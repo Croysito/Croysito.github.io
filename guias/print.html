@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía Completa de print() en Python | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>print()</span></div>
+<p>Guía completa de la función print() en Python</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#quees">¿Qué es print()?</a>
+<a href="#sintaxis">Sintaxis básica</a>
+<a href="#multiples">Múltiples valores</a>
+<a href="#sep">Parámetro sep</a>
+<a href="#end">Parámetro end</a>
+<a href="#concatenacion">Concatenar vs. comas</a>
+<a href="#fstrings">f-Strings en print()</a>
+<a href="#formato">Formato avanzado</a>
+<a href="#escapes">Caracteres especiales</a>
+<a href="#errores">Errores comunes</a>
+<a href="#ejercicios">Ejercicios</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🐍 Guía de Aula Invertida</div>
+<h1>Dominando <span>print()</span> en Python</h1>
+<p>La primera instrucción que aprende todo programador, pero con muchos más trucos de los que parece. Aprende a mostrar información en pantalla con ejemplos prácticos que puedes editar y ejecutar en vivo.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead"><code>print()</code> es la función que utilizarás en prácticamente todos los programas que escribas. Sirve para comunicar al usuario lo que ocurre dentro del código: resultados, mensajes, errores o cualquier información que necesite mostrarse en pantalla.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía dominarás todas las formas de usar <code>print()</code>: valores múltiples, separadores, finales de línea personalizados, f-Strings y formato de salida.</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Todos los bloques con el encabezado <strong>Python</strong> son editables: presiona <strong>✏️ Editar</strong> para modificar el código y <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador (usa Pyodide, un Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📖 Aprende</h3><p>Conceptos explicados paso a paso.</p></div>
+<div class="info"><h3>💻 Practica</h3><p>Decenas de ejemplos editables y ejecutables.</p></div>
+<div class="info"><h3>🎯 Domina</h3><p>Ejercicios de dificultad creciente.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="quees">
+<div class="card">
+<h2 class="section-title">¿Qué es print()?</h2>
+<p><code>print()</code> es una <strong>función incorporada</strong> de Python: siempre está disponible, sin necesidad de importar nada. Su trabajo es mostrar en la consola el valor que le pases entre paréntesis.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("Hola, mundo")
+print("Bienvenido a Python")
+print("Facultad de Ingeniería de Sistemas")</code></pre>
+</div>
+<p>Cada llamada a <code>print()</code> muestra su contenido y luego salta a una nueva línea, por lo que el siguiente <code>print()</code> aparecerá debajo.</p>
+</div>
+</section>
+
+<section class="container" id="sintaxis">
+<div class="card">
+<h2 class="section-title">Sintaxis básica</h2>
+<p class="lead">La forma más simple es <code>print(valor)</code>, donde <strong>valor</strong> puede ser texto, un número, una variable o el resultado de una operación.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Roy"
+print(nombre)
+print("Roy")
+print(2 + 2)</code></pre>
+</div>
+<div class="highlight">
+<strong>Importante</strong>
+<p>Si el valor es texto, debe ir entre comillas. Si es una variable o una operación, no.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">print() sin argumentos</h2>
+<p><code>print()</code> también puede llamarse vacío. En ese caso solamente imprime una línea en blanco, muy útil para separar visualmente bloques de salida.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("Primer bloque")
+print()
+print("Segundo bloque")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="multiples">
+<div class="card">
+<h2 class="section-title">Imprimir múltiples valores</h2>
+<p class="lead"><code>print()</code> acepta más de un valor a la vez, separados por comas. Python los mostrará todos en la misma línea, separados automáticamente por un espacio.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Roy"
+carrera = "Ingeniería"
+print("Nombre:", nombre, "Carrera:", carrera)</code></pre>
+</div>
+<div class="highlight">
+<strong>Muy útil</strong>
+<p>No es necesario convertir números a texto para mezclarlos con comas: <code>print("Edad:", 20)</code> funciona sin problema.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Ejemplo práctico</h2>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Ana"
+edad = 21
+promedio = 88.5
+print("Estudiante:", nombre, "Edad:", edad, "Promedio:", promedio)</code></pre>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>Estudiante: Ana Edad: 21 Promedio: 88.5</pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="sep">
+<div class="card">
+<h2 class="section-title">El parámetro sep</h2>
+<p class="lead">Por defecto, cuando imprimes varios valores separados por comas, Python los une con un <strong>espacio</strong>. El parámetro <code>sep</code> permite cambiar ese separador.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("Roy", "Carrasco", sep=" ")
+print("2026", "07", "10", sep="-")
+print("a", "b", "c", sep="")</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Código</th><th scope="col">Resultado</th></tr></thead>
+<tbody>
+<tr><td><code>sep=" "</code></td><td>Roy Carrasco</td></tr>
+<tr><td><code>sep="-"</code></td><td>2026-07-10</td></tr>
+<tr><td><code>sep=""</code></td><td>abc</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Uso recomendado</strong>
+<p>Muy útil para construir fechas, rutas de archivo o listas separadas por comas sin necesidad de concatenar strings manualmente.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="end">
+<div class="card">
+<h2 class="section-title">El parámetro end</h2>
+<p class="lead">Por defecto, cada <code>print()</code> termina con un salto de línea (<code>\n</code>). El parámetro <code>end</code> permite reemplazar ese final por cualquier otro texto.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("Cargando", end="...")
+print("listo")</code></pre>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>Cargando...listo</pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("Uno", end=" ")
+print("Dos", end=" ")
+print("Tres")</code></pre>
+</div>
+<div class="highlight">
+<strong>Muy útil</strong>
+<p>Con <code>end=""</code> puedes construir una línea usando varios <code>print()</code> seguidos, por ejemplo dentro de un bucle que muestra una barra de progreso.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Combinando sep y end</h2>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("*", "*", "*", "*", "*", sep="", end="\n\n")
+print("Fin del encabezado")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Mini reto</h2>
+<p>Sin ejecutar el programa, intenta predecir la salida. Luego verifica editando y ejecutando el bloque de código.</p>
+<ol style="margin-left:30px;line-height:2;">
+<li>¿Qué imprime <code>print("a", "b", sep="-")</code>?</li>
+<li>¿Qué imprime <code>print("a", "b", end="!")</code>?</li>
+<li>¿Qué diferencia hay entre no usar <code>sep</code> y usar <code>sep=" "</code>?</li>
+</ol>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("a", "b", sep="-")
+print("a", "b", end="!")
+print()</code></pre>
+</div>
+<div class="highlight">
+<strong>Consejo del docente</strong>
+<p>Antes de ejecutar un programa, intenta predecir el resultado. Ese hábito acelera muchísimo el aprendizaje de programación.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="concatenacion">
+<div class="card">
+<h2 class="section-title">Concatenar con + vs. usar comas</h2>
+<p class="lead">Además de las comas, puedes construir el mensaje con el operador <strong>+</strong>. La diferencia importante es que <code>+</code> exige que <strong>todos</strong> los valores sean del mismo tipo (texto con texto).</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Roy"
+print("Hola, " + nombre)
+print("Hola,", nombre)</code></pre>
+</div>
+<div class="highlight">
+<strong>Diferencia clave</strong>
+<p>Con comas, Python añade el espacio automáticamente y convierte los valores a texto por ti. Con <code>+</code>, tú controlas cada espacio, pero debes convertir manualmente los valores que no sean texto.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Error frecuente: mezclar tipos con +</h2>
+<p>Si intentas concatenar texto con un número usando <code>+</code>, Python produce un error. Prueba ejecutar este bloque para ver el error real.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 20
+print("Tengo " + edad + " años")</code></pre>
+</div>
+<div class="highlight">
+<strong>¿Por qué ocurre?</strong>
+<p>Obtendrás <code>TypeError: can only concatenate str (not "int") to str</code>. La solución es convertir el número con <code>str()</code>, o mejor aún, usar comas o un f-String.</p>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 20
+print("Tengo " + str(edad) + " años")
+print("Tengo", edad, "años")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="fstrings">
+<div class="card">
+<h2 class="section-title">f-Strings dentro de print()</h2>
+<p class="lead">Los <strong>f-Strings</strong> son la forma más legible de insertar variables dentro de un mensaje: antepones la letra <strong>f</strong> a la cadena y colocas las variables entre llaves.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Roy"
+edad = 30
+print(f"Hola {nombre}")
+print(f"Tienes {edad} años")</code></pre>
+</div>
+<div class="highlight">
+<strong>Ventaja</strong>
+<p>No necesitas convertir números con <code>str()</code> ni preocuparte por espacios: el f-String los inserta exactamente donde escribas las llaves.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Expresiones dentro de un f-String</h2>
+<p>Dentro de las llaves puedes colocar operaciones y expresiones, no solo nombres de variables.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">a = 15
+b = 7
+print(f"La suma es {a+b}")
+print(f"El doble de a es {a*2}")
+print(f"La división es {a/b}")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">f-Strings de depuración</h2>
+<p>Desde Python 3.8, agregar <code>=</code> después de una expresión imprime también su nombre, útil para depurar rápidamente sin escribir <code>print("variable:", variable)</code>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Roy"
+edad = 30
+print(f"{nombre=}")
+print(f"{edad=}")
+print(f"{edad*2=}")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="formato">
+<div class="card">
+<h2 class="section-title">Formato avanzado dentro de print()</h2>
+<p class="lead">Dentro de las llaves de un f-String puedes agregar <code>:especificador</code> para controlar decimales, ancho y alineación del texto que se imprime.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">promedio = 87.4567
+print(f"Promedio: {promedio:.2f}")
+print(f"{'Nombre':<10}|{'Edad':>5}")
+print(f"{'Juan':<10}|{20:>5}")
+print(f"{1234567:,}")</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Especificador</th><th scope="col">Efecto</th></tr></thead>
+<tbody>
+<tr><td><code>:.2f</code></td><td>Redondea a 2 decimales.</td></tr>
+<tr><td><code>:&lt;10</code></td><td>Alinea a la izquierda en un ancho de 10.</td></tr>
+<tr><td><code>:&gt;5</code></td><td>Alinea a la derecha en un ancho de 5.</td></tr>
+<tr><td><code>:,</code></td><td>Agrega comas como separador de miles.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Uso recomendado</strong>
+<p>Muy útil para imprimir tablas de datos alineadas o reportes con números legibles directamente en la consola.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Imprimir una tarjeta con formato</h2>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Juan"
+carrera = "Ingeniería"
+semestre = 2
+promedio = 87.5
+print(f"""
+===== INFORMACIÓN DEL ESTUDIANTE =====
+Nombre   : {nombre}
+Carrera  : {carrera}
+Semestre : {semestre}
+Promedio : {promedio:.1f}
+======================================
+""")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="escapes">
+<div class="card">
+<h2 class="section-title">Caracteres especiales dentro de print()</h2>
+<p class="lead">Algunos caracteres no pueden escribirse directamente dentro de una cadena. Para ello Python utiliza las <strong>secuencias de escape</strong>, que comienzan con una barra invertida (<code>\</code>).</p>
+<table class="tabla">
+<thead><tr><th scope="col">Secuencia</th><th scope="col">Significado</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><code>\n</code></td><td>Nueva línea</td><td>Hola<br>Mundo</td></tr>
+<tr><td><code>\t</code></td><td>Tabulación</td><td>Nombre&nbsp;&nbsp;&nbsp;Edad</td></tr>
+<tr><td><code>\\</code></td><td>Barra invertida</td><td>C:\Usuarios</td></tr>
+<tr><td><code>\"</code></td><td>Comilla doble</td><td>"Python"</td></tr>
+</tbody>
+</table>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("Primera línea\nSegunda línea")
+print("Nombre:\tJuan")
+print("C:\\Usuarios\\Roy")
+print("\"Python\"")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">print() con comillas triples</h2>
+<p>Las comillas triples permiten imprimir bloques completos de texto respetando los saltos de línea, sin necesidad de escribir <code>\n</code> en cada uno.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("""
+Bienvenido al Sistema
+Universidad Adventista de Bolivia
+Ingeniería de Sistemas
+""")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Repetición y separadores visuales</h2>
+<p>Combinar <code>print()</code> con el operador <strong>*</strong> es una forma rápida de construir encabezados y separadores en la consola.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("=" * 40)
+print("SISTEMA DE VENTAS".center(40))
+print("=" * 40)</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="errores">
+<div class="card">
+<h2 class="section-title">Errores comunes</h2>
+<div class="info-grid">
+<div class="info"><h3>❌ Olvidar los paréntesis</h3><p>En Python 3, <code>print "Hola"</code> (sin paréntesis) produce un <strong>SyntaxError</strong>. Siempre usa <code>print("Hola")</code>.</p></div>
+<div class="info"><h3>❌ Mezclar texto y número con +</h3><p><code>print("Edad: " + 20)</code> falla con <strong>TypeError</strong>. Usa comas, <code>str()</code> o un f-String.</p></div>
+<div class="info"><h3>❌ Olvidar la letra f</h3><p>Si escribes <code>print("Hola {nombre}")</code> sin anteponer <strong>f</strong>, Python muestra literalmente <strong>{nombre}</strong>.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Prueba el error</h2>
+<p>Ejecuta este bloque para observar en vivo el error de mezclar tipos con <strong>+</strong>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">precio = 25
+print("El precio es: " + precio)</code></pre>
+</div>
+<div class="highlight">
+<strong>Corrígelo</strong>
+<p>Edita el bloque anterior y corrige el error usando <code>str(precio)</code> o una coma en lugar de <strong>+</strong>.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Resumen</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Elemento</th><th scope="col">Descripción</th></tr></thead>
+<tbody>
+<tr><td><code>print(valor)</code></td><td>Muestra un valor en pantalla.</td></tr>
+<tr><td><code>print(a, b, c)</code></td><td>Muestra varios valores separados por espacio.</td></tr>
+<tr><td><code>sep=</code></td><td>Cambia el separador entre valores.</td></tr>
+<tr><td><code>end=</code></td><td>Cambia el final de la línea (por defecto <code>\n</code>).</td></tr>
+<tr><td><code>f"texto {var}"</code></td><td>Inserta variables directamente en el mensaje.</td></tr>
+<tr><td><code>f"{var:.2f}"</code></td><td>Aplica formato numérico dentro del mensaje.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Ejercicios Propuestos</h2>
+<p class="lead">Pon en práctica lo aprendido resolviendo los siguientes ejercicios directamente en el bloque editable.</p>
+<ol style="margin-left:25px;line-height:2">
+<li>Imprime tu nombre completo y tu carrera en una sola línea usando comas.</li>
+<li>Usa <code>sep="-"</code> para imprimir una fecha como <code>10-07-2026</code>.</li>
+<li>Usa <code>end=""</code> para construir una palabra letra por letra con varios <code>print()</code>.</li>
+<li>Construye un mensaje de bienvenida usando un f-String con tu nombre y tu edad.</li>
+<li>Imprime un promedio con dos decimales usando <code>:.2f</code>.</li>
+<li>Imprime una línea de 50 signos "=" usando repetición.</li>
+<li>Provoca a propósito un <code>TypeError</code> concatenando texto y número con <strong>+</strong>, y luego corrígelo.</li>
+</ol>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>✍️ Resuelve aquí los ejercicios</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu solución a los ejercicios (puedes resolverlos uno por uno)…"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Reto Final</h2>
+<p>Desarrolla un programa que defina las siguientes variables:</p>
+<ul style="margin-left:25px;line-height:2">
+<li>Nombre completo</li>
+<li>Carrera</li>
+<li>Semestre</li>
+<li>Promedio</li>
+</ul>
+<p>El programa deberá:</p>
+<ul style="margin-left:25px;line-height:2">
+<li>Mostrar una tarjeta usando un único f-String multilínea.</li>
+<li>Mostrar el promedio con dos decimales.</li>
+<li>Usar <code>sep</code> y <code>end</code> al menos una vez cada uno.</li>
+<li>Evitar cualquier <code>TypeError</code> al mezclar texto y números.</li>
+</ul>
+<div class="code salida">
+<div class="code-header"><span>Salida esperada</span></div>
+<pre>=================================
+DATOS DEL ESTUDIANTE
+Nombre    : Ana López
+Carrera   : Ingeniería
+Semestre  : 4
+Promedio  : 91.40
+=================================</pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Uso</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Valor simple</td><td><code>print("Hola")</code></td></tr>
+<tr><td>Varios valores</td><td><code>print("a", "b", "c")</code></td></tr>
+<tr><td>Separador</td><td><code>print("a", "b", sep="-")</code></td></tr>
+<tr><td>Final de línea</td><td><code>print("a", end=" ")</code></td></tr>
+<tr><td>f-String</td><td><code>print(f"Hola {nombre}")</code></td></tr>
+<tr><td>Decimales</td><td><code>print(f"{valor:.2f}")</code></td></tr>
+<tr><td>Alinear texto</td><td><code>print(f"{'x':&lt;10}")</code></td></tr>
+<tr><td>Miles</td><td><code>print(f"{1000000:,}")</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🐍 En Python 2 era distinto</h3><p>Antes se escribía <code>print "Hola"</code>, sin paréntesis. Desde Python 3, siempre es una función.</p></div>
+<div class="info"><h3>🚀 print() también acepta flush</h3><p>El parámetro <code>flush=True</code> fuerza a mostrar el texto de inmediato, útil en barras de progreso.</p></div>
+<div class="info"><h3>📖 Todo pasa por sys.stdout</h3><p>Internamente, <code>print()</code> escribe en la salida estándar del programa.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de print() en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Resaltado de sintaxis (sin librerías externas) ===== */
+const PY_KEYWORDS = ["False","None","True","and","as","assert","async","await","break","class",
+  "continue","def","del","elif","else","except","finally","for","from","global","if","import",
+  "in","is","lambda","nonlocal","not","or","pass","raise","return","try","while","with","yield",
+  "print","len","int","str","float","input"];
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function highlightPython(code){
+  const escaped = escapeHtml(code);
+  const tokens = [];
+  const mask = (html) => {
+    const marker = String.fromCharCode(0xE000 + tokens.length);
+    tokens.push(html);
+    return marker;
+  };
+  let out = escaped.replace(
+    /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:[^"\\]|\\.)*"|f?'(?:[^'\\]|\\.)*')/gm,
+    (m, comment, str) => comment !== undefined
+      ? mask(`<span class="comment">${comment}</span>`)
+      : mask(`<span class="string">${str}</span>`)
+  );
+  out = out.replace(/\b\d+\.?\d*\b/g, m => mask(`<span class="number">${m}</span>`));
+  out = out.replace(new RegExp(`\\b(${PY_KEYWORDS.join("|")})\\b`, "g"), m => mask(`<span class="keyword">${m}</span>`));
+  out = out.replace(/\b([A-Za-z_]\w*)(?=\()/g, m => mask(`<span class="func">${m}</span>`));
+  out = out.replace(/[-]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
+  return out;
+}
+
+/* ===== Pyodide (Python real en el navegador), carga perezosa ===== */
+let pyodideReadyPromise = null;
+function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      const pyodide = await window.loadPyodide();
+      await pyodide.runPythonAsync(`
+import sys, io
+def __run_capture(src):
+    buf = io.StringIO()
+    old = sys.stdout
+    sys.stdout = buf
+    err = None
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.stdout = old
+    return buf.getvalue(), err
+`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+async function ejecutarPython(codigo){
+  const pyodide = await cargarPyodide();
+  const funcion = pyodide.globals.get("__run_capture");
+  const resultado = funcion(codigo);
+  const [salida, error] = resultado.toJs();
+  resultado.destroy();
+  return { salida, error };
+}
+
+/* ===== Resaltar cada ejemplo de solo lectura ===== */
+function resaltarEjemplo(bloque){
+  const codeEl = bloque.querySelector("pre code.src");
+  if (!codeEl) return;
+  codeEl.innerHTML = highlightPython(codeEl.textContent.trim());
+}
+
+/* ===== Conectar un panel de editor en blanco (ejecutar código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    try {
+      const { salida, error } = await ejecutarPython(textarea.value);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el intérprete de Python: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+function crearPanelEditor(mensaje){
+  const panel = document.createElement("div");
+  panel.className = "editor-panel";
+  panel.innerHTML = `
+    <div class="editor-header">
+      <span>${mensaje}</span>
+      <button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+    </div>
+    <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu propio código, inspirándote en el ejemplo de arriba, y presiona Ejecutar."></textarea>
+    <div class="output" hidden>
+      <div class="output-head">Salida</div>
+      <pre class="output-body"></pre>
+    </div>`;
+  return panel;
+}
+
+/* ===== Bloquear copiado del ejemplo (para que se escriba a mano) ===== */
+function bloquearCopiado(bloque){
+  const pre = bloque.querySelector("pre");
+  if (!pre) return;
+  const header = bloque.querySelector(".code-header span");
+  const avisar = () => {
+    if (!header) return;
+    const original = header.dataset.original || header.textContent;
+    header.dataset.original = original;
+    header.textContent = "🔒 Escríbelo tú mismo";
+    clearTimeout(header._avisoTimeout);
+    header._avisoTimeout = setTimeout(() => { header.textContent = original; }, 1600);
+  };
+  pre.addEventListener("copy", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("contextmenu", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("dragstart", e => e.preventDefault());
+}
+
+/* ===== Igualar la altura del editor a la del ejemplo ===== */
+function sincronizarAltura(bloque, panel){
+  const pre = bloque.querySelector("pre");
+  const textarea = panel.querySelector(".editor");
+  if (pre && textarea) textarea.style.minHeight = pre.offsetHeight + "px";
+}
+
+const parejas = [];
+document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
+  resaltarEjemplo(bloque);
+  bloquearCopiado(bloque);
+  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo");
+  bloque.after(panel);
+  conectarEditor(panel);
+  parejas.push([bloque, panel]);
+});
+
+document.querySelectorAll(".editor-panel.independiente").forEach(conectarEditor);
+document.querySelectorAll(".code.salida").forEach(bloquearCopiado);
+
+parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel));
+window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel)));
+
+</script>
+
+</body>
+</html>

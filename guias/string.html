@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía Completa de String en Python | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>Strings</span></div>
+<p>Guía completa de cadenas de texto en Python</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#quees">¿Qué es un String?</a>
+<a href="#crear">Crear Strings</a>
+<a href="#comillas">Comillas</a>
+<a href="#indices">Índices</a>
+<a href="#inmutable">Strings inmutables</a>
+<a href="#slicing">Slicing</a>
+<a href="#metodos">Métodos</a>
+<a href="#formato">Formato avanzado</a>
+<a href="#fstrings">f-Strings</a>
+<a href="#ejercicios">Ejercicios</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🐍 Guía de Aula Invertida</div>
+<h1>Dominando los <span>String</span> en Python</h1>
+<p>Aprende a crear, manipular y transformar cadenas de texto mediante ejemplos prácticos que puedes editar y ejecutar en vivo, explicaciones sencillas y ejercicios guiados.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Los <strong>strings</strong> son uno de los tipos de datos más utilizados en programación. Todo programa trabaja con nombres, mensajes, direcciones, contraseñas, archivos o información escrita, y todos esos datos se representan mediante cadenas de texto.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía serás capaz de crear, acceder, modificar y manipular cadenas utilizando las principales herramientas que ofrece Python.</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Todos los bloques con el encabezado <strong>Python</strong> son editables: presiona <strong>✏️ Editar</strong> para modificar el código y <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador (usa Pyodide, un Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📖 Aprende</h3><p>Conceptos explicados paso a paso.</p></div>
+<div class="info"><h3>💻 Practica</h3><p>Decenas de ejemplos editables y ejecutables.</p></div>
+<div class="info"><h3>🎯 Domina</h3><p>Ejercicios de dificultad creciente.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="quees">
+<div class="card">
+<h2 class="section-title">¿Qué es un String?</h2>
+<p>Un <strong>string</strong> es una secuencia de caracteres utilizada para almacenar texto. En Python, un string puede contener letras, números, símbolos, espacios y caracteres especiales.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Roy"
+ciudad = "Cochabamba"
+mensaje = "Bienvenido a Python"
+print(nombre)
+print(ciudad)
+print(mensaje)</code></pre>
+</div>
+<p>En Python, un string es un objeto, lo que significa que posee propiedades y métodos que permiten transformarlo fácilmente.</p>
+</div>
+</section>
+
+<section class="container" id="crear">
+<div class="card">
+<h2 class="section-title">Crear Strings</h2>
+<p class="lead">Existen varias formas de crear una cadena de texto en Python. Todas representan el mismo tipo de dato, pero cada una resulta útil en situaciones diferentes.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Roy"
+apellido = 'Carrasco'
+universidad = "Universidad Adventista de Bolivia"
+print(nombre)
+print(apellido)
+print(universidad)</code></pre>
+</div>
+<div class="highlight">
+<strong>Importante</strong>
+<p>Todo lo que esté entre comillas será interpretado por Python como una cadena de texto (<strong>str</strong>).</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="comillas">
+<div class="card">
+<h2 class="section-title">Comillas simples y dobles</h2>
+<p>Python acepta indistintamente comillas simples y dobles.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">saludo = "Hola"
+mensaje = 'Bienvenido'
+print(saludo)
+print(mensaje)</code></pre>
+</div>
+<div class="info-grid">
+<div class="info"><h3>Comillas dobles</h3><p>Son las más utilizadas por la comunidad de Python y la mayoría de ejemplos oficiales.</p></div>
+<div class="info"><h3>Comillas simples</h3><p>Funcionan exactamente igual y suelen emplearse cuando la cadena contiene comillas dobles.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Texto que contiene comillas</h2>
+<p>Cuando una cadena contiene comillas, resulta conveniente utilizar el otro tipo de comillas para evitar errores.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">frase = "Ella dijo 'Hola'"
+respuesta = 'Él respondió "Adiós"'
+print(frase)
+print(respuesta)</code></pre>
+</div>
+<div class="highlight">
+<strong>Error frecuente</strong>
+<p>No mezcles el mismo tipo de comillas al inicio y al final de una cadena.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Comillas triples</h2>
+<p>Las comillas triples permiten escribir texto de varias líneas sin utilizar el carácter <code>\n</code>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">mensaje = """
+Bienvenido al sistema.
+Este texto ocupa
+varias líneas.
+"""
+print(mensaje)</code></pre>
+</div>
+<p>También se utilizan para escribir documentación dentro de funciones y clases.</p>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">String vacío</h2>
+<p>Una cadena también puede estar vacía. Esto es muy útil cuando una variable almacenará texto más adelante.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = ""
+apellido = ''
+print(nombre)
+print(apellido)</code></pre>
+</div>
+<div class="highlight">
+<strong>Recuerda</strong>
+<p>Una cadena vacía tiene longitud cero, pero sigue siendo un objeto de tipo <strong>str</strong>.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Resumen</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Forma</th><th scope="col">Ejemplo</th><th scope="col">Uso recomendado</th></tr></thead>
+<tbody>
+<tr><td>Comillas dobles</td><td><code>"Hola"</code></td><td>Uso general</td></tr>
+<tr><td>Comillas simples</td><td><code>'Hola'</code></td><td>Alternativa equivalente</td></tr>
+<tr><td>Comillas triples</td><td><code>"""Texto"""</code></td><td>Texto multilínea</td></tr>
+<tr><td>Cadena vacía</td><td><code>""</code></td><td>Inicializar variables</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container" id="indices">
+<div class="card">
+<h2 class="section-title">Acceder a los caracteres (Índices)</h2>
+<p class="lead">Cada carácter de un string posee una posición llamada <strong>índice</strong>. Los índices comienzan siempre en <strong>0</strong>.</p>
+<div class="highlight">
+<strong>Idea importante</strong>
+<p>Python numera cada carácter individualmente, incluyendo espacios.</p>
+</div>
+<div style="overflow-x:auto;margin:30px 0;">
+<table class="tabla-indices">
+<thead><tr><th scope="col">0</th><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th></tr></thead>
+<tbody><tr><td>P</td><td>y</td><td>t</td><td>h</td><td>o</td><td>n</td></tr></tbody>
+</table>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "Python"
+print(texto[0])
+print(texto[1])
+print(texto[5])</code></pre>
+</div>
+<div class="info-grid">
+<div class="info"><h3>texto[0]</h3><p>Devuelve la primera letra.</p></div>
+<div class="info"><h3>texto[1]</h3><p>Devuelve la segunda letra.</p></div>
+<div class="info"><h3>texto[5]</h3><p>Devuelve la última letra.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Índices negativos</h2>
+<p>Python también puede contar desde el final utilizando números negativos.</p>
+<div style="overflow-x:auto;margin:30px 0;">
+<table class="tabla-indices neg">
+<thead><tr><th scope="col">-6</th><th scope="col">-5</th><th scope="col">-4</th><th scope="col">-3</th><th scope="col">-2</th><th scope="col">-1</th></tr></thead>
+<tbody><tr><td>P</td><td>y</td><td>t</td><td>h</td><td>o</td><td>n</td></tr></tbody>
+</table>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "Python"
+print(texto[-1])
+print(texto[-2])
+print(texto[-6])</code></pre>
+</div>
+<div class="highlight">
+<strong>Muy útil</strong>
+<p>Los índices negativos permiten acceder rápidamente al último elemento sin conocer la longitud del string.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Ejemplos prácticos</h2>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Alejandro"
+print(nombre[0])
+print(nombre[3])
+print(nombre[-1])
+print(nombre[-3])</code></pre>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>A
+j
+o
+d</pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Los espacios también cuentan</h2>
+<p>Un error frecuente es pensar que los espacios no tienen posición.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">frase = "Hola Mundo"
+print(frase[4])
+print(frase[5])</code></pre>
+</div>
+<div class="highlight">
+<strong>Resultado</strong>
+<p>La posición <strong>4</strong> corresponde a la letra <strong>a</strong>, mientras que la posición <strong>5</strong> corresponde al espacio entre las palabras.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Error común: IndexError</h2>
+<p>Si intentas acceder a una posición que no existe, Python producirá un error. Prueba ejecutar este bloque para ver el error real.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "Python"
+print(texto[20])</code></pre>
+</div>
+<div class="highlight">
+<strong>¿Por qué ocurre?</strong>
+<p>La palabra <strong>Python</strong> solamente posee seis caracteres. No existe la posición número 20.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Cuántos caracteres tiene un string?</h2>
+<p>La función <code>len()</code> devuelve la cantidad total de caracteres de una cadena.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "Python"
+print(len(texto))</code></pre>
+</div>
+<div class="highlight">
+<strong>Resultado</strong>
+<p>La función devuelve <strong>6</strong>, ya que la palabra "Python" tiene seis caracteres.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Mini reto</h2>
+<p>Sin ejecutar el programa, intenta responder las siguientes preguntas. Luego verifica editando y ejecutando el bloque de código.</p>
+<ol style="margin-left:30px;line-height:2;">
+<li>¿Qué devuelve <code>texto[0]</code> si <code>texto = "Programación"</code>?</li>
+<li>¿Qué devuelve <code>texto[-1]</code>?</li>
+<li>¿Cuál es el resultado de <code>len(texto)</code>?</li>
+<li>¿Qué error produce <code>texto[50]</code>?</li>
+</ol>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "Programación"
+print(texto[0])
+print(texto[-1])
+print(len(texto))</code></pre>
+</div>
+<div class="highlight">
+<strong>Consejo del docente</strong>
+<p>Antes de ejecutar un programa, intenta predecir el resultado. Ese hábito acelera muchísimo el aprendizaje de programación.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="inmutable">
+<div class="card">
+<h2 class="section-title">Strings inmutables</h2>
+<p class="lead">Un string en Python es <strong>inmutable</strong>: una vez creado, no se puede cambiar carácter por carácter. Cualquier "modificación" en realidad crea un string nuevo.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "Python"
+texto[0] = "J"
+print(texto)</code></pre>
+</div>
+<div class="highlight">
+<strong>¿Por qué falla?</strong>
+<p>Al ejecutar el bloque anterior obtendrás <code>TypeError: 'str' object does not support item assignment</code>. Los strings no permiten asignar directamente a una posición.</p>
+</div>
+<p>La forma correcta de "cambiar" un carácter es construir un string nuevo, por ejemplo combinando slicing y concatenación:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "Python"
+nuevo = "J" + texto[1:]
+print(nuevo)
+print(texto)</code></pre>
+</div>
+<div class="highlight">
+<strong>Observa</strong>
+<p><code>texto</code> nunca cambió: <code>nuevo</code> es un string completamente distinto. Esto es importante porque significa que los métodos de string (como <code>upper()</code> o <code>replace()</code>) siempre devuelven un resultado nuevo en lugar de modificar el original.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="slicing">
+<div class="card">
+<h2 class="section-title">Slicing (Rebanado de cadenas)</h2>
+<p class="lead">El <strong>slicing</strong> permite extraer una parte de un string sin modificar el original.</p>
+<div class="highlight">
+<strong>Sintaxis</strong>
+<p><code>cadena[inicio:fin]</code></p>
+<p>✔ Incluye el índice inicial.<br>✔ No incluye el índice final.</p>
+</div>
+<div style="overflow-x:auto;margin:30px 0;">
+<table class="tabla-indices">
+<thead><tr><th scope="col">0</th><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th></tr></thead>
+<tbody><tr><td>P</td><td>y</td><td>t</td><td>h</td><td>o</td><td>n</td></tr></tbody>
+</table>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "Python"
+print(texto[0:2])
+print(texto[0:4])
+print(texto[2:6])</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Resultado del slicing</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Expresión</th><th scope="col">Resultado</th><th scope="col">Explicación</th></tr></thead>
+<tbody>
+<tr><td><code>texto[0:2]</code></td><td>Py</td><td>Posiciones 0 y 1</td></tr>
+<tr><td><code>texto[0:4]</code></td><td>Pyth</td><td>Desde la primera hasta antes del índice 4</td></tr>
+<tr><td><code>texto[2:6]</code></td><td>thon</td><td>Desde la letra "t"</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Omitiendo índices</h2>
+<p>Python permite omitir el índice inicial o final.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "Programación"
+print(texto[:5])
+print(texto[5:])
+print(texto[:])</code></pre>
+</div>
+<div class="info-grid">
+<div class="info"><h3>texto[:5]</h3><p>Desde el inicio hasta antes del índice 5.</p></div>
+<div class="info"><h3>texto[5:]</h3><p>Desde el índice 5 hasta el final.</p></div>
+<div class="info"><h3>texto[:]</h3><p>Devuelve una copia completa del string.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Paso (Step)</h2>
+<p>El tercer valor indica cuántas posiciones debe avanzar Python.</p>
+<div class="highlight"><code>cadena[inicio:fin:paso]</code></div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "Programacion"
+print(texto[::2])
+print(texto[::3])
+print(texto[::-1])</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Código</th><th scope="col">Resultado</th></tr></thead>
+<tbody>
+<tr><td><code>texto[::2]</code></td><td>Pormco</td></tr>
+<tr><td><code>texto[::3]</code></td><td>Pgmi</td></tr>
+<tr><td><code>texto[::-1]</code></td><td>noicamargorP</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Concatenación</h2>
+<p>Concatenar significa unir dos o más cadenas utilizando el operador <strong>+</strong>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Roy"
+apellido = "Carrasco"
+completo = nombre + " " + apellido
+print(completo)</code></pre>
+</div>
+<div class="highlight">Resultado: <strong>Roy Carrasco</strong></div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Repetición</h2>
+<p>El operador <strong>*</strong> permite repetir un string varias veces.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("*" * 30)
+print("Python " * 5)
+print("-" * 50)</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Ejemplo práctico</h2>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">titulo = " SISTEMA DE VENTAS "
+print("=" * 40)
+print(titulo)
+print("=" * 40)</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Mini laboratorio</h2>
+<ol style="margin-left:25px;line-height:2;">
+<li>Extrae las cuatro primeras letras de "Universidad".</li>
+<li>Obtén únicamente las tres últimas letras.</li>
+<li>Invierte la palabra "Python".</li>
+<li>Concatena tu nombre y apellido.</li>
+<li>Imprime una línea de 60 signos "=".</li>
+<li>Crea un encabezado usando repetición.</li>
+</ol>
+<div class="highlight">
+<strong>Desafío</strong>
+<p>¿Puedes escribir un programa que imprima una tarjeta como esta? Pruébalo en el bloque de abajo.</p>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("*" * 30)
+print("Nombre :", "Juan Pérez")
+print("Carrera:", "Ingeniería")
+print("Edad   :", 20)
+print("*" * 30)</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="metodos">
+<div class="card">
+<h2 class="section-title">Métodos de los Strings</h2>
+<p class="lead">Los <strong>strings</strong> son objetos. Esto significa que poseen <strong>métodos</strong>, es decir, funciones que permiten transformar o consultar el contenido de una cadena.</p>
+<div class="highlight">
+<strong>Importante</strong>
+<p>Los métodos de los strings <strong>no modifican</strong> la cadena original. Devuelven una nueva cadena con el resultado (recuerda la sección <a href="#inmutable" style="color:var(--azul);text-decoration:underline;">Strings inmutables</a>).</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">upper()</h2>
+<p>Convierte todos los caracteres a mayúsculas.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "Python"
+print(texto.upper())</code></pre>
+</div>
+<div class="highlight">
+<strong>Uso recomendado</strong>
+<p>Muy útil para realizar comparaciones de texto ignorando diferencias entre mayúsculas y minúsculas.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">lower()</h2>
+<p>Convierte todos los caracteres a minúsculas.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">correo = "Roy.Carrasco@UAB.edu"
+print(correo.lower())</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">capitalize()</h2>
+<p>Convierte únicamente la primera letra en mayúscula.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "python es divertido"
+print(texto.capitalize())</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">title()</h2>
+<p>Convierte la primera letra de cada palabra en mayúscula.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "universidad adventista de bolivia"
+print(nombre.title())</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">swapcase()</h2>
+<p>Invierte mayúsculas por minúsculas y viceversa.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "PyThOn"
+print(texto.swapcase())</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">casefold()</h2>
+<p>Es similar a <code>lower()</code>, pero está diseñado para realizar comparaciones de texto de manera más robusta, especialmente con caracteres internacionales.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "PYTHON"
+print(texto.casefold())</code></pre>
+</div>
+<div class="highlight">
+<strong>¿Cuándo usarlo?</strong>
+<p>Cuando necesites comparar cadenas sin importar mayúsculas, minúsculas o ciertas diferencias de idioma.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Resumen de métodos vistos</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Método</th><th scope="col">Descripción</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><code>upper()</code></td><td>Convierte a mayúsculas.</td><td>PYTHON</td></tr>
+<tr><td><code>lower()</code></td><td>Convierte a minúsculas.</td><td>python</td></tr>
+<tr><td><code>capitalize()</code></td><td>Primera letra en mayúscula.</td><td>Python</td></tr>
+<tr><td><code>title()</code></td><td>Cada palabra inicia con mayúscula.</td><td>Hola Mundo</td></tr>
+<tr><td><code>swapcase()</code></td><td>Invierte mayúsculas y minúsculas.</td><td>pYTHON</td></tr>
+<tr><td><code>casefold()</code></td><td>Versión avanzada de lower().</td><td>python</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Alineación y relleno</h2>
+<p class="lead">Estos métodos ajustan el ancho de una cadena rellenando con espacios (o el carácter que indiques).</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">codigo = "42"
+print(codigo.zfill(5))
+print("Python".ljust(12, "."))
+print("Python".rjust(12, "."))
+print("Python".center(12, "*"))</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Método</th><th scope="col">Descripción</th></tr></thead>
+<tbody>
+<tr><td><code>zfill(n)</code></td><td>Rellena con ceros a la izquierda hasta completar n caracteres.</td></tr>
+<tr><td><code>ljust(n, c)</code></td><td>Alinea a la izquierda y rellena a la derecha con el carácter c.</td></tr>
+<tr><td><code>rjust(n, c)</code></td><td>Alinea a la derecha y rellena a la izquierda con el carácter c.</td></tr>
+<tr><td><code>center(n, c)</code></td><td>Centra el texto rellenando ambos lados con el carácter c.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Uso recomendado</strong>
+<p>Muy útiles para alinear columnas en reportes de consola, o para construir códigos con ceros a la izquierda (como <code>00042</code>).</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Comprobaciones is...()</h2>
+<p class="lead">Estos métodos no transforman el string: devuelven <code>True</code> o <code>False</code> según el contenido de la cadena.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("12345".isdigit())
+print("Python".isalpha())
+print("Python3".isalnum())
+print("   ".isspace())
+print("Python 3".isalnum())</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Método</th><th scope="col">Devuelve True si...</th></tr></thead>
+<tbody>
+<tr><td><code>isdigit()</code></td><td>Todos los caracteres son dígitos.</td></tr>
+<tr><td><code>isalpha()</code></td><td>Todos los caracteres son letras.</td></tr>
+<tr><td><code>isalnum()</code></td><td>Todos los caracteres son letras o dígitos (sin espacios ni símbolos).</td></tr>
+<tr><td><code>isspace()</code></td><td>Todos los caracteres son espacios en blanco.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Uso recomendado</strong>
+<p>Muy usados para validar datos ingresados por el usuario, por ejemplo comprobar que una edad ingresada como texto realmente sea un número antes de convertirla con <code>int()</code>.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Mini laboratorio</h2>
+<ol style="margin-left:25px;line-height:2;">
+<li>Convierte tu nombre completo a mayúsculas.</li>
+<li>Convierte una dirección de correo a minúsculas.</li>
+<li>Escribe una oración y aplica <code>capitalize()</code>.</li>
+<li>Escribe el nombre de tu universidad usando <code>title()</code>.</li>
+<li>Experimenta con <code>swapcase()</code>.</li>
+<li>Rellena el número "7" con ceros hasta que tenga 4 dígitos usando <code>zfill()</code>.</li>
+<li>Comprueba con <code>isdigit()</code> si el texto "abc123" es completamente numérico.</li>
+</ol>
+<div class="highlight">
+<strong>Consejo</strong>
+<p>Prueba cada método utilizando diferentes palabras. Aprenderás mucho más experimentando que copiando ejemplos.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">strip()</h2>
+<p>Elimina los espacios en blanco al inicio y al final de una cadena.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "     Python     "
+print(texto.strip())</code></pre>
+</div>
+<div class="highlight">
+<strong>Muy utilizado</strong>
+<p>Ideal cuando se reciben datos desde un teclado o desde un archivo de texto.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">lstrip() y rstrip()</h2>
+<p>Permiten eliminar espacios únicamente de un lado.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "     Python     "
+print(texto.lstrip())
+print(texto.rstrip())</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Método</th><th scope="col">Elimina</th></tr></thead>
+<tbody>
+<tr><td><code>lstrip()</code></td><td>Espacios de la izquierda</td></tr>
+<tr><td><code>rstrip()</code></td><td>Espacios de la derecha</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">replace()</h2>
+<p>Reemplaza una parte del texto por otra.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">frase = "Me gusta Java"
+print(frase.replace("Java","Python"))</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">split()</h2>
+<p>Divide una cadena en varias partes utilizando un separador.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">cadena = "Juan,Pedro,Ana,Luis"
+lista = cadena.split(",")
+print(lista)</code></pre>
+</div>
+<div class="highlight">
+<strong>Importante</strong>
+<p>El método devuelve una <strong>lista</strong>, no un string.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">join()</h2>
+<p>Hace exactamente lo contrario que <code>split()</code>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombres = ["Juan","Pedro","Ana"]
+texto = " - ".join(nombres)
+print(texto)</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">find()</h2>
+<p>Busca una palabra dentro de otra cadena.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "Programación en Python"
+print(texto.find("Python"))</code></pre>
+</div>
+<div class="highlight"><p>Si encuentra el texto devuelve la posición donde comienza.</p></div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">index()</h2>
+<p>Funciona parecido a <code>find()</code>, pero genera un error si no encuentra el texto.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "Python"
+print(texto.index("t"))</code></pre>
+</div>
+<div class="highlight">
+<strong>Diferencia</strong>
+<p><code>find()</code> devuelve <strong>-1</strong> si no encuentra la cadena.</p>
+<p><code>index()</code> produce una excepción.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">count()</h2>
+<p>Cuenta cuántas veces aparece un texto.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">texto = "banana"
+print(texto.count("a"))</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">startswith()</h2>
+<p>Comprueba si una cadena comienza con determinado texto.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">archivo = "reporte.pdf"
+print(archivo.startswith("rep"))</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">endswith()</h2>
+<p>Comprueba cómo termina una cadena.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">archivo = "reporte.pdf"
+print(archivo.endswith(".pdf"))</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Resumen de métodos</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Método</th><th scope="col">Descripción</th></tr></thead>
+<tbody>
+<tr><td><code>strip()</code></td><td>Elimina espacios al inicio y al final.</td></tr>
+<tr><td><code>lstrip()</code></td><td>Elimina espacios de la izquierda.</td></tr>
+<tr><td><code>rstrip()</code></td><td>Elimina espacios de la derecha.</td></tr>
+<tr><td><code>replace()</code></td><td>Reemplaza texto.</td></tr>
+<tr><td><code>split()</code></td><td>Divide una cadena.</td></tr>
+<tr><td><code>join()</code></td><td>Une varias cadenas.</td></tr>
+<tr><td><code>find()</code></td><td>Busca texto.</td></tr>
+<tr><td><code>index()</code></td><td>Busca texto y produce error si no existe.</td></tr>
+<tr><td><code>count()</code></td><td>Cuenta apariciones.</td></tr>
+<tr><td><code>startswith()</code></td><td>Verifica el inicio.</td></tr>
+<tr><td><code>endswith()</code></td><td>Verifica el final.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Mini laboratorio</h2>
+<ol style="margin-left:25px;line-height:2">
+<li>Elimina los espacios de tu nombre utilizando <code>strip()</code>.</li>
+<li>Reemplaza tu apellido por otro usando <code>replace()</code>.</li>
+<li>Divide una fecha (<code>2026-07-10</code>) utilizando <code>split("-")</code>.</li>
+<li>Une una lista de palabras mediante <code>join()</code>.</li>
+<li>Cuenta cuántas veces aparece la letra <strong>a</strong> en tu nombre.</li>
+<li>Comprueba si un archivo termina en <strong>.pdf</strong>.</li>
+<li>Comprueba si un correo comienza por "admin".</li>
+</ol>
+<div class="highlight">
+<strong>Actividad sugerida</strong>
+<p>Construye un programa que solicite el nombre completo de un estudiante, elimine los espacios sobrantes, convierta el texto a formato de título (<code>title()</code>) y muestre cuántos caracteres tiene el nombre utilizando <code>len()</code>.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Caracteres especiales (Secuencias de escape)</h2>
+<p class="lead">Algunos caracteres no pueden escribirse directamente dentro de una cadena. Para ello Python utiliza las <strong>secuencias de escape</strong>, que comienzan con una barra invertida (<code>\</code>).</p>
+<table class="tabla">
+<thead><tr><th scope="col">Secuencia</th><th scope="col">Significado</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><code>\n</code></td><td>Nueva línea</td><td>Hola<br>Mundo</td></tr>
+<tr><td><code>\t</code></td><td>Tabulación</td><td>Nombre&nbsp;&nbsp;&nbsp;Edad</td></tr>
+<tr><td><code>\\</code></td><td>Barra invertida</td><td>C:\Usuarios</td></tr>
+<tr><td><code>\"</code></td><td>Comilla doble</td><td>"Python"</td></tr>
+<tr><td><code>\'</code></td><td>Comilla simple</td><td>It's</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Ejemplos de secuencias de escape</h2>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print("Primera línea\nSegunda línea")
+print("Nombre:\tJuan")
+print("C:\\Usuarios\\Roy")
+print("\"Python\"")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Strings de varias líneas</h2>
+<p>Las comillas triples permiten escribir bloques completos de texto respetando los saltos de línea.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">mensaje = """
+Bienvenido al Sistema
+Universidad Adventista de Bolivia
+Ingeniería de Sistemas
+"""
+print(mensaje)</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="fstrings">
+<div class="card">
+<h2 class="section-title">f-Strings (Python moderno)</h2>
+<p class="lead">Los <strong>f-Strings</strong> son la forma recomendada de insertar variables dentro de una cadena.</p>
+<div class="highlight">
+<strong>Sintaxis</strong>
+<p>Antepone la letra <strong>f</strong> a la cadena y coloca las variables entre llaves.</p>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Roy"
+edad = 30
+print(f"Hola {nombre}")
+print(f"Tienes {edad} años")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Expresiones dentro de un f-String</h2>
+<p>Dentro de las llaves puedes colocar operaciones y expresiones.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">a = 15
+b = 7
+print(f"La suma es {a+b}")
+print(f"El doble es {a*2}")
+print(f"La división es {a/b}")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="formato">
+<div class="card">
+<h2 class="section-title">format() y especificadores</h2>
+<p class="lead">Dentro de las llaves de un f-String puedes agregar <code>:especificador</code> para controlar decimales, ancho y alineación.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">promedio = 87.4567
+print(f"Promedio: {promedio:.2f}")
+print(f"{'Nombre':<10}|{'Edad':>5}")
+print(f"{'Juan':<10}|{20:>5}")
+print(f"{1234567:,}")</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Especificador</th><th scope="col">Efecto</th></tr></thead>
+<tbody>
+<tr><td><code>:.2f</code></td><td>Redondea a 2 decimales.</td></tr>
+<tr><td><code>:&lt;10</code></td><td>Alinea a la izquierda en un ancho de 10.</td></tr>
+<tr><td><code>:&gt;5</code></td><td>Alinea a la derecha en un ancho de 5.</td></tr>
+<tr><td><code>:,</code></td><td>Agrega comas como separador de miles.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">f-Strings de depuración</h2>
+<p>Desde Python 3.8, agregar <code>=</code> después de una expresión imprime también su nombre, útil para depurar rápidamente sin escribir <code>print("variable:", variable)</code>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Roy"
+edad = 30
+print(f"{nombre=}")
+print(f"{edad=}")
+print(f"{edad*2=}")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Comparación de estilos</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Método</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Concatenación</td><td><code>"Hola " + nombre</code></td></tr>
+<tr><td>format()</td><td><code>"Hola {}".format(nombre)</code></td></tr>
+<tr><td>%</td><td><code>"Hola %s" % nombre</code></td></tr>
+<tr><td><strong>f-String</strong></td><td><code>f"Hola {nombre}"</code></td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Recomendación</strong>
+<p>Desde Python 3.6, los <strong>f-Strings</strong> son el método recomendado por ser más legibles y rápidos.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Ejemplo de aplicación</h2>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Juan"
+carrera = "Ingeniería"
+semestre = 2
+promedio = 87.5
+print(f"""
+===== INFORMACIÓN DEL ESTUDIANTE =====
+Nombre   : {nombre}
+Carrera  : {carrera}
+Semestre : {semestre}
+Promedio : {promedio}
+======================================
+""")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Errores comunes</h2>
+<div class="info-grid">
+<div class="info"><h3>❌ Olvidar la letra f</h3><p>Si escribes <code>"Hola {nombre}"</code> Python mostrará literalmente <strong>{nombre}</strong>.</p></div>
+<div class="info"><h3>❌ Llaves incorrectas</h3><p>Los f-Strings utilizan <strong>{ }</strong> no paréntesis.</p></div>
+<div class="info"><h3>❌ Variables inexistentes</h3><p>Si la variable no existe se producirá un <strong>NameError</strong>.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Buenas prácticas</h2>
+<ul style="margin-left:25px;line-height:2;">
+<li>Utiliza nombres descriptivos para las variables.</li>
+<li>Prefiere <strong>f-Strings</strong> antes que concatenaciones largas.</li>
+<li>No abuses de las comillas triples para textos pequeños.</li>
+<li>Utiliza <code>strip()</code> cuando recibas datos del usuario.</li>
+<li>Convierte el texto con <code>lower()</code> o <code>casefold()</code> antes de comparar.</li>
+<li>No modifiques directamente una cadena pensando que cambiará el original; recuerda que los strings son inmutables.</li>
+</ul>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Reto</h2>
+<p>Escribe un programa que solicite:</p>
+<ol style="margin-left:25px;line-height:2;">
+<li>Nombre del estudiante.</li>
+<li>Carrera.</li>
+<li>Edad.</li>
+<li>Promedio.</li>
+</ol>
+<p>Después muestra toda la información utilizando un único <strong>f-String</strong> con formato similar al siguiente:</p>
+<div class="code salida">
+<div class="code-header"><span>Salida esperada</span></div>
+<pre>=================================
+DATOS DEL ESTUDIANTE
+Nombre    : Ana López
+Carrera   : Ingeniería
+Edad      : 20
+Promedio  : 91.4
+=================================</pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Ana López"
+carrera = "Ingeniería"
+edad = 20
+promedio = 91.4
+print(f"""=================================
+DATOS DEL ESTUDIANTE
+Nombre    : {nombre}
+Carrera   : {carrera}
+Edad      : {edad}
+Promedio  : {promedio}
+=================================""")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Ejercicios Propuestos</h2>
+<p class="lead">Pon en práctica lo aprendido resolviendo los siguientes ejercicios directamente en el bloque editable.</p>
+<ol style="margin-left:25px;line-height:2">
+<li>Crea una variable con tu nombre y muéstralo en mayúsculas.</li>
+<li>Cuenta cuántas vocales <strong>a</strong> tiene tu nombre.</li>
+<li>Obtén las tres primeras letras de tu apellido.</li>
+<li>Invierte tu nombre utilizando slicing.</li>
+<li>Concatena nombre y apellido usando un f-String.</li>
+<li>Reemplaza todos los espacios de una frase por guiones.</li>
+<li>Verifica si un correo termina en <code>.edu</code>.</li>
+<li>Divide una fecha (<code>2026-07-10</code>) utilizando <code>split()</code>.</li>
+<li>Une una lista de ciudades utilizando <code>join()</code>.</li>
+<li>Construye una tarjeta de presentación utilizando f-Strings.</li>
+</ol>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>✍️ Resuelve aquí los ejercicios</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu solución a los ejercicios (puedes resolverlos uno por uno)…"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Reto Final</h2>
+<p>Desarrolla un programa que solicite la siguiente información:</p>
+<ul style="margin-left:25px;line-height:2">
+<li>Nombre completo</li>
+<li>Carrera</li>
+<li>Edad</li>
+<li>Correo electrónico</li>
+<li>Ciudad</li>
+</ul>
+<p>El programa deberá:</p>
+<ul style="margin-left:25px;line-height:2">
+<li>Eliminar espacios innecesarios.</li>
+<li>Convertir el nombre a formato título.</li>
+<li>Convertir el correo a minúsculas.</li>
+<li>Mostrar el número de caracteres del nombre.</li>
+<li>Mostrar una tarjeta utilizando f-Strings.</li>
+</ul>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Método</th><th scope="col">Descripción</th></tr></thead>
+<tbody>
+<tr><td>upper()</td><td>Mayúsculas</td></tr>
+<tr><td>lower()</td><td>Minúsculas</td></tr>
+<tr><td>capitalize()</td><td>Primera letra</td></tr>
+<tr><td>title()</td><td>Cada palabra</td></tr>
+<tr><td>strip()</td><td>Quitar espacios</td></tr>
+<tr><td>replace()</td><td>Reemplazar texto</td></tr>
+<tr><td>split()</td><td>Separar cadena</td></tr>
+<tr><td>join()</td><td>Unir cadenas</td></tr>
+<tr><td>find()</td><td>Buscar texto</td></tr>
+<tr><td>count()</td><td>Contar ocurrencias</td></tr>
+<tr><td>startswith()</td><td>Verificar inicio</td></tr>
+<tr><td>endswith()</td><td>Verificar final</td></tr>
+<tr><td>zfill() / ljust() / rjust() / center()</td><td>Alinear y rellenar</td></tr>
+<tr><td>isdigit() / isalpha() / isalnum()</td><td>Validar contenido</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>💡 Los Strings son inmutables</h3><p>Cuando modificas un string, Python crea uno nuevo.</p></div>
+<div class="info"><h3>🚀 f-Strings</h3><p>Son la forma más rápida y legible de construir mensajes.</p></div>
+<div class="info"><h3>📖 Todo es un objeto</h3><p>En Python, incluso las cadenas poseen métodos propios.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Strings en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Resaltado de sintaxis (sin librerías externas) ===== */
+const PY_KEYWORDS = ["False","None","True","and","as","assert","async","await","break","class",
+  "continue","def","del","elif","else","except","finally","for","from","global","if","import",
+  "in","is","lambda","nonlocal","not","or","pass","raise","return","try","while","with","yield",
+  "print","len","int","str","float","input"];
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function highlightPython(code){
+  const escaped = escapeHtml(code);
+  const tokens = [];
+  const mask = (html) => {
+    const marker = String.fromCharCode(0xE000 + tokens.length);
+    tokens.push(html);
+    return marker;
+  };
+  let out = escaped.replace(
+    /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:[^"\\]|\\.)*"|f?'(?:[^'\\]|\\.)*')/gm,
+    (m, comment, str) => comment !== undefined
+      ? mask(`<span class="comment">${comment}</span>`)
+      : mask(`<span class="string">${str}</span>`)
+  );
+  out = out.replace(/\b\d+\.?\d*\b/g, m => mask(`<span class="number">${m}</span>`));
+  out = out.replace(new RegExp(`\\b(${PY_KEYWORDS.join("|")})\\b`, "g"), m => mask(`<span class="keyword">${m}</span>`));
+  out = out.replace(/\b([A-Za-z_]\w*)(?=\()/g, m => mask(`<span class="func">${m}</span>`));
+  out = out.replace(/[-]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
+  return out;
+}
+
+/* ===== Pyodide (Python real en el navegador), carga perezosa ===== */
+let pyodideReadyPromise = null;
+function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      const pyodide = await window.loadPyodide();
+      await pyodide.runPythonAsync(`
+import sys, io
+def __run_capture(src):
+    buf = io.StringIO()
+    old = sys.stdout
+    sys.stdout = buf
+    err = None
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.stdout = old
+    return buf.getvalue(), err
+`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+async function ejecutarPython(codigo){
+  const pyodide = await cargarPyodide();
+  const funcion = pyodide.globals.get("__run_capture");
+  const resultado = funcion(codigo);
+  const [salida, error] = resultado.toJs();
+  resultado.destroy();
+  return { salida, error };
+}
+
+/* ===== Resaltar cada ejemplo de solo lectura ===== */
+function resaltarEjemplo(bloque){
+  const codeEl = bloque.querySelector("pre code.src");
+  if (!codeEl) return;
+  codeEl.innerHTML = highlightPython(codeEl.textContent.trim());
+}
+
+/* ===== Conectar un panel de editor en blanco (ejecutar código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    try {
+      const { salida, error } = await ejecutarPython(textarea.value);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el intérprete de Python: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+function crearPanelEditor(mensaje){
+  const panel = document.createElement("div");
+  panel.className = "editor-panel";
+  panel.innerHTML = `
+    <div class="editor-header">
+      <span>${mensaje}</span>
+      <button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+    </div>
+    <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu propio código, inspirándote en el ejemplo de arriba, y presiona Ejecutar."></textarea>
+    <div class="output" hidden>
+      <div class="output-head">Salida</div>
+      <pre class="output-body"></pre>
+    </div>`;
+  return panel;
+}
+
+/* ===== Bloquear copiado del ejemplo (para que se escriba a mano) ===== */
+function bloquearCopiado(bloque){
+  const pre = bloque.querySelector("pre");
+  if (!pre) return;
+  const header = bloque.querySelector(".code-header span");
+  const avisar = () => {
+    if (!header) return;
+    const original = header.dataset.original || header.textContent;
+    header.dataset.original = original;
+    header.textContent = "🔒 Escríbelo tú mismo";
+    clearTimeout(header._avisoTimeout);
+    header._avisoTimeout = setTimeout(() => { header.textContent = original; }, 1600);
+  };
+  pre.addEventListener("copy", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("contextmenu", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("dragstart", e => e.preventDefault());
+}
+
+/* ===== Igualar la altura del editor a la del ejemplo ===== */
+function sincronizarAltura(bloque, panel){
+  const pre = bloque.querySelector("pre");
+  const textarea = panel.querySelector(".editor");
+  if (pre && textarea) textarea.style.minHeight = pre.offsetHeight + "px";
+}
+
+const parejas = [];
+document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
+  resaltarEjemplo(bloque);
+  bloquearCopiado(bloque);
+  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo");
+  bloque.after(panel);
+  conectarEditor(panel);
+  parejas.push([bloque, panel]);
+});
+
+document.querySelectorAll(".editor-panel.independiente").forEach(conectarEditor);
+document.querySelectorAll(".code.salida").forEach(bloquearCopiado);
+
+parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel));
+window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel)));
+
+</script>
+
+</body>
+</html>

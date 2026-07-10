@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materiales de Clase | Roy Carrasco — FIS-UAB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --verde-mate: #7cb15e;
+            --verde-mate-light: #9bc583;
+            --verde-mate-dark: #5a9040;
+            --azul-profundo: #123a63;
+            --azul-uab: #123a63;
+            --purpura: #8b61c2;
+            --python-yellow: #ffd43b;
+            --blanco: #ffffff;
+            --gris-claro: #ced8de;
+            --gris-medio: #9eaeba;
+            --gris-texto: #647182;
+
+            /* Colores por materia */
+            --color-poo: #7cb15e;
+            --color-bd: #2b8aa3;
+            --color-is: #8b61c2;
+            --color-tgs: #d9822b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(180deg, #f8faf6 0%, var(--blanco) 100%);
+            color: var(--azul-profundo);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            background: linear-gradient(135deg, var(--azul-profundo) 0%, #1e4a7a 100%);
+            padding: 3.5rem 1.5rem 5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%237cb15e' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .uab-logo-wrap { margin-bottom: 1.75rem; animation: fadeInDown 0.6s ease-out; }
+
+        /* ====== LOGO UAB ======
+           Reemplaza src="" con la ruta de tu logo (ej: "assets/logo-uab.png")
+           Si tu logo es azul, descomenta el filter para volverlo blanco. */
+        .uab-logo-wrap img {
+            height: 64px;
+            width: auto;
+            max-width: 90%;
+            /* filter: brightness(0) invert(1); */
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(124, 177, 94, 0.2);
+            border: 1px solid rgba(124, 177, 94, 0.4);
+            color: var(--verde-mate-light);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .hero h1 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2rem, 5vw, 3.25rem);
+            color: var(--blanco);
+            margin-bottom: 1rem;
+            font-weight: 700;
+            animation: fadeInUp 0.6s ease-out 0.1s both;
+        }
+
+        .hero h1 span { color: var(--python-yellow); }
+
+        .hero-subtitle {
+            color: var(--gris-claro);
+            font-size: 1.15rem;
+            max-width: 640px;
+            margin: 0 auto 1.75rem;
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .materias-chips {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.6rem;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.6s ease-out 0.25s both;
+        }
+
+        .materia-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.16);
+            color: var(--gris-claro);
+            padding: 0.4rem 0.9rem 0.4rem 0.6rem;
+            border-radius: 50px;
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+
+        .materia-chip .dot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .profesor-card {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 0.85rem 1.5rem 0.85rem 0.85rem;
+            border-radius: 60px;
+            animation: fadeInUp 0.6s ease-out 0.3s both;
+        }
+
+        .profesor-avatar {
+            width: 52px; height: 52px;
+            background: var(--verde-mate);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--blanco);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .profesor-info { text-align: left; }
+        .profesor-name { color: var(--blanco); font-weight: 700; font-size: 1.05rem; }
+        .profesor-role { color: var(--gris-medio); font-size: 0.85rem; }
+
+        /* ===== CONTENEDOR ===== */
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 1.5rem; }
+
+        /* ===== PRESENTACIÓN ===== */
+        .presentacion {
+            background: var(--blanco);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-top: -3rem;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 4px 30px rgba(24, 55, 93, 0.1);
+            border: 1px solid rgba(206, 216, 222, 0.5);
+        }
+
+        .presentacion h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.6rem;
+            color: var(--azul-profundo);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .presentacion p {
+            color: var(--gris-texto);
+            font-size: 1.05rem;
+            margin-bottom: 1rem;
+        }
+
+        .presentacion p:last-child { margin-bottom: 0; }
+        .presentacion strong { color: var(--azul-profundo); }
+
+        .metodo-box {
+            background: linear-gradient(135deg, rgba(124, 177, 94, 0.1) 0%, rgba(124, 177, 94, 0.05) 100%);
+            border-left: 4px solid var(--verde-mate);
+            padding: 1.25rem 1.5rem;
+            margin-top: 1.5rem;
+            border-radius: 0 12px 12px 0;
+        }
+
+        .metodo-box p { margin: 0; color: var(--azul-profundo); font-weight: 500; font-size: 1rem; }
+
+        /* ===== SECCIONES ===== */
+        .section-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.75rem;
+            color: var(--azul-profundo);
+            margin: 3.5rem 0 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            scroll-margin-top: 1.5rem;
+        }
+
+        .section-desc {
+            color: var(--gris-texto);
+            font-size: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        /* ===== CURSOS ===== */
+        .cursos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .curso-card {
+            background: var(--blanco);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 12px rgba(24, 55, 93, 0.06);
+            border: 1px solid rgba(206, 216, 222, 0.6);
+            border-top: 4px solid var(--verde-mate);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            text-align: left;
+            width: 100%;
+            font: inherit;
+            color: inherit;
+        }
+
+        .curso-card:hover, .curso-card:focus-visible {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(24, 55, 93, 0.12);
+            outline: none;
+        }
+
+        .curso-card.poo { border-top-color: var(--color-poo); }
+        .curso-card.bd { border-top-color: var(--color-bd); }
+        .curso-card.is { border-top-color: var(--color-is); }
+        .curso-card.tgs { border-top-color: var(--color-tgs); }
+
+        .curso-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+        .curso-card h3 { color: var(--azul-profundo); font-size: 1.05rem; font-weight: 600; margin-bottom: 0.4rem; }
+        .curso-card p { color: var(--gris-texto); font-size: 0.9rem; margin-bottom: 0.9rem; }
+
+        .curso-link {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--gris-texto);
+        }
+
+        .curso-card.poo .curso-link { color: var(--color-poo); }
+        .curso-card.bd .curso-link { color: var(--color-bd); }
+        .curso-card.is .curso-link { color: var(--color-is); }
+        .curso-card.tgs .curso-link { color: var(--color-tgs); }
+
+        /* ===== FILTROS ===== */
+        .filtro-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .filtro-btn {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.55rem 1.1rem;
+            border-radius: 50px;
+            border: 1px solid rgba(206, 216, 222, 0.9);
+            background: var(--blanco);
+            color: var(--gris-texto);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filtro-btn:hover { border-color: var(--gris-medio); color: var(--azul-profundo); }
+
+        .filtro-btn.active {
+            background: var(--c, var(--azul-profundo));
+            border-color: var(--c, var(--azul-profundo));
+            color: var(--blanco);
+        }
+
+        /* ===== GUÍAS ===== */
+        .guias-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .guia-card {
+            background: var(--blanco);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 12px rgba(24, 55, 93, 0.06);
+            border: 1px solid rgba(206, 216, 222, 0.6);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+            text-decoration: none;
+        }
+
+        .guia-card.disponible:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(24, 55, 93, 0.12);
+        }
+
+        .guia-card.proximo { opacity: 0.65; }
+
+        .guia-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.25rem 0.7rem;
+            border-radius: 50px;
+            margin-bottom: 0.9rem;
+            width: fit-content;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .guia-tag.lista { background: rgba(124, 177, 94, 0.15); color: var(--verde-mate-dark); }
+        .guia-tag.pendiente { background: rgba(158, 174, 186, 0.2); color: var(--gris-texto); }
+
+        .guia-card h3 { color: var(--azul-profundo); font-size: 1.15rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .guia-card p { color: var(--gris-texto); font-size: 0.9rem; margin-bottom: 1.25rem; flex-grow: 1; }
+
+        .guia-curso {
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .guia-curso.poo { color: var(--color-poo); }
+        .guia-curso.bd { color: var(--color-bd); }
+        .guia-curso.is { color: var(--color-is); }
+        .guia-curso.tgs { color: var(--color-tgs); }
+
+        .guia-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: auto;
+        }
+
+        .guia-card.disponible.poo .guia-link { color: var(--color-poo); }
+        .guia-card.disponible.bd .guia-link { color: var(--color-bd); }
+        .guia-card.disponible.is .guia-link { color: var(--color-is); }
+        .guia-card.disponible.tgs .guia-link { color: var(--color-tgs); }
+        .guia-card.proximo .guia-link { color: var(--gris-medio); }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            text-align: center;
+            padding: 3rem 1.5rem 2.5rem;
+            margin-top: 4rem;
+            color: var(--gris-texto);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(206, 216, 222, 0.5);
+        }
+
+        .footer strong { color: var(--azul-profundo); }
+        .footer-lema { font-family: 'Fraunces', serif; font-size: 1.1rem; color: var(--azul-profundo); margin-bottom: 0.75rem; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 640px) {
+            .presentacion { padding: 1.75rem; }
+            .profesor-card { flex-direction: column; text-align: center; border-radius: 20px; padding: 1.25rem; }
+            .profesor-info { text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <div class="hero-content">
+            <div class="uab-logo-wrap">
+                <!-- ===== PEGA AQUÍ TU LOGO =====
+                     Sube tu logo a la carpeta assets/ y usa: src="assets/logo-uab.png"
+                     Si el logo es azul, descomenta el filter en .uab-logo-wrap img -->
+                <img src="" alt="Universidad Adventista de Bolivia" onerror="this.style.display='none'">
+            </div>
+            <div class="badge">📚 Materiales de clase · Aula invertida</div>
+            <h1>Materiales de <span>Clase</span></h1>
+            <p class="hero-subtitle">Guías, recursos y material de consulta para las 4 materias que dicto este semestre en la Facultad de Ingeniería de Sistemas de la UAB.</p>
+            <div class="materias-chips">
+                <span class="materia-chip"><span class="dot" style="background:var(--color-poo)"></span>POO</span>
+                <span class="materia-chip"><span class="dot" style="background:var(--color-bd)"></span>Base de Datos II</span>
+                <span class="materia-chip"><span class="dot" style="background:var(--color-is)"></span>Ingeniería de Software</span>
+                <span class="materia-chip"><span class="dot" style="background:var(--color-tgs)"></span>Teoría General de Sistemas</span>
+            </div>
+            <div class="profesor-card">
+                <div class="profesor-avatar">RC</div>
+                <div class="profesor-info">
+                    <div class="profesor-name">Ing. Roy Carrasco</div>
+                    <div class="profesor-role">Docente · Facultad de Ingeniería de Sistemas · UAB</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- PRESENTACIÓN -->
+        <section class="presentacion">
+            <h2>👋 Bienvenidos</h2>
+            <p>
+                Soy <strong>Roy Carrasco</strong>, docente en la Facultad de Ingeniería de Sistemas de la Universidad Adventista de Bolivia. Este espacio reúne el material de consulta de mis cursos: guías paso a paso, ejemplos y recursos pensados para que aprendas practicando.
+            </p>
+            <p>
+                Todo el material está diseñado bajo la metodología de <strong>aula invertida</strong>: la teoría la revisas aquí, a tu ritmo, antes de clase; y el tiempo en el aula lo aprovechamos para resolver problemas juntos, aclarar dudas y programar de verdad.
+            </p>
+            <div class="metodo-box">
+                <p>🎯 Revisa el material antes de clase · Practica los ejemplos · Llega con tus preguntas listas</p>
+            </div>
+        </section>
+
+        <!-- CURSOS -->
+        <h2 class="section-title">📖 Mis cursos</h2>
+        <p class="section-desc">Las 4 asignaturas que dicto este semestre en la FIS-UAB. Cada una tiene sus propias guías y artefactos de estudio — haz clic en una para ver su material.</p>
+        <div class="cursos-grid">
+            <button class="curso-card poo" data-curso="poo">
+                <span class="curso-icon">🐍</span>
+                <h3>Programación Orientada a Objetos</h3>
+                <p>Clases, objetos, herencia, polimorfismo y buenas prácticas con Python.</p>
+                <span class="curso-link">Ver guías →</span>
+            </button>
+            <button class="curso-card bd" data-curso="bd">
+                <span class="curso-icon">🗄️</span>
+                <h3>Base de Datos II</h3>
+                <p>Modelado avanzado, transacciones, concurrencia y optimización.</p>
+                <span class="curso-link">Ver guías →</span>
+            </button>
+            <button class="curso-card is" data-curso="is">
+                <span class="curso-icon">🛠️</span>
+                <h3>Ingeniería de Software</h3>
+                <p>Metodologías, requisitos, estimación y ciclo de vida del software.</p>
+                <span class="curso-link">Ver guías →</span>
+            </button>
+            <button class="curso-card tgs" data-curso="tgs">
+                <span class="curso-icon">🧩</span>
+                <h3>Teoría General de Sistemas</h3>
+                <p>Sistemas, entropía, retroalimentación y pensamiento sistémico.</p>
+                <span class="curso-link">Ver guías →</span>
+            </button>
+        </div>
+
+        <!-- GUÍAS -->
+        <h2 class="section-title" id="guias">📝 Guías y recursos</h2>
+        <p class="section-desc">Material de consulta disponible, organizado por materia. Se irá ampliando a lo largo del semestre.</p>
+
+        <div class="filtro-tabs">
+            <button class="filtro-btn active" data-filter="todas">Todas</button>
+            <button class="filtro-btn" data-filter="poo" style="--c: var(--color-poo)">POO</button>
+            <button class="filtro-btn" data-filter="bd" style="--c: var(--color-bd)">Base de Datos II</button>
+            <button class="filtro-btn" data-filter="is" style="--c: var(--color-is)">Ingeniería de Software</button>
+            <button class="filtro-btn" data-filter="tgs" style="--c: var(--color-tgs)">TGS</button>
+        </div>
+
+        <div class="guias-grid">
+            <!-- POO -->
+            <a href="guias/print.html" class="guia-card disponible poo" data-curso="poo">
+                <span class="guia-tag lista">✓ Disponible</span>
+                <div class="guia-curso poo">Programación Orientada a Objetos</div>
+                <h3>Guía completa de print() en Python</h3>
+                <p>Tu primera instrucción en Python. Todo lo que print() puede hacer, paso a paso.</p>
+                <span class="guia-link">Abrir guía →</span>
+            </a>
+
+            <a href="guias/string.html" class="guia-card disponible poo" data-curso="poo">
+                <span class="guia-tag lista">✓ Disponible</span>
+                <div class="guia-curso poo">Programación Orientada a Objetos</div>
+                <h3>Guía completa de String en Python</h3>
+                <p>Crear, indexar, recortar y transformar cadenas de texto con métodos y f-Strings.</p>
+                <span class="guia-link">Abrir guía →</span>
+            </a>
+
+            <div class="guia-card proximo poo" data-curso="poo">
+                <span class="guia-tag pendiente">Próximamente</span>
+                <div class="guia-curso poo">Programación Orientada a Objetos</div>
+                <h3>Clases y objetos desde cero</h3>
+                <p>Atributos, métodos y el modelo mental de la POO.</p>
+                <span class="guia-link">En preparación</span>
+            </div>
+
+            <!-- Base de Datos II -->
+            <div class="guia-card proximo bd" data-curso="bd">
+                <span class="guia-tag pendiente">Próximamente</span>
+                <div class="guia-curso bd">Base de Datos II</div>
+                <h3>Modelado relacional y normalización</h3>
+                <p>De un modelo conceptual a un esquema normalizado y eficiente.</p>
+                <span class="guia-link">En preparación</span>
+            </div>
+
+            <div class="guia-card proximo bd" data-curso="bd">
+                <span class="guia-tag pendiente">Próximamente</span>
+                <div class="guia-curso bd">Base de Datos II</div>
+                <h3>Transacciones, concurrencia y bloqueos</h3>
+                <p>ACID, niveles de aislamiento y control de concurrencia.</p>
+                <span class="guia-link">En preparación</span>
+            </div>
+
+            <!-- Ingeniería de Software -->
+            <div class="guia-card proximo is" data-curso="is">
+                <span class="guia-tag pendiente">Próximamente</span>
+                <div class="guia-curso is">Ingeniería de Software</div>
+                <h3>Metodologías ágiles: Scrum y Kanban</h3>
+                <p>Roles, ceremonias y tableros para organizar el desarrollo.</p>
+                <span class="guia-link">En preparación</span>
+            </div>
+
+            <div class="guia-card proximo is" data-curso="is">
+                <span class="guia-tag pendiente">Próximamente</span>
+                <div class="guia-curso is">Ingeniería de Software</div>
+                <h3>Elicitación y especificación de requisitos</h3>
+                <p>Cómo levantar, redactar y validar requisitos de software.</p>
+                <span class="guia-link">En preparación</span>
+            </div>
+
+            <!-- Teoría General de Sistemas -->
+            <div class="guia-card proximo tgs" data-curso="tgs">
+                <span class="guia-tag pendiente">Próximamente</span>
+                <div class="guia-curso tgs">Teoría General de Sistemas</div>
+                <h3>Fundamentos de la Teoría General de Sistemas</h3>
+                <p>Qué es un sistema, sus límites, entradas, salidas y entorno.</p>
+                <span class="guia-link">En preparación</span>
+            </div>
+
+            <div class="guia-card proximo tgs" data-curso="tgs">
+                <span class="guia-tag pendiente">Próximamente</span>
+                <div class="guia-curso tgs">Teoría General de Sistemas</div>
+                <h3>Retroalimentación y pensamiento sistémico</h3>
+                <p>Ciclos de retroalimentación, homeostasis y modelado de sistemas.</p>
+                <span class="guia-link">En preparación</span>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p class="footer-lema">Aprender haciendo, enseñar acompañando</p>
+        <p>Material preparado por <strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · Universidad Adventista de Bolivia (UAB)</p>
+    </footer>
+
+    <script>
+        (function () {
+            const filtroBtns = document.querySelectorAll('.filtro-btn');
+            const guiaCards = document.querySelectorAll('.guia-card');
+
+            function aplicarFiltro(filtro) {
+                filtroBtns.forEach(b => b.classList.toggle('active', b.dataset.filter === filtro));
+                guiaCards.forEach(card => {
+                    card.style.display = (filtro === 'todas' || card.dataset.curso === filtro) ? '' : 'none';
+                });
+            }
+
+            filtroBtns.forEach(btn => {
+                btn.addEventListener('click', () => aplicarFiltro(btn.dataset.filter));
+            });
+
+            document.querySelectorAll('.curso-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    aplicarFiltro(card.dataset.curso);
+                    document.getElementById('guias').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
