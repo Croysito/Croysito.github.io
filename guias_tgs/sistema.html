@@ -47,7 +47,7 @@
 <a href="#jerarquia">Subsistemas y suprasistemas</a>
 <a href="#pensamiento">Pensamiento sistémico</a>
 <a href="#ejemplos">Ejemplos aplicados</a>
-<a href="#ejercicios">Ejercicios</a>
+<a href="#ejercicios">Actividades de repaso</a>
 </nav>
 
 <button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
@@ -77,8 +77,8 @@
 <p>Al finalizar esta guía serás capaz de identificar los elementos, límites, entorno y propósito de cualquier sistema, distinguir sistemas abiertos de cerrados, reconocer bucles de retroalimentación y aplicar el pensamiento sistémico al analizar un problema real.</p>
 </div>
 <div class="highlight">
-<strong>📝 Ejercicios de este módulo</strong>
-<p>A diferencia de una guía de programación, aquí no hay código que ejecutar. Los ejercicios son de <strong>observación, análisis y reflexión</strong>: puedes escribir tus respuestas directamente en los cuadros de texto de cada sección; se guardan automáticamente en tu navegador.</p>
+<strong>📝 Actividades de este módulo</strong>
+<p>A diferencia de una guía de programación, aquí no hay código que ejecutar. En su lugar encontrarás <strong>actividades cortas y autocorregibles</strong> —selección múltiple, verdadero/falso, emparejamiento, clasificación y completar espacios— repartidas a lo largo de la guía, más un caso de estudio y un repaso final. Cada una te da retroalimentación inmediata para reforzar la teoría con ejemplos concretos.</p>
 </div>
 <div class="info-grid">
 <div class="info"><h3>📖 Aprende</h3><p>Conceptos fundamentales explicados con ejemplos cotidianos.</p></div>
@@ -109,6 +109,18 @@
 <strong>Diferencia clave</strong>
 <p>Lo que convierte a un conjunto de elementos en un sistema no son los elementos en sí, sino la <strong>organización</strong> y el <strong>propósito</strong> que los relaciona.</p>
 </div>
+
+<div class="quiz quiz-mc" data-quiz-id="quees-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un grupo de personas desconocidas caminando por la misma calle, sin interactuar entre sí, ¿por qué NO se considera un sistema según la TGS?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque son demasiadas personas para analizarlas.</button>
+<button class="quiz-opt" data-correct>Porque no comparten organización ni un propósito común: solo coinciden en el mismo espacio.</button>
+<button class="quiz-opt">Porque no tienen un límite físico visible, como una pared.</button>
+<button class="quiz-opt">Porque no pertenecen a ninguna institución.</button>
+</div>
+<p class="quiz-fb" data-ok="Exacto: lo que define a un sistema no es la cantidad de elementos ni compartir un espacio físico, sino la organización y el propósito común que los relaciona." data-ko="La clave no es el tamaño del grupo ni la falta de un límite visible: lo que falta aquí es organización y un propósito compartido entre las partes." hidden></p>
+</div>
 </div>
 </section>
 
@@ -135,21 +147,28 @@
 
 <section class="container">
 <div class="card">
-<h2 class="section-title">Practica: identifica los elementos</h2>
-<p>Piensa en un sistema que conozcas bien —tu familia, tu equipo de trabajo, un negocio, un club deportivo— y completa mentalmente esta tabla antes de escribir tu respuesta abajo.</p>
-<ul style="margin-left:25px;line-height:2;">
-<li>¿Cuáles son sus componentes principales?</li>
-<li>¿Qué relaciones existen entre ellos?</li>
-<li>¿Dónde está su límite? ¿Quién pertenece y quién no?</li>
-<li>¿Qué elementos forman parte de su entorno?</li>
-<li>¿Cuál es su propósito?</li>
-</ul>
-<div class="editor-panel independiente">
-<div class="editor-header">
-<span>📝 Tu análisis</span>
-<span class="guardado-indicador" hidden>💾 Guardado</span>
+<h2 class="section-title">Comprueba lo aprendido: elementos de un sistema</h2>
+<p class="lead">Relaciona cada elemento con su definición. Haz clic primero en un término y luego en la definición que le corresponde.</p>
+<div class="quiz quiz-match" data-quiz-id="elementos-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada elemento del sistema con su definición.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="componentes">Componentes</button>
+<button class="quiz-match-item" data-pair="relaciones">Relaciones</button>
+<button class="quiz-match-item" data-pair="limite">Límite (frontera)</button>
+<button class="quiz-match-item" data-pair="entorno">Entorno (ambiente)</button>
+<button class="quiz-match-item" data-pair="proposito">Propósito</button>
 </div>
-<textarea class="editor reflexion" data-key="tgs-elementos" spellcheck="true" aria-label="Escribe aquí tu análisis" placeholder="Describe el sistema que elegiste y sus cinco elementos…"></textarea>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="limite">Lo que separa al sistema de lo que no le pertenece.</button>
+<button class="quiz-match-item" data-pair="proposito">La razón de ser del sistema, lo que busca lograr.</button>
+<button class="quiz-match-item" data-pair="componentes">Las partes que forman el sistema.</button>
+<button class="quiz-match-item" data-pair="entorno">Todo lo externo que influye o es influido por el sistema.</button>
+<button class="quiz-match-item" data-pair="relaciones">Las interacciones entre los componentes.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
 </div>
 </div>
 </section>
@@ -175,6 +194,62 @@ ENTRADA  ──▶  PROCESO  ──▶  SALIDA  ──▶  ENTORNO
 <tr><td><strong>Salida</strong></td><td>Platos servidos, ingresos, residuos.</td><td>Suelo regado, consumo de agua registrado.</td></tr>
 </tbody>
 </table>
+
+<div class="quiz quiz-classify" data-quiz-id="flujo-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Ahora con un sistema nuevo: una biblioteca. Clasifica cada elemento como Entrada, Proceso o Salida.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Solicitudes de préstamo hechas por los usuarios</span>
+<div class="quiz-classify-btns">
+<button data-correct>Entrada</button>
+<button>Proceso</button>
+<button>Salida</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Verificar disponibilidad y registrar el préstamo en el sistema</span>
+<div class="quiz-classify-btns">
+<button>Entrada</button>
+<button data-correct>Proceso</button>
+<button>Salida</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Libro entregado al usuario</span>
+<div class="quiz-classify-btns">
+<button>Entrada</button>
+<button>Proceso</button>
+<button data-correct>Salida</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Nuevos libros donados a la biblioteca</span>
+<div class="quiz-classify-btns">
+<button data-correct>Entrada</button>
+<button>Proceso</button>
+<button>Salida</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Catalogar y ubicar el material recién ingresado</span>
+<div class="quiz-classify-btns">
+<button>Entrada</button>
+<button data-correct>Proceso</button>
+<button>Salida</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Reporte mensual de los libros más prestados</span>
+<div class="quiz-classify-btns">
+<button>Entrada</button>
+<button>Proceso</button>
+<button data-correct>Salida</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
 </div>
 </section>
 
@@ -189,6 +264,26 @@ ENTRADA  ──▶  PROCESO  ──▶  SALIDA  ──▶  ENTORNO
 <div class="highlight">
 <strong>No confundir</strong>
 <p>"Negativa" y "positiva" no significan "mala" y "buena": describen si el efecto corrige (negativa) o amplifica (positiva) la desviación original.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="retro-vf-1">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Una retroalimentación positiva siempre es dañina para el sistema.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: 'positiva' solo significa que amplifica una tendencia, no que sea buena o mala. El crecimiento viral de una campaña útil también es retroalimentación positiva." data-ko="Recuerda: 'positiva' no es sinónimo de 'buena'. Solo describe que el efecto amplifica la desviación original; puede ser deseable o riesgoso según el caso." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="retro-vf-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">El termostato que enciende la calefacción cuando la temperatura baja demasiado es un ejemplo de retroalimentación negativa.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el sistema detecta una desviación (frío) y actúa para corregirla y volver al equilibrio, justo lo que define a la retroalimentación negativa." data-ko="En realidad sí lo es: el termostato detecta una desviación (frío) y actúa para corregirla, devolviendo al sistema a su punto de equilibrio. Eso es retroalimentación negativa." hidden></p>
 </div>
 </div>
 </section>
@@ -207,6 +302,42 @@ ENTRADA  ──▶  PROCESO  ──▶  SALIDA  ──▶  ENTORNO
 <div class="highlight">
 <strong>En la práctica</strong>
 <p>Casi todos los sistemas reales que estudiarás en esta materia —organizaciones, ecosistemas, sistemas informáticos— son <strong>sistemas abiertos</strong>. Comprenderlos exige mirar también su entorno, no solo su interior.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="tipos-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada ejemplo como sistema abierto o cerrado.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un ser humano</span>
+<div class="quiz-classify-btns">
+<button data-correct>Abierto</button>
+<button>Cerrado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una célula</span>
+<div class="quiz-classify-btns">
+<button data-correct>Abierto</button>
+<button>Cerrado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un termo perfectamente sellado que no intercambia calor con el exterior (caso ideal)</span>
+<div class="quiz-classify-btns">
+<button>Abierto</button>
+<button data-correct>Cerrado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una aplicación de mensajería que envía y recibe datos constantemente</span>
+<div class="quiz-classify-btns">
+<button data-correct>Abierto</button>
+<button>Cerrado</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
 </div>
 </div>
 </section>
@@ -229,6 +360,39 @@ ENTRADA  ──▶  PROCESO  ──▶  SALIDA  ──▶  ENTORNO
 <strong>Ejemplo integrador</strong>
 <p>Una empresa que atraviesa una crisis financiera puede sobrevivir importando recursos nuevos (neguentropía: inversión, información de mercado) y ajustando sus procesos internos (homeostasis) para volver a un estado estable, incluso si otra empresa llega a ese mismo estado de estabilidad por un camino distinto (equifinalidad).</p>
 </div>
+
+<div class="quiz quiz-fill" data-quiz-id="propiedades-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Elige el término correcto para cada frase.</p>
+<p>1. Cuando un equipo de trabajo logra más resultados juntos que la suma de lo que lograría cada integrante por separado, hablamos de
+<select class="quiz-blank" data-correct="sinergia">
+<option value="">— elige —</option>
+<option value="sinergia">sinergia</option>
+<option value="entropia">entropía</option>
+<option value="neguentropia">neguentropía</option>
+<option value="homeostasis">homeostasis</option>
+<option value="equifinalidad">equifinalidad</option>
+</select>.</p>
+<p>2. Un edificio abandonado que se deteriora con el paso del tiempo, sin nadie que lo mantenga, ilustra el concepto de
+<select class="quiz-blank" data-correct="entropia">
+<option value="">— elige —</option>
+<option value="sinergia">sinergia</option>
+<option value="entropia">entropía</option>
+<option value="neguentropia">neguentropía</option>
+<option value="homeostasis">homeostasis</option>
+<option value="equifinalidad">equifinalidad</option>
+</select>.</p>
+<p>3. Dos empresas que parten de situaciones muy distintas, pero logran estabilizarse en un mismo nivel de rentabilidad siguiendo caminos diferentes, ejemplifican la
+<select class="quiz-blank" data-correct="equifinalidad">
+<option value="">— elige —</option>
+<option value="sinergia">sinergia</option>
+<option value="entropia">entropía</option>
+<option value="neguentropia">neguentropía</option>
+<option value="homeostasis">homeostasis</option>
+<option value="equifinalidad">equifinalidad</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
 </div>
 </section>
 
@@ -247,6 +411,18 @@ ENTRADA  ──▶  PROCESO  ──▶  SALIDA  ──▶  ENTORNO
 <div class="highlight">
 <strong>Uso práctico</strong>
 <p>Pensar en jerarquías te permite decidir en qué "nivel de zoom" vas a analizar un problema: a veces la causa de una falla no está dentro del sistema, sino en su suprasistema o en un subsistema específico.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="jerarquia-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En la jerarquía del diagrama, ¿qué es la "Facultad de Ingeniería de Sistemas" respecto a la Universidad?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Su suprasistema.</button>
+<button class="quiz-opt" data-correct>Un subsistema de la Universidad.</button>
+<button class="quiz-opt">Un sistema totalmente independiente, sin relación con la Universidad.</button>
+<button class="quiz-opt">Su entorno.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la Facultad es una parte que compone a la Universidad, un nivel jerárquico inferior. Eso la convierte en su subsistema." data-ko="Recuerda que un subsistema es una parte que compone a un sistema mayor. Aquí la Facultad forma parte de la Universidad, así que es su subsistema, no su suprasistema ni su entorno." hidden></p>
 </div>
 </div>
 </section>
@@ -268,6 +444,35 @@ ENTRADA  ──▶  PROCESO  ──▶  SALIDA  ──▶  ENTORNO
 <strong>Por qué importa</strong>
 <p>Mejorar cada área de una organización por separado no garantiza que la organización completa mejore; a veces incluso la perjudica, porque se ignoran las relaciones entre las áreas. El pensamiento sistémico previene ese tipo de errores.</p>
 </div>
+
+<div class="highlight">
+<strong>📋 Caso de estudio</strong>
+<p>Un hospital decide reducir costos evaluando y optimizando cada departamento por separado: Farmacia recorta inventario, Enfermería reduce turnos nocturnos y Admisión automatiza trámites. Cada departamento cumple su meta individual de ahorro. Sin embargo, tres meses después, el tiempo total de espera de los pacientes aumentó y las quejas se triplicaron.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="pensamiento-caso-1">
+<span class="quiz-badge">Caso de estudio</span>
+<p class="quiz-q">¿Qué tipo de enfoque siguió la dirección del hospital al tomar estas decisiones?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Pensamiento sistémico.</button>
+<button class="quiz-opt" data-correct>Pensamiento reduccionista.</button>
+<button class="quiz-opt">Retroalimentación positiva.</button>
+<button class="quiz-opt">Homeostasis.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: dividieron el problema en partes (departamentos) y optimizaron cada una por separado, sin mirar cómo se relacionan entre sí. Eso es pensamiento reduccionista." data-ko="Revisa la definición: optimizar cada departamento por separado, sin considerar sus relaciones, es exactamente lo que caracteriza al pensamiento reduccionista." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="pensamiento-caso-2">
+<span class="quiz-badge">Caso de estudio</span>
+<p class="quiz-q">¿Cuál es la explicación más probable, desde la TGS, de por qué empeoró el servicio aunque cada área cumplió su meta?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque el hospital es un sistema cerrado.</button>
+<button class="quiz-opt" data-correct>Porque se optimizaron las partes por separado, sin considerar las relaciones entre ellas.</button>
+<button class="quiz-opt">Porque hubo demasiada sinergia entre los departamentos.</button>
+<button class="quiz-opt">Porque aumentó la entropía del edificio.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: mejorar cada parte de forma aislada puede empeorar el conjunto si se ignoran las relaciones entre las áreas —justo lo que advierte el pensamiento sistémico." data-ko="Piensa en las relaciones: menos personal nocturno, menos inventario y trámites automatizados sin coordinación entre áreas generan cuellos de botella que ninguna métrica individual detecta." hidden></p>
+</div>
 </div>
 </section>
 
@@ -280,27 +485,106 @@ ENTRADA  ──▶  PROCESO  ──▶  SALIDA  ──▶  ENTORNO
 <div class="info"><h3>🏢 Sistema social</h3><p>Una empresa: personas, procesos y recursos organizados para producir bienes o servicios, regulados por retroalimentación del mercado.</p></div>
 <div class="info"><h3>💻 Sistema técnico</h3><p>Una red de computadoras: nodos, protocolos y datos que fluyen entre entradas (solicitudes) y salidas (respuestas), con mecanismos de control de errores.</p></div>
 </div>
+
+<div class="quiz quiz-classify" data-quiz-id="ejemplos-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada sistema según su naturaleza: natural, social o técnico.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un bosque tropical</span>
+<div class="quiz-classify-btns">
+<button data-correct>Natural</button>
+<button>Social</button>
+<button>Técnico</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una cooperativa de agricultores</span>
+<div class="quiz-classify-btns">
+<button>Natural</button>
+<button data-correct>Social</button>
+<button>Técnico</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una red eléctrica inteligente</span>
+<div class="quiz-classify-btns">
+<button>Natural</button>
+<button>Social</button>
+<button data-correct>Técnico</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El sistema inmunológico humano</span>
+<div class="quiz-classify-btns">
+<button data-correct>Natural</button>
+<button>Social</button>
+<button>Técnico</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
 </div>
 </section>
 
 <section class="container" id="ejercicios">
 <div class="card">
-<h2 class="section-title">Ejercicios de reflexión y análisis</h2>
-<p class="lead">Resuelve los siguientes ejercicios directamente en los cuadros de texto. Tus respuestas se guardan automáticamente en este navegador.</p>
-<ol style="margin-left:25px;line-height:2">
-<li>Elige un sistema social que conozcas (tu familia, tu curso, un equipo) y describe su propósito y su entorno.</li>
-<li>Identifica un bucle de retroalimentación negativa en tu vida cotidiana.</li>
-<li>Identifica un bucle de retroalimentación positiva y explica por qué puede ser riesgoso si no se controla.</li>
-<li>Clasifica tres sistemas reales como abiertos o cerrados, y justifica tu respuesta.</li>
-<li>Describe un caso de sinergia: un equipo o grupo que logró más trabajando junto que la suma de sus esfuerzos individuales.</li>
-<li>Explica con tus palabras la diferencia entre pensamiento reduccionista y pensamiento sistémico usando un ejemplo propio.</li>
-</ol>
-<div class="editor-panel independiente">
-<div class="editor-header">
-<span>📝 Resuelve aquí los ejercicios</span>
-<span class="guardado-indicador" hidden>💾 Guardado</span>
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
 </div>
-<textarea class="editor reflexion" data-key="tgs-ejercicios" spellcheck="true" aria-label="Escribe aquí tus respuestas" placeholder="Responde aquí los ejercicios, uno por uno…"></textarea>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Una startup que recibe inversión de nuevos socios y contrata personal externo para reorganizarse tras una crisis está usando principalmente:</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Entropía.</button>
+<button class="quiz-opt" data-correct>Neguentropía.</button>
+<button class="quiz-opt">Retroalimentación positiva.</button>
+<button class="quiz-opt">Pensamiento reduccionista.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: importar recursos (dinero, personas, información) desde el entorno para reorganizarse y contrarrestar el desorden es exactamente neguentropía." data-ko="Piensa en el origen de los recursos: vienen de fuera del sistema y se usan para combatir el desorden. Eso es neguentropía, no entropía." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Todo sistema abierto es, por definición, más ordenado que un sistema cerrado.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: ser abierto solo describe el intercambio con el entorno, no garantiza mayor orden. Un sistema abierto debe trabajar activamente (neguentropía) para no degradarse." data-ko="Ser 'abierto' se refiere al intercambio con el entorno, no al nivel de orden. Un sistema abierto igual puede degradarse si no importa energía o información suficiente." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de las siguientes situaciones describe mejor la equifinalidad?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Dos equipos de fútbol distintos, con jugadores y estrategias diferentes, terminan la temporada campeones.</button>
+<button class="quiz-opt">Un termostato que apaga la calefacción al alcanzar la temperatura deseada.</button>
+<button class="quiz-opt">Una empresa que colapsa por falta de mantenimiento.</button>
+<button class="quiz-opt">Un equipo que logra más resultados trabajando junto que por separado.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la equifinalidad es llegar al mismo resultado partiendo de condiciones distintas y por caminos diferentes, como estos dos equipos." data-ko="Busca la opción donde el mismo resultado se alcanza por caminos distintos: eso es equifinalidad. Las otras opciones son homeostasis, entropía y sinergia respectivamente." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En la jerarquía Ministerio de Educación → Universidad → Facultad → Carrera, si el bajo rendimiento de una sola Carrera se debe en realidad a una política del Ministerio, ¿en qué nivel deberías buscar la solución?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Solo dentro de la Carrera.</button>
+<button class="quiz-opt" data-correct>En el suprasistema (el Ministerio), no solo en el sistema donde se observa el síntoma.</button>
+<button class="quiz-opt">Es imposible saberlo sin más información.</button>
+<button class="quiz-opt">En un subsistema de la Carrera.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: a veces la causa de una falla no está dentro del sistema donde se manifiesta, sino en su suprasistema. Analizar solo la Carrera no habría resuelto el problema." data-ko="Aplica la idea de jerarquía: el síntoma aparece en la Carrera, pero si la causa está en una política del Ministerio, hay que subir de nivel —al suprasistema— para encontrar la solución." hidden></p>
 </div>
 </div>
 </section>
@@ -444,25 +728,159 @@ window.addEventListener("scroll", () => {
   });
 });
 
-/* ===== Guardado local de las respuestas de reflexión ===== */
-document.querySelectorAll(".reflexion").forEach(area => {
-  const key = "tgs-" + location.pathname + "-" + area.dataset.key;
-  const indicador = area.closest(".editor-panel").querySelector(".guardado-indicador");
-  const guardado = localStorage.getItem(key);
-  if (guardado) area.value = guardado;
-  let timeout;
-  area.addEventListener("input", () => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      localStorage.setItem(key, area.value);
-      if (indicador) {
-        indicador.hidden = false;
-        clearTimeout(indicador._t);
-        indicador._t = setTimeout(() => { indicador.hidden = true; }, 1500);
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
       }
-    }, 500);
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
   });
 });
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
 
 </script>
 
