@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introducción a la Teoría General de Sistemas | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">TGS <span>Sistemas</span></div>
+<p>Introducción a la Teoría General de Sistemas</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#quees">¿Qué es un sistema?</a>
+<a href="#elementos">Elementos de un sistema</a>
+<a href="#flujo">Entradas, proceso y salidas</a>
+<a href="#retroalimentacion">Retroalimentación</a>
+<a href="#tipos">Sistemas abiertos y cerrados</a>
+<a href="#propiedades">Propiedades sistémicas</a>
+<a href="#jerarquia">Subsistemas y suprasistemas</a>
+<a href="#pensamiento">Pensamiento sistémico</a>
+<a href="#ejemplos">Ejemplos aplicados</a>
+<a href="#ejercicios">Ejercicios</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧩 Guía de Aula Invertida</div>
+<h1>Introducción a la <span>Teoría General de Sistemas</span></h1>
+<p>Antes de analizar organizaciones, procesos o tecnologías, necesitamos un lenguaje común para hablar de ellos: el de los sistemas. Esta guía te da las bases conceptuales para observar cualquier fenómeno complejo como un todo interrelacionado, no como piezas sueltas.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">La <strong>Teoría General de Sistemas (TGS)</strong> nació como una respuesta a un problema muy concreto: la ciencia tradicional estudiaba cada fenómeno aislándolo de su contexto, y eso funcionaba mal para explicar organismos vivos, organizaciones o ecosistemas, donde las partes no se entienden sin sus relaciones. El biólogo <strong>Ludwig von Bertalanffy</strong> propuso, a mediados del siglo XX, un marco conceptual capaz de describir cualquier tipo de sistema —biológico, social, técnico o abstracto— con los mismos principios.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía serás capaz de identificar los elementos, límites, entorno y propósito de cualquier sistema, distinguir sistemas abiertos de cerrados, reconocer bucles de retroalimentación y aplicar el pensamiento sistémico al analizar un problema real.</p>
+</div>
+<div class="highlight">
+<strong>📝 Ejercicios de este módulo</strong>
+<p>A diferencia de una guía de programación, aquí no hay código que ejecutar. Los ejercicios son de <strong>observación, análisis y reflexión</strong>: puedes escribir tus respuestas directamente en los cuadros de texto de cada sección; se guardan automáticamente en tu navegador.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📖 Aprende</h3><p>Conceptos fundamentales explicados con ejemplos cotidianos.</p></div>
+<div class="info"><h3>🔎 Analiza</h3><p>Aplica cada concepto a sistemas reales que ya conoces.</p></div>
+<div class="info"><h3>🧠 Piensa sistémicamente</h3><p>Desarrolla la mirada que usarás durante toda la materia.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="quees">
+<div class="card">
+<h2 class="section-title">¿Qué es un sistema?</h2>
+<p class="lead">Un <strong>sistema</strong> es un conjunto de elementos interrelacionados que actúan de manera organizada para cumplir un propósito común, de tal forma que el conjunto presenta propiedades que ninguna de sus partes tiene por separado.</p>
+<p>Esa última idea es la más importante de toda la teoría de sistemas y se resume en una frase clásica:</p>
+<div class="highlight">
+<strong>"El todo es más que la suma de sus partes."</strong>
+<p>Un motor desarmado sobre una mesa no puede mover un vehículo, aunque contenga todas las piezas necesarias. Solo cuando esas piezas están <strong>organizadas y relacionadas</strong> entre sí surge la propiedad de "generar movimiento". A esa propiedad que aparece únicamente en el conjunto se le llama <strong>emergencia</strong>.</p>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Sí es un sistema</th><th scope="col">No es un sistema (solo un agregado)</th></tr></thead>
+<tbody>
+<tr><td>Un equipo de fútbol jugando un partido</td><td>Once personas desconocidas caminando por una calle</td></tr>
+<tr><td>El cuerpo humano</td><td>Una pila de órganos sin conexión</td></tr>
+<tr><td>Una universidad</td><td>Un edificio vacío</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Diferencia clave</strong>
+<p>Lo que convierte a un conjunto de elementos en un sistema no son los elementos en sí, sino la <strong>organización</strong> y el <strong>propósito</strong> que los relaciona.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="elementos">
+<div class="card">
+<h2 class="section-title">Elementos de un sistema</h2>
+<p class="lead">Todo sistema, sin importar su naturaleza, puede describirse a partir de los mismos cinco elementos.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Elemento</th><th scope="col">Descripción</th><th scope="col">Ejemplo (una universidad)</th></tr></thead>
+<tbody>
+<tr><td><strong>Componentes</strong></td><td>Las partes que forman el sistema.</td><td>Estudiantes, docentes, personal administrativo, infraestructura.</td></tr>
+<tr><td><strong>Relaciones</strong></td><td>Las interacciones entre los componentes.</td><td>Clases, evaluaciones, trámites, comunicación entre facultades.</td></tr>
+<tr><td><strong>Límite (frontera)</strong></td><td>Lo que separa al sistema de lo que no le pertenece.</td><td>La condición de estar matriculado como estudiante o contratado como docente.</td></tr>
+<tr><td><strong>Entorno (ambiente)</strong></td><td>Todo lo externo que influye o es influido por el sistema.</td><td>El Ministerio de Educación, el mercado laboral, la sociedad.</td></tr>
+<tr><td><strong>Propósito</strong></td><td>La razón de ser del sistema, lo que busca lograr.</td><td>Formar profesionales competentes.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Importante</strong>
+<p>El límite de un sistema no siempre es físico. En muchos sistemas sociales o de información, el límite es una regla, una membresía o un criterio de pertenencia.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Practica: identifica los elementos</h2>
+<p>Piensa en un sistema que conozcas bien —tu familia, tu equipo de trabajo, un negocio, un club deportivo— y completa mentalmente esta tabla antes de escribir tu respuesta abajo.</p>
+<ul style="margin-left:25px;line-height:2;">
+<li>¿Cuáles son sus componentes principales?</li>
+<li>¿Qué relaciones existen entre ellos?</li>
+<li>¿Dónde está su límite? ¿Quién pertenece y quién no?</li>
+<li>¿Qué elementos forman parte de su entorno?</li>
+<li>¿Cuál es su propósito?</li>
+</ul>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>📝 Tu análisis</span>
+<span class="guardado-indicador" hidden>💾 Guardado</span>
+</div>
+<textarea class="editor reflexion" data-key="tgs-elementos" spellcheck="true" aria-label="Escribe aquí tu análisis" placeholder="Describe el sistema que elegiste y sus cinco elementos…"></textarea>
+</div>
+</div>
+</section>
+
+<section class="container" id="flujo">
+<div class="card">
+<h2 class="section-title">Entradas, proceso y salidas</h2>
+<p class="lead">La mayoría de los sistemas no son estáticos: reciben algo desde su entorno, lo transforman internamente y devuelven un resultado. A ese flujo se le llama <strong>entrada → proceso → salida</strong>.</p>
+<div class="code">
+<div class="code-header"><span>Diagrama</span></div>
+<pre>ENTORNO
+   │
+   ▼
+ENTRADA  ──▶  PROCESO  ──▶  SALIDA  ──▶  ENTORNO
+                  ▲                         │
+                  └────── RETROALIMENTACIÓN ┘</pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Etapa</th><th scope="col">Restaurante</th><th scope="col">Sistema de riego</th></tr></thead>
+<tbody>
+<tr><td><strong>Entrada</strong></td><td>Ingredientes, personal, pedidos de los clientes.</td><td>Agua, energía eléctrica, humedad del suelo medida.</td></tr>
+<tr><td><strong>Proceso</strong></td><td>Cocinar, preparar, servir.</td><td>Abrir o cerrar válvulas según la humedad.</td></tr>
+<tr><td><strong>Salida</strong></td><td>Platos servidos, ingresos, residuos.</td><td>Suelo regado, consumo de agua registrado.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container" id="retroalimentacion">
+<div class="card">
+<h2 class="section-title">Retroalimentación (feedback)</h2>
+<p class="lead">La <strong>retroalimentación</strong> ocurre cuando parte de la salida de un sistema vuelve a ingresar como entrada, permitiendo que el sistema ajuste su comportamiento. Es el mecanismo que le da a un sistema la capacidad de autorregularse.</p>
+<div class="info-grid">
+<div class="info"><h3>🔵 Retroalimentación negativa</h3><p>Corrige desviaciones y busca mantener el equilibrio. Ejemplo: un termostato que enciende la calefacción cuando la temperatura baja demasiado.</p></div>
+<div class="info"><h3>🔴 Retroalimentación positiva</h3><p>Amplifica una tendencia en lugar de corregirla. Ejemplo: el pánico bancario, donde más retiros generan más desconfianza y más retiros.</p></div>
+</div>
+<div class="highlight">
+<strong>No confundir</strong>
+<p>"Negativa" y "positiva" no significan "mala" y "buena": describen si el efecto corrige (negativa) o amplifica (positiva) la desviación original.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="tipos">
+<div class="card">
+<h2 class="section-title">Sistemas abiertos y cerrados</h2>
+<p class="lead">Según su relación con el entorno, los sistemas se clasifican en abiertos o cerrados.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Tipo</th><th scope="col">Característica</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><strong>Sistema abierto</strong></td><td>Intercambia materia, energía o información con su entorno.</td><td>Un ser vivo, una empresa, una universidad.</td></tr>
+<tr><td><strong>Sistema cerrado</strong></td><td>No intercambia nada con su entorno; es un caso teórico casi imposible en la práctica.</td><td>Un experimento perfectamente aislado en un laboratorio ideal.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>En la práctica</strong>
+<p>Casi todos los sistemas reales que estudiarás en esta materia —organizaciones, ecosistemas, sistemas informáticos— son <strong>sistemas abiertos</strong>. Comprenderlos exige mirar también su entorno, no solo su interior.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="propiedades">
+<div class="card">
+<h2 class="section-title">Propiedades sistémicas</h2>
+<p class="lead">Estas propiedades explican comportamientos que solo tienen sentido al observar el sistema como un todo.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Propiedad</th><th scope="col">Descripción</th></tr></thead>
+<tbody>
+<tr><td><strong>Sinergia</strong></td><td>El resultado del conjunto supera la suma de los resultados individuales de cada parte.</td></tr>
+<tr><td><strong>Entropía</strong></td><td>Tendencia natural de todo sistema a perder organización y degradarse con el tiempo si no recibe energía o información del exterior.</td></tr>
+<tr><td><strong>Neguentropía</strong></td><td>Capacidad de un sistema abierto de importar energía o información desde su entorno para contrarrestar la entropía y mantenerse organizado.</td></tr>
+<tr><td><strong>Homeostasis</strong></td><td>Capacidad de un sistema de autorregularse para mantener su equilibrio interno pese a los cambios del entorno.</td></tr>
+<tr><td><strong>Equifinalidad</strong></td><td>Un sistema abierto puede llegar al mismo estado final partiendo de condiciones iniciales distintas y siguiendo caminos diferentes.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Ejemplo integrador</strong>
+<p>Una empresa que atraviesa una crisis financiera puede sobrevivir importando recursos nuevos (neguentropía: inversión, información de mercado) y ajustando sus procesos internos (homeostasis) para volver a un estado estable, incluso si otra empresa llega a ese mismo estado de estabilidad por un camino distinto (equifinalidad).</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="jerarquia">
+<div class="card">
+<h2 class="section-title">Subsistemas y suprasistemas</h2>
+<p class="lead">Ningún sistema existe de forma aislada: siempre está compuesto por sistemas más pequeños (<strong>subsistemas</strong>) y, a la vez, forma parte de un sistema mayor (<strong>suprasistema</strong>). A esto se le llama <strong>jerarquía de sistemas</strong>.</p>
+<div class="code">
+<div class="code-header"><span>Diagrama</span></div>
+<pre>SUPRASISTEMA:  Sistema Nacional de Educación
+      └── SISTEMA:  Universidad Adventista de Bolivia
+              └── SUBSISTEMA:  Facultad de Ingeniería de Sistemas
+                      └── SUBSISTEMA:  Carrera de Ingeniería de Sistemas
+                              └── SUBSISTEMA:  Materia de TGS</pre>
+</div>
+<div class="highlight">
+<strong>Uso práctico</strong>
+<p>Pensar en jerarquías te permite decidir en qué "nivel de zoom" vas a analizar un problema: a veces la causa de una falla no está dentro del sistema, sino en su suprasistema o en un subsistema específico.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="pensamiento">
+<div class="card">
+<h2 class="section-title">Pensamiento sistémico vs. pensamiento reduccionista</h2>
+<p class="lead">La ciencia clásica suele avanzar dividiendo un problema en partes cada vez más pequeñas y estudiándolas por separado. La TGS propone complementar esa mirada con una que estudie las <strong>relaciones y el comportamiento del conjunto</strong>.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Pensamiento reduccionista</th><th scope="col">Pensamiento sistémico</th></tr></thead>
+<tbody>
+<tr><td>Divide el problema en partes aisladas.</td><td>Estudia las relaciones entre las partes.</td></tr>
+<tr><td>Busca causas únicas y lineales.</td><td>Reconoce causas múltiples e interdependientes.</td></tr>
+<tr><td>Optimiza cada parte por separado.</td><td>Optimiza el comportamiento del conjunto.</td></tr>
+<tr><td>Funciona bien en sistemas simples y estables.</td><td>Necesario en sistemas complejos, dinámicos o sociales.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Por qué importa</strong>
+<p>Mejorar cada área de una organización por separado no garantiza que la organización completa mejore; a veces incluso la perjudica, porque se ignoran las relaciones entre las áreas. El pensamiento sistémico previene ese tipo de errores.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejemplos">
+<div class="card">
+<h2 class="section-title">Ejemplos aplicados</h2>
+<p class="lead">Los mismos conceptos se aplican a sistemas de naturaleza muy distinta.</p>
+<div class="info-grid">
+<div class="info"><h3>🌱 Sistema natural</h3><p>Un ecosistema: sus componentes (especies, agua, suelo) mantienen el equilibrio mediante relaciones de depredación, competencia y ciclos de nutrientes.</p></div>
+<div class="info"><h3>🏢 Sistema social</h3><p>Una empresa: personas, procesos y recursos organizados para producir bienes o servicios, regulados por retroalimentación del mercado.</p></div>
+<div class="info"><h3>💻 Sistema técnico</h3><p>Una red de computadoras: nodos, protocolos y datos que fluyen entre entradas (solicitudes) y salidas (respuestas), con mecanismos de control de errores.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Ejercicios de reflexión y análisis</h2>
+<p class="lead">Resuelve los siguientes ejercicios directamente en los cuadros de texto. Tus respuestas se guardan automáticamente en este navegador.</p>
+<ol style="margin-left:25px;line-height:2">
+<li>Elige un sistema social que conozcas (tu familia, tu curso, un equipo) y describe su propósito y su entorno.</li>
+<li>Identifica un bucle de retroalimentación negativa en tu vida cotidiana.</li>
+<li>Identifica un bucle de retroalimentación positiva y explica por qué puede ser riesgoso si no se controla.</li>
+<li>Clasifica tres sistemas reales como abiertos o cerrados, y justifica tu respuesta.</li>
+<li>Describe un caso de sinergia: un equipo o grupo que logró más trabajando junto que la suma de sus esfuerzos individuales.</li>
+<li>Explica con tus palabras la diferencia entre pensamiento reduccionista y pensamiento sistémico usando un ejemplo propio.</li>
+</ol>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>📝 Resuelve aquí los ejercicios</span>
+<span class="guardado-indicador" hidden>💾 Guardado</span>
+</div>
+<textarea class="editor reflexion" data-key="tgs-ejercicios" spellcheck="true" aria-label="Escribe aquí tus respuestas" placeholder="Responde aquí los ejercicios, uno por uno…"></textarea>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Reto Final: primer artefacto de análisis</h2>
+<p>Elige un sistema real que te interese (tu universidad, un negocio familiar, un club, una institución pública) y elabora un breve reporte que incluya:</p>
+<ul style="margin-left:25px;line-height:2">
+<li>Sus componentes, relaciones, límite, entorno y propósito.</li>
+<li>Un diagrama simple de entrada → proceso → salida.</li>
+<li>Al menos un bucle de retroalimentación (positiva o negativa).</li>
+<li>Su clasificación como sistema abierto o cerrado, justificada.</li>
+<li>Un subsistema y un suprasistema a los que pertenece.</li>
+<li>Al menos una propiedad sistémica identificada (sinergia, entropía, homeostasis o equifinalidad).</li>
+</ul>
+<div class="highlight">
+<strong>Por qué este es tu primer artefacto</strong>
+<p>Este análisis será la base sobre la que construirás los siguientes modelos de la materia: cuanto mejor definas el sistema ahora, más fácil será modelarlo, diagramarlo y mejorarlo después.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Sistema</td><td>Elementos interrelacionados con un propósito común.</td></tr>
+<tr><td>Elemento / componente</td><td>Parte que forma el sistema.</td></tr>
+<tr><td>Límite</td><td>Lo que separa el sistema de su entorno.</td></tr>
+<tr><td>Entorno</td><td>Todo lo externo que influye en el sistema.</td></tr>
+<tr><td>Entrada / proceso / salida</td><td>Flujo de transformación del sistema.</td></tr>
+<tr><td>Retroalimentación</td><td>La salida vuelve a influir en la entrada.</td></tr>
+<tr><td>Sistema abierto</td><td>Intercambia recursos con su entorno.</td></tr>
+<tr><td>Sinergia</td><td>El todo produce más que la suma de las partes.</td></tr>
+<tr><td>Entropía / neguentropía</td><td>Tendencia al desorden y su contrapeso.</td></tr>
+<tr><td>Homeostasis</td><td>Autorregulación para mantener el equilibrio.</td></tr>
+<tr><td>Subsistema / suprasistema</td><td>Niveles jerárquicos del mismo sistema.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🔬 Un biólogo la creó</h3><p>Ludwig von Bertalanffy formuló la Teoría General de Sistemas estudiando organismos vivos, pero la extendió deliberadamente a cualquier disciplina.</p></div>
+<div class="info"><h3>🎛️ Nació junto a la cibernética</h3><p>En la misma época, Norbert Wiener desarrollaba la cibernética, centrada en el control y la retroalimentación, una disciplina hermana de la TGS.</p></div>
+<div class="info"><h3>📘 Sigue vigente</h3><p>El pensamiento sistémico es la base de obras modernas de gestión, como "La Quinta Disciplina" de Peter Senge sobre organizaciones que aprenden.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Introducción a la Teoría General de Sistemas</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Guardado local de las respuestas de reflexión ===== */
+document.querySelectorAll(".reflexion").forEach(area => {
+  const key = "tgs-" + location.pathname + "-" + area.dataset.key;
+  const indicador = area.closest(".editor-panel").querySelector(".guardado-indicador");
+  const guardado = localStorage.getItem(key);
+  if (guardado) area.value = guardado;
+  let timeout;
+  area.addEventListener("input", () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      localStorage.setItem(key, area.value);
+      if (indicador) {
+        indicador.hidden = false;
+        clearTimeout(indicador._t);
+        indicador._t = setTimeout(() => { indicador.hidden = true; }, 1500);
+      }
+    }, 500);
+  });
+});
+
+</script>
+
+</body>
+</html>

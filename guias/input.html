@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía Completa de input() en Python | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>input()</span></div>
+<p>Guía completa de la función input() en Python</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#quees">¿Qué es input()?</a>
+<a href="#sintaxis">Sintaxis básica</a>
+<a href="#mensaje">Mensaje de solicitud</a>
+<a href="#tipodato">input() siempre es texto</a>
+<a href="#conversion">Conversión de tipos</a>
+<a href="#fstrings">input() con f-Strings</a>
+<a href="#multiples">Varios valores a la vez</a>
+<a href="#validacion">Validar datos</a>
+<a href="#errores">Errores comunes</a>
+<a href="#ejercicios">Ejercicios</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🐍 Guía de Aula Invertida</div>
+<h1>Dominando <span>input()</span> en Python</h1>
+<p>La función que convierte un programa en algo interactivo: le permite conversar con el usuario y recibir datos desde el teclado. Aprende a leerlos, convertirlos y validarlos con ejemplos prácticos que puedes editar y ejecutar en vivo.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead"><code>input()</code> es la función que utilizarás cada vez que un programa necesite recibir información directamente del usuario: un nombre, una edad, un precio o cualquier dato que no esté escrito de antemano en el código.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás leer datos del usuario, convertirlos al tipo correcto, combinarlos con f-Strings, leer varios valores a la vez y validarlos antes de usarlos.</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Todos los bloques con el encabezado <strong>Python</strong> son editables: presiona <strong>✏️ Editar</strong> para modificar el código y <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador (usa Pyodide, un Python real compilado a WebAssembly). Cuando el código llegue a un <code>input()</code>, aparecerá un cuadro de diálogo pidiéndote el valor: escríbelo y presiona Aceptar para continuar la ejecución.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📖 Aprende</h3><p>Conceptos explicados paso a paso.</p></div>
+<div class="info"><h3>💻 Practica</h3><p>Ejemplos editables y ejecutables con entrada real.</p></div>
+<div class="info"><h3>🎯 Domina</h3><p>Ejercicios de dificultad creciente.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="quees">
+<div class="card">
+<h2 class="section-title">¿Qué es input()?</h2>
+<p><code>input()</code> es una <strong>función incorporada</strong> de Python: siempre está disponible, sin necesidad de importar nada. Cuando el programa la ejecuta, se detiene y espera a que el usuario escriba algo y presione Enter.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = input("¿Cómo te llamas? ")
+print("Hola,", nombre)</code></pre>
+</div>
+<p>Al ejecutar este bloque aparecerá un cuadro pidiendo el nombre. Lo que escribas se guarda en la variable <code>nombre</code> y luego se muestra con <code>print()</code>.</p>
+</div>
+</section>
+
+<section class="container" id="sintaxis">
+<div class="card">
+<h2 class="section-title">Sintaxis básica</h2>
+<p class="lead">La forma más simple es <code>variable = input()</code>. También puedes pasar un mensaje entre paréntesis para indicarle al usuario qué debe escribir.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">dato = input()
+print("Escribiste:", dato)</code></pre>
+</div>
+<div class="highlight">
+<strong>Importante</strong>
+<p>El programa se detiene por completo en la línea de <code>input()</code> hasta que el usuario responde. No se ejecuta nada más hasta ese momento.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="mensaje">
+<div class="card">
+<h2 class="section-title">El mensaje de solicitud</h2>
+<p class="lead">El texto que colocas entre los paréntesis de <code>input()</code> se llama <strong>prompt</strong> y se muestra justo antes de esperar la respuesta del usuario. Es totalmente opcional, pero mejora mucho la experiencia del programa.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = input("Ingresa tu edad: ")
+print("Tu edad es", edad)</code></pre>
+</div>
+<div class="highlight">
+<strong>Buena práctica</strong>
+<p>Termina el mensaje con dos puntos y un espacio, por ejemplo <code>"Nombre: "</code>, para que la respuesta del usuario no quede pegada al texto.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="tipodato">
+<div class="card">
+<h2 class="section-title">input() siempre devuelve texto</h2>
+<p class="lead">Sin importar lo que el usuario escriba, <code>input()</code> siempre devuelve un <strong>string</strong>. Incluso si tecleas números, Python los recibe como texto.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = input("Edad: ")
+print(type(edad))</code></pre>
+</div>
+<p>Salida (si escribes 20):</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>Edad: 20
+&lt;class 'str'&gt;</pre>
+</div>
+<div class="highlight">
+<strong>Error frecuente</strong>
+<p>Si intentas sumar el resultado de <code>input()</code> directamente con un número, Python producirá un error. Prueba ejecutar este bloque para verlo.</p>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = input("Edad: ")
+print(edad + 1)</code></pre>
+</div>
+<p>Obtendrás <code>TypeError: can only concatenate str (not "int") to str</code>, porque <code>edad</code> es texto, no un número.</p>
+</div>
+</section>
+
+<section class="container" id="conversion">
+<div class="card">
+<h2 class="section-title">Conversión de tipos</h2>
+<p class="lead">Para trabajar con números, debes convertir el resultado de <code>input()</code> usando <code>int()</code> o <code>float()</code>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = int(input("Edad: "))
+print(edad + 1)</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">altura = float(input("Altura en metros: "))
+print(altura * 100)</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Función</th><th scope="col">Convierte a</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><code>int()</code></td><td>Número entero</td><td><code>int(input("Edad: "))</code></td></tr>
+<tr><td><code>float()</code></td><td>Número decimal</td><td><code>float(input("Precio: "))</code></td></tr>
+<tr><td><code>str()</code></td><td>Texto (ya lo es por defecto)</td><td><code>str(input("Nombre: "))</code></td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Uso recomendado</strong>
+<p>Convierte el dato apenas lo recibes, en la misma línea de <code>input()</code>. Así evitas arrastrar un string por el resto del programa cuando en realidad necesitas un número.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Ejemplo práctico</h2>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">base = float(input("Base del rectángulo: "))
+altura = float(input("Altura del rectángulo: "))
+area = base * altura
+print("El área es:", area)</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="fstrings">
+<div class="card">
+<h2 class="section-title">input() combinado con f-Strings</h2>
+<p class="lead">Una vez leídos y convertidos los datos, los f-Strings son la forma más clara de mostrarlos dentro de un mensaje.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = input("Nombre: ")
+edad = int(input("Edad: "))
+print(f"Hola {nombre}, el próximo año tendrás {edad + 1} años")</code></pre>
+</div>
+<div class="highlight">
+<strong>Muy útil</strong>
+<p>Dentro de las llaves de un f-String puedes usar directamente el resultado convertido, incluso con operaciones como <code>edad + 1</code>.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Mini reto</h2>
+<p>Sin ejecutar el programa, intenta predecir qué pasaría si escribes tu nombre y luego tu edad. Luego verifica editando y ejecutando el bloque de código.</p>
+<ol style="margin-left:30px;line-height:2;">
+<li>¿Qué tipo de dato devuelve <code>input()</code> siempre?</li>
+<li>¿Qué error ocurre si sumas <code>input()</code> directamente con un número?</li>
+<li>¿Qué función usarías para leer un precio con decimales?</li>
+</ol>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = input("Nombre: ")
+edad = int(input("Edad: "))
+print(f"{nombre} tiene {edad} años")</code></pre>
+</div>
+<div class="highlight">
+<strong>Consejo del docente</strong>
+<p>Antes de ejecutar un programa, intenta predecir el resultado. Ese hábito acelera muchísimo el aprendizaje de programación.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="multiples">
+<div class="card">
+<h2 class="section-title">Leer varios valores en una sola línea</h2>
+<p class="lead">Puedes pedirle al usuario varios datos separados por un mismo <code>input()</code> y luego dividirlos con <code>split()</code>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">datos = input("Escribe tu nombre y tu edad separados por coma: ")
+nombre, edad = datos.split(",")
+print("Nombre:", nombre.strip())
+print("Edad:", edad.strip())</code></pre>
+</div>
+<p>También puedes convertir varios números a la vez combinando <code>split()</code> con <code>map()</code>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">a, b = map(int, input("Escribe dos números separados por espacio: ").split())
+print("Suma:", a + b)</code></pre>
+</div>
+<div class="highlight">
+<strong>¿Cómo funciona?</strong>
+<p><code>split()</code> divide el texto ingresado en una lista de partes, y <code>map(int, ...)</code> convierte cada una de esas partes a número entero.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="validacion">
+<div class="card">
+<h2 class="section-title">Validar los datos ingresados</h2>
+<p class="lead">No siempre el usuario escribe lo que el programa espera. Antes de convertir un dato, conviene comprobar que realmente sea válido.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = input("Edad: ")
+if edad.isdigit():
+    edad = int(edad)
+    print("Edad registrada:", edad)
+else:
+    print("Debes ingresar solo números")</code></pre>
+</div>
+<p>Otra forma habitual es usar <code>try</code> y <code>except</code> para capturar el error de conversión directamente.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">try:
+    edad = int(input("Edad: "))
+    print("Correcto:", edad)
+except ValueError:
+    print("Debes ingresar un número válido")</code></pre>
+</div>
+<div class="highlight">
+<strong>Uso recomendado</strong>
+<p>Valida siempre los datos que provienen de <code>input()</code> antes de usarlos en cálculos. Un usuario puede escribir letras donde se esperaba un número.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="errores">
+<div class="card">
+<h2 class="section-title">Errores comunes</h2>
+<div class="info-grid">
+<div class="info"><h3>❌ Olvidar convertir el tipo</h3><p><code>input()</code> siempre devuelve texto. Sumar directamente el resultado con un número produce un <strong>TypeError</strong>.</p></div>
+<div class="info"><h3>❌ Convertir texto no numérico</h3><p><code>int("veinte")</code> falla con <strong>ValueError</strong>. Valida antes de convertir, con <code>isdigit()</code> o <code>try/except</code>.</p></div>
+<div class="info"><h3>❌ Olvidar el mensaje</h3><p>Un <code>input()</code> sin mensaje deja al usuario sin saber qué debe escribir. Siempre incluye un prompt claro.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Prueba el error</h2>
+<p>Ejecuta este bloque y escribe algo que no sea un número (por ejemplo "veinte") para observar en vivo el <strong>ValueError</strong>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = int(input("Edad: "))
+print("Tu edad es", edad)</code></pre>
+</div>
+<div class="highlight">
+<strong>Corrígelo</strong>
+<p>Edita el bloque anterior y envuélvelo en <code>try/except ValueError</code> para mostrar un mensaje amigable en lugar del error.</p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Resumen</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Elemento</th><th scope="col">Descripción</th></tr></thead>
+<tbody>
+<tr><td><code>input()</code></td><td>Espera y devuelve lo que escribe el usuario, siempre como texto.</td></tr>
+<tr><td><code>input("mensaje")</code></td><td>Muestra un mensaje antes de esperar la respuesta.</td></tr>
+<tr><td><code>int(input())</code></td><td>Lee y convierte a número entero.</td></tr>
+<tr><td><code>float(input())</code></td><td>Lee y convierte a número decimal.</td></tr>
+<tr><td><code>input().split()</code></td><td>Divide una entrada en varias partes.</td></tr>
+<tr><td><code>try/except ValueError</code></td><td>Evita que el programa se detenga por datos inválidos.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Ejercicios Propuestos</h2>
+<p class="lead">Pon en práctica lo aprendido resolviendo los siguientes ejercicios directamente en el bloque editable.</p>
+<ol style="margin-left:25px;line-height:2">
+<li>Pide tu nombre con <code>input()</code> y muéstralo con un f-String.</li>
+<li>Pide dos números, conviértelos con <code>int()</code> y muestra su suma.</li>
+<li>Pide un precio con decimales y muéstralo multiplicado por 1.16 (impuesto).</li>
+<li>Pide nombre y edad separados por coma en un solo <code>input()</code> y sepáralos con <code>split()</code>.</li>
+<li>Valida con <code>isdigit()</code> que una edad ingresada sea numérica antes de convertirla.</li>
+<li>Usa <code>try/except ValueError</code> para evitar que el programa se detenga si el usuario escribe texto en lugar de un número.</li>
+</ol>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>✍️ Resuelve aquí los ejercicios</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu solución a los ejercicios (puedes resolverlos uno por uno)…"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Reto Final</h2>
+<p>Desarrolla un programa que pida al usuario, mediante <code>input()</code>:</p>
+<ul style="margin-left:25px;line-height:2">
+<li>Nombre completo</li>
+<li>Carrera</li>
+<li>Semestre</li>
+<li>Promedio</li>
+</ul>
+<p>El programa deberá:</p>
+<ul style="margin-left:25px;line-height:2">
+<li>Convertir cada dato al tipo correcto (<code>int</code> o <code>float</code> según corresponda).</li>
+<li>Mostrar una tarjeta usando un único f-String multilínea.</li>
+<li>Mostrar el promedio con dos decimales.</li>
+<li>Validar con <code>try/except</code> que el semestre y el promedio sean numéricos.</li>
+</ul>
+<div class="code salida">
+<div class="code-header"><span>Salida esperada</span></div>
+<pre>=================================
+DATOS DEL ESTUDIANTE
+Nombre    : Ana López
+Carrera   : Ingeniería
+Semestre  : 4
+Promedio  : 91.40
+=================================</pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Uso</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Lectura simple</td><td><code>dato = input()</code></td></tr>
+<tr><td>Con mensaje</td><td><code>input("Nombre: ")</code></td></tr>
+<tr><td>Leer entero</td><td><code>int(input("Edad: "))</code></td></tr>
+<tr><td>Leer decimal</td><td><code>float(input("Precio: "))</code></td></tr>
+<tr><td>Varios valores</td><td><code>input().split(",")</code></td></tr>
+<tr><td>Varios números</td><td><code>map(int, input().split())</code></td></tr>
+<tr><td>Validar dígitos</td><td><code>input().isdigit()</code></td></tr>
+<tr><td>Validar con excepción</td><td><code>try/except ValueError</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🐍 En Python 2 era distinto</h3><p>Existían <code>raw_input()</code> (devolvía texto) e <code>input()</code> (evaluaba código). Desde Python 3, solo existe <code>input()</code> y siempre devuelve texto.</p></div>
+<div class="info"><h3>🚀 input() detiene el programa</h3><p>Mientras espera una respuesta, ninguna otra línea del programa se ejecuta.</p></div>
+<div class="info"><h3>📖 Todo pasa por sys.stdin</h3><p>Internamente, <code>input()</code> lee desde la entrada estándar del programa.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de input() en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Resaltado de sintaxis (sin librerías externas) ===== */
+const PY_KEYWORDS = ["False","None","True","and","as","assert","async","await","break","class",
+  "continue","def","del","elif","else","except","finally","for","from","global","if","import",
+  "in","is","lambda","nonlocal","not","or","pass","raise","return","try","while","with","yield",
+  "print","len","int","str","float","input"];
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function highlightPython(code){
+  const escaped = escapeHtml(code);
+  const tokens = [];
+  const mask = (html) => {
+    const marker = String.fromCharCode(0xE000 + tokens.length);
+    tokens.push(html);
+    return marker;
+  };
+  let out = escaped.replace(
+    /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:[^"\\]|\\.)*"|f?'(?:[^'\\]|\\.)*')/gm,
+    (m, comment, str) => comment !== undefined
+      ? mask(`<span class="comment">${comment}</span>`)
+      : mask(`<span class="string">${str}</span>`)
+  );
+  out = out.replace(/\b\d+\.?\d*\b/g, m => mask(`<span class="number">${m}</span>`));
+  out = out.replace(new RegExp(`\\b(${PY_KEYWORDS.join("|")})\\b`, "g"), m => mask(`<span class="keyword">${m}</span>`));
+  out = out.replace(/\b([A-Za-z_]\w*)(?=\()/g, m => mask(`<span class="func">${m}</span>`));
+  out = out.replace(/[-]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
+  return out;
+}
+
+/* ===== Pyodide (Python real en el navegador), carga perezosa ===== */
+let pyodideReadyPromise = null;
+function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      const pyodide = await window.loadPyodide();
+      await pyodide.runPythonAsync(`
+import sys, io, builtins
+from js import prompt as __js_prompt
+
+def __run_capture(src):
+    buf = io.StringIO()
+    old_stdout = sys.stdout
+    old_input = builtins.input
+    sys.stdout = buf
+
+    def __custom_input(mensaje=""):
+        respuesta = __js_prompt(str(mensaje))
+        if respuesta is None:
+            raise EOFError("Entrada cancelada por el usuario")
+        print(mensaje, end="")
+        print(respuesta)
+        return respuesta
+
+    builtins.input = __custom_input
+    err = None
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.stdout = old_stdout
+        builtins.input = old_input
+    return buf.getvalue(), err
+`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+async function ejecutarPython(codigo){
+  const pyodide = await cargarPyodide();
+  const funcion = pyodide.globals.get("__run_capture");
+  const resultado = funcion(codigo);
+  const [salida, error] = resultado.toJs();
+  resultado.destroy();
+  return { salida, error };
+}
+
+/* ===== Resaltar cada ejemplo de solo lectura ===== */
+function resaltarEjemplo(bloque){
+  const codeEl = bloque.querySelector("pre code.src");
+  if (!codeEl) return;
+  codeEl.innerHTML = highlightPython(codeEl.textContent.trim());
+}
+
+/* ===== Conectar un panel de editor en blanco (ejecutar código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    try {
+      const { salida, error } = await ejecutarPython(textarea.value);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el intérprete de Python: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+function crearPanelEditor(mensaje){
+  const panel = document.createElement("div");
+  panel.className = "editor-panel";
+  panel.innerHTML = `
+    <div class="editor-header">
+      <span>${mensaje}</span>
+      <button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+    </div>
+    <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu propio código, inspirándote en el ejemplo de arriba, y presiona Ejecutar."></textarea>
+    <div class="output" hidden>
+      <div class="output-head">Salida</div>
+      <pre class="output-body"></pre>
+    </div>`;
+  return panel;
+}
+
+/* ===== Bloquear copiado del ejemplo (para que se escriba a mano) ===== */
+function bloquearCopiado(bloque){
+  const pre = bloque.querySelector("pre");
+  if (!pre) return;
+  const header = bloque.querySelector(".code-header span");
+  const avisar = () => {
+    if (!header) return;
+    const original = header.dataset.original || header.textContent;
+    header.dataset.original = original;
+    header.textContent = "🔒 Escríbelo tú mismo";
+    clearTimeout(header._avisoTimeout);
+    header._avisoTimeout = setTimeout(() => { header.textContent = original; }, 1600);
+  };
+  pre.addEventListener("copy", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("contextmenu", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("dragstart", e => e.preventDefault());
+}
+
+/* ===== Igualar la altura del editor a la del ejemplo ===== */
+function sincronizarAltura(bloque, panel){
+  const pre = bloque.querySelector("pre");
+  const textarea = panel.querySelector(".editor");
+  if (pre && textarea) textarea.style.minHeight = pre.offsetHeight + "px";
+}
+
+const parejas = [];
+document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
+  resaltarEjemplo(bloque);
+  bloquearCopiado(bloque);
+  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo");
+  bloque.after(panel);
+  conectarEditor(panel);
+  parejas.push([bloque, panel]);
+});
+
+document.querySelectorAll(".editor-panel.independiente").forEach(conectarEditor);
+document.querySelectorAll(".code.salida").forEach(bloquearCopiado);
+
+parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel));
+window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel)));
+
+</script>
+
+</body>
+</html>
