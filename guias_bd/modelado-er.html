@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reforzamiento: Modelado Entidad-Relación | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>Modelado ER</span></div>
+<p>Reforzamiento: Modelado Entidad-Relación</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#quees">¿Qué es el modelo E-R?</a>
+<a href="#entidades">Entidades</a>
+<a href="#atributos">Tipos de atributos</a>
+<a href="#claves">Claves: PK, FK y candidata</a>
+<a href="#relaciones">Relaciones entre entidades</a>
+<a href="#cardinalidad">Cardinalidad y participación</a>
+<a href="#debiles">Entidades débiles</a>
+<a href="#notacion">Notación: Chen vs. pata de gallo</a>
+<a href="#diagrama">Etiqueta el diagrama</a>
+<a href="#relacional">De ER a tablas relacionales</a>
+<a href="#razonamiento">Ejercicios de razonamiento</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🗄️ Guía de Aula Invertida</div>
+<h1>Reforzamiento: <span>Modelado Entidad-Relación</span></h1>
+<p>Antes de hablar de normalización, transacciones u optimización, necesitas dominar la herramienta con la que se diseña cualquier base de datos: el Modelo Entidad-Relación. Esta guía es un repaso completo pensado para consolidar lo que ya viste en Bases de Datos I, con actividades que te exigen razonar, no solo memorizar.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">El <strong>Modelo Entidad-Relación (MER)</strong> es la herramienta con la que se diseña la estructura de cualquier base de datos, antes de escribir una sola línea de SQL. Esta guía es un <strong>repaso completo</strong>: si ya viste estos conceptos en Bases de Datos I, aquí los vas a consolidar con actividades que exigen razonar, no solo memorizar.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía dominarás entidades, atributos, claves, relaciones, cardinalidad, entidades débiles, las dos notaciones más usadas, y sabrás traducir un modelo ER a tablas relacionales.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Encontrarás <strong>actividades cortas y autocorregibles</strong> —selección múltiple, verdadero/falso, emparejamiento, clasificación y completar espacios— repartidas a lo largo de la guía, un <strong>diagrama ER para etiquetar</strong>, y una sección de <strong>ejercicios de razonamiento</strong> donde se te da un escenario o una tabla y debes predecir el resultado correcto antes de comprobarlo. Cada actividad te da retroalimentación inmediata.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📖 Repasa</h3><p>Todos los conceptos del modelo Entidad-Relación, desde cero.</p></div>
+<div class="info"><h3>🔎 Razona</h3><p>Escenarios y tablas donde debes predecir el resultado antes de verificarlo.</p></div>
+<div class="info"><h3>🧠 Conecta</h3><p>La base que necesitarás para normalización y diseño de tablas relacionales.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="quees">
+<div class="card">
+<h2 class="section-title">¿Qué es el modelo Entidad-Relación?</h2>
+<p class="lead">El MER es una herramienta <strong>conceptual</strong>, propuesta por <strong>Peter Chen en 1976</strong>, para representar la estructura de los datos de un sistema de forma independiente de cualquier motor de base de datos concreto. Es el puente entre "lo que el negocio necesita guardar" y "cómo se van a organizar las tablas".</p>
+<table class="tabla">
+<thead><tr><th scope="col">Fase de diseño</th><th scope="col">Qué produce</th></tr></thead>
+<tbody>
+<tr><td><strong>Conceptual</strong></td><td>Diagrama Entidad-Relación: entidades, atributos y relaciones, sin pensar todavía en un motor de base de datos.</td></tr>
+<tr><td><strong>Lógico</strong></td><td>Esquema relacional: tablas, columnas y claves, ya derivadas del modelo ER.</td></tr>
+<tr><td><strong>Físico</strong></td><td>Implementación real en un motor concreto (tipos de datos exactos, índices, particiones).</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Por qué importa hacerlo bien</strong>
+<p>Un error en el modelo ER se arrastra a todas las fases siguientes. Diseñar bien en esta etapa —antes de tocar SQL— ahorra muchísimo trabajo de corrección más adelante.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="quees-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿En qué fase del diseño de una base de datos se usa el modelo Entidad-Relación?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Conceptual.</button>
+<button class="quiz-opt">Lógica.</button>
+<button class="quiz-opt">Física.</button>
+<button class="quiz-opt">Ninguna: el MER se usa después de crear las tablas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el MER pertenece a la fase conceptual, independiente de cualquier motor de base de datos concreto." data-ko="El MER se usa en la fase conceptual, antes de pensar en tablas (fase lógica) o en un motor de base de datos específico (fase física)." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="entidades">
+<div class="card">
+<h2 class="section-title">Entidades</h2>
+<p class="lead">Una <strong>entidad</strong> es un objeto o concepto del mundo real sobre el que necesitas guardar información, y del que existen muchas instancias distintas: "Cliente", "Producto", "Curso". Se representa como un <strong>rectángulo</strong> en la notación clásica de Chen.</p>
+<div class="highlight">
+<strong>Tipo de entidad vs. instancia</strong>
+<p>"Cliente" es el <strong>tipo de entidad</strong> (lo que modelas una sola vez en el diagrama). "Juan Pérez" es una <strong>instancia</strong> concreta de ese tipo (una fila que existirá en la tabla). El diagrama ER modela tipos, no instancias.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="entidades-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada elemento como entidad, atributo o valor concreto.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cliente</span>
+<div class="quiz-classify-btns">
+<button data-correct>Entidad</button>
+<button>Atributo</button>
+<button>Valor</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Nombre del cliente</span>
+<div class="quiz-classify-btns">
+<button>Entidad</button>
+<button data-correct>Atributo</button>
+<button>Valor</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Juan Pérez"</span>
+<div class="quiz-classify-btns">
+<button>Entidad</button>
+<button>Atributo</button>
+<button data-correct>Valor</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Producto</span>
+<div class="quiz-classify-btns">
+<button data-correct>Entidad</button>
+<button>Atributo</button>
+<button>Valor</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="atributos">
+<div class="card">
+<h2 class="section-title">Tipos de atributos</h2>
+<p class="lead">No todos los atributos son iguales. Distinguirlos correctamente es clave para decidir cómo se van a representar como columnas más adelante.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Tipo</th><th scope="col">Descripción</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><strong>Simple</strong></td><td>No se puede dividir en partes más pequeñas.</td><td>Edad.</td></tr>
+<tr><td><strong>Compuesto</strong></td><td>Se puede dividir en subpartes con sentido propio.</td><td>Nombre completo (nombre + apellido).</td></tr>
+<tr><td><strong>Derivado</strong></td><td>Se calcula a partir de otro atributo, no se guarda directamente.</td><td>Edad, calculada desde la fecha de nacimiento.</td></tr>
+<tr><td><strong>Multivaluado</strong></td><td>Puede tener varios valores simultáneamente para la misma instancia.</td><td>Teléfonos de un mismo cliente.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Por qué importa distinguirlos</strong>
+<p>Un atributo multivaluado casi nunca se convierte en una sola columna: normalmente se convierte en una tabla aparte, como verás más adelante en esta guía.</p>
+</div>
+
+<p>Relaciona cada tipo de atributo con su ejemplo.</p>
+<div class="quiz quiz-match" data-quiz-id="atributos-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada tipo de atributo con su ejemplo.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="simple">Simple</button>
+<button class="quiz-match-item" data-pair="compuesto">Compuesto</button>
+<button class="quiz-match-item" data-pair="derivado">Derivado</button>
+<button class="quiz-match-item" data-pair="multivaluado">Multivaluado</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="derivado">Antigüedad de un empleado, calculada desde su fecha de contratación.</button>
+<button class="quiz-match-item" data-pair="multivaluado">Los correos electrónicos de un mismo usuario.</button>
+<button class="quiz-match-item" data-pair="simple">El precio de un producto.</button>
+<button class="quiz-match-item" data-pair="compuesto">La dirección de un cliente (calle, ciudad, país).</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="claves">
+<div class="card">
+<h2 class="section-title">Claves: primaria, candidata y foránea</h2>
+<p class="lead">Las claves son las que permiten identificar instancias de forma única y conectar entidades entre sí.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Clave</th><th scope="col">Definición</th></tr></thead>
+<tbody>
+<tr><td><strong>Clave candidata</strong></td><td>Cualquier atributo (o conjunto de atributos) que podría identificar de forma única cada instancia.</td></tr>
+<tr><td><strong>Clave primaria</strong></td><td>La clave candidata que finalmente se elige para identificar cada fila de la tabla.</td></tr>
+<tr><td><strong>Clave foránea</strong></td><td>Un atributo que referencia la clave primaria de otra entidad, materializando una relación entre ambas.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Ejemplo</strong>
+<p>En "Estudiante" podrían ser claves candidatas tanto el <em>carnet de identidad</em> como el <em>código de estudiante</em>; la universidad elige una de las dos como <strong>clave primaria</strong>. Si la tabla "Matrícula" guarda el código de estudiante para saber a quién pertenece, ese código actúa ahí como <strong>clave foránea</strong>.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="claves-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Elige el tipo de clave correcto para cada frase.</p>
+<p>1. El carnet de identidad y el código de estudiante son ambos, antes de decidir cuál usar, ejemplos de
+<select class="quiz-blank" data-correct="candidata">
+<option value="">— elige —</option>
+<option value="candidata">clave candidata</option>
+<option value="primaria">clave primaria</option>
+<option value="foranea">clave foránea</option>
+</select>.</p>
+<p>2. Una vez que la universidad decide usar el código de estudiante para identificar cada fila de la tabla "Estudiante", ese código pasa a ser la
+<select class="quiz-blank" data-correct="primaria">
+<option value="">— elige —</option>
+<option value="candidata">clave candidata</option>
+<option value="primaria">clave primaria</option>
+<option value="foranea">clave foránea</option>
+</select>.</p>
+<p>3. Cuando la tabla "Matrícula" guarda ese mismo código para saber a qué estudiante pertenece cada registro, ese código funciona ahí como
+<select class="quiz-blank" data-correct="foranea">
+<option value="">— elige —</option>
+<option value="candidata">clave candidata</option>
+<option value="primaria">clave primaria</option>
+<option value="foranea">clave foránea</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="relaciones">
+<div class="card">
+<h2 class="section-title">Relaciones entre entidades</h2>
+<p class="lead">Una <strong>relación</strong> es una asociación con sentido de negocio entre dos o más entidades. Se representa como un <strong>rombo</strong> en la notación de Chen, y normalmente se nombra con un verbo: "Cliente <em>REALIZA</em> Pedido", "Empleado <em>TRABAJA_EN</em> Departamento".</p>
+<div class="highlight">
+<strong>Binarias, ternarias...</strong>
+<p>La mayoría de las relaciones que modelarás son <strong>binarias</strong> (conectan exactamente dos entidades). También existen relaciones <strong>ternarias</strong>, que conectan tres entidades a la vez, aunque son mucho menos comunes.</p>
+</div>
+<div class="highlight">
+<strong>Relaciones reflexivas (recursivas)</strong>
+<p>A veces una entidad se relaciona <strong>consigo misma</strong>. El caso clásico es "Empleado <em>ES_JEFE_DE</em> Empleado": la tabla EMPLEADOS guarda una columna <code>jefe_id</code> que apunta a otro <code>id</code> de esa misma tabla. Esto se llama <strong>relación reflexiva</strong> o <strong>recursiva</strong>, y la volverás a ver en la sección de razonamiento.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="relaciones-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En la frase "Un Alumno SE_INSCRIBE en un Curso", ¿cuál es la relación?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Alumno.</button>
+<button class="quiz-opt">Curso.</button>
+<button class="quiz-opt" data-correct>SE_INSCRIBE.</button>
+<button class="quiz-opt">Alumno y Curso juntos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: SE_INSCRIBE es el verbo que conecta a las dos entidades (Alumno y Curso); Alumno y Curso son las entidades, no la relación." data-ko="Las entidades son los sustantivos (Alumno, Curso). La relación es el verbo que las conecta con sentido de negocio: SE_INSCRIBE." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="cardinalidad">
+<div class="card">
+<h2 class="section-title">Cardinalidad y participación</h2>
+<p class="lead">La <strong>cardinalidad</strong> indica cuántas instancias de una entidad pueden relacionarse con cuántas instancias de otra.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Cardinalidad</th><th scope="col">Significado</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><strong>1:1</strong></td><td>Una instancia se relaciona con exactamente una del otro lado.</td><td>Persona - Pasaporte.</td></tr>
+<tr><td><strong>1:N</strong></td><td>Una instancia se relaciona con varias, pero no al revés.</td><td>Departamento - Empleados.</td></tr>
+<tr><td><strong>N:M</strong></td><td>Varias instancias de cada lado se relacionan entre sí.</td><td>Estudiantes - Cursos.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Participación total vs. parcial</strong>
+<p>Además de la cardinalidad, cada entidad tiene una <strong>participación</strong> en la relación: <strong>total</strong> (obligatoria: toda instancia debe participar) o <strong>parcial</strong> (opcional: puede quedar sin relacionarse).</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="cardinalidad-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica la cardinalidad correcta para cada relación.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un país tiene una única capital; una capital pertenece a un único país.</span>
+<div class="quiz-classify-btns">
+<button data-correct>1:1</button>
+<button>1:N</button>
+<button>N:M</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un autor puede escribir varios libros; cada libro tiene un único autor.</span>
+<div class="quiz-classify-btns">
+<button>1:1</button>
+<button data-correct>1:N</button>
+<button>N:M</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un actor puede participar en varias películas; una película puede tener varios actores.</span>
+<div class="quiz-classify-btns">
+<button>1:1</button>
+<button>1:N</button>
+<button data-correct>N:M</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un ciudadano tiene un único número de identidad; ese número pertenece a un único ciudadano.</span>
+<div class="quiz-classify-btns">
+<button data-correct>1:1</button>
+<button>1:N</button>
+<button>N:M</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="debiles">
+<div class="card">
+<h2 class="section-title">Entidades débiles</h2>
+<p class="lead">Una <strong>entidad débil</strong> no puede identificarse de forma única solo con sus propios atributos: depende de una <strong>entidad fuerte</strong> (su "dueña") para existir. Se representa con un rectángulo de doble línea, y su relación con la entidad fuerte, con un rombo de doble línea.</p>
+<div class="highlight">
+<strong>Ejemplo</strong>
+<p>"Dependiente" de un "Empleado": dos empleados distintos podrían tener cada uno un dependiente llamado "María". "María" sola no identifica nada de forma única; su identificador real es la combinación de su nombre <strong>más</strong> el <code>id</code> del empleado del que depende (su <strong>clave parcial</strong> + la clave de la entidad fuerte).</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="debiles-1">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Una entidad débil puede identificarse de forma única usando solamente sus propios atributos.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: por definición, una entidad débil necesita combinar su clave parcial con la clave de la entidad fuerte de la que depende para identificarse de forma única." data-ko="Justo al revés: una entidad débil NO puede identificarse solo con sus propios atributos. Necesita apoyarse en la clave de su entidad fuerte." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="notacion">
+<div class="card">
+<h2 class="section-title">Notación: Chen vs. pata de gallo</h2>
+<p class="lead">La notación de Chen (rectángulos, rombos y óvalos) es la más didáctica para aprender la teoría. En la práctica, las herramientas de diseño (MySQL Workbench, dbdiagram.io) suelen usar la notación de <strong>pata de gallo</strong> ("crow's foot"), más compacta.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Elemento</th><th scope="col">Notación de Chen</th><th scope="col">Notación de pata de gallo</th></tr></thead>
+<tbody>
+<tr><td>Entidad</td><td>Rectángulo</td><td>Rectángulo</td></tr>
+<tr><td>Atributo</td><td>Óvalo conectado con una línea</td><td>Listado dentro del rectángulo</td></tr>
+<tr><td>Relación</td><td>Rombo</td><td>Línea directa entre entidades, sin rombo</td></tr>
+<tr><td>Cardinalidad</td><td>Etiquetas "1", "N" junto a las líneas</td><td>Símbolos en los extremos de la línea</td></tr>
+</tbody>
+</table>
+
+<p>Relaciona cada símbolo de la notación de pata de gallo con su significado.</p>
+<div class="quiz quiz-match" data-quiz-id="notacion-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada símbolo con lo que representa.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="uno">Dos barras cortas (||)</button>
+<button class="quiz-match-item" data-pair="cero-uno">Círculo + una barra (o|)</button>
+<button class="quiz-match-item" data-pair="muchos">"Pata de gallo" abierta</button>
+<button class="quiz-match-item" data-pair="cero-muchos">Círculo + pata de gallo</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="cero-muchos">Cero o muchos.</button>
+<button class="quiz-match-item" data-pair="uno">Exactamente uno (participación total).</button>
+<button class="quiz-match-item" data-pair="muchos">Muchos.</button>
+<button class="quiz-match-item" data-pair="cero-uno">Cero o uno (participación parcial).</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="diagrama">
+<div class="card">
+<h2 class="section-title">Etiqueta el diagrama</h2>
+<p class="lead">Este diagrama, en notación de Chen, modela: <em>"Un Empleado TRABAJA_EN un Departamento; un Departamento tiene muchos Empleados, pero cada Empleado trabaja en un único Departamento."</em> Identifica qué representa cada marca numerada.</p>
+
+<div class="diagrama-er">
+<svg viewBox="0 0 640 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama entidad-relación: Empleado trabaja en Departamento, con el atributo nombre y las cardinalidades N y 1">
+<line class="er-linea" x1="95" y1="64" x2="95" y2="115"></line>
+<line class="er-linea" x1="170" y1="142" x2="232" y2="142"></line>
+<line class="er-linea" x1="368" y1="142" x2="470" y2="142"></line>
+
+<ellipse class="er-atributo" cx="95" cy="40" rx="48" ry="24"></ellipse>
+<text x="95" y="44" text-anchor="middle" font-size="13">nombre</text>
+
+<rect class="er-entidad" x="20" y="115" width="150" height="55" rx="4"></rect>
+<text x="95" y="147" text-anchor="middle" font-size="14" font-weight="700">EMPLEADO</text>
+
+<polygon class="er-relacion" points="300,102 368,142 300,182 232,142"></polygon>
+<text x="300" y="146" text-anchor="middle" font-size="11" font-weight="700">TRABAJA_EN</text>
+
+<rect class="er-entidad" x="470" y="115" width="150" height="55" rx="4"></rect>
+<text x="545" y="147" text-anchor="middle" font-size="13" font-weight="700">DEPARTAMENTO</text>
+
+<g class="er-marca"><circle cx="20" cy="115" r="12"></circle><text x="20" y="115">1</text></g>
+<g class="er-marca"><circle cx="138" cy="20" r="12"></circle><text x="138" y="20">2</text></g>
+<g class="er-marca"><circle cx="300" cy="102" r="12"></circle><text x="300" y="102">3</text></g>
+<g class="er-marca"><circle cx="200" cy="142" r="12"></circle><text x="200" y="142">4</text></g>
+<g class="er-marca"><circle cx="420" cy="142" r="12"></circle><text x="420" y="142">5</text></g>
+</svg>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="diagrama-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Relaciona cada número del diagrama con el concepto que representa.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="1">Marca ①</button>
+<button class="quiz-match-item" data-pair="2">Marca ②</button>
+<button class="quiz-match-item" data-pair="3">Marca ③</button>
+<button class="quiz-match-item" data-pair="4">Marca ④</button>
+<button class="quiz-match-item" data-pair="5">Marca ⑤</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="3">Relación.</button>
+<button class="quiz-match-item" data-pair="1">Entidad.</button>
+<button class="quiz-match-item" data-pair="5">Cardinalidad: el lado "uno" (hacia Departamento).</button>
+<button class="quiz-match-item" data-pair="2">Atributo.</button>
+<button class="quiz-match-item" data-pair="4">Cardinalidad: el lado "muchos" (hacia Empleado).</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="relacional">
+<div class="card">
+<h2 class="section-title">De ER a tablas relacionales</h2>
+<p class="lead">Un modelo ER no se ejecuta directamente: se traduce a tablas siguiendo reglas fijas. Estas son las más importantes.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Elemento ER</th><th scope="col">Se convierte en...</th></tr></thead>
+<tbody>
+<tr><td>Entidad fuerte</td><td>Una tabla, con sus atributos simples y compuestos como columnas.</td></tr>
+<tr><td>Atributo multivaluado</td><td>Una tabla aparte, relacionada mediante clave foránea.</td></tr>
+<tr><td>Relación 1:N</td><td>Una clave foránea en la tabla del lado "N".</td></tr>
+<tr><td>Relación N:M</td><td>Una tabla intermedia, con dos claves foráneas (una por cada entidad).</td></tr>
+<tr><td>Entidad débil</td><td>Una tabla cuya clave primaria combina su clave parcial con la clave foránea de la entidad fuerte.</td></tr>
+</tbody>
+</table>
+
+<p>Relaciona cada elemento del modelo ER con lo que se convierte en el esquema relacional.</p>
+<div class="quiz quiz-match" data-quiz-id="relacional-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada elemento ER con su traducción a tablas relacionales.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="1n">Relación 1:N</button>
+<button class="quiz-match-item" data-pair="nm">Relación N:M</button>
+<button class="quiz-match-item" data-pair="multi">Atributo multivaluado</button>
+<button class="quiz-match-item" data-pair="debil">Entidad débil</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="debil">Tabla con clave primaria compuesta (clave parcial + clave foránea de la entidad fuerte).</button>
+<button class="quiz-match-item" data-pair="multi">Una tabla aparte, relacionada por clave foránea.</button>
+<button class="quiz-match-item" data-pair="1n">Una clave foránea en la tabla del lado "N".</button>
+<button class="quiz-match-item" data-pair="nm">Una tabla intermedia con dos claves foráneas.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Ejercicios de razonamiento</h2>
+<p class="lead">En estas preguntas no se te pide recordar una definición: se te da un escenario o una tabla, y debes <strong>razonar</strong> cuál sería la respuesta correcta antes de comprobarla.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Id</th><th scope="col">Nombre</th><th scope="col">jefe_id</th><th scope="col">Salario</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Carlos Ramírez</td><td>NULL</td><td>9000</td></tr>
+<tr><td>2</td><td>Ana López</td><td>1</td><td>6000</td></tr>
+<tr><td>3</td><td>Luis Martínez</td><td>1</td><td>7000</td></tr>
+<tr><td>6</td><td>Diego Morales</td><td>3</td><td>8000</td></tr>
+</tbody>
+</table>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">La tabla EMPLEADOS de arriba tiene una columna jefe_id que hace referencia al id de otra fila de esa misma tabla. ¿Qué tipo de relación representa esto en el modelo Entidad-Relación?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Una relación N:M entre dos entidades distintas.</button>
+<button class="quiz-opt" data-correct>Una relación reflexiva (recursiva) dentro de la misma entidad.</button>
+<button class="quiz-opt">Una entidad débil.</button>
+<button class="quiz-opt">Un atributo multivaluado.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: EMPLEADO se relaciona consigo mismo (ES_JEFE_DE / REPORTA_A), exactamente el caso de relación reflexiva que viste en la sección de Relaciones." data-ko="jefe_id apunta a otra fila de la misma tabla EMPLEADOS: eso es una relación reflexiva (recursiva), no una relación entre dos entidades distintas ni una entidad débil." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:30px;">
+<strong>Otro escenario</strong>
+<p>Una tabla <code>CLIENTES</code> tiene las columnas <code>id</code>, <code>nombre</code>, <code>telefono1</code>, <code>telefono2</code> y <code>telefono3</code>, para guardar hasta tres teléfonos por cliente.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué error de modelado se está cometiendo con las columnas telefono1, telefono2 y telefono3, y cómo se corrige?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ningún error: así se modela correctamente un atributo multivaluado.</button>
+<button class="quiz-opt" data-correct>Se está tratando un atributo multivaluado como si fueran varios atributos simples repetidos; la solución es crear una tabla aparte para los teléfonos.</button>
+<button class="quiz-opt">Falta agregar una clave foránea a la tabla CLIENTES.</button>
+<button class="quiz-opt">telefono1 debería ser la clave primaria de la tabla.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: repetir columnas para un mismo tipo de dato es la señal clásica de un atributo multivaluado mal modelado. La solución correcta es una tabla TELEFONOS relacionada por clave foránea al cliente." data-ko="Repetir columnas (telefono1, telefono2, telefono3) para el mismo tipo de dato es exactamente el síntoma de un atributo multivaluado tratado como si fuera simple. Se corrige con una tabla aparte." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:30px;">
+<strong>Un último escenario</strong>
+<p>Una aerolínea registra que cada <strong>Vuelo</strong> tiene asignado un único <strong>Avión</strong> en un momento dado, pero un mismo <strong>Avión</strong> puede operar muchos <strong>Vuelos</strong> distintos a lo largo del tiempo.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-3">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Cuál es la cardinalidad correcta de la relación entre Vuelo y Avión?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">1:1</button>
+<button class="quiz-opt" data-correct>1:N (un Avión, muchos Vuelos)</button>
+<button class="quiz-opt">N:M</button>
+<button class="quiz-opt">No se puede modelar como relación.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: cada Vuelo tiene un único Avión, pero cada Avión puede operar muchos Vuelos. Eso es exactamente una relación 1:N desde Avión hacia Vuelo." data-ko="Fíjate en la dirección: un Avión se repite en muchos Vuelos, pero cada Vuelo tiene solo un Avión. Eso es 1:N, no 1:1 ni N:M." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Quién propuso el modelo Entidad-Relación?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Peter Chen, en 1976.</button>
+<button class="quiz-opt">Edgar Codd, en 1970.</button>
+<button class="quiz-opt">Ludwig von Bertalanffy, en 1968.</button>
+<button class="quiz-opt">Norbert Wiener, en 1948.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Peter Chen propuso el modelo Entidad-Relación en 1976, como herramienta conceptual independiente del motor de base de datos." data-ko="El modelo Entidad-Relación fue propuesto por Peter Chen en 1976. Edgar Codd es el creador del modelo relacional (1970), un aporte relacionado pero distinto." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Una relación N:M se traduce directamente a una clave foránea en una de las dos tablas involucradas.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: una relación N:M necesita una tabla intermedia con dos claves foráneas; una sola clave foránea no alcanza para representar esa cardinalidad." data-ko="Una relación N:M no cabe en una sola clave foránea: necesita una tabla intermedia con una clave foránea hacia cada una de las dos entidades." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un Departamento tiene muchos Empleados, pero cada Empleado pertenece a un único Departamento. ¿Cuál es la cardinalidad?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">1:1</button>
+<button class="quiz-opt" data-correct>1:N</button>
+<button class="quiz-opt">N:M</button>
+<button class="quiz-opt">0:0</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un Departamento se relaciona con varios Empleados, pero cada Empleado con un único Departamento: exactamente 1:N." data-ko="Un lado (Departamento) tiene muchas instancias relacionadas, el otro (Empleado) solo una. Eso es 1:N, no 1:1 ni N:M." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas situaciones describe mejor a una entidad débil?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>"Dependiente", que solo puede identificarse combinando su nombre con el id del Empleado del que depende.</button>
+<button class="quiz-opt">"Producto", identificado por su propio código de barras.</button>
+<button class="quiz-opt">"Cliente", identificado por su número de identidad.</button>
+<button class="quiz-opt">"País", identificado por su nombre oficial.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Dependiente no puede identificarse solo con sus propios atributos, necesita apoyarse en la clave de su entidad fuerte (Empleado). Esa es la definición de entidad débil." data-ko="Las otras opciones se identifican perfectamente con sus propios atributos. Una entidad débil, como Dependiente, necesita apoyarse en la clave de otra entidad para identificarse." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Al pasar un modelo ER a tablas relacionales, ¿qué le ocurre a una relación N:M?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Se ignora, no se representa en las tablas.</button>
+<button class="quiz-opt" data-correct>Se convierte en una tabla intermedia con una clave foránea hacia cada entidad relacionada.</button>
+<button class="quiz-opt">Se convierte en un solo atributo multivaluado.</button>
+<button class="quiz-opt">Se convierte en una entidad débil.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la única forma de representar correctamente una relación N:M en tablas relacionales es con una tabla intermedia y dos claves foráneas." data-ko="Una relación N:M requiere una tabla intermedia con dos claves foráneas, una hacia cada entidad. Ninguna de las otras opciones representa correctamente esa cardinalidad." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Entidad</td><td>Objeto o concepto del mundo real con muchas instancias.</td></tr>
+<tr><td>Atributo</td><td>Propiedad de una entidad; puede ser simple, compuesto, derivado o multivaluado.</td></tr>
+<tr><td>Clave primaria</td><td>Identifica de forma única cada fila de una tabla.</td></tr>
+<tr><td>Clave foránea</td><td>Referencia la clave primaria de otra tabla, materializando una relación.</td></tr>
+<tr><td>Relación</td><td>Asociación con sentido de negocio entre dos o más entidades.</td></tr>
+<tr><td>Relación reflexiva</td><td>Una entidad se relaciona consigo misma.</td></tr>
+<tr><td>Cardinalidad</td><td>1:1, 1:N o N:M: cuántas instancias se relacionan con cuántas.</td></tr>
+<tr><td>Entidad débil</td><td>No se identifica sola; depende de la clave de una entidad fuerte.</td></tr>
+<tr><td>Relación N:M en tablas</td><td>Se convierte en una tabla intermedia con dos claves foráneas.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📄 Un solo artículo lo cambió todo</h3><p>Peter Chen presentó el modelo Entidad-Relación en un único artículo de 1976, "The Entity-Relationship Model—Toward a Unified View of Data", que sigue siendo referencia obligada.</p></div>
+<div class="info"><h3>🐔 Por qué se llama "pata de gallo"</h3><p>La notación crow's foot debe su nombre a que el símbolo de cardinalidad "muchos" se dibuja como tres líneas abiertas, parecidas a la huella de una pata de ave.</p></div>
+<div class="info"><h3>➡️ El siguiente paso: normalización</h3><p>Un modelo ER bien construido es la base para normalizar correctamente un esquema relacional, el siguiente gran tema de Base de Datos II.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Reforzamiento: Modelado Entidad-Relación</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía Completa de Variables en Python | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>Variables</span></div>
+<p>Guía completa de variables en Python</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#quees">¿Qué es una variable?</a>
+<a href="#declarar">Crear y asignar variables</a>
+<a href="#nombres">Reglas para nombrar variables</a>
+<a href="#convenciones">Convenciones de estilo</a>
+<a href="#reasignacion">Reasignar variables</a>
+<a href="#multiple">Asignación múltiple</a>
+<a href="#referencias">Variables como referencias</a>
+<a href="#constantes">Constantes por convención</a>
+<a href="#errores">Errores comunes</a>
+<a href="#ejercicios">Ejercicios</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🐍 Guía de Aula Invertida</div>
+<h1>Dominando las <span>Variables</span> en Python</h1>
+<p>Es la herramienta más básica y más usada en cualquier programa: el nombre que le das a un dato para poder usarlo, cambiarlo y recuperarlo más adelante. Aprende a crearlas, nombrarlas bien y entender qué ocurre realmente en memoria, con ejemplos que puedes editar y ejecutar en vivo.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Una <strong>variable</strong> es la herramienta más básica y más usada en cualquier programa: es el nombre que le das a un dato para poder usarlo, cambiarlo y recuperarlo más adelante. Todo lo que has visto en las guías anteriores —imprimir texto, guardar tipos de datos— depende de que sepas crear y manejar variables correctamente.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás crear variables, seguir las reglas y convenciones de nombres de Python, reasignar e intercambiar valores, entender qué significa realmente que una variable "apunte" a un objeto, y evitar los errores más comunes de principiante.</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Todos los bloques con el encabezado <strong>Python</strong> son editables: presiona <strong>✏️ Editar</strong> para modificar el código y <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador (usa Pyodide, un Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📖 Aprende</h3><p>Cómo Python crea y maneja variables por dentro.</p></div>
+<div class="info"><h3>💻 Practica</h3><p>Ejemplos editables y ejecutables en cada sección.</p></div>
+<div class="info"><h3>🎯 Domina</h3><p>Convenciones de nombres y los errores que evitan la mayoría de los principiantes.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="quees">
+<div class="card">
+<h2 class="section-title">¿Qué es una variable?</h2>
+<p class="lead">Una variable es un <strong>nombre</strong> asociado a un valor guardado en memoria. En lenguajes como C o Java suele explicarse como una "caja" que contiene un valor; en Python es más preciso pensar en ella como una <strong>etiqueta</strong> pegada a un objeto que ya existe en memoria.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Roy"
+edad = 30
+print(nombre)
+print(edad)</code></pre>
+</div>
+<div class="highlight">
+<strong>Caja vs. etiqueta</strong>
+<p>Esta diferencia parece sutil, pero es clave: más adelante en esta guía verás que dos "etiquetas" pueden apuntar al mismo objeto, y modificar uno afecta lo que ves a través del otro. Con la metáfora de la "caja" ese comportamiento resulta confuso.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="declarar">
+<div class="card">
+<h2 class="section-title">Crear y asignar variables</h2>
+<p class="lead">Para crear una variable en Python basta con escribir su nombre, el operador <code>=</code> y el valor que quieres guardar. No es necesario declarar el tipo por adelantado, a diferencia de otros lenguajes.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">ciudad = "Cochabamba"
+temperatura = 18.5
+es_feriado = False
+print(ciudad, temperatura, es_feriado)</code></pre>
+</div>
+<div class="highlight">
+<strong>Comparación con otros lenguajes</strong>
+<p>En Java o C escribirías algo como <code>int edad = 20;</code>, indicando el tipo antes del nombre. En Python solo escribes <code>edad = 20</code>: Python infiere el tipo a partir del valor que le asignas.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="nombres">
+<div class="card">
+<h2 class="section-title">Reglas para nombrar variables</h2>
+<p class="lead">Python exige que los nombres de variable cumplan ciertas reglas. Si no las cumples, obtendrás un <code>SyntaxError</code> antes siquiera de ejecutar el programa.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Regla</th><th scope="col">Válido</th><th scope="col">Inválido</th></tr></thead>
+<tbody>
+<tr><td>Debe empezar con letra o guion bajo</td><td><code>_total</code>, <code>nombre2</code></td><td><code>2nombre</code></td></tr>
+<tr><td>Solo letras, números y guion bajo</td><td><code>precio_final</code></td><td><code>precio-final</code></td></tr>
+<tr><td>Distingue mayúsculas de minúsculas</td><td><code>Nombre</code> ≠ <code>nombre</code></td><td>—</td></tr>
+<tr><td>No puede ser una palabra reservada</td><td><code>valor_clase</code></td><td><code>class</code></td></tr>
+</tbody>
+</table>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">_total = 100
+nombre2 = "Ana"
+print(_total, nombre2)</code></pre>
+</div>
+<p>Ejecuta este bloque para ver en vivo el error al empezar un nombre con un número:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">2nombre = "esto falla"
+print(2nombre)</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="convenciones">
+<div class="card">
+<h2 class="section-title">Convenciones de estilo</h2>
+<p class="lead">Más allá de lo que Python exige para que el código funcione, la comunidad sigue una guía de estilo llamada <strong>PEP 8</strong>. Para variables, la convención es <code>snake_case</code>: minúsculas separadas por guiones bajos.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Estilo</th><th scope="col">Ejemplo</th><th scope="col">Uso en Python</th></tr></thead>
+<tbody>
+<tr><td>snake_case</td><td><code>nombre_completo</code></td><td>Variables y funciones (recomendado)</td></tr>
+<tr><td>camelCase</td><td><code>nombreCompleto</code></td><td>Común en Java/JavaScript, no en Python</td></tr>
+<tr><td>PascalCase</td><td><code>NombreCompleto</code></td><td>Reservado para nombres de clases</td></tr>
+</tbody>
+</table>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre_completo = "Ana López"
+precio_total = 45.90
+print(nombre_completo, precio_total)</code></pre>
+</div>
+<div class="highlight">
+<strong>Nombres descriptivos</strong>
+<p>Además del estilo, elige nombres que expliquen qué contienen: <code>promedio_estudiante</code> es mucho más claro que <code>p</code> o <code>x1</code>, sobre todo cuando el programa crece.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="reasignacion">
+<div class="card">
+<h2 class="section-title">Reasignar variables</h2>
+<p class="lead">Una variable puede reasignarse tantas veces como necesites, incluso cambiando de tipo, porque Python es de tipado dinámico.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">puntaje = 0
+print(puntaje)
+puntaje = 10
+print(puntaje)
+puntaje = puntaje + 5
+print(puntaje)</code></pre>
+</div>
+<div class="highlight">
+<strong>Operadores de asignación aumentada</strong>
+<p>Escribir <code>puntaje = puntaje + 5</code> es tan común que Python ofrece una forma corta: <code>puntaje += 5</code>. Ambas líneas hacen exactamente lo mismo.</p>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">puntaje = 10
+puntaje += 5
+print(puntaje)
+puntaje -= 2
+print(puntaje)</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Operador</th><th scope="col">Equivale a</th></tr></thead>
+<tbody>
+<tr><td><code>x += n</code></td><td><code>x = x + n</code></td></tr>
+<tr><td><code>x -= n</code></td><td><code>x = x - n</code></td></tr>
+<tr><td><code>x *= n</code></td><td><code>x = x * n</code></td></tr>
+<tr><td><code>x /= n</code></td><td><code>x = x / n</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container" id="multiple">
+<div class="card">
+<h2 class="section-title">Asignación múltiple</h2>
+<p class="lead">Python permite asignar varias variables en una sola línea, separando nombres y valores por comas.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre, edad, activo = "Roy", 30, True
+print(nombre, edad, activo)</code></pre>
+</div>
+<p>También puedes asignar el mismo valor a varias variables a la vez:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">x = y = z = 0
+print(x, y, z)</code></pre>
+</div>
+<div class="highlight">
+<strong>Intercambiar valores sin variable temporal</strong>
+<p>En muchos lenguajes, intercambiar el contenido de dos variables requiere una tercera variable auxiliar. En Python, la asignación múltiple lo resuelve en una sola línea.</p>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">a = 5
+b = 10
+a, b = b, a
+print(a, b)</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="referencias">
+<div class="card">
+<h2 class="section-title">Variables como referencias a objetos</h2>
+<p class="lead">Volvamos a la idea de la "etiqueta": cuando asignas una variable a otra, ambas quedan apuntando <strong>al mismo objeto</strong> en memoria, no a una copia independiente.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">a = [1, 2, 3]
+b = a
+b.append(4)
+print(a)
+print(b)</code></pre>
+</div>
+<div class="highlight">
+<strong>¿Por qué cambió "a" si solo modifiqué "b"?</strong>
+<p>Porque <code>a</code> y <code>b</code> son dos etiquetas para el <strong>mismo</strong> objeto lista. Esto no ocurre con tipos inmutables como <code>int</code>, <code>float</code>, <code>str</code> o <code>bool</code>, que nunca cambian de contenido una vez creados.</p>
+</div>
+<p>La función <code>id()</code> te muestra la dirección de memoria de un objeto, y el operador <code>is</code> compara si dos variables apuntan al mismo objeto (a diferencia de <code>==</code>, que compara si los valores son iguales).</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">x = [1, 2]
+y = [1, 2]
+print(x == y)
+print(x is y)</code></pre>
+</div>
+<div class="highlight">
+<strong>Igualdad no es identidad</strong>
+<p><code>x</code> e <code>y</code> tienen el mismo contenido (<code>==</code> es <code>True</code>), pero son dos objetos distintos en memoria (<code>is</code> es <code>False</code>). Esta distinción será clave más adelante, cuando trabajes con objetos en POO.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="constantes">
+<div class="card">
+<h2 class="section-title">Constantes por convención</h2>
+<p class="lead">Python no tiene una palabra clave como <code>const</code> para crear constantes verdaderas. En su lugar, la comunidad usa una convención: los nombres en <strong>MAYÚSCULAS</strong> indican que ese valor no debería cambiar.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">PI = 3.14159
+IVA = 0.13
+MAX_INTENTOS = 3
+print(PI, IVA, MAX_INTENTOS)</code></pre>
+</div>
+<div class="highlight">
+<strong>Solo una convención</strong>
+<p>Python no impide reasignar <code>PI</code>; nada se rompe técnicamente si lo haces. Es una señal para otros programadores (y para ti mismo) de que ese valor está pensado para no cambiar durante la ejecución del programa.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="errores">
+<div class="card">
+<h2 class="section-title">Errores comunes</h2>
+<div class="info-grid">
+<div class="info"><h3>❌ Usar una variable antes de crearla</h3><p><code>print(saldo)</code> antes de que <code>saldo</code> exista produce <strong>NameError</strong>: Python lee el programa de arriba hacia abajo.</p></div>
+<div class="info"><h3>❌ Empezar el nombre con un número</h3><p><code>2nombre = "x"</code> produce <strong>SyntaxError</strong>. Los nombres deben empezar con letra o guion bajo.</p></div>
+<div class="info"><h3>❌ Usar una palabra reservada</h3><p><code>class = "A"</code> produce <strong>SyntaxError</strong>: <code>class</code>, <code>for</code>, <code>if</code>, etc. están reservadas por el lenguaje.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Prueba el error</h2>
+<p>Ejecuta este bloque para observar en vivo el <code>NameError</code> al usar una variable antes de crearla.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print(saldo)
+saldo = 100</code></pre>
+</div>
+<div class="highlight">
+<strong>Corrígelo</strong>
+<p>Edita el bloque anterior e intercambia el orden de las dos líneas para que <code>saldo</code> se cree antes de imprimirse.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Ejercicios Propuestos</h2>
+<p class="lead">Pon en práctica lo aprendido resolviendo los siguientes ejercicios directamente en el bloque editable.</p>
+<ol style="margin-left:25px;line-height:2">
+<li>Crea variables para tu nombre, tu edad y tu promedio, e imprímelas en una sola línea.</li>
+<li>Usa asignación múltiple para crear tres variables distintas en una sola línea.</li>
+<li>Intercambia los valores de dos variables sin usar una variable temporal.</li>
+<li>Usa el operador <code>+=</code> para incrementar un contador tres veces seguidas.</li>
+<li>Crea una lista, asígnala a dos variables distintas, modifica una con <code>.append()</code> y observa el efecto en la otra.</li>
+<li>Declara una constante <code>MAX_USUARIOS</code> y dos variables normales, respetando la convención de nombres de cada una.</li>
+</ol>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>✍️ Resuelve aquí los ejercicios</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu solución a los ejercicios (puedes resolverlos uno por uno)…"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Reto Final</h2>
+<p>Desarrolla un programa que declare estas variables:</p>
+<ul style="margin-left:25px;line-height:2">
+<li><code>nombre_cliente</code> y <code>precio_unitario</code>, creadas en una sola línea con asignación múltiple.</li>
+<li><code>cantidad</code> (un número entero).</li>
+</ul>
+<p>El programa deberá:</p>
+<ul style="margin-left:25px;line-height:2">
+<li>Calcular el <code>total</code> multiplicando <code>precio_unitario</code> por <code>cantidad</code>.</li>
+<li>Aplicar un descuento del 10% sobre el <code>total</code> usando el operador <code>-=</code>.</li>
+<li>Mostrar un resumen con un f-String, con el total final formateado a dos decimales.</li>
+</ul>
+<div class="code salida">
+<div class="code-header"><span>Salida esperada</span></div>
+<pre>Cliente: Ana López
+Total con descuento: $80.91</pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Uso</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Crear variable</td><td><code>nombre = "Ana"</code></td></tr>
+<tr><td>Reasignar</td><td><code>nombre = "Roy"</code></td></tr>
+<tr><td>Incrementar</td><td><code>contador += 1</code></td></tr>
+<tr><td>Asignación múltiple</td><td><code>a, b, c = 1, 2, 3</code></td></tr>
+<tr><td>Intercambiar valores</td><td><code>a, b = b, a</code></td></tr>
+<tr><td>Constante (convención)</td><td><code>MAX_INTENTOS = 3</code></td></tr>
+<tr><td>Comparar identidad</td><td><code>a is b</code></td></tr>
+<tr><td>Ver dirección en memoria</td><td><code>id(a)</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🔢 Python cachea enteros pequeños</h3><p>CPython guarda en caché los enteros entre -5 y 256: dos variables con ese mismo valor pequeño pueden compartir el mismo objeto en memoria, y por eso <code>x is y</code> a veces da <code>True</code> sin que lo esperes.</p></div>
+<div class="info"><h3>🐫 camelCase no es "pythónico"</h3><p>La guía de estilo oficial PEP 8 recomienda <code>snake_case</code> para variables; <code>camelCase</code> es mucho más común en Java y JavaScript.</p></div>
+<div class="info"><h3>🔒 Python no tiene constantes reales</h3><p>A diferencia de lenguajes con <code>const</code> o <code>final</code>, en Python cualquier variable —incluidas las "constantes" en mayúsculas— puede reasignarse. El respeto a esa convención es solo cultura de equipo.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Variables en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Resaltado de sintaxis (sin librerías externas) ===== */
+const PY_KEYWORDS = ["False","None","True","and","as","assert","async","await","break","class",
+  "continue","def","del","elif","else","except","finally","for","from","global","if","import",
+  "in","is","lambda","nonlocal","not","or","pass","raise","return","try","while","with","yield",
+  "print","len","int","str","float","input"];
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function highlightPython(code){
+  const escaped = escapeHtml(code);
+  const tokens = [];
+  const mask = (html) => {
+    const marker = String.fromCharCode(0xE000 + tokens.length);
+    tokens.push(html);
+    return marker;
+  };
+  let out = escaped.replace(
+    /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:[^"\\]|\\.)*"|f?'(?:[^'\\]|\\.)*')/gm,
+    (m, comment, str) => comment !== undefined
+      ? mask(`<span class="comment">${comment}</span>`)
+      : mask(`<span class="string">${str}</span>`)
+  );
+  out = out.replace(/\b\d+\.?\d*\b/g, m => mask(`<span class="number">${m}</span>`));
+  out = out.replace(new RegExp(`\\b(${PY_KEYWORDS.join("|")})\\b`, "g"), m => mask(`<span class="keyword">${m}</span>`));
+  out = out.replace(/\b([A-Za-z_]\w*)(?=\()/g, m => mask(`<span class="func">${m}</span>`));
+  out = out.replace(/[-]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
+  return out;
+}
+
+/* ===== Pyodide (Python real en el navegador), carga perezosa ===== */
+let pyodideReadyPromise = null;
+function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      const pyodide = await window.loadPyodide();
+      await pyodide.runPythonAsync(`
+import sys, io
+def __run_capture(src):
+    buf = io.StringIO()
+    old = sys.stdout
+    sys.stdout = buf
+    err = None
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.stdout = old
+    return buf.getvalue(), err
+`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+async function ejecutarPython(codigo){
+  const pyodide = await cargarPyodide();
+  const funcion = pyodide.globals.get("__run_capture");
+  const resultado = funcion(codigo);
+  const [salida, error] = resultado.toJs();
+  resultado.destroy();
+  return { salida, error };
+}
+
+/* ===== Resaltar cada ejemplo de solo lectura ===== */
+function resaltarEjemplo(bloque){
+  const codeEl = bloque.querySelector("pre code.src");
+  if (!codeEl) return;
+  codeEl.innerHTML = highlightPython(codeEl.textContent.trim());
+}
+
+/* ===== Conectar un panel de editor en blanco (ejecutar código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    try {
+      const { salida, error } = await ejecutarPython(textarea.value);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el intérprete de Python: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+function crearPanelEditor(mensaje){
+  const panel = document.createElement("div");
+  panel.className = "editor-panel";
+  panel.innerHTML = `
+    <div class="editor-header">
+      <span>${mensaje}</span>
+      <button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+    </div>
+    <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu propio código, inspirándote en el ejemplo de arriba, y presiona Ejecutar."></textarea>
+    <div class="output" hidden>
+      <div class="output-head">Salida</div>
+      <pre class="output-body"></pre>
+    </div>`;
+  return panel;
+}
+
+/* ===== Bloquear copiado del ejemplo (para que se escriba a mano) ===== */
+function bloquearCopiado(bloque){
+  const pre = bloque.querySelector("pre");
+  if (!pre) return;
+  const header = bloque.querySelector(".code-header span");
+  const avisar = () => {
+    if (!header) return;
+    const original = header.dataset.original || header.textContent;
+    header.dataset.original = original;
+    header.textContent = "🔒 Escríbelo tú mismo";
+    clearTimeout(header._avisoTimeout);
+    header._avisoTimeout = setTimeout(() => { header.textContent = original; }, 1600);
+  };
+  pre.addEventListener("copy", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("contextmenu", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("dragstart", e => e.preventDefault());
+}
+
+/* ===== Igualar la altura del editor a la del ejemplo ===== */
+function sincronizarAltura(bloque, panel){
+  const pre = bloque.querySelector("pre");
+  const textarea = panel.querySelector(".editor");
+  if (pre && textarea) textarea.style.minHeight = pre.offsetHeight + "px";
+}
+
+const parejas = [];
+document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
+  resaltarEjemplo(bloque);
+  bloquearCopiado(bloque);
+  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo");
+  bloque.after(panel);
+  conectarEditor(panel);
+  parejas.push([bloque, panel]);
+});
+
+document.querySelectorAll(".editor-panel.independiente").forEach(conectarEditor);
+document.querySelectorAll(".code.salida").forEach(bloquearCopiado);
+
+parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel));
+window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel)));
+
+</script>
+
+</body>
+</html>

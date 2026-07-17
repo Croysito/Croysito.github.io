@@ -272,3 +272,17 @@ footer{ padding:70px; text-align:center; color:var(--gris); }
 @media(max-width:640px){
   .quiz-match-grid{ grid-template-columns:1fr; }
 }
+
+/* =========================================================
+   DIAGRAMA ETIQUETADO (SVG con marcas numeradas)
+   ========================================================= */
+.diagrama-er{ background:var(--blanco); border:1px solid var(--borde); border-radius:14px; padding:20px; margin:25px 0; overflow-x:auto; transition:background .25s,border-color .25s; }
+.diagrama-er svg{ display:block; margin:0 auto; max-width:100%; height:auto; min-width:560px; }
+.diagrama-er .er-entidad{ fill:var(--highlightBg); stroke:var(--azul2); stroke-width:2; }
+.diagrama-er .er-debil{ fill:var(--highlightBg); stroke:var(--azul2); stroke-width:2; }
+.diagrama-er .er-atributo{ fill:var(--blanco); stroke:var(--verde); stroke-width:2; }
+.diagrama-er .er-relacion{ fill:var(--amarillo); fill-opacity:.25; stroke:#b8860b; stroke-width:2; }
+.diagrama-er .er-linea{ stroke:var(--gris); stroke-width:1.5; }
+.diagrama-er text{ fill:var(--texto); font-family:'DM Sans',sans-serif; }
+.diagrama-er .er-marca circle{ fill:var(--verde); }
+.diagrama-er .er-marca text{ fill:#ffffff; font-weight:700; font-size:13px; text-anchor:middle; dominant-baseline:central; }

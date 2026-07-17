@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fundamentos y Origen de la Teoría General de Sistemas | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">TGS <span>Orígenes</span></div>
+<p>Fundamentos y origen de la Teoría General de Sistemas</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#contexto">Crisis del reduccionismo</a>
+<a href="#bertalanffy">Ludwig von Bertalanffy</a>
+<a href="#nacimiento">Nacimiento de la TGS</a>
+<a href="#cibernetica">Cibernética: la disciplina hermana</a>
+<a href="#pioneros">Otros pioneros</a>
+<a href="#principios">Principios epistemológicos</a>
+<a href="#boulding">Jerarquía de Boulding</a>
+<a href="#vigencia">Vigencia actual</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧩 Guía de Aula Invertida</div>
+<h1>Fundamentos y <span>Origen</span> de la TGS</h1>
+<p>¿Por qué un biólogo terminó proponiendo una teoría que hoy se usa en administración, ingeniería, ecología e informática? Descubre el contexto histórico y científico que dio origen a la Teoría General de Sistemas, quiénes fueron sus principales impulsores y por qué su forma de pensar sigue vigente casi un siglo después.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Antes de seguir usando conceptos como "sistema abierto" o "retroalimentación", vale la pena preguntarse: <strong>¿de dónde salieron?</strong> Esta guía retrocede en el tiempo para entender el problema científico que la Teoría General de Sistemas (TGS) vino a resolver, y las personas que la construyeron.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía comprenderás por qué surgió la TGS, quién fue <strong>Ludwig von Bertalanffy</strong>, qué relación tiene con la <strong>cibernética</strong> de Norbert Wiener, y cuáles son los principios epistemológicos —isomorfismo, totalidad, jerarquía— que sostienen todo el edificio teórico que usarás durante el resto de la materia.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Como en la guía anterior, encontrarás <strong>actividades cortas y autocorregibles</strong> —selección múltiple, verdadero/falso, emparejamiento, clasificación y completar espacios— repartidas a lo largo de la guía, más un caso de estudio y un repaso final. Cada una te da retroalimentación inmediata.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📖 Aprende</h3><p>El contexto científico e histórico que dio origen a la TGS.</p></div>
+<div class="info"><h3>🔎 Analiza</h3><p>La relación entre la TGS y disciplinas hermanas como la cibernética.</p></div>
+<div class="info"><h3>🧠 Conecta</h3><p>Las bases filosóficas que usarás durante toda la materia.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="contexto">
+<div class="card">
+<h2 class="section-title">El contexto científico: la crisis del reduccionismo</h2>
+<p class="lead">Hasta bien entrado el siglo XX, la ciencia avanzaba principalmente con el método <strong>reduccionista</strong> (heredero del paradigma cartesiano-newtoniano): para entender un fenómeno complejo, se lo dividía en partes cada vez más pequeñas y se estudiaba cada una por separado, asumiendo que el comportamiento del todo era simplemente la suma de sus partes.</p>
+<p>Ese método funcionaba extraordinariamente bien en la física clásica: sistemas simples, cerrados y predecibles, como un péndulo o el movimiento de los planetas. El problema apareció cuando los científicos intentaron aplicar la misma lógica a organismos vivos, ecosistemas u organizaciones sociales.</p>
+<div class="highlight">
+<strong>El problema de fondo</strong>
+<p>Un organismo vivo no se explica sumando el comportamiento aislado de sus órganos: aparecen propiedades <strong>emergentes</strong> —como la vida misma— que solo existen en el conjunto organizado, no en las partes por separado. El reduccionismo, tal cual, no tenía herramientas para explicar eso.</p>
+</div>
+<p>Ese vacío metodológico es exactamente el espacio que la Teoría General de Sistemas vino a ocupar.</p>
+
+<div class="quiz quiz-mc" data-quiz-id="contexto-vf">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">El método reduccionista, que divide un fenómeno en partes para estudiarlas por separado, funciona igual de bien para explicar un péndulo que para explicar un organismo vivo.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el reduccionismo funciona bien en sistemas simples y deterministas como un péndulo, pero falla al explicar organismos vivos, donde el todo tiene propiedades que no existen en las partes aisladas." data-ko="Piensa en las propiedades emergentes: un organismo vivo no se explica sumando sus órganos por separado, algo que sí funciona razonablemente bien con un sistema simple como un péndulo." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="bertalanffy">
+<div class="card">
+<h2 class="section-title">Ludwig von Bertalanffy: el origen biológico</h2>
+<p class="lead">El biólogo austriaco <strong>Ludwig von Bertalanffy</strong> (1901-1972) estudiaba organismos vivos como <strong>sistemas abiertos</strong>: conjuntos que intercambian materia, energía e información con su entorno para mantenerse organizados. Al comparar distintos niveles de organización biológica —células, tejidos, organismos, poblaciones— notó que ciertos principios de organización se repetían una y otra vez, sin importar la escala.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Dato</th><th scope="col">Detalle</th></tr></thead>
+<tbody>
+<tr><td>Nacionalidad</td><td>Austriaco</td></tr>
+<tr><td>Formación original</td><td>Biología</td></tr>
+<tr><td>Idea central</td><td>El organismo es un sistema abierto que se mantiene en un estado estable intercambiando recursos con su entorno.</td></tr>
+<tr><td>Obra principal</td><td><em>General System Theory: Foundations, Development, Applications</em> (1968)</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>El salto conceptual</strong>
+<p>Bertalanffy se preguntó: si estos principios de organización se repiten en distintos niveles biológicos, ¿por qué no podrían aplicarse también a sistemas no biológicos —sociales, técnicos, económicos—? Esa pregunta es, en esencia, el nacimiento de la TGS.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="bertalanffy-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál era la formación original de Ludwig von Bertalanffy antes de proponer la Teoría General de Sistemas?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Matemático.</button>
+<button class="quiz-opt">Ingeniero.</button>
+<button class="quiz-opt" data-correct>Biólogo.</button>
+<button class="quiz-opt">Sociólogo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Bertalanffy era biólogo, y sus observaciones sobre organismos como sistemas abiertos son el punto de partida de toda la teoría." data-ko="Bertalanffy era biólogo. Sus observaciones sobre organismos vivos como sistemas abiertos —no las matemáticas ni la ingeniería— son el origen de la TGS." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="nacimiento">
+<div class="card">
+<h2 class="section-title">El nacimiento de la Teoría General de Sistemas</h2>
+<p class="lead">La TGS no nació en un solo momento: se fue consolidando a lo largo de tres décadas, entre una primera presentación de la idea y su formulación madura y definitiva.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Año</th><th scope="col">Hito</th></tr></thead>
+<tbody>
+<tr><td><strong>1937</strong></td><td>Bertalanffy presenta por primera vez, en un seminario de filosofía en la Universidad de Chicago, la idea de una teoría aplicable a cualquier tipo de sistema.</td></tr>
+<tr><td><strong>1954</strong></td><td>Se funda la <em>Society for General Systems Research</em>, junto con Kenneth Boulding, Ralph Gerard y Anatol Rapoport, institucionalizando el campo.</td></tr>
+<tr><td><strong>1968</strong></td><td>Bertalanffy publica <em>General System Theory: Foundations, Development, Applications</em>, la obra que consolida y expande sus ideas.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Un desarrollo interrumpido</strong>
+<p>Entre la primera presentación de la idea (1937) y su publicación formal más influyente (1968) pasaron más de 30 años, en parte porque la Segunda Guerra Mundial interrumpió y retrasó buena parte del trabajo académico de la época.</p>
+</div>
+
+<p>Relaciona cada hito con su año correspondiente.</p>
+<div class="quiz quiz-match" data-quiz-id="nacimiento-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada hito histórico con el año en que ocurrió.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="1937">1937</button>
+<button class="quiz-match-item" data-pair="1954">1954</button>
+<button class="quiz-match-item" data-pair="1968">1968</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="1968">Publicación de "General System Theory: Foundations, Development, Applications".</button>
+<button class="quiz-match-item" data-pair="1937">Primera presentación pública de la idea de una teoría general de sistemas.</button>
+<button class="quiz-match-item" data-pair="1954">Fundación de la Society for General Systems Research.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="cibernetica">
+<div class="card">
+<h2 class="section-title">Cibernética: la disciplina hermana</h2>
+<p class="lead">Mientras Bertalanffy maduraba sus ideas desde la biología, el matemático <strong>Norbert Wiener</strong>, del MIT, publicaba en 1948 su libro <em>Cybernetics: Or Control and Communication in the Animal and the Machine</em>, fundando la <strong>cibernética</strong>: el estudio del control, la comunicación y la retroalimentación en máquinas y seres vivos.</p>
+<p>Ambas disciplinas nacieron casi al mismo tiempo, comparten conceptos centrales —organización, control, retroalimentación— y se influyeron mutuamente. Pero no son lo mismo.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Aspecto</th><th scope="col">Teoría General de Sistemas</th><th scope="col">Cibernética</th></tr></thead>
+<tbody>
+<tr><td>Origen disciplinario</td><td>Biología</td><td>Matemáticas e ingeniería de control</td></tr>
+<tr><td>Autor principal</td><td>Ludwig von Bertalanffy</td><td>Norbert Wiener</td></tr>
+<tr><td>Año clave</td><td>1937 / 1968</td><td>1948</td></tr>
+<tr><td>Enfoque principal</td><td>Principios generales de organización, aplicables a cualquier sistema</td><td>Mecanismos de control y comunicación, especialmente en máquinas</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-classify" data-quiz-id="cibernetica-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada afirmación según sea más propia de la TGS o de la Cibernética.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Busca principios de organización aplicables a cualquier sistema, sin importar su naturaleza.</span>
+<div class="quiz-classify-btns">
+<button data-correct>TGS</button>
+<button>Cibernética</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Se centra en los mecanismos de control y retroalimentación, especialmente en máquinas.</span>
+<div class="quiz-classify-btns">
+<button>TGS</button>
+<button data-correct>Cibernética</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Nace de observar organismos vivos como sistemas abiertos.</span>
+<div class="quiz-classify-btns">
+<button data-correct>TGS</button>
+<button>Cibernética</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Nace de la ingeniería de control automático y las matemáticas aplicadas.</span>
+<div class="quiz-classify-btns">
+<button>TGS</button>
+<button data-correct>Cibernética</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="pioneros">
+<div class="card">
+<h2 class="section-title">Otros pioneros</h2>
+<p class="lead">La TGS no fue obra de una sola persona. La <em>Society for General Systems Research</em> reunió a investigadores de disciplinas muy distintas que llegaron a conclusiones parecidas por caminos diferentes.</p>
+<div class="info-grid">
+<div class="info"><h3>📊 Kenneth Boulding</h3><p>Economista. Propuso en 1956 una jerarquía de la complejidad de los sistemas, de las estructuras más simples a las más complejas.</p></div>
+<div class="info"><h3>🎛️ W. Ross Ashby</h3><p>Psiquiatra y cibernético. Formuló la <strong>Ley de la Variedad Requerida</strong>, sobre la capacidad de un sistema de control para regular un sistema complejo.</p></div>
+<div class="info"><h3>🎲 Anatol Rapoport</h3><p>Matemático y biólogo. Aportó herramientas formales, incluida la teoría de juegos, al estudio de los sistemas.</p></div>
+</div>
+
+<p>Relaciona cada autor con su principal aporte a la teoría de sistemas.</p>
+<div class="quiz quiz-match" data-quiz-id="pioneros-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada autor con su aporte principal.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="bertalanffy">Ludwig von Bertalanffy</button>
+<button class="quiz-match-item" data-pair="wiener">Norbert Wiener</button>
+<button class="quiz-match-item" data-pair="boulding">Kenneth Boulding</button>
+<button class="quiz-match-item" data-pair="ashby">W. Ross Ashby</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="ashby">Ley de la Variedad Requerida.</button>
+<button class="quiz-match-item" data-pair="boulding">Jerarquía de la complejidad de los sistemas.</button>
+<button class="quiz-match-item" data-pair="bertalanffy">Teoría General de Sistemas y sistemas abiertos.</button>
+<button class="quiz-match-item" data-pair="wiener">Cibernética: control y comunicación.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="principios">
+<div class="card">
+<h2 class="section-title">Principios epistemológicos: isomorfismo y totalidad</h2>
+<p class="lead">Para que una teoría pudiera aplicarse a sistemas de cualquier naturaleza, Bertalanffy necesitaba principios que no dependieran de una disciplina concreta. Estos son los más importantes.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Principio</th><th scope="col">Descripción</th></tr></thead>
+<tbody>
+<tr><td><strong>Isomorfismo</strong></td><td>Un mismo patrón estructural o funcional se repite en sistemas de naturaleza completamente distinta.</td></tr>
+<tr><td><strong>Totalidad (no-sumatividad)</strong></td><td>El comportamiento del sistema completo no puede deducirse solo de la suma de sus partes aisladas.</td></tr>
+<tr><td><strong>Jerarquía</strong></td><td>Los sistemas están compuestos por niveles organizados, cada uno construido sobre el anterior.</td></tr>
+<tr><td><strong>Equifinalidad</strong></td><td>Un sistema abierto puede alcanzar el mismo estado final partiendo de condiciones iniciales distintas.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>El más importante para la TGS</strong>
+<p>El <strong>isomorfismo</strong> es, en cierto sentido, el principio que justifica la existencia misma de la TGS: si patrones como la retroalimentación o el equilibrio dinámico aparecen tanto en biología como en economía o ingeniería, entonces tiene sentido estudiar esos patrones de forma independiente de cada disciplina.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="principios-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Elige el principio correcto para cada frase.</p>
+<p>1. Que la idea de "equilibrio dinámico" aparezca tanto en la homeostasis de un organismo como en el equilibrio de un mercado económico es un ejemplo de
+<select class="quiz-blank" data-correct="isomorfismo">
+<option value="">— elige —</option>
+<option value="isomorfismo">isomorfismo</option>
+<option value="totalidad">totalidad</option>
+<option value="jerarquia">jerarquía</option>
+<option value="equifinalidad">equifinalidad</option>
+</select>.</p>
+<p>2. Que una célula, un tejido y un organismo completo sean niveles distintos, cada uno construido sobre el anterior, refleja el principio de
+<select class="quiz-blank" data-correct="jerarquia">
+<option value="">— elige —</option>
+<option value="isomorfismo">isomorfismo</option>
+<option value="totalidad">totalidad</option>
+<option value="jerarquia">jerarquía</option>
+<option value="equifinalidad">equifinalidad</option>
+</select>.</p>
+<p>3. Que dos culturas completamente distintas, partiendo de condiciones históricas diferentes, terminen desarrollando estructuras sociales muy parecidas ilustra el principio de
+<select class="quiz-blank" data-correct="equifinalidad">
+<option value="">— elige —</option>
+<option value="isomorfismo">isomorfismo</option>
+<option value="totalidad">totalidad</option>
+<option value="jerarquia">jerarquía</option>
+<option value="equifinalidad">equifinalidad</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="boulding">
+<div class="card">
+<h2 class="section-title">La jerarquía de la complejidad de Boulding</h2>
+<p class="lead">En 1956, el economista Kenneth Boulding propuso clasificar todos los sistemas posibles en una jerarquía de nueve niveles, desde las estructuras más simples hasta las más complejas. Aquí presentamos una selección simplificada de cuatro de esos niveles.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Nivel (simplificado)</th><th scope="col">Tipo de sistema</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Estructuras estáticas</td><td>Un cristal, un mapa.</td></tr>
+<tr><td>3</td><td>Sistemas de control (cibernéticos)</td><td>Un termostato.</td></tr>
+<tr><td>4</td><td>Sistemas abiertos (biológicos)</td><td>Una célula.</td></tr>
+<tr><td>8</td><td>Sistemas sociales</td><td>Una empresa, una universidad.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Solo una muestra</strong>
+<p>El modelo original de Boulding tiene nueve niveles completos, incluyendo sistemas animales, humanos y hasta "trascendentales". Aquí solo tomamos cuatro para que puedas ubicar rápidamente ejemplos cotidianos en distintos grados de complejidad.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="boulding-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada ejemplo según el nivel de la jerarquía de Boulding al que pertenece.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una fotografía impresa, sin movimiento ni cambio.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Estructura estática</button>
+<button>Sistema de control</button>
+<button>Sistema abierto</button>
+<button>Sistema social</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un aire acondicionado que regula la temperatura automáticamente.</span>
+<div class="quiz-classify-btns">
+<button>Estructura estática</button>
+<button data-correct>Sistema de control</button>
+<button>Sistema abierto</button>
+<button>Sistema social</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una planta que crece y se repara a sí misma.</span>
+<div class="quiz-classify-btns">
+<button>Estructura estática</button>
+<button>Sistema de control</button>
+<button data-correct>Sistema abierto</button>
+<button>Sistema social</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un equipo de fútbol organizado con roles y reglas.</span>
+<div class="quiz-classify-btns">
+<button>Estructura estática</button>
+<button>Sistema de control</button>
+<button>Sistema abierto</button>
+<button data-correct>Sistema social</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="vigencia">
+<div class="card">
+<h2 class="section-title">Vigencia actual: de la TGS a la ciencia de la complejidad</h2>
+<p class="lead">Las ideas de Bertalanffy y Wiener no se quedaron en 1968. Sentaron las bases de campos que hoy son centrales en ingeniería, administración y ciencia de datos.</p>
+<div class="highlight">
+<strong>📋 Caso de estudio</strong>
+<p>En el MIT, décadas después de Wiener, el ingeniero <strong>Jay Forrester</strong> aplicó los principios de retroalimentación de la cibernética para simular el comportamiento de empresas y ciudades enteras, dando origen a la <strong>dinámica de sistemas</strong>. Más tarde, el consultor <strong>Peter Senge</strong> popularizó el "pensamiento sistémico" en la gestión de organizaciones con su libro <em>La Quinta Disciplina</em>, mostrando que los mismos principios de retroalimentación y totalidad explican por qué las empresas a veces fallan al intentar mejorar cada área por separado.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="vigencia-1">
+<span class="quiz-badge">Caso de estudio</span>
+<p class="quiz-q">¿En qué campo de la administración influyó directamente el pensamiento sistémico originado en la TGS?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Contabilidad tributaria.</button>
+<button class="quiz-opt" data-correct>Gestión de organizaciones que aprenden.</button>
+<button class="quiz-opt">Fisiología comparada.</button>
+<button class="quiz-opt">Astronomía observacional.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Peter Senge aplicó el pensamiento sistémico a la gestión de organizaciones en su libro La Quinta Disciplina, sobre organizaciones que aprenden." data-ko="La conexión más directa es con la gestión de organizaciones que aprenden, popularizada por Peter Senge aplicando principios de la TGS a la administración." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="vigencia-2">
+<span class="quiz-badge">Caso de estudio</span>
+<p class="quiz-q">¿Qué disciplina moderna se considera heredera directa de los principios de la TGS y la cibernética?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>La ciencia de la complejidad.</button>
+<button class="quiz-opt">La química orgánica.</button>
+<button class="quiz-opt">La geografía física.</button>
+<button class="quiz-opt">La gramática comparada.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la ciencia de la complejidad estudia sistemas con muchas partes interrelacionadas y comportamiento emergente, exactamente la línea que abrieron la TGS y la cibernética." data-ko="Piensa en qué campo estudia sistemas con muchas partes interrelacionadas y comportamiento emergente: es la ciencia de la complejidad, heredera directa de la TGS y la cibernética." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Quién es considerado el fundador de la Teoría General de Sistemas?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Ludwig von Bertalanffy.</button>
+<button class="quiz-opt">Norbert Wiener.</button>
+<button class="quiz-opt">Kenneth Boulding.</button>
+<button class="quiz-opt">Isaac Newton.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Bertalanffy, biólogo austriaco, es reconocido como el fundador de la TGS a partir de sus observaciones sobre organismos como sistemas abiertos." data-ko="El fundador es Ludwig von Bertalanffy. Wiener fundó la cibernética (disciplina hermana), y Boulding fue uno de los pioneros que se sumó después." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">La cibernética y la Teoría General de Sistemas son exactamente lo mismo, solo con nombres distintos.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: comparten intereses (organización, control, retroalimentación) y nacieron casi al mismo tiempo, pero tienen orígenes disciplinarios y enfoques distintos." data-ko="Comparten conceptos e influencias mutuas, pero no son lo mismo: la TGS nace de la biología y busca principios generales; la cibernética nace de la ingeniería y las matemáticas, centrada en el control." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué evento institucionalizó la TGS como campo de estudio formal?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>La fundación de la Society for General Systems Research en 1954.</button>
+<button class="quiz-opt">La Segunda Guerra Mundial.</button>
+<button class="quiz-opt">La publicación del libro de Norbert Wiener en 1948.</button>
+<button class="quiz-opt">El descubrimiento de la estructura del ADN.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la fundación de la Society for General Systems Research en 1954, con Bertalanffy, Boulding, Gerard y Rapoport, convirtió a la TGS en un campo de investigación formal y organizado." data-ko="La institucionalización llegó con la fundación de la Society for General Systems Research en 1954. La obra de Wiener (1948) fundó la cibernética, una disciplina relacionada pero distinta." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de las siguientes es un ejemplo de isomorfismo, en el sentido que le da la TGS?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Que el concepto de retroalimentación explique tanto el funcionamiento de un termostato como el control hormonal del cuerpo humano.</button>
+<button class="quiz-opt">Que dos organismos de la misma especie compartan el mismo ADN.</button>
+<button class="quiz-opt">Que dos edificios tengan exactamente la misma altura.</button>
+<button class="quiz-opt">Que dos estudiantes obtengan la misma nota en un examen.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el isomorfismo es que un mismo patrón estructural (aquí, la retroalimentación) se repita en sistemas de naturaleza completamente distinta, como una máquina y un organismo." data-ko="El isomorfismo es que un mismo patrón se repita en sistemas de naturaleza distinta. Las otras opciones son solo coincidencias de valores, no patrones estructurales compartidos entre dominios diferentes." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Reduccionismo</td><td>Dividir el todo en partes y estudiarlas por separado.</td></tr>
+<tr><td>Sistema abierto (Bertalanffy)</td><td>Intercambia materia, energía o información con su entorno.</td></tr>
+<tr><td>Isomorfismo</td><td>Un mismo patrón estructural se repite en sistemas de naturaleza distinta.</td></tr>
+<tr><td>Cibernética (Wiener)</td><td>Estudio del control y la comunicación en máquinas y seres vivos.</td></tr>
+<tr><td>Society for General Systems Research</td><td>Institución fundada en 1954 que consolidó el campo.</td></tr>
+<tr><td>Jerarquía de Boulding</td><td>Clasificación de sistemas en niveles crecientes de complejidad (1956).</td></tr>
+<tr><td>Ley de la Variedad Requerida (Ashby)</td><td>Principio sobre la capacidad de control de un sistema.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🎓 En busca de una ciencia unificada</h3><p>Bertalanffy buscaba, en parte, un lenguaje común entre ciencias, un ideal cercano al del "Círculo de Viena", aunque por un camino distinto al positivismo lógico.</p></div>
+<div class="info"><h3>🖥️ La cibernética inspiró la IA</h3><p>Los conceptos de retroalimentación y control de Norbert Wiener influyeron directamente en el desarrollo temprano de la inteligencia artificial y la robótica.</p></div>
+<div class="info"><h3>📈 Jay Forrester y la dinámica de sistemas</h3><p>En el MIT, Forrester aplicó principios sistémicos para simular el comportamiento de empresas y ciudades, dando origen a la "dinámica de sistemas".</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Fundamentos y Origen de la Teoría General de Sistemas</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+</body>
+</html>
