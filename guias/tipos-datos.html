@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía Completa de Tipos de Datos en Python | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>Tipos de Datos</span></div>
+<p>Guía completa de los tipos de datos básicos en Python</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#quees">¿Qué es un tipo de dato?</a>
+<a href="#dinamico">Tipado dinámico</a>
+<a href="#type">La función type()</a>
+<a href="#enteros">Números enteros (int)</a>
+<a href="#decimales">Números decimales (float)</a>
+<a href="#booleanos">Booleanos (bool)</a>
+<a href="#texto">Cadenas de texto (str)</a>
+<a href="#conversion">Conversión de tipos</a>
+<a href="#mixtos">Operaciones con tipos mixtos</a>
+<a href="#colecciones">Tipos compuestos: vista previa</a>
+<a href="#errores">Errores comunes</a>
+<a href="#ejercicios">Ejercicios</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🐍 Guía de Aula Invertida</div>
+<h1>Tipos de <span>Datos</span> en Python</h1>
+<p>Antes de construir clases y objetos necesitas dominar la materia prima con la que trabaja todo programa: los tipos de datos. Aprende a identificarlos, convertirlos y evitar los errores más comunes al mezclarlos, con ejemplos que puedes editar y ejecutar en vivo.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Todo dato que manejas en un programa —un nombre, una edad, un precio, una condición verdadera o falsa— pertenece a un <strong>tipo de dato</strong> distinto. Python necesita saber de qué tipo es cada valor para decidir qué operaciones puede hacer con él y cómo almacenarlo en memoria.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía identificarás los tipos de datos básicos de Python (<code>int</code>, <code>float</code>, <code>bool</code>, <code>str</code>), sabrás comprobarlos con <code>type()</code>, convertirlos con casting y evitar los errores más frecuentes al mezclar tipos distintos.</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Todos los bloques con el encabezado <strong>Python</strong> son editables: presiona <strong>✏️ Editar</strong> para modificar el código y <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador (usa Pyodide, un Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📖 Aprende</h3><p>Los tipos básicos y cómo Python los maneja internamente.</p></div>
+<div class="info"><h3>💻 Practica</h3><p>Ejemplos editables y ejecutables en cada sección.</p></div>
+<div class="info"><h3>🎯 Domina</h3><p>Conversión de tipos y los errores que evitan la mayoría de los principiantes.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="quees">
+<div class="card">
+<h2 class="section-title">¿Qué es un tipo de dato?</h2>
+<p class="lead">Un <strong>tipo de dato</strong> clasifica un valor y define qué operaciones son válidas sobre él. No tiene sentido dividir un texto entre 3, pero sí dividir un número; no tiene sentido poner en mayúsculas un número, pero sí un texto.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Tipo</th><th scope="col">Ejemplo</th><th scope="col">Uso típico</th></tr></thead>
+<tbody>
+<tr><td><code>int</code></td><td><code>25</code></td><td>Contar, indexar, edades, cantidades.</td></tr>
+<tr><td><code>float</code></td><td><code>3.14</code></td><td>Precios, promedios, medidas.</td></tr>
+<tr><td><code>str</code></td><td><code>"Hola"</code></td><td>Texto, nombres, mensajes.</td></tr>
+<tr><td><code>bool</code></td><td><code>True</code> / <code>False</code></td><td>Condiciones, banderas de estado.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Importante</strong>
+<p>Aunque en matemáticas 5 y 5.0 son "el mismo número", para Python son tipos distintos (<code>int</code> y <code>float</code>), y esa diferencia puede cambiar el resultado de una operación.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="dinamico">
+<div class="card">
+<h2 class="section-title">Tipado dinámico en Python</h2>
+<p class="lead">A diferencia de lenguajes como Java o C, en Python <strong>no declaras el tipo</strong> de una variable: Python lo infiere automáticamente a partir del valor que le asignas, y una misma variable puede cambiar de tipo durante la ejecución del programa.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 20
+print(type(edad))
+
+edad = "veinte"
+print(type(edad))</code></pre>
+</div>
+<div class="highlight">
+<strong>No confundir</strong>
+<p>Que Python sea de <strong>tipado dinámico</strong> no significa que los tipos no importen: Python sigue siendo <strong>fuertemente tipado</strong> y verifica los tipos en cada operación. Solo significa que no necesitas declarar el tipo por adelantado.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="type">
+<div class="card">
+<h2 class="section-title">La función type()</h2>
+<p class="lead">La función incorporada <code>type()</code> te dice exactamente con qué tipo de dato estás trabajando en cualquier momento del programa.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Roy"
+edad = 30
+promedio = 88.5
+activo = True
+
+print(type(nombre))
+print(type(edad))
+print(type(promedio))
+print(type(activo))</code></pre>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>&lt;class 'str'&gt;
+&lt;class 'int'&gt;
+&lt;class 'float'&gt;
+&lt;class 'bool'&gt;</pre>
+</div>
+<div class="highlight">
+<strong>Alternativa más robusta</strong>
+<p>Para comprobar un tipo dentro de una condición, se prefiere <code>isinstance(valor, int)</code> en lugar de <code>type(valor) == int</code>: <code>isinstance()</code> también reconoce subclases, algo importante cuando trabajes con herencia en POO.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="enteros">
+<div class="card">
+<h2 class="section-title">Números enteros (int)</h2>
+<p class="lead">El tipo <code>int</code> representa números enteros, positivos o negativos, sin parte decimal. A diferencia de otros lenguajes, en Python los enteros no tienen un límite de tamaño fijo.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 20
+poblacion = 12_000_000
+print(edad, poblacion)
+print(type(poblacion))</code></pre>
+</div>
+<div class="highlight">
+<strong>Legibilidad</strong>
+<p>El guion bajo <code>_</code> dentro de un número (<code>12_000_000</code>) es solo un separador visual para el programador; Python lo ignora al interpretar el valor.</p>
+</div>
+<p>Los enteros admiten los operadores aritméticos habituales, incluyendo la división entera <code>//</code> y el módulo <code>%</code>:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">a = 17
+b = 5
+print(a + b)
+print(a - b)
+print(a * b)
+print(a // b)
+print(a % b)
+print(a ** b)</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Operador</th><th scope="col">Significado</th></tr></thead>
+<tbody>
+<tr><td><code>//</code></td><td>División entera (descarta la parte decimal).</td></tr>
+<tr><td><code>%</code></td><td>Módulo: el resto de la división.</td></tr>
+<tr><td><code>**</code></td><td>Potencia.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container" id="decimales">
+<div class="card">
+<h2 class="section-title">Números decimales (float)</h2>
+<p class="lead">El tipo <code>float</code> representa números con parte decimal. También admite notación científica usando <code>e</code>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">precio = 19.99
+distancia = 2.5e3
+print(precio, distancia)
+print(type(precio))</code></pre>
+</div>
+<div class="highlight">
+<strong>Cuidado con la precisión</strong>
+<p>Los <code>float</code> se almacenan en binario y no siempre pueden representar exactamente un decimal, igual que 1/3 no tiene una representación decimal exacta en base 10. Ejecuta el siguiente bloque:</p>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print(0.1 + 0.2)</code></pre>
+</div>
+<p>El resultado no es exactamente <code>0.3</code>. Para comparar o mostrar decimales de forma segura, usa <code>round()</code>:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">resultado = 0.1 + 0.2
+print(round(resultado, 2))</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="booleanos">
+<div class="card">
+<h2 class="section-title">Booleanos (bool)</h2>
+<p class="lead">El tipo <code>bool</code> solo tiene dos valores posibles: <code>True</code> o <code>False</code>. Se usa para representar condiciones y es el resultado natural de cualquier comparación.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">mayor_edad = True
+tiene_deuda = False
+print(mayor_edad, tiene_deuda)
+print(type(mayor_edad))</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print(5 > 3)
+print(10 == 10)
+print("a" == "b")</code></pre>
+</div>
+<div class="highlight">
+<strong>Curiosidad</strong>
+<p>En Python, <code>bool</code> es técnicamente una subclase de <code>int</code>: <code>True</code> equivale a <code>1</code> y <code>False</code> a <code>0</code>. Por eso <code>True + True</code> da <code>2</code> sin ningún error.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="texto">
+<div class="card">
+<h2 class="section-title">Cadenas de texto (str)</h2>
+<p class="lead">El tipo <code>str</code> representa texto. Aquí lo vemos solo como parte del panorama general de tipos; si quieres profundizar en indexado, slicing, métodos y formato, revisa la <strong>guía dedicada de Strings</strong>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = "Roy Carrasco"
+print(nombre)
+print(type(nombre))</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="conversion">
+<div class="card">
+<h2 class="section-title">Conversión de tipos (casting)</h2>
+<p class="lead">Python ofrece funciones para convertir explícitamente un valor de un tipo a otro: <code>int()</code>, <code>float()</code>, <code>str()</code> y <code>bool()</code>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad_texto = "20"
+edad_numero = int(edad_texto)
+print(edad_numero, type(edad_numero))
+
+precio = float("19.99")
+print(precio, type(precio))
+
+numero = 42
+texto = str(numero)
+print(texto, type(texto))</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Conversión</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Texto a entero</td><td><code>int("20")</code></td></tr>
+<tr><td>Texto a decimal</td><td><code>float("19.99")</code></td></tr>
+<tr><td>Número a texto</td><td><code>str(42)</code></td></tr>
+<tr><td>Cualquier valor a booleano</td><td><code>bool(valor)</code></td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Cuidado</strong>
+<p><code>int()</code> no puede convertir directamente un texto con decimales, como <code>"3.5"</code>: primero debes pasarlo por <code>float()</code> y luego por <code>int()</code>, es decir, <code>int(float("3.5"))</code>.</p>
+</div>
+<p>La conversión a <code>bool()</code> sigue una regla especial: existen valores que Python considera "falsos" (<strong>falsy</strong>) aunque no sean <code>False</code> explícitamente.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print(bool(0), bool(1))
+print(bool(""), bool("hola"))
+print(bool([]), bool([1, 2]))</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Valores "falsy" (equivalen a False)</th></tr></thead>
+<tbody>
+<tr><td><code>0</code>, <code>0.0</code>, <code>""</code>, <code>None</code>, <code>[]</code>, <code>{}</code>, <code>()</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container" id="mixtos">
+<div class="card">
+<h2 class="section-title">Operaciones con tipos mixtos</h2>
+<p class="lead">Cuando mezclas un <code>int</code> y un <code>float</code> en una operación aritmética, Python "asciende" automáticamente el resultado a <code>float</code>, sin que tengas que convertir nada manualmente.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">entero = 5
+decimal = 2.5
+resultado = entero + decimal
+print(resultado, type(resultado))</code></pre>
+</div>
+<div class="highlight">
+<strong>Lo que Python NO hace automáticamente</strong>
+<p>Esa conversión automática solo ocurre entre tipos numéricos. Python <strong>no</strong> convierte números a texto por ti: por eso <code>print("Edad: " + edad)</code> produce un <code>TypeError</code>, como ya viste en la guía de <code>print()</code>. Con <code>+</code>, texto y número nunca se mezclan solos.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="colecciones">
+<div class="card">
+<h2 class="section-title">Tipos compuestos: una vista previa</h2>
+<p class="lead">Además de los tipos simples, Python tiene tipos que agrupan varios valores a la vez: <code>list</code>, <code>tuple</code> y <code>dict</code> son los más comunes. Aquí solo los presentamos como tipos de dato; los estudiarás en detalle más adelante en el curso.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">numeros = [10, 20, 30]
+coordenada = (4, 7)
+persona = {"nombre": "Roy", "edad": 30}
+
+print(type(numeros))
+print(type(coordenada))
+print(type(persona))</code></pre>
+</div>
+<div class="highlight">
+<strong>Por ahora, quédate con esto</strong>
+<p>Igual que <code>int</code> o <code>str</code>, cada uno de estos tipos compuestos tiene sus propias reglas: si permite duplicados, si se puede modificar después de creado y si mantiene un orden. Los exploraremos con calma en las próximas guías.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="errores">
+<div class="card">
+<h2 class="section-title">Errores comunes</h2>
+<div class="info-grid">
+<div class="info"><h3>❌ Mezclar str y número con +</h3><p><code>"Edad: " + 20</code> produce <strong>TypeError</strong>. Usa comas, <code>str()</code> o un f-String.</p></div>
+<div class="info"><h3>❌ Convertir texto no numérico</h3><p><code>int("veinte")</code> produce <strong>ValueError</strong>: solo se pueden convertir textos que representen números válidos.</p></div>
+<div class="info"><h3>❌ Confundir "5" con 5</h3><p><code>"5" == 5</code> es <strong>False</strong>: un texto nunca es igual a un número, aunque se "vean" iguales.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Prueba el error</h2>
+<p>Ejecuta este bloque para observar en vivo el <code>ValueError</code> al convertir un texto no numérico.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = int("veinte")
+print(edad)</code></pre>
+</div>
+<div class="highlight">
+<strong>Corrígelo</strong>
+<p>Edita el bloque anterior y reemplaza <code>"veinte"</code> por un texto que sí represente un número, como <code>"20"</code>, para ver la diferencia.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Ejercicios Propuestos</h2>
+<p class="lead">Pon en práctica lo aprendido resolviendo los siguientes ejercicios directamente en el bloque editable.</p>
+<ol style="margin-left:25px;line-height:2">
+<li>Declara una variable de cada tipo básico (<code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code>) y usa <code>type()</code> para confirmar cada una.</li>
+<li>Convierte el texto <code>"150"</code> a <code>int</code> y súmale <code>50</code>.</li>
+<li>Provoca a propósito un <code>ValueError</code> convirtiendo <code>"hola"</code> a <code>int</code>, y luego corrígelo evitando el error.</li>
+<li>Escribe una expresión que mezcle un <code>int</code> y un <code>float</code>, e imprime el resultado junto con su <code>type()</code>.</li>
+<li>Usa <code>bool()</code> para comprobar si <code>0</code>, <code>""</code>, <code>"algo"</code> y <code>5</code> son verdaderos o falsos.</li>
+<li>Declara una lista, una tupla y un diccionario, e imprime el tipo de cada uno con <code>type()</code>.</li>
+</ol>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>✍️ Resuelve aquí los ejercicios</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu solución a los ejercicios (puedes resolverlos uno por uno)…"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Reto Final</h2>
+<p>Escribe un programa que parta de estos dos valores, guardados como texto (simulando datos que llegan de un formulario):</p>
+<ul style="margin-left:25px;line-height:2">
+<li><code>precio_texto = "45.90"</code></li>
+<li><code>cantidad_texto = "3"</code></li>
+</ul>
+<p>El programa deberá:</p>
+<ul style="margin-left:25px;line-height:2">
+<li>Convertir cada valor al tipo numérico correcto.</li>
+<li>Calcular el total (precio × cantidad).</li>
+<li>Mostrar el total con dos decimales usando un f-String.</li>
+<li>Imprimir el <code>type()</code> de cada variable involucrada para confirmar las conversiones.</li>
+</ul>
+<div class="code salida">
+<div class="code-header"><span>Salida esperada</span></div>
+<pre>Total a pagar: $137.70
+&lt;class 'float'&gt;
+&lt;class 'int'&gt;
+&lt;class 'float'&gt;</pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Uso</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Comprobar tipo</td><td><code>type(x)</code></td></tr>
+<tr><td>Comprobar tipo (robusto)</td><td><code>isinstance(x, int)</code></td></tr>
+<tr><td>Texto a entero</td><td><code>int("5")</code></td></tr>
+<tr><td>Texto a decimal</td><td><code>float("3.14")</code></td></tr>
+<tr><td>Número a texto</td><td><code>str(5)</code></td></tr>
+<tr><td>A booleano</td><td><code>bool(x)</code></td></tr>
+<tr><td>Redondear decimales</td><td><code>round(x, 2)</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🔢 Enteros sin límite</h3><p>A diferencia de C o Java, en Python los <code>int</code> no tienen un tamaño fijo: pueden crecer tanto como lo permita la memoria de tu computadora.</p></div>
+<div class="info"><h3>🐍 bool hereda de int</h3><p><code>True</code> y <code>False</code> son técnicamente una subclase de <code>int</code>, por eso puedes usarlos en operaciones aritméticas.</p></div>
+<div class="info"><h3>📏 El estándar IEEE 754</h3><p>Los <code>float</code> de Python siguen el mismo estándar binario que casi todos los lenguajes modernos; por eso <code>0.1 + 0.2</code> no da exactamente <code>0.3</code> en ninguno de ellos.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Tipos de Datos en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Resaltado de sintaxis (sin librerías externas) ===== */
+const PY_KEYWORDS = ["False","None","True","and","as","assert","async","await","break","class",
+  "continue","def","del","elif","else","except","finally","for","from","global","if","import",
+  "in","is","lambda","nonlocal","not","or","pass","raise","return","try","while","with","yield",
+  "print","len","int","str","float","bool","input","type","isinstance","round"];
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function highlightPython(code){
+  const escaped = escapeHtml(code);
+  const tokens = [];
+  const mask = (html) => {
+    const marker = String.fromCharCode(0xE000 + tokens.length);
+    tokens.push(html);
+    return marker;
+  };
+  let out = escaped.replace(
+    /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:[^"\\]|\\.)*"|f?'(?:[^'\\]|\\.)*')/gm,
+    (m, comment, str) => comment !== undefined
+      ? mask(`<span class="comment">${comment}</span>`)
+      : mask(`<span class="string">${str}</span>`)
+  );
+  out = out.replace(/\b\d+\.?\d*\b/g, m => mask(`<span class="number">${m}</span>`));
+  out = out.replace(new RegExp(`\\b(${PY_KEYWORDS.join("|")})\\b`, "g"), m => mask(`<span class="keyword">${m}</span>`));
+  out = out.replace(/\b([A-Za-z_]\w*)(?=\()/g, m => mask(`<span class="func">${m}</span>`));
+  out = out.replace(/[-]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
+  return out;
+}
+
+/* ===== Pyodide (Python real en el navegador), carga perezosa ===== */
+let pyodideReadyPromise = null;
+function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      const pyodide = await window.loadPyodide();
+      await pyodide.runPythonAsync(`
+import sys, io
+def __run_capture(src):
+    buf = io.StringIO()
+    old = sys.stdout
+    sys.stdout = buf
+    err = None
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.stdout = old
+    return buf.getvalue(), err
+`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+async function ejecutarPython(codigo){
+  const pyodide = await cargarPyodide();
+  const funcion = pyodide.globals.get("__run_capture");
+  const resultado = funcion(codigo);
+  const [salida, error] = resultado.toJs();
+  resultado.destroy();
+  return { salida, error };
+}
+
+/* ===== Resaltar cada ejemplo de solo lectura ===== */
+function resaltarEjemplo(bloque){
+  const codeEl = bloque.querySelector("pre code.src");
+  if (!codeEl) return;
+  codeEl.innerHTML = highlightPython(codeEl.textContent.trim());
+}
+
+/* ===== Conectar un panel de editor en blanco (ejecutar código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    try {
+      const { salida, error } = await ejecutarPython(textarea.value);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el intérprete de Python: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+function crearPanelEditor(mensaje){
+  const panel = document.createElement("div");
+  panel.className = "editor-panel";
+  panel.innerHTML = `
+    <div class="editor-header">
+      <span>${mensaje}</span>
+      <button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+    </div>
+    <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu propio código, inspirándote en el ejemplo de arriba, y presiona Ejecutar."></textarea>
+    <div class="output" hidden>
+      <div class="output-head">Salida</div>
+      <pre class="output-body"></pre>
+    </div>`;
+  return panel;
+}
+
+/* ===== Bloquear copiado del ejemplo (para que se escriba a mano) ===== */
+function bloquearCopiado(bloque){
+  const pre = bloque.querySelector("pre");
+  if (!pre) return;
+  const header = bloque.querySelector(".code-header span");
+  const avisar = () => {
+    if (!header) return;
+    const original = header.dataset.original || header.textContent;
+    header.dataset.original = original;
+    header.textContent = "🔒 Escríbelo tú mismo";
+    clearTimeout(header._avisoTimeout);
+    header._avisoTimeout = setTimeout(() => { header.textContent = original; }, 1600);
+  };
+  pre.addEventListener("copy", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("contextmenu", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("dragstart", e => e.preventDefault());
+}
+
+/* ===== Igualar la altura del editor a la del ejemplo ===== */
+function sincronizarAltura(bloque, panel){
+  const pre = bloque.querySelector("pre");
+  const textarea = panel.querySelector(".editor");
+  if (pre && textarea) textarea.style.minHeight = pre.offsetHeight + "px";
+}
+
+const parejas = [];
+document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
+  resaltarEjemplo(bloque);
+  bloquearCopiado(bloque);
+  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo");
+  bloque.after(panel);
+  conectarEditor(panel);
+  parejas.push([bloque, panel]);
+});
+
+document.querySelectorAll(".editor-panel.independiente").forEach(conectarEditor);
+document.querySelectorAll(".code.salida").forEach(bloquearCopiado);
+
+parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel));
+window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel)));
+
+</script>
+
+</body>
+</html>
