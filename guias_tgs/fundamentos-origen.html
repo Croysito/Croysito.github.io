@@ -58,6 +58,7 @@
 <header class="hero">
 <div class="hero-content">
 <div class="badge">🧩 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
 <h1>Fundamentos y <span>Origen</span> de la TGS</h1>
 <p>¿Por qué un biólogo terminó proponiendo una teoría que hoy se usa en administración, ingeniería, ecología e informática? Descubre el contexto histórico y científico que dio origen a la Teoría General de Sistemas, quiénes fueron sus principales impulsores y por qué su forma de pensar sigue vigente casi un siglo después.</p>
 <div class="author">
@@ -751,6 +752,18 @@ actualizarProgreso();
 <!-- Cloudflare Web Analytics -->
 <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
 <!-- End Cloudflare Web Analytics -->
+
+<!-- GoatCounter: conteo y contador de vistas visible -->
+<script data-goatcounter="https://croysito.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script>
+fetch('https://croysito.goatcounter.com/counter' + location.pathname + '.json')
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
 
 </body>
 </html>

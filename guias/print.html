@@ -60,6 +60,7 @@
 <header class="hero">
 <div class="hero-content">
 <div class="badge">🐍 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
 <h1>Dominando <span>print()</span> en Python</h1>
 <p>La primera instrucción que aprende todo programador, pero con muchos más trucos de los que parece. Aprende a mostrar información en pantalla con ejemplos prácticos que puedes editar y ejecutar en vivo.</p>
 <div class="author">
@@ -837,6 +838,18 @@ window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincr
 <!-- Cloudflare Web Analytics -->
 <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
 <!-- End Cloudflare Web Analytics -->
+
+<!-- GoatCounter: conteo y contador de vistas visible -->
+<script data-goatcounter="https://croysito.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script>
+fetch('https://croysito.goatcounter.com/counter' + location.pathname + '.json')
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
 
 </body>
 </html>

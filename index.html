@@ -89,6 +89,22 @@
             animation: fadeInDown 0.6s ease-out;
         }
 
+        .view-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(124, 177, 94, 0.2);
+            border: 1px solid rgba(124, 177, 94, 0.4);
+            color: var(--verde-mate-light);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            margin-left: 0.6rem;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
         .hero h1 {
             font-family: 'Fraunces', serif;
             font-size: clamp(2rem, 5vw, 3.25rem);
@@ -408,6 +424,7 @@
                 <img src="" alt="Universidad Adventista de Bolivia" onerror="this.style.display='none'">
             </div>
             <div class="badge">📚 Materiales de clase · Aula invertida</div>
+                <div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
             <h1>Materiales de <span>Clase</span></h1>
             <p class="hero-subtitle">Guías, recursos y material de consulta para las 4 materias que dicto este semestre en la Facultad de Ingeniería de Sistemas de la UAB.</p>
             <div class="materias-chips">
@@ -635,5 +652,17 @@
     <!-- Cloudflare Web Analytics -->
     <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
     <!-- End Cloudflare Web Analytics -->
+
+    <!-- GoatCounter: conteo y contador de vistas visible -->
+    <script data-goatcounter="https://croysito.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    <script>
+    fetch('https://croysito.goatcounter.com/counter' + location.pathname + '.json')
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var el = document.getElementById('viewCount');
+        if (el) el.textContent = d.count;
+      })
+      .catch(function(){});
+    </script>
 </body>
 </html>
