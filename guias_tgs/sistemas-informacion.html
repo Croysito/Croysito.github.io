@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TGS Aplicada: Sistemas de Información como Sistemas | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">TGS <span>Aplicada</span></div>
+<p>Sistemas de información como sistemas</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#vinculo">El vínculo histórico con Ingeniería de Sistemas</a>
+<a href="#sistema-info">Un sistema de información como sistema</a>
+<a href="#limites">Límites y entorno de un sistema de software</a>
+<a href="#eps">Entrada, proceso y salida en software real</a>
+<a href="#subsistemas">Arquitectura como jerarquía de subsistemas</a>
+<a href="#propiedades">Propiedades sistémicas en el software</a>
+<a href="#retroalimentacion">Retroalimentación en el ciclo de vida</a>
+<a href="#construccion">Analiza un sistema real</a>
+<a href="#razonamiento">Ejercicios de razonamiento</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧩 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>TGS Aplicada: <span>Sistemas de Información</span> como Sistemas</h1>
+<p>Todo lo que viste en las guías anteriores —elementos, límites, entorno, jerarquías, propiedades sistémicas, retroalimentación, diagramas causales— no era teoría abstracta. Es exactamente el lente con el que se analiza y diseña cualquier sistema de software real.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Esta guía conecta directamente lo aprendido en TGS con lo que vas a hacer como ingeniero de sistemas: analizar, diseñar y mantener sistemas de software. No es una guía más de "otro tema nuevo": es aplicar todo lo anterior a casos reales de software.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás identificar el límite y el entorno de un sistema de software real, mapear su entrada-proceso-salida, reconocer subsistemas en una arquitectura, reconocer propiedades sistémicas y bucles de retroalimentación en el desarrollo y operación de software.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Vas a trabajar con sistemas de software <strong>reales y reconocibles</strong> —una app de delivery, una tienda en línea, un sistema bancario, un hospital— para razonar cómo se aplican los conceptos, no para memorizar definiciones nuevas.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🔗 Conecta</h3><p>Todo lo de TGS, aplicado directamente a sistemas de software reales.</p></div>
+<div class="info"><h3>🔎 Razona</h3><p>Analiza sistemas reales identificando sus límites, entorno y subsistemas.</p></div>
+<div class="info"><h3>🎓 Prepara</h3><p>La base conceptual que usarás en Análisis y Diseño de Sistemas e Ingeniería de Software.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="vinculo">
+<div class="card">
+<h2 class="section-title">El vínculo histórico con Ingeniería de Sistemas</h2>
+<p class="lead">Cuando la TGS se popularizó, transformó también la forma de analizar organizaciones y, poco después, sistemas de información. El <strong>"enfoque de sistemas"</strong> (systems approach) se convirtió en la base metodológica del <strong>Análisis Estructurado</strong> (Tom DeMarco, Gane-Sarson), cuyos <strong>Diagramas de Flujo de Datos</strong> son, literalmente, entrada-proceso-salida aplicado a software. No es una coincidencia: es la misma idea, con otro nombre.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto de TGS</th><th scope="col">Su equivalente en Ingeniería de Sistemas</th></tr></thead>
+<tbody>
+<tr><td>Sistema</td><td>Sistema de información / sistema de software.</td></tr>
+<tr><td>Entrada → Proceso → Salida</td><td>Diagrama de flujo de datos (DFD).</td></tr>
+<tr><td>Límite del sistema</td><td>Alcance del proyecto (scope).</td></tr>
+<tr><td>Entorno</td><td>Stakeholders, sistemas externos, usuarios, integraciones.</td></tr>
+<tr><td>Subsistema</td><td>Módulo, componente o microservicio.</td></tr>
+</tbody>
+</table>
+
+<p>Relaciona cada concepto de TGS con su equivalente en Ingeniería de Sistemas.</p>
+<div class="quiz quiz-match" data-quiz-id="vinculo-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada concepto de TGS con su equivalente en un proyecto de software.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="limite">Límite del sistema</button>
+<button class="quiz-match-item" data-pair="entorno">Entorno</button>
+<button class="quiz-match-item" data-pair="subsistema">Subsistema</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="subsistema">Un microservicio o módulo dentro de la arquitectura.</button>
+<button class="quiz-match-item" data-pair="limite">El alcance del proyecto: qué se va a construir y qué no.</button>
+<button class="quiz-match-item" data-pair="entorno">La pasarela de pago externa que el sistema usa pero no controla.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="sistema-info">
+<div class="card">
+<h2 class="section-title">Un sistema de información como sistema</h2>
+<p class="lead">Cualquier sistema de software cumple, al pie de la letra, la definición de sistema que ya conoces: un conjunto de elementos interrelacionados que trabajan juntos hacia un propósito común, dentro de un límite, interactuando con su entorno.</p>
+<div class="highlight">
+<strong>Ejemplo: sistema de matrícula universitaria</strong>
+<p><strong>Elementos:</strong> estudiantes, cursos, horarios, cupos, reglas de prerrequisitos. <strong>Propósito:</strong> inscribir estudiantes a cursos sin choques de horario ni cupos excedidos. <strong>Relaciones:</strong> un estudiante se relaciona con varios cursos; un curso valida contra las reglas de prerrequisitos de cada estudiante.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="sistema-info-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un sistema de matrícula que solo permite inscribir un curso a la vez, sin validar choques de horario ni prerrequisitos, ¿en qué falla como "sistema" según la definición de TGS?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">No falla en nada: sigue siendo un sistema perfectamente válido.</button>
+<button class="quiz-opt" data-correct>Le faltan las relaciones entre elementos: un sistema no es solo una lista de elementos sueltos, sino elementos que interactúan entre sí con un propósito común.</button>
+<button class="quiz-opt">Falla porque no tiene entorno.</button>
+<button class="quiz-opt">Falla porque tiene demasiados elementos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un sistema que registra inscripciones sin relacionar cursos entre sí (choques de horario, prerrequisitos) es solo una lista de datos, no un sistema completo: le falta la parte más importante, las relaciones entre los elementos." data-ko="El número de elementos y la existencia de un entorno no son el problema. Lo que falta es que los elementos SE RELACIONEN entre sí (horarios que chocan, prerrequisitos que se validan): sin eso, no hay verdaderamente un sistema, solo datos sueltos." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="limites">
+<div class="card">
+<h2 class="section-title">Límites y entorno de un sistema de software</h2>
+<p class="lead">El <strong>límite</strong> de un sistema de software (lo que en gestión de proyectos se llama <strong>alcance</strong>) determina qué está <strong>dentro</strong> (lo que se construye y controla) y qué está en el <strong>entorno</strong> (lo que el sistema usa pero no controla).</p>
+<div class="highlight">
+<strong>Ejemplo: una tienda en línea</strong>
+<p>Dentro del límite: el catálogo, el carrito, la lógica de precios y descuentos. En el entorno: la pasarela de pago externa (Stripe, PayPal), el servicio de envíos, y el propio usuario, que decide qué comprar sin que el sistema pueda controlarlo.</p>
+</div>
+
+<p>Clasifica cada elemento de una tienda en línea según si está dentro del límite del sistema o en su entorno.</p>
+<div class="quiz quiz-classify" data-quiz-id="limites-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Está dentro del límite del sistema, o en su entorno?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El carrito de compras.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Dentro del límite</button>
+<button>En el entorno</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La pasarela de pago externa (ej. Stripe).</span>
+<div class="quiz-classify-btns">
+<button>Dentro del límite</button>
+<button data-correct>En el entorno</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La lógica de cálculo de descuentos.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Dentro del límite</button>
+<button>En el entorno</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El servicio postal que entrega el paquete.</span>
+<div class="quiz-classify-btns">
+<button>Dentro del límite</button>
+<button data-correct>En el entorno</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="eps">
+<div class="card">
+<h2 class="section-title">Entrada, proceso y salida en software real</h2>
+<p class="lead">Todo sistema de software puede describirse con el mismo esquema que ya conoces de TGS: <strong>entrada</strong> (lo que recibe), <strong>proceso</strong> (lo que hace con eso), <strong>salida</strong> (lo que entrega).</p>
+<div class="highlight">
+<strong>Ejemplo: control de asistencia por reconocimiento facial</strong>
+<p><strong>Entrada:</strong> foto capturada por la cámara. <strong>Proceso:</strong> comparar el rostro contra la base de datos de rostros registrados. <strong>Salida:</strong> registro de asistencia, o una alerta si el rostro no coincide con nadie registrado.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="eps-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Un sistema de recomendaciones de una tienda online recibe el historial de compras de un usuario, lo compara con patrones de compra de usuarios similares, y muestra una lista de productos sugeridos.</p>
+<p>1. El historial de compras del usuario es la
+<select class="quiz-blank" data-correct="entrada">
+<option value="">— elige —</option>
+<option value="entrada">entrada</option>
+<option value="proceso">proceso</option>
+<option value="salida">salida</option>
+</select>.</p>
+<p>2. Comparar el historial con patrones de usuarios similares es el
+<select class="quiz-blank" data-correct="proceso">
+<option value="">— elige —</option>
+<option value="entrada">entrada</option>
+<option value="proceso">proceso</option>
+<option value="salida">salida</option>
+</select>.</p>
+<p>3. La lista de productos sugeridos que se muestra al usuario es la
+<select class="quiz-blank" data-correct="salida">
+<option value="">— elige —</option>
+<option value="entrada">entrada</option>
+<option value="proceso">proceso</option>
+<option value="salida">salida</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="subsistemas">
+<div class="card">
+<h2 class="section-title">Arquitectura como jerarquía de subsistemas</h2>
+<p class="lead">La jerarquía de subsistemas y suprasistemas que ya viste no es solo para organizaciones: es exactamente cómo se piensa una arquitectura de software.</p>
+<div class="code">
+<div class="code-header"><span>Jerarquía de una plataforma de e-commerce</span></div>
+<pre>SUPRASISTEMA:  Ecosistema tecnológico de la empresa
+      └── SISTEMA:  Plataforma de e-commerce
+              ├── SUBSISTEMA:  Módulo de catálogo
+              ├── SUBSISTEMA:  Módulo de carrito y checkout
+              ├── SUBSISTEMA:  Módulo de pagos
+              └── SUBSISTEMA:  Módulo de usuarios y autenticación</pre>
+</div>
+<div class="highlight">
+<strong>Por qué importa</strong>
+<p>Cada módulo (subsistema) tiene su propio límite y se comunica con los demás a través de <strong>interfaces</strong> (APIs), igual que los subsistemas de cualquier organización se comunican entre sí sin que uno necesite conocer los detalles internos del otro.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="subsistemas-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un equipo decide que el "Módulo de pagos" acceda directamente a las tablas internas de la base de datos del "Módulo de usuarios", en vez de comunicarse a través de una API. ¿Qué principio de la jerarquía de sistemas se está rompiendo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ninguno: los subsistemas siempre deben compartir toda su información interna.</button>
+<button class="quiz-opt" data-correct>Se rompe el límite del subsistema: un subsistema bien definido expone una interfaz hacia los demás, sin que estos necesiten conocer ni acceder a sus detalles internos.</button>
+<button class="quiz-opt">Se rompe la propiedad de entropía.</button>
+<button class="quiz-opt">Se rompe la definición de suprasistema.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: cuando un subsistema accede directamente a las entrañas de otro, deja de respetarse el límite de cada uno, y el sistema completo se vuelve frágil: un cambio interno en Usuarios puede romper Pagos sin ningún aviso." data-ko="El problema no es de entropía ni de la definición de suprasistema: es que un subsistema bien definido protege sus detalles internos y solo expone una interfaz hacia afuera. Acceder directamente a tablas internas rompe justamente ese límite." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="propiedades">
+<div class="card">
+<h2 class="section-title">Propiedades sistémicas en el software</h2>
+<p class="lead">Las mismas propiedades sistémicas que viste antes (sinergia, entropía, homeostasis, equifinalidad) aparecen constantemente en el desarrollo y operación de software.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Propiedad</th><th scope="col">Ejemplo en software</th></tr></thead>
+<tbody>
+<tr><td><strong>Sinergia</strong></td><td>Catálogo + carrito + pagos, juntos, ofrecen la experiencia de compra completa: mucho más valor que cada módulo funcionando aislado.</td></tr>
+<tr><td><strong>Entropía</strong></td><td>Código que se degrada con el tiempo si nadie lo mantiene: deuda técnica, dependencias desactualizadas, funciones cada vez más difíciles de entender.</td></tr>
+<tr><td><strong>Homeostasis</strong></td><td>Auto-escalado (auto-scaling): el sistema añade o quita servidores automáticamente para mantener el rendimiento estable ante picos de tráfico.</td></tr>
+<tr><td><strong>Equifinalidad</strong></td><td>Dos equipos distintos, con arquitecturas completamente diferentes (un monolito bien diseñado y un conjunto de microservicios), logran el mismo objetivo de negocio igual de bien.</td></tr>
+</tbody>
+</table>
+
+<p>Relaciona cada propiedad sistémica con el ejemplo de software que la ilustra.</p>
+<div class="quiz quiz-match" data-quiz-id="propiedades-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada propiedad con su ejemplo en software.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="entropia">Entropía</button>
+<button class="quiz-match-item" data-pair="homeostasis">Homeostasis</button>
+<button class="quiz-match-item" data-pair="equifinalidad">Equifinalidad</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="homeostasis">Auto-escalado que ajusta servidores automáticamente ante picos de tráfico.</button>
+<button class="quiz-match-item" data-pair="entropia">Código que acumula deuda técnica y se vuelve más difícil de mantener con el tiempo.</button>
+<button class="quiz-match-item" data-pair="equifinalidad">Dos arquitecturas distintas (monolito y microservicios) que cumplen igual de bien el mismo objetivo de negocio.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="retroalimentacion">
+<div class="card">
+<h2 class="section-title">Retroalimentación en el ciclo de vida del software</h2>
+<p class="lead">Los bucles de retroalimentación que viste en la guía de diagramas causales están en el corazón de cómo se controla la calidad de un sistema de software.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Mecanismo</th><th scope="col">Cómo funciona como bucle de balance</th></tr></thead>
+<tbody>
+<tr><td>Pruebas automatizadas / CI</td><td>Detectan errores antes de que lleguen a producción, corrigiendo la desviación (el bug) muy cerca de donde se originó.</td></tr>
+<tr><td>Monitoreo y alertas en producción</td><td>Detectan anomalías de rendimiento en tiempo real y disparan una corrección (rollback, escalado, aviso al equipo).</td></tr>
+<tr><td>Reseñas y calificaciones de usuarios</td><td>Señalan problemas de experiencia que el equipo no detectó internamente, cerrando el bucle con el usuario real.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>El mismo problema de retardos que ya viste</strong>
+<p>Un equipo sin pruebas automatizadas detecta sus bugs semanas después, ya en producción: el mismo <strong>retardo</strong> que causaba oscilación en la ducha con tubería larga. Cuanto más tarda el equipo en recibir la retroalimentación, más "sobrecorrige" con parches apurados, y más inestable se vuelve la calidad del sistema con el tiempo.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="retro-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un equipo que hace despliegues cada 6 meses tarda mucho más en enterarse de un problema en producción que uno que despliega varias veces por semana. Según lo que viste sobre retardos, ¿qué consecuencia es más probable para el equipo de despliegues cada 6 meses?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ninguna: el retardo entre despliegues no afecta la estabilidad del sistema.</button>
+<button class="quiz-opt" data-correct>Mayor probabilidad de "sobrecorrecciones" grandes y estabilidad más irregular, porque el bucle de retroalimentación (detectar y corregir problemas) tarda mucho más en cerrarse.</button>
+<button class="quiz-opt">El sistema se volverá automáticamente un bucle de refuerzo.</button>
+<button class="quiz-opt">El retardo mejora la calidad del software.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: es el mismo principio de la ducha con tubería larga. Cuanto más tarda el bucle de balance en detectar y corregir una desviación, más grande es la corrección necesaria y más inestable se vuelve el sistema mientras tanto." data-ko="El retardo sí importa, y no cambia el tipo de bucle (sigue siendo de balance, buscando estabilidad). Lo que sí provoca es corrección tardía y más brusca, igual que en el ejemplo de la ducha: más retardo, más inestabilidad mientras el bucle se cierra." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="construccion">
+<div class="card">
+<h2 class="section-title">Analiza un sistema real</h2>
+<p class="lead">Vas a aplicar todo lo anterior, en orden, a un sistema real y reconocible: <strong>una app de delivery de comida</strong>.</p>
+
+<div class="quiz quiz-mc" data-quiz-id="construccion-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">La app de delivery coordina restaurantes, repartidores y clientes, pero no controla el tráfico de la ciudad ni el clima, que afectan los tiempos de entrega igual. ¿Cómo clasificarías el tráfico y el clima respecto al sistema?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Son parte del límite del sistema, porque afectan directamente el resultado.</button>
+<button class="quiz-opt" data-correct>Son parte del entorno: el sistema los sufre y debe adaptarse a ellos (por ejemplo, ajustando el tiempo estimado de entrega), pero no puede controlarlos.</button>
+<button class="quiz-opt">Son subsistemas de la app.</button>
+<button class="quiz-opt">No tienen ninguna relación con el sistema.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: que algo afecte al sistema no significa que esté dentro de su límite. El tráfico y el clima son entorno: el sistema no los controla, solo puede reaccionar y adaptarse a ellos." data-ko="Afectar el resultado no es lo mismo que estar dentro del límite. El sistema no puede controlar el tráfico ni el clima, solo reaccionar a ellos: eso es exactamente la definición de entorno." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Ahora el bucle de retroalimentación</strong>
+<p>Cuando un repartidor recibe varias calificaciones bajas seguidas, el sistema le asigna menos pedidos automáticamente hasta que sus calificaciones mejoren.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="construccion-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué tipo de bucle de retroalimentación es este, y qué función cumple para el sistema completo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Bucle de refuerzo: amplifica la mala calificación hasta sacar al repartidor de la plataforma sin remedio.</button>
+<button class="quiz-opt" data-correct>Bucle de balance: corrige la desviación (mala calidad de servicio) reduciendo pedidos, dando al repartidor la oportunidad de recuperar su calificación y mantener estable la calidad del servicio en la plataforma.</button>
+<button class="quiz-opt">No es un bucle de retroalimentación, es solo una regla de negocio sin relación con TGS.</button>
+<button class="quiz-opt">Es un ejemplo de entropía, no de retroalimentación.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: es un bucle de balance clásico. La 'salida' (calificación baja) retroalimenta al sistema, que ajusta su comportamiento (menos pedidos asignados) para corregir la desviación y mantener estable la calidad general del servicio." data-ko="No amplifica sin límite (no es refuerzo) ni es solo una regla de negocio aislada: es exactamente un bucle de balance, donde la salida (calificación) retroalimenta al sistema para corregir el comportamiento y mantener la calidad estable." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Ejercicios de razonamiento</h2>
+<p class="lead">Escenarios reales completos. Debes <strong>razonar</strong> la respuesta antes de comprobarla.</p>
+
+<div class="highlight">
+<strong>Escenario: banca en línea</strong>
+<p>Un banco construye su propia app de banca en línea, pero para verificar la identidad de un usuario nuevo usa un servicio externo de verificación biométrica de un tercero, y para las transferencias interbancarias depende de la red de pagos nacional.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Cómo se clasifican el servicio de verificación biométrica y la red de pagos nacional respecto al sistema del banco?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ambos son subsistemas del sistema del banco.</button>
+<button class="quiz-opt" data-correct>Ambos son parte del entorno: el banco los usa e integra, pero no los controla ni son parte de lo que el banco construye.</button>
+<button class="quiz-opt">Ambos están dentro del límite del sistema, porque el banco depende de ellos para funcionar.</button>
+<button class="quiz-opt">No se pueden clasificar sin más información.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: depender de algo no es lo mismo que controlarlo o construirlo. Ambos servicios son externos al banco, así que son entorno, no subsistemas internos ni parte del límite." data-ko="El banco depende de estos servicios, pero dependencia no es lo mismo que control. Al ser construidos y operados por terceros, están en el entorno del sistema del banco, no dentro de su límite." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:30px;">
+<strong>Escenario: red social</strong>
+<p>Cuantos más usuarios se unen a una red social, más útil se vuelve para cada usuario que ya está en ella (hay más gente con quién conectar, más contenido relevante).</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué propiedad sistémica describe mejor este fenómeno (conocido en la industria como "efecto de red")?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Entropía.</button>
+<button class="quiz-opt" data-correct>Sinergia: el valor del conjunto (todos los usuarios juntos) es mayor que la suma de sus partes, y crece con cada usuario nuevo que se añade.</button>
+<button class="quiz-opt">Homeostasis.</button>
+<button class="quiz-opt">Equifinalidad.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el efecto de red es un caso muy claro de sinergia: el valor que cada usuario obtiene depende de que exista el conjunto completo, no de su cuenta individual aislada." data-ko="No es degradación con el tiempo (entropía), ni autorregulación hacia un equilibrio (homeostasis), ni llegar al mismo resultado por caminos distintos (equifinalidad). Es sinergia: el conjunto vale más que la suma de sus partes." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:30px;">
+<strong>Escenario: sistema hospitalario</strong>
+<p>Un hospital tiene un sistema de historias clínicas, un sistema de laboratorio y un sistema de facturación, cada uno desarrollado por un proveedor distinto, integrados entre sí mediante interfaces estándar (HL7/FHIR).</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-3">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Si el sistema de laboratorio deja de funcionar por unas horas, el sistema de historias clínicas sigue funcionando pero sin poder mostrar resultados nuevos de exámenes. ¿Qué característica de la jerarquía de sistemas explica que uno pueda fallar sin tumbar a los demás?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Que los tres sistemas son en realidad el mismo sistema.</button>
+<button class="quiz-opt" data-correct>Que cada sistema tiene su propio límite bien definido y se comunica con los demás mediante interfaces, en vez de compartir sus internals directamente: por eso la falla de uno no colapsa automáticamente a los otros.</button>
+<button class="quiz-opt">Que no existe ninguna relación entre los tres sistemas.</button>
+<button class="quiz-opt">Que el sistema de laboratorio no es realmente un sistema.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: cada sistema mantiene su propio límite y se conecta a los demás por interfaces estándar, no compartiendo sus entrañas. Eso es justamente lo que permite que la falla de un subsistema (o sistema externo integrado) no derrumbe a todo el conjunto." data-ko="Sí existe relación entre los tres sistemas (se integran), y cada uno es un sistema legítimo por separado. Lo que explica la resiliencia es que cada uno mantiene su propio límite y se comunica por interfaces, en vez de depender de los detalles internos del otro." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué metodología de análisis de software está directamente basada en el esquema entrada-proceso-salida de la TGS?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Scrum.</button>
+<button class="quiz-opt" data-correct>El Análisis Estructurado, con sus Diagramas de Flujo de Datos.</button>
+<button class="quiz-opt">La programación orientada a objetos.</button>
+<button class="quiz-opt">El modelo entidad-relación.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: los Diagramas de Flujo de Datos del Análisis Estructurado (DeMarco, Gane-Sarson) son entrada-proceso-salida aplicado directamente al software." data-ko="Scrum es una metodología ágil de gestión, no de análisis basado en E-P-S; POO y el modelo E-R son otras técnicas de diseño. El Análisis Estructurado y sus Diagramas de Flujo de Datos son el vínculo directo con entrada-proceso-salida." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">El "límite" de un sistema de software es lo mismo que su "entorno".</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: son conceptos opuestos. El límite marca qué está DENTRO del sistema; el entorno es todo lo que está FUERA pero interactúa con él." data-ko="Son conceptos distintos y complementarios: el límite define qué está dentro del sistema (lo que se construye), y el entorno es todo lo externo que interactúa con él pero no se controla." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un módulo de "Reportes" que necesita leer directamente las tablas internas de otros cinco módulos para funcionar, en vez de usar sus APIs, es un síntoma de que se rompió...</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La propiedad de homeostasis.</button>
+<button class="quiz-opt" data-correct>El límite de cada subsistema: cada uno debería exponer una interfaz hacia afuera, no compartir sus detalles internos.</button>
+<button class="quiz-opt">El principio de equifinalidad.</button>
+<button class="quiz-opt">Nada: es la forma correcta de construir un módulo de reportes.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: acceder directamente a los internals de otros módulos rompe el límite de cada subsistema, generando acoplamiento frágil entre partes que deberían ser independientes." data-ko="No tiene que ver con homeostasis ni equifinalidad. Un módulo que necesita leer directamente las tablas internas de otros cinco está rompiendo el límite de cada uno: la forma correcta es comunicarse por interfaces." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué propiedad sistémica describe mejor el "auto-escalado" de servidores ante picos de tráfico?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Sinergia.</button>
+<button class="quiz-opt" data-correct>Homeostasis.</button>
+<button class="quiz-opt">Entropía.</button>
+<button class="quiz-opt">Equifinalidad.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el auto-escalado es autorregulación para mantener el rendimiento estable ante cambios del entorno (más tráfico): la definición exacta de homeostasis." data-ko="No es el valor del conjunto (sinergia), ni degradación (entropía), ni llegar al mismo resultado por caminos distintos (equifinalidad). Es autorregulación para mantener el equilibrio: homeostasis." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué un equipo que despliega software con más frecuencia suele tener sistemas más estables que uno que despliega cada 6 meses?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque desplegar seguido convierte los bucles de balance en bucles de refuerzo.</button>
+<button class="quiz-opt" data-correct>Porque el bucle de retroalimentación (detectar y corregir problemas) se cierra más rápido, evitando el mismo tipo de sobrecorrección que causa un retardo largo.</button>
+<button class="quiz-opt">No hay ninguna relación entre la frecuencia de despliegue y la estabilidad.</button>
+<button class="quiz-opt">Porque desplegar seguido elimina por completo la necesidad de retroalimentación.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: desplegar seguido acorta el retardo del bucle de balance que detecta y corrige problemas, exactamente el mismo principio que viste con la ducha de tubería larga: menos retardo, menos oscilación." data-ko="El bucle sigue siendo de balance, no se convierte en refuerzo, y la retroalimentación nunca deja de ser necesaria. Lo que cambia es que el retardo del bucle es más corto, evitando la sobrecorrección que un retardo largo produce." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto TGS</th><th scope="col">Aplicación en software</th></tr></thead>
+<tbody>
+<tr><td>Sistema</td><td>Cualquier sistema de información, con elementos, relaciones y un propósito.</td></tr>
+<tr><td>Límite</td><td>El alcance del proyecto: qué se construye.</td></tr>
+<tr><td>Entorno</td><td>Servicios externos, usuarios, integraciones que el sistema no controla.</td></tr>
+<tr><td>Entrada-Proceso-Salida</td><td>La base de los Diagramas de Flujo de Datos.</td></tr>
+<tr><td>Subsistema</td><td>Un módulo, componente o microservicio con su propio límite.</td></tr>
+<tr><td>Sinergia</td><td>El valor del conjunto (módulos integrados) supera la suma de sus partes.</td></tr>
+<tr><td>Entropía</td><td>Deuda técnica: degradación del código sin mantenimiento.</td></tr>
+<tr><td>Homeostasis</td><td>Auto-escalado y mecanismos de autorregulación.</td></tr>
+<tr><td>Equifinalidad</td><td>Distintas arquitecturas que logran el mismo objetivo de negocio.</td></tr>
+<tr><td>Retroalimentación</td><td>Pruebas, monitoreo y reseñas de usuarios como bucles de balance.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📊 El origen del "Analista de Sistemas"</h3><p>El puesto de "Systems Analyst", tan común en la industria del software, tomó su nombre y su método directamente del "enfoque de sistemas" (systems approach) que popularizó la TGS en los años 60 y 70.</p></div>
+<div class="info"><h3>🚀 La NASA y el enfoque de sistemas</h3><p>El programa Apollo popularizó la disciplina de "Ingeniería de Sistemas" (Systems Engineering) a gran escala, aplicando el pensamiento sistémico para coordinar millones de componentes de miles de proveedores distintos hacia un mismo objetivo.</p></div>
+<div class="info"><h3>🗂️ Los DFD cumplen 50 años</h3><p>Los Diagramas de Flujo de Datos, todavía enseñados hoy en análisis de sistemas, fueron popularizados por Tom DeMarco en 1978 —una aplicación directa y duradera del esquema entrada-proceso-salida de la TGS.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de TGS Aplicada: Sistemas de Información como Sistemas</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- GoatCounter: conteo y contador de vistas visible -->
+<script data-goatcounter="https://croysito.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script>
+fetch('https://croysito.goatcounter.com/counter' + location.pathname + '.json?start=2020-01-01')
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
