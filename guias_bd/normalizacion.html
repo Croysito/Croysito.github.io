@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelado Relacional y Normalización | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>Normalización</span></div>
+<p>Modelado relacional y normalización</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#isa">Generalización y especialización</a>
+<a href="#dependencias">Dependencias funcionales</a>
+<a href="#anomalias">Redundancia y anomalías</a>
+<a href="#1fn">Primera Forma Normal (1FN)</a>
+<a href="#2fn">Segunda Forma Normal (2FN)</a>
+<a href="#3fn">Tercera Forma Normal (3FN)</a>
+<a href="#bcnf">Forma Normal de Boyce-Codd</a>
+<a href="#proceso">Normalización paso a paso</a>
+<a href="#razonamiento">Ejercicios de razonamiento</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🗄️ Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Modelado Relacional y <span>Normalización</span></h1>
+<p>Ya tienes un modelo ER sólido. Ahora toca completarlo con generalización/especialización, y llevarlo a un esquema de tablas sin redundancia ni anomalías: el proceso de normalización, paso a paso, desde 1FN hasta BCNF.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Un modelo <strong>Entidad-Relación</strong> bien hecho no es el punto final: es el punto de partida. Esta guía cierra dos huecos que quedaron pendientes de la guía anterior y añade el proceso completo de <strong>normalización</strong>, la técnica que garantiza que un esquema relacional no tenga redundancia ni anomalías.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás modelar jerarquías de generalización/especialización y convertirlas a tablas, identificar dependencias funcionales, reconocer anomalías de redundancia, y aplicar 1FN, 2FN, 3FN y BCNF sobre un esquema real.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Encontrarás <strong>actividades cortas y autocorregibles</strong> —selección múltiple, verdadero/falso, emparejamiento, clasificación y completar espacios— repartidas a lo largo de la guía, y una sección de <strong>ejercicios de razonamiento</strong> donde se te da un escenario y debes predecir el resultado correcto antes de comprobarlo. Cada actividad te da retroalimentación inmediata.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🧬 Completa</h3><p>Generalización/especialización: lo único que faltaba del modelo ER.</p></div>
+<div class="info"><h3>🔎 Razona</h3><p>Dependencias funcionales: la base teórica de toda la normalización.</p></div>
+<div class="info"><h3>🧹 Ordena</h3><p>1FN → 2FN → 3FN → BCNF, un esquema sin redundancia ni anomalías.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="isa">
+<div class="card">
+<h2 class="section-title">Generalización y especialización (ISA)</h2>
+<p class="lead">A veces una entidad tiene <strong>subtipos</strong> con atributos propios además de los que comparten con el tipo general. "Vehículo" puede especializarse en "Auto" y "Moto"; "Persona" puede especializarse en "Empleado" y "Cliente". Esta jerarquía se llama <strong>generalización/especialización</strong>, o relación <strong>ISA</strong> ("Auto ISA Vehículo": un Auto ES UN Vehículo).</p>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Significado</th></tr></thead>
+<tbody>
+<tr><td><strong>Superclase</strong></td><td>La entidad general, con los atributos comunes a todos los subtipos.</td></tr>
+<tr><td><strong>Subclase</strong></td><td>Un subtipo especializado, que hereda los atributos de la superclase y añade los suyos propios.</td></tr>
+<tr><td><strong>Participación total</strong></td><td>Toda instancia de la superclase debe pertenecer a alguna subclase.</td></tr>
+<tr><td><strong>Participación parcial</strong></td><td>Puede haber instancias de la superclase que no pertenezcan a ninguna subclase.</td></tr>
+<tr><td><strong>Disjunta</strong></td><td>Una instancia solo puede pertenecer a una subclase a la vez (Auto o Moto, no ambas).</td></tr>
+<tr><td><strong>Solapada</strong></td><td>Una instancia puede pertenecer a varias subclases al mismo tiempo (una Persona puede ser Empleado y Cliente a la vez).</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Ejemplo</strong>
+<p><strong>Vehículo</strong> (placa, marca, año) se especializa, de forma <strong>total y disjunta</strong>, en <strong>Auto</strong> (número de puertas) y <strong>Moto</strong> (cilindraje): todo vehículo registrado es un Auto o una Moto, y nunca ambos a la vez.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="isa-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada situación según el tipo de participación/solapamiento que describe.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Todo Empleado de la empresa es Gerente o Técnico, nunca las dos cosas.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Total y disjunta</button>
+<button>Parcial y disjunta</button>
+<button>Total y solapada</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una Persona puede ser Cliente, Proveedor, ambas cosas a la vez, o ninguna.</span>
+<div class="quiz-classify-btns">
+<button>Total y disjunta</button>
+<button>Parcial y disjunta</button>
+<button data-correct>Parcial y solapada</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<h2 class="section-title" style="margin-top:35px;">Cómo convertir una jerarquía ISA a tablas</h2>
+<p class="lead">Existen tres estrategias clásicas para representar una jerarquía ISA en tablas relacionales, con distintos compromisos.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Estrategia</th><th scope="col">Cómo funciona</th></tr></thead>
+<tbody>
+<tr><td><strong>Tabla única</strong></td><td>Una sola tabla con todos los atributos de la superclase y todas las subclases, más una columna "tipo" para saber a qué subclase pertenece cada fila. Genera columnas que quedan en NULL para las filas que no aplican.</td></tr>
+<tr><td><strong>Tabla por subclase</strong></td><td>Una tabla para la superclase (atributos comunes) y una tabla por cada subclase, cuya clave primaria es también clave foránea hacia la superclase. Es la más usada porque no desperdicia espacio y respeta bien la jerarquía.</td></tr>
+<tr><td><strong>Tabla por clase completa</strong></td><td>Una tabla independiente por cada subclase, repitiendo en cada una los atributos de la superclase (sin tabla aparte para la superclase). Solo funciona bien si la jerarquía es total.</td></tr>
+</tbody>
+</table>
+
+<p>Relaciona cada estrategia con su descripción.</p>
+<div class="quiz quiz-match" data-quiz-id="isa-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada estrategia de mapeo ISA con su descripción.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="unica">Tabla única</button>
+<button class="quiz-match-item" data-pair="subclase">Tabla por subclase</button>
+<button class="quiz-match-item" data-pair="completa">Tabla por clase completa</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="completa">Cada subclase repite los atributos de la superclase; no hay tabla para la superclase.</button>
+<button class="quiz-match-item" data-pair="unica">Una sola tabla con columna "tipo" y columnas que quedan en NULL según el subtipo.</button>
+<button class="quiz-match-item" data-pair="subclase">Una tabla por la superclase y una por cada subclase, unidas por clave primaria que también es foránea.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="dependencias">
+<div class="card">
+<h2 class="section-title">Dependencias funcionales</h2>
+<p class="lead">Una <strong>dependencia funcional</strong> X → Y significa: "el valor de X determina de forma única el valor de Y". Si dos filas tienen el mismo valor de X, necesariamente deben tener el mismo valor de Y. Toda la teoría de normalización se construye sobre este concepto.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Notación</th><th scope="col">Se lee como</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>cedula → nombre</td><td>La cédula determina el nombre.</td><td>Dos filas con la misma cédula deben tener el mismo nombre.</td></tr>
+<tr><td>{pedido_id, producto_id} → cantidad</td><td>La combinación de pedido y producto determina la cantidad.</td><td>Dependencia con un determinante compuesto.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Dependencia completa vs. parcial</strong>
+<p>Cuando la clave es <strong>compuesta</strong> (más de una columna), un atributo tiene <strong>dependencia completa</strong> si depende de toda la clave, y <strong>dependencia parcial</strong> si depende solo de una parte de ella. Por ejemplo, en DETALLE_PEDIDO(pedido_id, producto_id, producto_nombre, cantidad), <code>cantidad</code> depende de la clave completa {pedido_id, producto_id}, pero <code>producto_nombre</code> depende solo de <code>producto_id</code>: es una dependencia parcial.</p>
+</div>
+<div class="highlight">
+<strong>Dependencia transitiva</strong>
+<p>Si X → Y y Y → Z, entonces X → Z, pero de forma <strong>indirecta</strong> (a través de Y). Por ejemplo, si <code>empleado_id → depto_id</code> y <code>depto_id → depto_nombre</code>, entonces <code>depto_nombre</code> depende de <code>empleado_id</code> de forma <strong>transitiva</strong>, no directa.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="dependencias-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Dada la tabla EMPLEADO(empleado_id, nombre, depto_id, depto_nombre), donde depto_id → depto_nombre, clasifica cada dependencia.</p>
+<p>1. La dependencia empleado_id → nombre es una dependencia
+<select class="quiz-blank" data-correct="directa">
+<option value="">— elige —</option>
+<option value="directa">directa</option>
+<option value="transitiva">transitiva</option>
+</select>.</p>
+<p>2. La dependencia empleado_id → depto_nombre (a través de depto_id) es una dependencia
+<select class="quiz-blank" data-correct="transitiva">
+<option value="">— elige —</option>
+<option value="directa">directa</option>
+<option value="transitiva">transitiva</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="anomalias">
+<div class="card">
+<h2 class="section-title">Redundancia y anomalías</h2>
+<p class="lead">Un esquema mal normalizado repite información innecesariamente. Esa redundancia produce tres tipos clásicos de <strong>anomalías</strong> al modificar los datos.</p>
+<table class="tabla">
+<thead><tr><th scope="col">pedido_id</th><th scope="col">cliente_id</th><th scope="col">cliente_nombre</th><th scope="col">cliente_ciudad</th></tr></thead>
+<tbody>
+<tr><td>101</td><td>7</td><td>Ana Flores</td><td>Cochabamba</td></tr>
+<tr><td>102</td><td>7</td><td>Ana Flores</td><td>Cochabamba</td></tr>
+<tr><td>103</td><td>9</td><td>Luis Vega</td><td>Santa Cruz</td></tr>
+</tbody>
+</table>
+<table class="tabla">
+<thead><tr><th scope="col">Anomalía</th><th scope="col">Qué ocurre</th></tr></thead>
+<tbody>
+<tr><td><strong>Inserción</strong></td><td>No puedes registrar un cliente nuevo si todavía no tiene ningún pedido, porque cliente_nombre y cliente_ciudad solo existen "colgadas" de una fila de pedido.</td></tr>
+<tr><td><strong>Eliminación</strong></td><td>Si borras el único pedido del cliente 9, pierdes también toda la información de "Luis Vega" sin querer.</td></tr>
+<tr><td><strong>Actualización</strong></td><td>Si Ana Flores se muda de ciudad, hay que actualizar cliente_ciudad en todas sus filas; si olvidas una, los datos quedan inconsistentes.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-classify" data-quiz-id="anomalias-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada situación según el tipo de anomalía que describe.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Al borrar el pedido 103, se pierde por completo el registro de que existe el cliente "Luis Vega".</span>
+<div class="quiz-classify-btns">
+<button>Inserción</button>
+<button data-correct>Eliminación</button>
+<button>Actualización</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">No se puede registrar a un cliente nuevo en el sistema hasta que haga su primer pedido.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Inserción</button>
+<button>Eliminación</button>
+<button>Actualización</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Ana Flores cambia de ciudad y hay que corregir cliente_ciudad en varias filas repetidas.</span>
+<div class="quiz-classify-btns">
+<button>Inserción</button>
+<button>Eliminación</button>
+<button data-correct>Actualización</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="1fn">
+<div class="card">
+<h2 class="section-title">Primera Forma Normal (1FN)</h2>
+<p class="lead">Una tabla está en <strong>1FN</strong> si todos sus atributos son <strong>atómicos</strong> (no se pueden dividir más), no hay grupos repetitivos ni columnas multivaluadas, y cada fila puede identificarse de forma única.</p>
+<table class="tabla">
+<thead><tr><th scope="col">cliente_id</th><th scope="col">nombre</th><th scope="col">telefonos</th></tr></thead>
+<tbody>
+<tr><td>7</td><td>Ana Flores</td><td>591-70011122, 591-70033344</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>No cumple 1FN</strong>
+<p>La columna <code>telefonos</code> guarda varios valores en una sola celda. La solución es crear una tabla <strong>TELEFONO(cliente_id, numero)</strong> aparte, con una fila por número, relacionada por clave foránea.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="1fn-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Una tabla PRODUCTO tiene una columna "categorias" que guarda valores como "Electrónica, Hogar". ¿Qué regla de 1FN se está violando?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La clave primaria no está bien elegida.</button>
+<button class="quiz-opt" data-correct>Atomicidad: la columna guarda varios valores en una sola celda.</button>
+<button class="quiz-opt">Hay una dependencia transitiva.</button>
+<button class="quiz-opt">Hay una dependencia parcial.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: 1FN exige que cada celda contenga un único valor atómico. 'Electrónica, Hogar' en una sola celda viola esa regla." data-ko="Las dependencias parciales y transitivas se evalúan en 2FN y 3FN, no en 1FN. El problema aquí es que la celda no es atómica: contiene varios valores." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="2fn">
+<div class="card">
+<h2 class="section-title">Segunda Forma Normal (2FN)</h2>
+<p class="lead">Una tabla está en <strong>2FN</strong> si ya está en 1FN y, además, <strong>ningún atributo no clave depende solo de una parte</strong> de una clave primaria compuesta (no tiene dependencias parciales). Si la clave primaria es una sola columna, la tabla cumple 2FN automáticamente.</p>
+<table class="tabla">
+<thead><tr><th scope="col">pedido_id (PK)</th><th scope="col">producto_id (PK)</th><th scope="col">producto_nombre</th><th scope="col">cantidad</th></tr></thead>
+<tbody>
+<tr><td>101</td><td>P01</td><td>Teclado</td><td>2</td></tr>
+<tr><td>101</td><td>P02</td><td>Mouse</td><td>1</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>No cumple 2FN</strong>
+<p><code>producto_nombre</code> depende solo de <code>producto_id</code>, no de la clave completa {pedido_id, producto_id}: es una <strong>dependencia parcial</strong>. Se corrige moviendo <code>producto_nombre</code> a una tabla <strong>PRODUCTO(producto_id, producto_nombre)</strong> aparte. <code>cantidad</code> sí depende de la clave completa, así que se queda en DETALLE_PEDIDO.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="2fn-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre la tabla DETALLE_PEDIDO(pedido_id, producto_id, producto_nombre, cantidad):</p>
+<p>1. producto_nombre depende
+<select class="quiz-blank" data-correct="parcial">
+<option value="">— elige —</option>
+<option value="parcial">parcialmente</option>
+<option value="completamente">completamente</option>
+</select> de la clave primaria.</p>
+<p>2. cantidad depende
+<select class="quiz-blank" data-correct="completamente">
+<option value="">— elige —</option>
+<option value="parcial">parcialmente</option>
+<option value="completamente">completamente</option>
+</select> de la clave primaria.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="3fn">
+<div class="card">
+<h2 class="section-title">Tercera Forma Normal (3FN)</h2>
+<p class="lead">Una tabla está en <strong>3FN</strong> si ya está en 2FN y, además, <strong>ningún atributo no clave depende de otro atributo no clave</strong> (no tiene dependencias transitivas). Se resume con la regla mnemotécnica: cada atributo debe depender "de la clave, de toda la clave, y de nada más que la clave".</p>
+<table class="tabla">
+<thead><tr><th scope="col">empleado_id (PK)</th><th scope="col">nombre</th><th scope="col">depto_id</th><th scope="col">depto_nombre</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Carlos Ramírez</td><td>D1</td><td>Sistemas</td></tr>
+<tr><td>2</td><td>Ana López</td><td>D1</td><td>Sistemas</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>No cumple 3FN</strong>
+<p><code>depto_nombre</code> no depende directamente de <code>empleado_id</code>: depende de <code>depto_id</code>, que a su vez depende de <code>empleado_id</code>. Es una <strong>dependencia transitiva</strong>. Se corrige moviendo <code>depto_nombre</code> a una tabla <strong>DEPARTAMENTO(depto_id, depto_nombre)</strong> aparte, dejando <code>depto_id</code> como clave foránea en EMPLEADO.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="3fn-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué depto_nombre viola 3FN en la tabla EMPLEADO(empleado_id, nombre, depto_id, depto_nombre)?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque depto_nombre no es atómico.</button>
+<button class="quiz-opt">Porque depende solo de una parte de la clave primaria.</button>
+<button class="quiz-opt" data-correct>Porque depende de depto_id, que es un atributo no clave, en lugar de depender directamente de empleado_id.</button>
+<button class="quiz-opt">Porque la tabla no tiene clave primaria.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: depto_nombre depende transitivamente de empleado_id, a través del atributo no clave depto_id. Eso es justamente lo que 3FN prohíbe." data-ko="El problema no es atomicidad (eso es 1FN) ni dependencia parcial (eso requiere clave compuesta, y aquí la clave es solo empleado_id). Es una dependencia transitiva a través de depto_id." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="bcnf">
+<div class="card">
+<h2 class="section-title">Forma Normal de Boyce-Codd (BCNF)</h2>
+<p class="lead">BCNF es una versión <strong>más estricta</strong> que 3FN: para <strong>toda</strong> dependencia funcional X → Y de la tabla, X debe ser una <strong>superclave</strong> (una clave candidata, o contenerla). 3FN permite una excepción que BCNF no permite.</p>
+<table class="tabla">
+<thead><tr><th scope="col">estudiante</th><th scope="col">curso</th><th scope="col">profesor</th></tr></thead>
+<tbody>
+<tr><td>Juan</td><td>Bases de Datos</td><td>Roy Carrasco</td></tr>
+<tr><td>Ana</td><td>Bases de Datos</td><td>Roy Carrasco</td></tr>
+<tr><td>Juan</td><td>Redes</td><td>Marco Vidal</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>El caso especial</strong>
+<p>Regla de negocio: <strong>cada profesor dicta un único curso</strong> (profesor → curso), pero un curso puede tener varios profesores en paralelo, y un estudiante puede inscribirse con cualquiera de ellos. Las claves candidatas son {estudiante, curso} y {estudiante, profesor}. La dependencia <code>profesor → curso</code> es válida, pero <code>profesor</code> por sí solo <strong>no es una superclave</strong>: viola BCNF. Sin embargo, sí cumple 3FN, porque <code>curso</code> es parte de una clave candidata (un "atributo primo"), y 3FN permite esa excepción.</p>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col"></th><th scope="col">3FN</th><th scope="col">BCNF</th></tr></thead>
+<tbody>
+<tr><td>Exige</td><td>X → Y: X es superclave, <strong>o</strong> Y es parte de una clave candidata.</td><td>X → Y: X es superclave, sin excepciones.</td></tr>
+<tr><td>Este ejemplo</td><td>✅ Cumple (curso es atributo primo).</td><td>❌ No cumple (profesor no es superclave).</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-mc" data-quiz-id="bcnf-1">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Toda tabla que está en BCNF también está en 3FN.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: BCNF es más estricta que 3FN, así que cualquier tabla en BCNF automáticamente cumple también 3FN. Lo contrario no siempre es cierto." data-ko="Es verdadero: BCNF exige más que 3FN (sin la excepción de los atributos primos), así que toda tabla en BCNF ya cumple 3FN por definición." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="proceso">
+<div class="card">
+<h2 class="section-title">Normalización paso a paso</h2>
+<p class="lead">Vas a normalizar una tabla real, de principio a fin. Punto de partida: una única tabla PEDIDO_RAW con datos de pedido, cliente y producto todos mezclados, clave primaria compuesta {pedido_id, producto_id}.</p>
+<table class="tabla">
+<thead><tr><th scope="col">pedido_id</th><th scope="col">producto_id</th><th scope="col">fecha</th><th scope="col">cliente_id</th><th scope="col">cliente_nombre</th><th scope="col">producto_nombre</th><th scope="col">precio</th><th scope="col">cantidad</th></tr></thead>
+<tbody>
+<tr><td>101</td><td>P01</td><td>2026-03-01</td><td>7</td><td>Ana Flores</td><td>Teclado</td><td>120</td><td>2</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-mc" data-quiz-id="proceso-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">PEDIDO_RAW ya tiene todos sus atributos atómicos (ninguna celda guarda varios valores). Al revisar 2FN, ¿qué atributos violan la dependencia completa respecto a la clave {pedido_id, producto_id}?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Solo cantidad.</button>
+<button class="quiz-opt" data-correct>fecha, cliente_id y cliente_nombre (dependen solo de pedido_id); producto_nombre y precio (dependen solo de producto_id).</button>
+<button class="quiz-opt">Ningún atributo: la tabla ya cumple 2FN.</button>
+<button class="quiz-opt">Todos los atributos, incluyendo cantidad.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: fecha y los datos del cliente dependen solo de pedido_id, y los datos del producto dependen solo de producto_id. Ambos son casos de dependencia parcial. Solo cantidad depende de la clave completa." data-ko="Fíjate en cada atributo por separado: fecha/cliente_id/cliente_nombre solo necesitan pedido_id; producto_nombre/precio solo necesitan producto_id. Ambos grupos dependen de una PARTE de la clave, no de la clave completa." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Aplicando 2FN</strong>
+<p>Se separan tres tablas: <strong>PEDIDO(pedido_id, fecha, cliente_id, cliente_nombre)</strong>, <strong>PRODUCTO(producto_id, producto_nombre, precio)</strong> y <strong>DETALLE_PEDIDO(pedido_id, producto_id, cantidad)</strong>, esta última con clave foránea hacia las otras dos.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="proceso-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Dentro de la nueva tabla PEDIDO(pedido_id, fecha, cliente_id, cliente_nombre), ¿qué violación queda todavía, y cuál es la solución?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ninguna: PEDIDO ya está en 3FN.</button>
+<button class="quiz-opt" data-correct>Dependencia transitiva: cliente_nombre depende de cliente_id, no directamente de pedido_id. Se corrige separando CLIENTE(cliente_id, cliente_nombre).</button>
+<button class="quiz-opt">Dependencia parcial, porque pedido_id no es una clave compuesta.</button>
+<button class="quiz-opt">Falta de atomicidad en cliente_nombre.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: pedido_id → cliente_id → cliente_nombre es una cadena transitiva. La solución en 3FN es siempre la misma: separar el atributo transitivo en su propia tabla." data-ko="La clave de PEDIDO ya es una sola columna (pedido_id), así que no puede haber dependencia parcial. El problema es la cadena pedido_id → cliente_id → cliente_nombre: una dependencia transitiva." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Esquema final (en 3FN)</strong>
+<p><strong>PEDIDO</strong>(pedido_id <em>PK</em>, fecha, cliente_id <em>FK</em>) · <strong>CLIENTE</strong>(cliente_id <em>PK</em>, cliente_nombre) · <strong>PRODUCTO</strong>(producto_id <em>PK</em>, producto_nombre, precio) · <strong>DETALLE_PEDIDO</strong>(pedido_id <em>PK, FK</em>, producto_id <em>PK, FK</em>, cantidad)</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Ejercicios de razonamiento</h2>
+<p class="lead">En estas preguntas no se te pide recordar una definición: se te da un escenario, y debes <strong>razonar</strong> cuál sería la respuesta correcta antes de comprobarla.</p>
+
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Una universidad modela "Persona", que se especializa en "Estudiante" y "Docente". Un mismo individuo puede ser estudiante de posgrado y docente de pregrado al mismo tiempo. ¿Qué tipo de solapamiento es este?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Total y disjunta.</button>
+<button class="quiz-opt" data-correct>Parcial y solapada (si además puede haber personas registradas que no son ni una cosa ni la otra) o total y solapada (si toda Persona debe ser al menos una de las dos).</button>
+<button class="quiz-opt">No es una jerarquía ISA válida.</button>
+<button class="quiz-opt">Total y disjunta, porque son dos subclases distintas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: como una misma Persona puede pertenecer a ambas subclases simultáneamente, la jerarquía es solapada, no disjunta." data-ko="La clave es que una misma Persona puede ser Estudiante Y Docente a la vez: eso es exactamente lo que define una jerarquía solapada, no disjunta." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:30px;">
+<strong>Otro escenario</strong>
+<p>La tabla LIBRO(isbn, titulo, editorial_id, editorial_nombre, editorial_pais) tiene clave primaria isbn (una sola columna), y editorial_id → editorial_nombre, editorial_id → editorial_pais.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿En qué forma normal está esta tabla como máximo, y qué falla?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Solo cumple 1FN, porque tiene un atributo multivaluado.</button>
+<button class="quiz-opt" data-correct>Cumple 2FN (la clave es una sola columna, no puede haber dependencia parcial), pero no 3FN, porque editorial_nombre y editorial_pais dependen transitivamente de isbn a través de editorial_id.</button>
+<button class="quiz-opt">Ya está en 3FN, no hace falta cambiar nada.</button>
+<button class="quiz-opt">No cumple ni 1FN.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: con clave simple (isbn), 2FN se cumple automáticamente. Pero editorial_nombre/editorial_pais dependen de editorial_id, no directamente de isbn: es una dependencia transitiva que rompe 3FN." data-ko="No hay atributos multivaluados (1FN se cumple) ni clave compuesta (2FN se cumple automáticamente con clave simple). El problema es la cadena isbn → editorial_id → editorial_nombre/editorial_pais: dependencia transitiva, viola 3FN." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:30px;">
+<strong>Un último escenario</strong>
+<p>Un sistema de talleres mecánicos registra HORARIO(vehiculo_placa, dia_semana, mecanico_id), donde cada mecánico atiende un único vehículo por día, pero un mismo vehículo puede pasar por varios mecánicos en días distintos.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-3">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Si además se cumple la regla "cada mecánico solo trabaja en una sucursal fija" (mecanico_id → sucursal_id), y sucursal_id se agrega como columna, ¿qué problema aparece?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ninguno, la tabla queda perfectamente normalizada.</button>
+<button class="quiz-opt" data-correct>mecanico_id no es superclave de HORARIO, así que mecanico_id → sucursal_id viola BCNF (y probablemente también 3FN, si sucursal_id no es parte de ninguna clave candidata).</button>
+<button class="quiz-opt">Se viola 1FN porque sucursal_id no es atómico.</button>
+<button class="quiz-opt">Se viola 2FN porque la clave de HORARIO es una sola columna.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: mecanico_id determina sucursal_id, pero mecanico_id por sí solo no identifica una fila de HORARIO (la clave es {vehiculo_placa, dia_semana} o similar). Eso es justo el patrón que viola BCNF." data-ko="sucursal_id sí es atómico, y la clave de HORARIO es compuesta (más de una columna), así que 2FN no es el problema directo aquí. El problema es que mecanico_id, que no es superclave, determina sucursal_id: viola BCNF." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas es una tabla por subclase, en el mapeo de una jerarquía ISA?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Una sola tabla con columna "tipo" para distinguir subtipos.</button>
+<button class="quiz-opt" data-correct>Una tabla para la superclase y una tabla por cada subclase, unidas por clave primaria que también es foránea.</button>
+<button class="quiz-opt">Una tabla por subclase que repite los atributos de la superclase.</button>
+<button class="quiz-opt">Ninguna tabla: las jerarquías ISA no se pueden representar en relacional.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: 'tabla por subclase' es exactamente eso: superclase en su propia tabla, cada subclase en la suya, conectadas por PK/FK compartida." data-ko="La opción de la columna 'tipo' es la estrategia de tabla única; repetir atributos es tabla por clase completa. Tabla por subclase separa superclase y subclases en tablas distintas unidas por PK/FK." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Una dependencia funcional X → Y significa que Y determina el valor de X.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: es al revés. X → Y significa que X determina Y, no al contrario." data-ko="Es al revés: en X → Y, X es el determinante y Y es el dependiente. X determina Y." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué forma normal elimina específicamente las dependencias parciales sobre una clave compuesta?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">1FN</button>
+<button class="quiz-opt" data-correct>2FN</button>
+<button class="quiz-opt">3FN</button>
+<button class="quiz-opt">BCNF</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: 2FN es la que exige que todo atributo no clave dependa de la clave completa, eliminando dependencias parciales." data-ko="1FN trata atomicidad; 3FN y BCNF tratan dependencias transitivas y superclaves. La que elimina dependencias parciales es específicamente 2FN." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas anomalías ocurre cuando no puedes registrar un dato nuevo porque depende de la existencia de otro registro no relacionado?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Anomalía de inserción.</button>
+<button class="quiz-opt">Anomalía de eliminación.</button>
+<button class="quiz-opt">Anomalía de actualización.</button>
+<button class="quiz-opt">No es una anomalía, es un diseño correcto.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: no poder insertar un cliente nuevo sin un pedido es el ejemplo clásico de anomalía de inserción." data-ko="La eliminación pierde datos al borrar una fila; la actualización genera inconsistencias al modificar datos repetidos. No poder insertar por una dependencia artificial es anomalía de inserción." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué diferencia principal hay entre 3FN y BCNF?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ninguna, son exactamente lo mismo.</button>
+<button class="quiz-opt">3FN aplica solo a claves compuestas; BCNF aplica solo a claves simples.</button>
+<button class="quiz-opt" data-correct>3FN permite que Y sea parte de una clave candidata aunque X no sea superclave; BCNF no permite esa excepción.</button>
+<button class="quiz-opt">BCNF es menos estricta que 3FN.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: BCNF exige que todo determinante sea superclave, sin excepciones. 3FN sí tiene esa excepción cuando el dependiente es un atributo primo." data-ko="BCNF es MÁS estricta que 3FN, no menos, y ambas pueden aplicar a claves simples o compuestas. La diferencia real es la excepción que 3FN permite y BCNF no." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Generalización/especialización (ISA)</td><td>Superclase con subclases que heredan sus atributos y añaden los propios.</td></tr>
+<tr><td>Dependencia funcional X → Y</td><td>X determina de forma única el valor de Y.</td></tr>
+<tr><td>Dependencia parcial</td><td>Un atributo no clave depende solo de una parte de una clave compuesta.</td></tr>
+<tr><td>Dependencia transitiva</td><td>Un atributo no clave depende de otro atributo no clave, no directamente de la clave.</td></tr>
+<tr><td>1FN</td><td>Atributos atómicos, sin grupos repetitivos.</td></tr>
+<tr><td>2FN</td><td>1FN + sin dependencias parciales.</td></tr>
+<tr><td>3FN</td><td>2FN + sin dependencias transitivas.</td></tr>
+<tr><td>BCNF</td><td>Todo determinante de toda dependencia funcional debe ser superclave.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📐 El mismo autor del modelo relacional</h3><p>Edgar F. Codd, quien propuso el modelo relacional en 1970, también definió las primeras tres formas normales poco después, como parte de la misma teoría.</p></div>
+<div class="info"><h3>🏷️ Por qué "Boyce-Codd"</h3><p>BCNF lleva el nombre de Raymond F. Boyce y Edgar F. Codd, quienes la propusieron en 1974 para cerrar un caso especial que 3FN dejaba sin cubrir.</p></div>
+<div class="info"><h3>⚖️ A veces se desnormaliza a propósito</h3><p>En sistemas con mucha lectura y poca escritura, a veces se introduce redundancia controlada ("desnormalización") a propósito, para ganar velocidad de consulta a cambio de más complejidad al actualizar.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Reforzamiento: Modelado Relacional y Normalización</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- GoatCounter: conteo y contador de vistas visible -->
+<script data-goatcounter="https://croysito.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script>
+fetch('https://croysito.goatcounter.com/counter' + location.pathname + '.json?start=2020-01-01')
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
