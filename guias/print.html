@@ -842,7 +842,7 @@ window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincr
 <!-- GoatCounter: conteo y contador de vistas visible -->
 <script data-goatcounter="https://croysito.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <script>
-fetch('https://croysito.goatcounter.com/counter' + location.pathname + '.json')
+fetch('https://croysito.goatcounter.com/counter' + location.pathname + '.json?start=2020-01-01')
   .then(function(r){ return r.json(); })
   .then(function(d){
     var el = document.getElementById('viewCount');
