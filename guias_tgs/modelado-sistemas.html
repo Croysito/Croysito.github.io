@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelado de Sistemas: Diagramas Causales y Dinámica de Sistemas | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">TGS <span>Modelado</span></div>
+<p>Diagramas causales y dinámica de sistemas</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#causales">Diagramas de bucle causal</a>
+<a href="#polaridad">Polaridad de las relaciones</a>
+<a href="#bucles">Bucles de refuerzo y balance</a>
+<a href="#arquetipos">Arquetipos sistémicos</a>
+<a href="#stockflujo">Diagramas de stock y flujo</a>
+<a href="#retardos">Retardos y oscilación</a>
+<a href="#construccion">Construye tu propio diagrama</a>
+<a href="#razonamiento">Ejercicios de razonamiento</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧩 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Modelado de Sistemas: <span>Diagramas Causales</span> y Dinámica de Sistemas</h1>
+<p>Ya sabes qué es la retroalimentación y por qué importa el pensamiento sistémico. Ahora vas a formalizar eso en una herramienta real: los diagramas de bucle causal, que te permiten predecir cómo se va a comportar un sistema antes de que ocurra.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">En la guía anterior viste que un sistema puede autorregularse (retroalimentación negativa) o amplificar una tendencia (retroalimentación positiva). Esta guía te da el <strong>lenguaje visual</strong> para representar eso con precisión: los <strong>diagramas de bucle causal</strong> y los <strong>diagramas de stock y flujo</strong>, la base de la disciplina conocida como <strong>Dinámica de Sistemas</strong>, creada por Jay Forrester en el MIT.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás construir diagramas de bucle causal, distinguir bucles de refuerzo y de balance, reconocer arquetipos sistémicos comunes en situaciones reales, diferenciar stocks de flujos, y explicar por qué un retardo puede hacer que un sistema oscile.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Esta guía está construida alrededor de <strong>escenarios reales</strong> —crecimiento viral, cambio climático, cadenas de suministro, guerras de precios— para que razones sobre el comportamiento del sistema, no que memorices definiciones. Cada actividad te da retroalimentación inmediata.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🔗 Conecta</h3><p>Formaliza lo que ya sabes de retroalimentación en un diagrama que se puede leer y predecir.</p></div>
+<div class="info"><h3>🔎 Razona</h3><p>Escenarios reales donde debes predecir el comportamiento del sistema antes de comprobarlo.</p></div>
+<div class="info"><h3>🛠️ Construye</h3><p>Un ejercicio guiado donde armas tu propio diagrama causal, paso a paso.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="causales">
+<div class="card">
+<h2 class="section-title">Diagramas de bucle causal</h2>
+<p class="lead">Un <strong>diagrama de bucle causal</strong> (Causal Loop Diagram) representa cómo las variables de un sistema se influyen entre sí. Cada <strong>flecha</strong> es un enlace causal: va de la variable que causa el cambio hacia la variable que lo recibe, y lleva una <strong>polaridad</strong> (+ o −) que indica el tipo de efecto.</p>
+<div class="code">
+<div class="code-header"><span>Notación básica</span></div>
+<pre>Horas de estudio  --(+)-->  Calificación en el examen</pre>
+</div>
+<p>Esta flecha se lee: "un aumento en las horas de estudio causa un aumento en la calificación" (y, simétricamente, una disminución causa una disminución). Varias flechas encadenadas forman una <strong>cadena causal</strong>; cuando la cadena vuelve a su punto de partida, se convierte en un <strong>bucle</strong> (el tema de la siguiente sección).</p>
+
+<div class="quiz quiz-mc" data-quiz-id="causales-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">"Precio de un producto --(?)--> Cantidad demandada por los consumidores". Pensando en cómo se comporta un mercado real, ¿qué polaridad corresponde a esa flecha?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Positiva (+): si el precio sube, la demanda también sube.</button>
+<button class="quiz-opt" data-correct>Negativa (−): si el precio sube, la demanda baja (y viceversa).</button>
+<button class="quiz-opt">No se puede asignar polaridad a precios y demanda.</button>
+<button class="quiz-opt">Depende del color del producto.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: precio y demanda se mueven en direcciones opuestas (ley de la demanda), así que el enlace es negativo." data-ko="Piensa en un mercado real: cuando algo sube de precio, normalmente se demanda menos, no más. Las variables se mueven en direcciones opuestas: enlace negativo (−)." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="polaridad">
+<div class="card">
+<h2 class="section-title">Polaridad de las relaciones</h2>
+<p class="lead">Cada enlace causal tiene exactamente una de estas dos polaridades. No describen si algo es "bueno" o "malo": describen la <strong>dirección del efecto</strong>.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Polaridad</th><th scope="col">Significado</th><th scope="col">Ejemplo real</th></tr></thead>
+<tbody>
+<tr><td><strong>Positiva (+)</strong></td><td>Ambas variables se mueven en la <strong>misma</strong> dirección: si A sube, B sube; si A baja, B baja.</td><td>Más inversión en marketing → más ventas.</td></tr>
+<tr><td><strong>Negativa (−)</strong></td><td>Las variables se mueven en direcciones <strong>opuestas</strong>: si A sube, B baja; si A baja, B sube.</td><td>Más velocidad de un vehículo → menos tiempo de viaje.</td></tr>
+</tbody>
+</table>
+
+<p>Clasifica cada relación real según su polaridad.</p>
+<div class="quiz quiz-classify" data-quiz-id="polaridad-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿La relación es positiva (+) o negativa (−)?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Horas de ejercicio semanal → Resistencia física.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Positiva (+)</button>
+<button>Negativa (−)</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Tasa de interés de un préstamo → Cantidad de dinero disponible para ahorrar.</span>
+<div class="quiz-classify-btns">
+<button>Positiva (+)</button>
+<button data-correct>Negativa (−)</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cantidad de servidores de una app → Capacidad de usuarios simultáneos que soporta.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Positiva (+)</button>
+<button>Negativa (−)</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Tiempo de espera en una fila → Satisfacción del cliente.</span>
+<div class="quiz-classify-btns">
+<button>Positiva (+)</button>
+<button data-correct>Negativa (−)</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="bucles">
+<div class="card">
+<h2 class="section-title">Bucles de refuerzo y de balance</h2>
+<p class="lead">Cuando una cadena causal vuelve a su punto de partida, forma un <strong>bucle</strong>. Hay una regla simple para saber de qué tipo es: <strong>cuenta los enlaces negativos del bucle</strong>.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Enlaces negativos</th><th scope="col">Tipo de bucle</th><th scope="col">Comportamiento</th></tr></thead>
+<tbody>
+<tr><td>Número <strong>par</strong> (incluyendo cero)</td><td><strong>Refuerzo (R)</strong></td><td>Amplifica la tendencia: crecimiento o caída acelerada.</td></tr>
+<tr><td>Número <strong>impar</strong></td><td><strong>Balance (B)</strong></td><td>Corrige desviaciones y busca un objetivo o equilibrio.</td></tr>
+</tbody>
+</table>
+
+<div class="code">
+<div class="code-header"><span>Bucle de refuerzo (R): pánico bancario</span></div>
+<pre>Retiros de dinero  --(+)-->  Desconfianza en el banco
+      ^                              |
+      |                             (+)
+      |                              v
+      Desconfianza en el banco  --(+)-->  Más retiros de dinero</pre>
+</div>
+<p>0 enlaces negativos (par) → <strong>bucle de refuerzo</strong>: cada vuelta amplifica la desconfianza y los retiros, sin nada que lo frene por sí solo.</p>
+
+<div class="code">
+<div class="code-header"><span>Bucle de balance (B): termostato</span></div>
+<pre>Temperatura del ambiente  --(−)-->  Activación de la calefacción
+                                            |
+                                           (+)
+                                            v
+      Temperatura del ambiente  &lt;--(+)--  Activación de la calefacción</pre>
+</div>
+<p>1 enlace negativo (impar) → <strong>bucle de balance</strong>: el sistema busca y mantiene una temperatura objetivo, corrigiendo cualquier desviación.</p>
+
+<div class="quiz quiz-mc" data-quiz-id="bucles-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un bucle tiene tres enlaces: "Población de conejos --(+)--> Población de zorros", "Población de zorros --(+)--> Conejos cazados", "Conejos cazados --(−)--> Población de conejos". ¿Qué tipo de bucle es, y qué comportamiento esperarías?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Refuerzo (R): ambas poblaciones crecerán sin límite.</button>
+<button class="quiz-opt" data-correct>Balance (B), porque tiene 1 enlace negativo (impar): el sistema tiende a regular las poblaciones de conejos y zorros hacia un equilibrio.</button>
+<button class="quiz-opt">No es un bucle válido porque mezcla dos especies distintas.</button>
+<button class="quiz-opt">Refuerzo (R), porque hay más enlaces positivos que negativos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: hay exactamente 1 enlace negativo (impar), así que es un bucle de balance. Este es, de hecho, el modelo clásico depredador-presa: las poblaciones oscilan alrededor de un equilibrio, no crecen sin control." data-ko="No se trata de contar cuál polaridad predomina, sino si el número de enlaces NEGATIVOS es par o impar. Aquí hay exactamente 1 negativo (impar): bucle de balance." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="arquetipos">
+<div class="card">
+<h2 class="section-title">Arquetipos sistémicos comunes</h2>
+<p class="lead">Ciertas combinaciones de bucles aparecen una y otra vez en sistemas muy distintos. Reconocerlas te permite anticipar problemas antes de que ocurran.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Arquetipo</th><th scope="col">Cómo funciona</th></tr></thead>
+<tbody>
+<tr><td><strong>Límites del crecimiento</strong></td><td>Un bucle de refuerzo impulsa un crecimiento acelerado, hasta que un bucle de balance (una restricción) empieza a frenarlo.</td></tr>
+<tr><td><strong>Solución que falla</strong></td><td>Una solución rápida alivia el síntoma a corto plazo (bucle de balance), pero dispara consecuencias no intencionadas que empeoran el problema de fondo a largo plazo (bucle de refuerzo).</td></tr>
+<tr><td><strong>Escalada</strong></td><td>Dos actores compiten en un bucle de refuerzo: cada uno reacciona a las acciones del otro, amplificando la tendencia en ambos lados.</td></tr>
+</tbody>
+</table>
+
+<p>Relaciona cada arquetipo con el escenario real que lo ejemplifica.</p>
+<div class="quiz quiz-match" data-quiz-id="arquetipos-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada arquetipo con su ejemplo.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="limites">Límites del crecimiento</button>
+<button class="quiz-match-item" data-pair="falla">Solución que falla</button>
+<button class="quiz-match-item" data-pair="escalada">Escalada</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="escalada">Dos supermercados vecinos bajan sus precios una y otra vez, reaccionando cada uno a la última rebaja del otro.</button>
+<button class="quiz-match-item" data-pair="limites">Una app crece viralmente hasta que sus servidores se saturan y la lentitud empieza a frenar la llegada de nuevos usuarios.</button>
+<button class="quiz-match-item" data-pair="falla">Un equipo recorta las pruebas de software para cumplir una fecha límite; entregan a tiempo, pero los bugs en producción exigen mucho más tiempo de corrección después.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Un caso más para razonar</strong>
+<p>Una ciudad amplía una autopista de 4 a 8 carriles para reducir el tráfico. Al principio funciona, pero en pocos años el tráfico vuelve a ser igual de denso: la autopista más rápida atrajo a más gente a vivir lejos y conducir más ("demanda inducida").</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="arquetipos-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué arquetipo describe mejor el caso de la autopista?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Límites del crecimiento.</button>
+<button class="quiz-opt" data-correct>Solución que falla: la solución (más carriles) alivia el síntoma (tráfico) a corto plazo, pero genera un efecto secundario (más gente conduciendo) que termina reproduciendo el problema original.</button>
+<button class="quiz-opt">Escalada.</button>
+<button class="quiz-opt">No corresponde a ningún arquetipo conocido.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: es un caso clásico de 'solución que falla' (a veces llamado 'demanda inducida' en planificación urbana): la solución rápida termina alimentando la causa raíz del problema." data-ko="No hay dos actores compitiendo (no es escalada) ni una restricción que frena un crecimiento (no es límites del crecimiento). La solución rápida termina alimentando el problema que quería resolver: solución que falla." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="stockflujo">
+<div class="card">
+<h2 class="section-title">Diagramas de stock y flujo</h2>
+<p class="lead">Los diagramas de bucle causal muestran <strong>qué influye en qué</strong>, pero no cuánto ni qué tan rápido. Para eso se usan los <strong>diagramas de stock y flujo</strong>, que distinguen dos tipos de variables.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Tipo</th><th scope="col">Qué representa</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><strong>Stock (nivel)</strong></td><td>Una cantidad acumulada, medible en un instante dado.</td><td>Agua en un tanque, saldo de una cuenta, usuarios activos.</td></tr>
+<tr><td><strong>Flujo (tasa)</strong></td><td>Cuánto entra o sale del stock por unidad de tiempo.</td><td>Caudal de entrada, depósitos y retiros, altas y bajas de usuarios.</td></tr>
+</tbody>
+</table>
+<div class="code">
+<div class="code-header"><span>Analogía de la bañera</span></div>
+<pre>[Flujo de entrada]  --->  ( STOCK: Saldo de la cuenta )  --->  [Flujo de salida]
+     depósitos                                                       retiros</pre>
+</div>
+<div class="highlight">
+<strong>La fórmula que lo resume todo</strong>
+<p>Stock(ahora) = Stock(antes) + Flujo de entrada − Flujo de salida. Un stock <strong>solo</strong> puede cambiar a través de sus flujos, nunca directamente.</p>
+</div>
+
+<p>Clasifica cada variable como stock o flujo.</p>
+<div class="quiz quiz-classify" data-quiz-id="stockflujo-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Es un stock (nivel acumulado) o un flujo (tasa de cambio)?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Población total de una ciudad.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Stock</button>
+<button>Flujo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Nacimientos por mes.</span>
+<div class="quiz-classify-btns">
+<button>Stock</button>
+<button data-correct>Flujo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Inventario disponible en una bodega.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Stock</button>
+<button>Flujo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Unidades vendidas por día.</span>
+<div class="quiz-classify-btns">
+<button>Stock</button>
+<button data-correct>Flujo</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="retardos">
+<div class="card">
+<h2 class="section-title">Retardos y oscilación</h2>
+<p class="lead">Cuando hay un <strong>retardo</strong> entre una acción y su efecto, un bucle de balance no siempre llega suavemente a su objetivo: puede <strong>oscilar</strong> o sobrepasarlo antes de estabilizarse.</p>
+<div class="highlight">
+<strong>Ejemplo: la ducha con tubería larga</strong>
+<p>Abres el agua caliente, pero por el retardo de la tubería el cambio de temperatura tarda unos segundos en llegar. Como no sientes ningún cambio, sigues subiendo la temperatura. Cuando por fin llega el agua caliente, está demasiado caliente: bajas de golpe. El mismo retardo hace que ahora se enfríe de más. El resultado es una <strong>oscilación</strong> entre "muy caliente" y "muy frío", en vez de llegar directo a la temperatura ideal.</p>
+</div>
+<div class="highlight">
+<strong>Ejemplo real: el efecto látigo (bullwhip effect)</strong>
+<p>En una cadena de suministro, un pequeño aumento en la demanda del consumidor final se amplifica cada vez más a medida que cada eslabón (minorista → mayorista → fábrica) reacciona con retraso e incertidumbre, pidiendo de más "por si acaso". El resultado son pedidos exagerados, seguidos de exceso de inventario, seguidos de pedidos casi nulos: una oscilación cada vez más grande mientras más lejos está el eslabón del consumidor final.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="retardos-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un termostato moderno, con un sensor rápido y una calefacción que responde casi de inmediato, mantiene la temperatura muy estable. Uno viejo, con un sensor lento y una calefacción que tarda minutos en responder, produce cambios bruscos de temperatura. ¿Qué explica la diferencia?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El termostato viejo tiene un bucle de refuerzo en vez de uno de balance.</button>
+<button class="quiz-opt" data-correct>Ambos son bucles de balance, pero el retardo más largo del sistema viejo hace que sobrecorrija antes de estabilizarse, produciendo oscilación.</button>
+<button class="quiz-opt">El termostato viejo tiene una polaridad distinta en sus enlaces.</button>
+<button class="quiz-opt">No hay ninguna relación entre el retardo y la estabilidad del sistema.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el objetivo (la temperatura deseada) es el mismo en ambos casos porque ambos son bucles de balance. Lo que cambia es el retardo: cuanto más tarda el sistema en reaccionar, más se sobrecorrige antes de estabilizarse." data-ko="Ambos termostatos son bucles de balance con la misma polaridad; ninguno cambia de tipo. La diferencia está en cuánto tarda el sistema en reaccionar: más retardo produce más oscilación antes de estabilizarse." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="construccion">
+<div class="card">
+<h2 class="section-title">Construye tu propio diagrama</h2>
+<p class="lead">Vas a construir un diagrama de bucle causal completo, de principio a fin, para un escenario real: <strong>una cafetería nueva se vuelve popular en redes sociales</strong>.</p>
+<div class="code">
+<div class="code-header"><span>Variables identificadas</span></div>
+<pre>Popularidad en redes, Clientes nuevos, Ingresos, Inversión en marketing,
+Tiempo de espera, Satisfacción del cliente</pre>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="construccion-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Con estas relaciones: "Popularidad --(+)--> Clientes nuevos", "Clientes nuevos --(+)--> Ingresos", "Ingresos --(+)--> Inversión en marketing", "Inversión en marketing --(+)--> Popularidad", ¿qué tipo de bucle forman y qué comportamiento producirán si nada más interviene?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Bucle de refuerzo (0 enlaces negativos, número par): un motor de crecimiento acelerado que, por sí solo, no tiene límite.</button>
+<button class="quiz-opt">Bucle de balance: la cafetería se estabilizará sola en un número fijo de clientes.</button>
+<button class="quiz-opt">No es un bucle porque tiene cuatro variables en vez de tres.</button>
+<button class="quiz-opt">No se puede determinar el tipo de bucle sin más información.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: los cuatro enlaces son positivos (0 negativos, número par), así que es un bucle de refuerzo: cada vuelta genera más popularidad, más clientes, más ingresos y más marketing, en una espiral de crecimiento." data-ko="El número de variables no determina el tipo de bucle; lo que importa es contar los enlaces negativos. Aquí los 4 enlaces son positivos (0 negativos, par): bucle de refuerzo." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Pero hay una segunda cadena</strong>
+<p>"Clientes nuevos --(+)--> Tiempo de espera", "Tiempo de espera --(−)--> Satisfacción del cliente", "Satisfacción del cliente --(+)--> Clientes nuevos" (clientes satisfechos recomiendan el lugar y vuelven).</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="construccion-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Esta segunda cadena tiene 1 enlace negativo (impar): es un bucle de balance. Combinando los dos bucles (el de refuerzo del marketing y este de balance), ¿qué arquetipo sistémico describe mejor lo que le pasará a la cafetería con el tiempo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Escalada, porque hay dos bucles compitiendo.</button>
+<button class="quiz-opt" data-correct>Límites del crecimiento: el bucle de refuerzo (popularidad-marketing) impulsa el crecimiento inicial, hasta que el bucle de balance (esperas largas bajan la satisfacción) empieza a frenarlo.</button>
+<button class="quiz-opt">Solución que falla, porque el marketing es una solución rápida.</button>
+<button class="quiz-opt">Ninguno: los dos bucles se anulan entre sí y no pasa nada.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: exactamente el patrón de 'límites del crecimiento'. El bucle R impulsa el crecimiento; el bucle B, activado por las esperas largas, termina frenándolo. Es la razón por la que el crecimiento de un negocio rara vez es una línea recta indefinida." data-ko="No hay dos actores compitiendo entre sí (no es escalada) ni una solución rápida con efectos secundarios (no es solución que falla). Un bucle R que crece y un bucle B que lo frena es, por definición, el arquetipo de límites del crecimiento." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Ejercicios de razonamiento</h2>
+<p class="lead">Escenarios reales completos. No se te pide recordar una definición: debes <strong>razonar</strong> la respuesta antes de comprobarla.</p>
+
+<div class="highlight">
+<strong>Escenario: cambio climático</strong>
+<p>Cadena: "Temperatura global --(+)--> Deshielo del Ártico" → "Deshielo del Ártico --(−)--> Superficie blanca (hielo) que refleja luz solar" → "Superficie blanca --(−)--> Calor solar absorbido por el planeta" → "Calor solar absorbido --(+)--> Temperatura global".</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Contando los enlaces negativos de esta cadena (hay 2), ¿qué tipo de bucle es y qué implica para el sistema climático?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Balance: el planeta se autorregulará y la temperatura volverá sola a su nivel original.</button>
+<button class="quiz-opt" data-correct>Refuerzo (2 negativos = número par): más deshielo produce menos reflejo de luz, lo que produce más calor absorbido y más temperatura, que a su vez produce más deshielo. Se amplifica solo.</button>
+<button class="quiz-opt">No es un bucle válido porque el clima no es un sistema.</button>
+<button class="quiz-opt">Balance, porque hay más de un enlace negativo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: 2 enlaces negativos es un número par, así que es un bucle de refuerzo. Este es el mecanismo real detrás de la 'retroalimentación del albedo' en el calentamiento global: el sistema se amplifica a sí mismo, no se autocorrige." data-ko="La regla es par/impar, no 'cuántos'. Aquí hay exactamente 2 enlaces negativos: número par, así que es un bucle de REFUERZO, no de balance. Por eso este mecanismo climático preocupa tanto: no se autocorrige, se amplifica." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:30px;">
+<strong>Escenario: propagación de una epidemia</strong>
+<p>Bucle A: "Personas infectadas --(+)--> Nuevos contagios" → "Nuevos contagios --(+)--> Personas infectadas". Bucle B: "Personas infectadas --(+)--> Medidas de restricción (cuarentenas, aforos)" → "Medidas de restricción --(−)--> Nuevos contagios" → "Nuevos contagios --(+)--> Personas infectadas".</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Al principio de un brote, casi no hay medidas de restricción activas. ¿Qué bucle domina el comportamiento del sistema en esa etapa, y qué pasa después cuando las autoridades reaccionan?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El bucle B domina siempre; los contagios nunca crecen exponencialmente.</button>
+<button class="quiz-opt" data-correct>Al inicio domina el bucle A (refuerzo, crecimiento exponencial de contagios); cuando las medidas se activan, el bucle B (balance, con 1 negativo) empieza a frenar el crecimiento.</button>
+<button class="quiz-opt">Ambos bucles son de refuerzo, así que los contagios nunca se frenan.</button>
+<button class="quiz-opt">El bucle A es de balance porque involucra personas, no cantidades.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el bucle A (0 negativos, refuerzo) explica el crecimiento exponencial típico del inicio de un brote. El bucle B (1 negativo, balance) solo empieza a pesar cuando las medidas de restricción se activan con fuerza, frenando los contagios." data-ko="El bucle A tiene 0 enlaces negativos (refuerzo) y domina cuando no hay restricciones, explicando el crecimiento exponencial inicial. El bucle B tiene 1 enlace negativo (balance) y frena los contagios solo una vez que las medidas están activas." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:30px;">
+<strong>Escenario: efecto látigo en una cadena de suministro</strong>
+<p>Una tienda ve que la demanda de un producto sube 10%. Para no quedarse sin stock, pide a su mayorista 25% más de lo normal. El mayorista, viendo ese pedido más grande y con su propio margen de seguridad, pide a la fábrica 50% más. La fábrica, para no arriesgarse, produce 80% más.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-3">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué elemento de los que viste en esta guía explica por qué un cambio pequeño (10%) termina amplificado (80%) a medida que se aleja del consumidor final?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un bucle de balance con 0 enlaces negativos.</button>
+<button class="quiz-opt" data-correct>El retardo y la incertidumbre en la información que cada eslabón recibe del siguiente: cada uno reacciona de más "por si acaso", igual que en el ejemplo de la ducha con tubería larga.</button>
+<button class="quiz-opt">Que la fábrica y la tienda son el mismo stock.</button>
+<button class="quiz-opt">Que no existe relación causal entre la demanda y la producción.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: es el efecto látigo (bullwhip effect). El retardo en la información entre eslabones, combinado con márgenes de seguridad que cada uno añade 'por si acaso', amplifica un cambio pequeño en un cambio enorme más arriba en la cadena." data-ko="No es un tema de bucles de balance simples ni de que fábrica y tienda compartan el mismo stock. El retardo en la información y la incertidumbre de cada eslabón —el mismo mecanismo que causa oscilación en la ducha— es lo que amplifica el cambio." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Quién es considerado el creador de la Dinámica de Sistemas y sus diagramas de stock y flujo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ludwig von Bertalanffy.</button>
+<button class="quiz-opt" data-correct>Jay Forrester, en el MIT.</button>
+<button class="quiz-opt">Norbert Wiener.</button>
+<button class="quiz-opt">Peter Chen.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Jay Forrester desarrolló la Dinámica de Sistemas en el MIT a fines de los años 1950, inicialmente aplicada a problemas industriales." data-ko="Bertalanffy fundó la TGS en general y Wiener la cibernética; la Dinámica de Sistemas específicamente, con sus diagramas de stock y flujo, la desarrolló Jay Forrester en el MIT." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Un bucle con 3 enlaces negativos es un bucle de refuerzo.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: 3 es impar, así que es un bucle de balance, no de refuerzo." data-ko="3 es un número impar. La regla es: número par de negativos (incluyendo cero) = refuerzo; número impar = balance. Con 3 negativos, es un bucle de balance." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas variables es un stock, no un flujo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ventas mensuales.</button>
+<button class="quiz-opt" data-correct>Inventario disponible en bodega.</button>
+<button class="quiz-opt">Altas de usuarios por semana.</button>
+<button class="quiz-opt">Litros de agua que entran por minuto a un tanque.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el inventario es una cantidad acumulada medible en un instante (stock). Las otras tres son tasas de cambio por unidad de tiempo (flujos)." data-ko="Ventas mensuales, altas por semana y litros por minuto son todas TASAS de cambio: flujos. El inventario disponible es una cantidad acumulada en un momento dado: eso es un stock." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un equipo de desarrollo, presionado por una fecha límite, decide no escribir pruebas automatizadas. Entregan a tiempo, pero pasan las siguientes semanas corrigiendo bugs en producción, atrasando el siguiente proyecto. ¿Qué arquetipo es este?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Límites del crecimiento.</button>
+<button class="quiz-opt" data-correct>Solución que falla.</button>
+<button class="quiz-opt">Escalada.</button>
+<button class="quiz-opt">No corresponde a ningún arquetipo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la solución rápida (no escribir pruebas) alivió la presión de tiempo hoy, pero generó una consecuencia no intencionada (más bugs) que terminó costando más tiempo después. Solución que falla." data-ko="No hay una restricción que frena un crecimiento (no es límites del crecimiento) ni dos actores compitiendo (no es escalada). Una solución rápida con efectos secundarios que empeoran el problema de fondo es 'solución que falla'." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué efecto tiene típicamente un retardo largo dentro de un bucle de balance?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Convierte el bucle de balance en un bucle de refuerzo.</button>
+<button class="quiz-opt" data-correct>Puede causar que el sistema oscile o sobrepase su objetivo antes de estabilizarse.</button>
+<button class="quiz-opt">No tiene ningún efecto sobre el comportamiento del sistema.</button>
+<button class="quiz-opt">Hace que el sistema alcance su objetivo más rápido.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el retardo no cambia el tipo de bucle ni el objetivo al que tiende, pero puede hacer que el sistema reaccione tarde, se pase de largo, y oscile antes de estabilizarse (como en el ejemplo de la ducha)." data-ko="El bucle sigue siendo de balance: el retardo no cambia su tipo ni acelera nada. Lo que sí puede provocar es sobrecorrección y oscilación antes de llegar al objetivo, como en el ejemplo de la ducha con tubería larga." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Enlace causal</td><td>Flecha entre dos variables, con una polaridad (+ o −).</td></tr>
+<tr><td>Polaridad positiva (+)</td><td>Las variables se mueven en la misma dirección.</td></tr>
+<tr><td>Polaridad negativa (−)</td><td>Las variables se mueven en direcciones opuestas.</td></tr>
+<tr><td>Bucle de refuerzo (R)</td><td>Número par de enlaces negativos; amplifica la tendencia.</td></tr>
+<tr><td>Bucle de balance (B)</td><td>Número impar de enlaces negativos; busca un equilibrio.</td></tr>
+<tr><td>Límites del crecimiento</td><td>Un bucle R impulsa el crecimiento hasta que un bucle B lo frena.</td></tr>
+<tr><td>Solución que falla</td><td>Una solución rápida genera un efecto secundario que empeora el problema.</td></tr>
+<tr><td>Escalada</td><td>Dos actores compiten en un bucle de refuerzo mutuo.</td></tr>
+<tr><td>Stock</td><td>Cantidad acumulada, medible en un instante dado.</td></tr>
+<tr><td>Flujo</td><td>Tasa de cambio de un stock por unidad de tiempo.</td></tr>
+<tr><td>Retardo</td><td>Demora entre acción y efecto; puede causar oscilación.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🖥️ Nació resolviendo un problema industrial</h3><p>Jay Forrester creó la Dinámica de Sistemas a fines de los años 1950 en el MIT, mientras ayudaba a General Electric a entender por qué sus fábricas tenían ciclos inexplicables de contratación y despidos: el efecto látigo, décadas antes de que se le pusiera ese nombre.</p></div>
+<div class="info"><h3>🌍 Un modelo que llegó a la ONU</h3><p>En 1972, el informe "Los límites del crecimiento" del Club de Roma usó un modelo de dinámica de sistemas a escala mundial para simular población, industrialización y recursos, y sigue siendo uno de los estudios de modelado de sistemas más citados de la historia.</p></div>
+<div class="info"><h3>🍼 El caso de los pañales</h3><p>Procter & Gamble estudió el efecto látigo analizando los pedidos de pañales Pampers: la demanda del consumidor final era estable, pero los pedidos entre distribuidores y fábrica oscilaban enormemente, solo por los retardos e incertidumbre de la cadena.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Modelado de Sistemas: Diagramas Causales y Dinámica de Sistemas</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- GoatCounter: conteo y contador de vistas visible -->
+<script data-goatcounter="https://croysito.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script>
+fetch('https://croysito.goatcounter.com/counter' + location.pathname + '.json?start=2020-01-01')
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
