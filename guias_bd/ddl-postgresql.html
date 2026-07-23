@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DDL y Restricciones en PostgreSQL | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>DDL PostgreSQL</span></div>
+<p>Crear tablas desde el modelo relacional</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#tipos">Tipos de datos en PostgreSQL</a>
+<a href="#create-table">CREATE TABLE</a>
+<a href="#restricciones">Restricciones de columna</a>
+<a href="#foraneas">Claves foráneas y acciones referenciales</a>
+<a href="#orden">Orden de creación y dependencias</a>
+<a href="#alter">ALTER TABLE</a>
+<a href="#drop">DROP TABLE</a>
+<a href="#razonamiento">Ejercicios de razonamiento</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🗄️ Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>DDL y Restricciones en <span>PostgreSQL</span></h1>
+<p>Ya normalizaste tu esquema hasta 3FN. Ahora toca escribirlo de verdad: crear las tablas, definir sus restricciones y decidir qué pasa cuando se borra o actualiza un dato relacionado. Todo con la sintaxis y las particularidades de PostgreSQL.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">En la guía anterior llegaste a un esquema en <strong>3FN</strong>: PEDIDO, CLIENTE, PRODUCTO y DETALLE_PEDIDO, con sus claves primarias y foráneas ya decididas. Esta guía traduce ese diseño a <strong>DDL (Data Definition Language)</strong> real, usando <strong>PostgreSQL</strong> como motor de referencia.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás elegir tipos de datos apropiados en PostgreSQL, escribir <code>CREATE TABLE</code> con restricciones (PK, FK, CHECK, UNIQUE, DEFAULT), decidir el orden de creación según las dependencias entre tablas, modificar tablas existentes con <code>ALTER TABLE</code>, y eliminarlas de forma segura con <code>DROP TABLE</code>.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Encontrarás <strong>actividades cortas y autocorregibles</strong> —selección múltiple, verdadero/falso, emparejamiento, clasificación y completar espacios— repartidas a lo largo de la guía, y una sección de <strong>ejercicios de razonamiento</strong> donde se te da un escenario y debes predecir el resultado correcto antes de comprobarlo. Cada actividad te da retroalimentación inmediata.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🧱 Construye</h3><p>El esquema de la guía anterior, ahora como tablas reales de PostgreSQL.</p></div>
+<div class="info"><h3>🔒 Restringe</h3><p>PK, FK, CHECK, UNIQUE y DEFAULT: las reglas que la base de datos hace cumplir por ti.</p></div>
+<div class="info"><h3>🐘 Piensa en Postgres</h3><p>Decisiones específicas del motor: tipos, identidad de filas, y comportamiento ante borrados en cascada.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="tipos">
+<div class="card">
+<h2 class="section-title">Tipos de datos en PostgreSQL</h2>
+<p class="lead">PostgreSQL tiene un catálogo de tipos más rico que la mayoría de motores. Estos son los que vas a usar constantemente.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Tipo</th><th scope="col">Uso</th></tr></thead>
+<tbody>
+<tr><td><code>INTEGER</code> / <code>BIGINT</code></td><td>Números enteros. <code>BIGINT</code> cuando esperas más de ~2.100 millones de filas.</td></tr>
+<tr><td><code>NUMERIC(precision, escala)</code></td><td>Dinero y cantidades exactas. <code>NUMERIC(10,2)</code> = hasta 10 dígitos, 2 decimales. Nunca uses <code>FLOAT</code> para dinero: pierde precisión.</td></tr>
+<tr><td><code>VARCHAR(n)</code> / <code>TEXT</code></td><td>Texto. En PostgreSQL <strong>no hay diferencia de rendimiento</strong> entre ambos: usa <code>VARCHAR(n)</code> solo si de verdad necesitas forzar un límite.</td></tr>
+<tr><td><code>BOOLEAN</code></td><td>Verdadero/falso nativo (<code>true</code>/<code>false</code>), no un entero disfrazado como en otros motores.</td></tr>
+<tr><td><code>DATE</code></td><td>Solo fecha, sin hora.</td></tr>
+<tr><td><code>TIMESTAMPTZ</code></td><td>Fecha y hora <strong>con zona horaria</strong>. Es la recomendación oficial de PostgreSQL sobre <code>TIMESTAMP</code> a secas, salvo que tengas una razón específica para no usarla.</td></tr>
+<tr><td><code>UUID</code></td><td>Identificador único de 128 bits, alternativa a los IDs autoincrementales cuando necesitas generarlos fuera de la base de datos.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>SERIAL vs. GENERATED ALWAYS AS IDENTITY</strong>
+<p>Durante años, la forma de tener un ID autoincremental fue <code>id SERIAL PRIMARY KEY</code>. Desde PostgreSQL 10, la forma recomendada por el estándar SQL es <code>id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY</code>: hace lo mismo, pero evita que alguien inserte manualmente un valor y descuadre la secuencia interna. Vas a ver ambas formas en código real; en esta guía usamos la moderna.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="tipos-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Necesitas guardar el precio de un producto, con exactitud hasta el centavo. ¿Qué tipo eliges en PostgreSQL?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">FLOAT</button>
+<button class="quiz-opt" data-correct>NUMERIC(10,2)</button>
+<button class="quiz-opt">VARCHAR(10)</button>
+<button class="quiz-opt">BOOLEAN</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: NUMERIC garantiza precisión exacta en cálculos monetarios. FLOAT es aritmética de punto flotante y puede acumular errores de redondeo." data-ko="FLOAT puede perder precisión en cálculos monetarios por ser aritmética de punto flotante. Para dinero, el tipo correcto es NUMERIC(precision, escala)." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="create-table">
+<div class="card">
+<h2 class="section-title">CREATE TABLE</h2>
+<p class="lead">Vamos a crear <strong>CLIENTE</strong> y <strong>PRODUCTO</strong> primero: no dependen de ninguna otra tabla del esquema.</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">CREATE TABLE cliente (
+    cliente_id      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cliente_nombre  VARCHAR(120) NOT NULL
+);
+
+CREATE TABLE producto (
+    producto_id      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    producto_nombre  VARCHAR(120) NOT NULL,
+    precio           NUMERIC(10,2) NOT NULL
+);</code></pre>
+</div>
+<p>Cada columna se escribe como <code>nombre tipo restricciones</code>. <code>PRIMARY KEY</code> junto al tipo declara una clave primaria de una sola columna directamente.</p>
+<div class="highlight">
+<strong>IF NOT EXISTS</strong>
+<p>Si vas a ejecutar el mismo script varias veces (por ejemplo en clase, mientras pruebas), <code>CREATE TABLE IF NOT EXISTS cliente (...)</code> evita el error "la relación ya existe" en las ejecuciones repetidas.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="restricciones">
+<div class="card">
+<h2 class="section-title">Restricciones de columna</h2>
+<p class="lead">Una restricción (<em>constraint</em>) es una regla que PostgreSQL hace cumplir automáticamente al insertar o modificar filas. Si la fila la rompe, la operación falla.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Restricción</th><th scope="col">Qué garantiza</th></tr></thead>
+<tbody>
+<tr><td><code>NOT NULL</code></td><td>La columna no puede quedar vacía (sin valor).</td></tr>
+<tr><td><code>UNIQUE</code></td><td>No puede haber dos filas con el mismo valor en esa columna.</td></tr>
+<tr><td><code>PRIMARY KEY</code></td><td>Combina <code>NOT NULL</code> + <code>UNIQUE</code>, y marca la columna (o combinación de columnas) que identifica cada fila.</td></tr>
+<tr><td><code>CHECK (condición)</code></td><td>La condición debe cumplirse siempre. Ej: <code>CHECK (precio &gt; 0)</code> impide precios negativos o en cero.</td></tr>
+<tr><td><code>DEFAULT valor</code></td><td>Si no se especifica un valor al insertar, se usa este por defecto.</td></tr>
+</tbody>
+</table>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">CREATE TABLE producto (
+    producto_id      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    producto_nombre  VARCHAR(120) NOT NULL,
+    precio           NUMERIC(10,2) NOT NULL CHECK (precio > 0),
+    activo           BOOLEAN NOT NULL DEFAULT true
+);</code></pre>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="restricciones-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre la tabla producto de arriba:</p>
+<p>1. Si intentas insertar un producto con precio = -50, la restricción que lo impide es
+<select class="quiz-blank" data-correct="check">
+<option value="">— elige —</option>
+<option value="check">CHECK</option>
+<option value="unique">UNIQUE</option>
+<option value="notnull">NOT NULL</option>
+</select>.</p>
+<p>2. Si no especificas el valor de "activo" al insertar, PostgreSQL usará
+<select class="quiz-blank" data-correct="true">
+<option value="">— elige —</option>
+<option value="true">true, por el DEFAULT</option>
+<option value="null">NULL</option>
+<option value="error">un error, porque falta el valor</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="foraneas">
+<div class="card">
+<h2 class="section-title">Claves foráneas y acciones referenciales</h2>
+<p class="lead">Ahora creamos <strong>PEDIDO</strong>, que depende de CLIENTE. La clave foránea (<code>REFERENCES</code>) obliga a que todo <code>cliente_id</code> en PEDIDO exista primero en CLIENTE.</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">CREATE TABLE pedido (
+    pedido_id   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fecha       DATE NOT NULL DEFAULT CURRENT_DATE,
+    cliente_id  INTEGER NOT NULL REFERENCES cliente(cliente_id)
+);</code></pre>
+</div>
+<p class="lead">Y <strong>DETALLE_PEDIDO</strong>, con clave primaria compuesta y dos claves foráneas — el esquema completo, tal como quedó en 3FN.</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">CREATE TABLE detalle_pedido (
+    pedido_id    INTEGER REFERENCES pedido(pedido_id) ON DELETE CASCADE,
+    producto_id  INTEGER REFERENCES producto(producto_id) ON DELETE RESTRICT,
+    cantidad     INTEGER NOT NULL CHECK (cantidad > 0),
+    PRIMARY KEY (pedido_id, producto_id)
+);</code></pre>
+</div>
+<p>Cuando la clave primaria es compuesta, no se declara junto a una columna: se agrega como una línea aparte, <code>PRIMARY KEY (col1, col2)</code>.</p>
+<div class="highlight">
+<strong>¿Qué hace ON DELETE?</strong>
+<p>Define qué pasa con las filas de DETALLE_PEDIDO cuando se borra la fila de PEDIDO o PRODUCTO que referencian.</p>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Acción</th><th scope="col">Qué hace al borrar el padre</th></tr></thead>
+<tbody>
+<tr><td><code>CASCADE</code></td><td>Borra también las filas hijas automáticamente.</td></tr>
+<tr><td><code>RESTRICT</code></td><td>Impide el borrado del padre mientras existan hijos que lo referencian.</td></tr>
+<tr><td><code>SET NULL</code></td><td>Pone en NULL la columna de clave foránea en las filas hijas (requiere que la columna admita NULL).</td></tr>
+<tr><td><code>NO ACTION</code></td><td>Es el valor por defecto si no se especifica nada; en la práctica se comporta como RESTRICT, salvo que la restricción se declare como diferible.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Por qué CASCADE en un caso y RESTRICT en otro</strong>
+<p>Si borras un PEDIDO, tiene sentido borrar también sus líneas de DETALLE_PEDIDO: no existen por sí solas. Por eso <code>ON DELETE CASCADE</code>. Pero si intentas borrar un PRODUCTO que ya fue vendido, quieres que PostgreSQL <strong>te lo impida</strong> hasta que decidas qué hacer con el historial: por eso <code>ON DELETE RESTRICT</code>.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="fk-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada situación según la acción ON DELETE que describe.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Al borrar un PEDIDO, sus filas de DETALLE_PEDIDO desaparecen automáticamente con él.</span>
+<div class="quiz-classify-btns">
+<button data-correct>CASCADE</button>
+<button>RESTRICT</button>
+<button>SET NULL</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">PostgreSQL rechaza borrar un PRODUCTO mientras tenga ventas registradas en DETALLE_PEDIDO.</span>
+<div class="quiz-classify-btns">
+<button>CASCADE</button>
+<button data-correct>RESTRICT</button>
+<button>SET NULL</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Al borrar un EMPLEADO que era el "supervisor" de otros, la columna supervisor_id de esos otros queda vacía en vez de bloquear el borrado.</span>
+<div class="quiz-classify-btns">
+<button>CASCADE</button>
+<button>RESTRICT</button>
+<button data-correct>SET NULL</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="orden">
+<div class="card">
+<h2 class="section-title">Orden de creación y dependencias</h2>
+<p class="lead">PostgreSQL no te deja crear una clave foránea que apunte a una tabla que todavía no existe. Por eso el orden de los <code>CREATE TABLE</code> importa: primero las tablas "independientes", luego las que dependen de ellas.</p>
+<div class="highlight">
+<strong>Orden correcto para nuestro esquema</strong>
+<p>1) <strong>CLIENTE</strong> y <strong>PRODUCTO</strong> (no dependen de nadie) → 2) <strong>PEDIDO</strong> (depende de CLIENTE) → 3) <strong>DETALLE_PEDIDO</strong> (depende de PEDIDO y PRODUCTO).</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="orden-1">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Si ejecutas el CREATE TABLE de detalle_pedido antes que el de producto, PostgreSQL lo crea sin problema y simplemente valida la referencia después.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: PostgreSQL lanza un error inmediato del tipo 'relation producto does not exist' porque REFERENCES necesita que la tabla referenciada ya exista en ese momento." data-ko="Es falso: PostgreSQL valida la existencia de la tabla referenciada en el momento de crear la clave foránea, no después. Si producto no existe todavía, el CREATE TABLE falla de inmediato." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="alter">
+<div class="card">
+<h2 class="section-title">ALTER TABLE</h2>
+<p class="lead">Una tabla ya creada no es definitiva: <code>ALTER TABLE</code> permite agregar, modificar o quitar columnas y restricciones sin recrearla desde cero.</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">-- Agregar una columna nueva
+ALTER TABLE cliente ADD COLUMN correo VARCHAR(150);
+
+-- Agregar una restricción a una columna existente
+ALTER TABLE cliente ADD CONSTRAINT correo_unico UNIQUE (correo);
+
+-- Cambiar el tipo de una columna
+ALTER TABLE producto ALTER COLUMN producto_nombre TYPE VARCHAR(200);
+
+-- Renombrar una columna
+ALTER TABLE cliente RENAME COLUMN cliente_nombre TO nombre;
+
+-- Quitar una columna
+ALTER TABLE cliente DROP COLUMN correo;</code></pre>
+</div>
+<div class="highlight">
+<strong>Cuidado en producción</strong>
+<p>Agregar una columna <code>NOT NULL</code> a una tabla que ya tiene filas falla, a menos que le des un <code>DEFAULT</code>: PostgreSQL necesita un valor para llenar las filas existentes. Por eso <code>ADD COLUMN correo VARCHAR(150) NOT NULL DEFAULT ''</code> funciona, pero <code>ADD COLUMN correo VARCHAR(150) NOT NULL</code> sin default falla si la tabla no está vacía.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="alter-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">La tabla cliente ya tiene 500 filas. Ejecutas: ALTER TABLE cliente ADD COLUMN puntos INTEGER NOT NULL; ¿Qué ocurre?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Se agrega la columna y queda en NULL en las 500 filas existentes.</button>
+<button class="quiz-opt" data-correct>Falla, porque NOT NULL exige un valor y no hay un DEFAULT para llenar las filas existentes.</button>
+<button class="quiz-opt">Se agrega la columna con valor 0 automáticamente.</button>
+<button class="quiz-opt">No es posible agregar columnas a una tabla con datos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: sin DEFAULT, PostgreSQL no tiene con qué llenar 'puntos' en las filas ya existentes, y NOT NULL no permite dejarlas vacías. La solución es agregar DEFAULT 0 (u otro valor) a la instrucción." data-ko="Sí es posible agregar columnas a una tabla con datos, pero NOT NULL sin DEFAULT falla porque PostgreSQL no sabe qué valor poner en las 500 filas ya existentes." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="drop">
+<div class="card">
+<h2 class="section-title">DROP TABLE</h2>
+<p class="lead">Elimina una tabla por completo, junto con sus datos, índices y restricciones. Es irreversible salvo que estés dentro de una transacción sin confirmar todavía.</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">DROP TABLE IF EXISTS detalle_pedido;
+DROP TABLE IF EXISTS pedido;
+DROP TABLE IF EXISTS producto, cliente;</code></pre>
+</div>
+<p>El orden es el <strong>inverso</strong> al de creación: primero las tablas que tienen claves foráneas hacia otras, al final las que son referenciadas. Si intentas borrar CLIENTE mientras PEDIDO todavía la referencia (y la relación no tiene <code>ON DELETE CASCADE</code> a nivel de esa restricción específica), PostgreSQL lo rechaza.</p>
+<div class="highlight">
+<strong>DROP TABLE ... CASCADE</strong>
+<p>Si quieres forzar el borrado de una tabla y de <strong>todo lo que dependa de ella</strong> (claves foráneas de otras tablas, vistas que la usan, etc.), PostgreSQL ofrece <code>DROP TABLE cliente CASCADE;</code>. Es potente y peligroso: borra en cadena sin volver a preguntar. Úsalo solo cuando de verdad entiendes qué depende de esa tabla.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="drop-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada instrucción con lo que hace.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="ifexists">DROP TABLE IF EXISTS x;</button>
+<button class="quiz-match-item" data-pair="cascade">DROP TABLE x CASCADE;</button>
+<button class="quiz-match-item" data-pair="restrict">DROP TABLE x;  (sin CASCADE, con dependientes)</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="restrict">Falla con error, porque hay objetos que dependen de x.</button>
+<button class="quiz-match-item" data-pair="ifexists">Borra x si existe; no da error si x no existe.</button>
+<button class="quiz-match-item" data-pair="cascade">Borra x y también todo lo que depende de ella.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Ejercicios de razonamiento</h2>
+<p class="lead">En estas preguntas no se te pide recordar sintaxis: se te da un escenario, y debes <strong>razonar</strong> cuál sería la respuesta correcta antes de comprobarla.</p>
+
+<div class="highlight">
+<strong>Escenario</strong>
+<p>Quieres agregar la tabla PAGO(pago_id, pedido_id, monto, fecha_pago), donde cada pedido puede tener varios pagos (pago parcial), y <code>monto</code> nunca debe ser negativo ni cero.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Cuál CREATE TABLE es el correcto?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">CREATE TABLE pago (pago_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY, pedido_id INTEGER, monto NUMERIC(10,2), fecha_pago DATE);</button>
+<button class="quiz-opt" data-correct>CREATE TABLE pago (pago_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY, pedido_id INTEGER NOT NULL REFERENCES pedido(pedido_id), monto NUMERIC(10,2) NOT NULL CHECK (monto > 0), fecha_pago DATE NOT NULL DEFAULT CURRENT_DATE);</button>
+<button class="quiz-opt">CREATE TABLE pago (pedido_id INTEGER PRIMARY KEY REFERENCES pedido(pedido_id), monto NUMERIC(10,2), fecha_pago DATE);</button>
+<button class="quiz-opt">CREATE TABLE pago (pago_id INTEGER, pedido_id INTEGER REFERENCES pedido(pedido_id), monto VARCHAR(10) CHECK (monto > 0));</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: pedido_id debe ser NOT NULL y REFERENCES pedido(pedido_id) para vincular cada pago a un pedido; monto necesita CHECK (monto > 0) para excluir negativos y cero." data-ko="La opción sin REFERENCES ni NOT NULL en pedido_id no vincula el pago a ningún pedido de forma obligatoria; usar pedido_id como PRIMARY KEY del pago impediría varios pagos por pedido; y monto como VARCHAR no puede compararse con > 0 de forma numérica." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Otro escenario</strong>
+<p>Tienes EMPLEADO(empleado_id, nombre, supervisor_id) donde supervisor_id referencia a otro empleado_id de la misma tabla (un empleado puede supervisar a otros). Un supervisor puede ser despedido, y en ese caso sus subordinados deben quedar temporalmente sin supervisor, no bloquear el despido.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué cláusula ON DELETE usarías en la clave foránea de supervisor_id?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">ON DELETE CASCADE, para borrar también a los subordinados.</button>
+<button class="quiz-opt">ON DELETE RESTRICT, para impedir despedir a un supervisor.</button>
+<button class="quiz-opt" data-correct>ON DELETE SET NULL, para que supervisor_id quede en NULL en los subordinados.</button>
+<button class="quiz-opt">No se puede hacer una clave foránea de una tabla hacia sí misma.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: CASCADE borraría por error a personas reales (los subordinados), y RESTRICT impediría despedir a nadie con gente a cargo. SET NULL es exactamente lo que describe el escenario: dejarlos sin supervisor, no eliminarlos ni bloquear la acción." data-ko="CASCADE borraría a los empleados subordinados (dato real, no debería desaparecer); RESTRICT bloquearía el despido. Una clave foránea autorreferenciada sí es válida en PostgreSQL. La respuesta que calza con 'quedar sin supervisor' es SET NULL." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Un último escenario</strong>
+<p>Necesitas ejecutar un script de instalación varias veces durante el desarrollo, sin que falle si las tablas ya existen de una corrida anterior.</p>
+</div>
+<div class="quiz quiz-fill" data-quiz-id="razonamiento-3">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Para lograrlo, cada CREATE TABLE del script debería escribirse como:</p>
+<p>CREATE TABLE
+<select class="quiz-blank" data-correct="ifnotexists">
+<option value="">— elige —</option>
+<option value="ifnotexists">IF NOT EXISTS</option>
+<option value="orreplace">OR REPLACE</option>
+<option value="nada">(sin ninguna cláusula adicional)</option>
+</select>
+nombre_tabla (...);</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál es la diferencia práctica entre VARCHAR(n) y TEXT en PostgreSQL?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">TEXT es mucho más rápido para almacenar.</button>
+<button class="quiz-opt" data-correct>Ninguna de rendimiento; VARCHAR(n) solo agrega un límite de longitud que PostgreSQL valida.</button>
+<button class="quiz-opt">VARCHAR no admite acentos ni caracteres especiales.</button>
+<button class="quiz-opt">TEXT no puede usarse como clave primaria ni en índices.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: en PostgreSQL ambos se almacenan igual internamente. La única diferencia real es que VARCHAR(n) impone un límite de longitud que la base de datos valida al insertar." data-ko="No hay diferencia de rendimiento entre TEXT y VARCHAR en PostgreSQL, ambos manejan cualquier codificación de texto, y TEXT sí puede indexarse y usarse en claves. La única diferencia real es el límite de longitud que VARCHAR(n) impone." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">GENERATED ALWAYS AS IDENTITY y SERIAL logran, en la práctica, el mismo objetivo: un valor autoincremental para la clave primaria.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: ambos generan valores autoincrementales mediante una secuencia interna. GENERATED ALWAYS AS IDENTITY es la forma moderna y estándar, pero el resultado práctico es el mismo." data-ko="Es verdadero: los dos mecanismos usan una secuencia interna para generar valores autoincrementales. IDENTITY es la forma más moderna y alineada al estándar SQL, pero cumple el mismo propósito que SERIAL." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿En qué orden debes ejecutar los CREATE TABLE de un esquema con dependencias por clave foránea?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">No importa el orden, PostgreSQL los reordena automáticamente.</button>
+<button class="quiz-opt" data-correct>Primero las tablas sin dependencias, luego las que las referencian.</button>
+<button class="quiz-opt">Primero las tablas con más columnas.</button>
+<button class="quiz-opt">Siempre en orden alfabético.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: una tabla con REFERENCES hacia otra exige que esa otra ya exista en el momento de crearla." data-ko="PostgreSQL no reordena nada por ti: si una tabla referencia a otra que aún no existe, el CREATE TABLE falla de inmediato. El orden correcto es de las tablas independientes hacia las dependientes." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué hace específicamente ON DELETE RESTRICT?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Borra en cascada las filas dependientes.</button>
+<button class="quiz-opt">Pone en NULL la clave foránea de las filas dependientes.</button>
+<button class="quiz-opt" data-correct>Impide el borrado de la fila padre mientras existan filas hijas que la referencien.</button>
+<button class="quiz-opt">Convierte el borrado en una actualización.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: RESTRICT bloquea el DELETE del padre mientras haya hijos dependientes; hay que borrar (o reasignar) los hijos primero." data-ko="Borrar en cascada es CASCADE; poner en NULL es SET NULL. RESTRICT específicamente bloquea el borrado del padre mientras tenga hijos dependientes." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Quieres agregar una columna NOT NULL a una tabla que ya tiene 10.000 filas, sin que la instrucción falle. ¿Qué debes incluir?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Nada especial, PostgreSQL rellena con NULL automáticamente.</button>
+<button class="quiz-opt" data-correct>Un DEFAULT, para que PostgreSQL sepa con qué valor llenar las filas existentes.</button>
+<button class="quiz-opt">La cláusula CASCADE.</button>
+<button class="quiz-opt">Debe hacerse en una tabla vacía siempre; no hay forma de evitarlo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: con un DEFAULT, PostgreSQL usa ese valor para llenar la columna nueva en todas las filas existentes, cumpliendo NOT NULL sin fallar." data-ko="NOT NULL no permite dejar la columna en NULL, así que rellenar automáticamente con NULL no es una opción. CASCADE no aplica aquí. La solución real es agregar un DEFAULT a la instrucción." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Instrucción</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>CREATE TABLE IF NOT EXISTS</code></td><td>Crea una tabla, sin fallar si ya existe.</td></tr>
+<tr><td><code>GENERATED ALWAYS AS IDENTITY</code></td><td>ID autoincremental, forma moderna recomendada.</td></tr>
+<tr><td><code>NOT NULL / UNIQUE / CHECK / DEFAULT</code></td><td>Restricciones de columna que PostgreSQL hace cumplir siempre.</td></tr>
+<tr><td><code>REFERENCES tabla(columna)</code></td><td>Declara una clave foránea.</td></tr>
+<tr><td><code>ON DELETE CASCADE/RESTRICT/SET NULL</code></td><td>Qué pasa con las filas hijas al borrar el padre.</td></tr>
+<tr><td><code>ALTER TABLE ... ADD/DROP COLUMN</code></td><td>Agrega o quita columnas de una tabla existente.</td></tr>
+<tr><td><code>DROP TABLE IF EXISTS ... CASCADE</code></td><td>Elimina una tabla (y opcionalmente todo lo que depende de ella).</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🐘 De dónde viene el nombre</h3><p>PostgreSQL nació como "POSTGRES" en la Universidad de Berkeley en 1986, liderado por Michael Stonebraker (el mismo investigador detrás de Ingres). En 1996 el proyecto adoptó SQL como lenguaje principal y pasó a llamarse PostgreSQL.</p></div>
+<div class="info"><h3>🧩 Extensible por diseño</h3><p>PostgreSQL permite crear tipos de datos, funciones e incluso índices propios. Por eso existen extensiones como PostGIS (datos geoespaciales) que convierten a Postgres en una base de datos especializada sin cambiar de motor.</p></div>
+<div class="info"><h3>🔁 Las transacciones DDL son "reales"</h3><p>A diferencia de otros motores populares, en PostgreSQL puedes envolver un CREATE TABLE o ALTER TABLE dentro de una transacción y hacer ROLLBACK: si algo sale mal a mitad de un script de migración, deshacer los cambios de estructura es tan simple como deshacer un INSERT.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Reforzamiento: DDL y Restricciones en PostgreSQL</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- GoatCounter: conteo y contador de vistas visible -->
+<script data-goatcounter="https://croysito.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script>
+fetch('https://croysito.goatcounter.com/counter' + location.pathname + '.json?start=2020-01-01')
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
