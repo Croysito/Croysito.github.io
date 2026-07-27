@@ -1,0 +1,10 @@
+name = "paginaguias-vistas"
+main = "worker.js"
+compatibility_date = "2026-07-26"
+
+# No sensibles: solo identifican tu cuenta y el sitio de Web Analytics.
+# El token de API SÍ es sensible y se guarda aparte con:
+#   wrangler secret put CF_API_TOKEN
+[vars]
+CF_ACCOUNT_TAG = "80144f9bccf5146d7951fdcd052cd065"
+CF_SITE_TAG = "e1c230ee7d8f4de388a4964be7899bb4"
