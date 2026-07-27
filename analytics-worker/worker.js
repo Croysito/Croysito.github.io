@@ -3,7 +3,9 @@
 // El token de API nunca se expone al navegador — vive como secret del Worker.
 
 const GRAPHQL_ENDPOINT = 'https://api.cloudflare.com/client/v4/graphql';
-const WINDOW_DAYS = 30; // Web Analytics (RUM) no retiene datos indefinidamente como GoatCounter.
+// Cloudflare limita este dataset a un rango de consulta máximo de 13 semanas y
+// 2 días (93 días) por cuenta; 90 es el máximo práctico dentro de ese límite.
+const WINDOW_DAYS = 90;
 const CACHE_TTL_SECONDS = 3600;
 
 // El filtro exacto "requestPath" de esta API no matchea de forma confiable
