@@ -299,7 +299,7 @@ print(frase[5])</code></pre>
 </div>
 <div class="highlight">
 <strong>Resultado</strong>
-<p>La posición <strong>4</strong> corresponde a la letra <strong>a</strong>, mientras que la posición <strong>5</strong> corresponde al espacio entre las palabras.</p>
+<p>La posición <strong>4</strong> corresponde al <strong>espacio</strong> entre las palabras, mientras que la posición <strong>5</strong> corresponde a la letra <strong>M</strong> de "Mundo".</p>
 </div>
 </div>
 </section>
@@ -1388,6 +1388,8 @@ function conectarEditor(panel){
   const runBtn = panel.querySelector(".code-btn.run");
   const output = panel.querySelector(".output");
   const outputBody = panel.querySelector(".output-body");
+
+  textarea.addEventListener("paste", e => e.preventDefault());
 
   runBtn.onclick = async () => {
     const codigo = textarea.value.trim();

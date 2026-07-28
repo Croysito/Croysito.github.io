@@ -748,6 +748,8 @@ function conectarEditor(panel){
   const output = panel.querySelector(".output");
   const outputBody = panel.querySelector(".output-body");
 
+  textarea.addEventListener("paste", e => e.preventDefault());
+
   runBtn.onclick = async () => {
     const codigo = textarea.value.trim();
     output.hidden = false;
