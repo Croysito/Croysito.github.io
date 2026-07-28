@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cibernética Avanzada: Variedad y Viabilidad de los Sistemas | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">TGS <span>Cibernética</span></div>
+<p>Variedad y viabilidad de los sistemas</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#control">Del bucle de control a la cibernética</a>
+<a href="#variedad">La Ley de Requisito de Variedad</a>
+<a href="#variedad-ti">Variedad aplicada a sistemas de información</a>
+<a href="#viable">El Modelo de Sistema Viable</a>
+<a href="#viable-ti">Viabilidad en una organización de TI</a>
+<a href="#razonamiento">Ejercicios de razonamiento</a>
+<a href="#analisis">Análisis abierto</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧩 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Cibernética Avanzada: <span>Variedad y Viabilidad</span> de los Sistemas</h1>
+<p>Ya sabes qué es un bucle de retroalimentación. Ahora vas a responder una pregunta más difícil: ¿cuánta capacidad de respuesta necesita un sistema para seguir siendo <strong>viable</strong> —capaz de sobrevivir por sí mismo— frente a un entorno que nunca deja de cambiar?</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">En las guías anteriores viste que un sistema se controla mediante bucles de retroalimentación. Esta guía va un paso más allá: explica <strong>cuánta</strong> capacidad de control hace falta para que ese control realmente funcione, y qué necesita un sistema completo para mantenerse vivo y autónomo con el tiempo.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía podrás aplicar la Ley de Requisito de Variedad para diagnosticar por qué un mecanismo de control falla, y usar el Modelo de Sistema Viable para analizar si una organización o un sistema de software tiene lo necesario para sobrevivir a largo plazo.</p>
+</div>
+<div class="highlight">
+<strong>📝 Sobre las actividades de este módulo</strong>
+<p>Casi todas las actividades son de <strong>razonamiento aplicado</strong>: se te presenta un caso o escenario real y debes decidir qué está pasando, no repetir una definición. Al final hay dos actividades de <strong>análisis abierto</strong>: escribes tu propio razonamiento en un cuadro de texto y luego comparas con una respuesta modelo — no tienen corrección automática de "bien/mal".</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🎛️ Controla</h3><p>Entiende por qué algunos mecanismos de control fallan aunque existan.</p></div>
+<div class="info"><h3>🧬 Sobrevive</h3><p>Analiza qué necesita un sistema para seguir siendo viable con el tiempo.</p></div>
+<div class="info"><h3>🎓 Conecta</h3><p>Base directa para gestión de proyectos, arquitectura de software y liderazgo de equipos de TI.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="control">
+<div class="card">
+<h2 class="section-title">Del bucle de control a la cibernética</h2>
+<p class="lead">La <strong>cibernética</strong> es la ciencia del control y la comunicación en sistemas, tanto en máquinas como en organismos y organizaciones. Nace de una pregunta simple: ¿qué hace falta para que un sistema se mantenga estable y cumpla su propósito, sin importar qué le lance el entorno?</p>
+<div class="highlight">
+<strong>El termostato, otra vez</strong>
+<p>Ya viste que un termostato mide la temperatura, la compara contra un valor deseado y actúa para corregir la diferencia. Eso es control. La cibernética pregunta algo más profundo: ¿ese termostato tiene <strong>suficiente</strong> capacidad de respuesta para controlar de verdad la temperatura de un edificio entero, con cien habitaciones y ventanas que se abren y se cierran todo el día?</p>
+</div>
+<p>Esa pregunta —¿alcanza la capacidad de respuesta del controlador?— es exactamente el tema de la siguiente sección.</p>
+</div>
+</section>
+
+<section class="container" id="variedad">
+<div class="card">
+<h2 class="section-title">La Ley de Requisito de Variedad (Ley de Ashby)</h2>
+<p class="lead">Formulada por el cibernético <strong>W. Ross Ashby</strong>, esta ley dice algo que suena extraño la primera vez que se escucha:</p>
+<div class="highlight">
+<strong>"Solo la variedad puede absorber variedad"</strong>
+<p>Para que un sistema controle de verdad una situación, su número de respuestas posibles (su <strong>variedad</strong>) debe ser al menos igual al número de perturbaciones posibles que puede enfrentar. Si el entorno tiene más "estados" posibles que el controlador, el controlador pierde el control tarde o temprano.</p>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Significado</th></tr></thead>
+<tbody>
+<tr><td><strong>Variedad</strong></td><td>El número de estados o comportamientos distintos que algo puede presentar.</td></tr>
+<tr><td><strong>Variedad del entorno / la perturbación</strong></td><td>Cuántas situaciones distintas puede lanzarle el entorno al sistema.</td></tr>
+<tr><td><strong>Variedad del regulador</strong></td><td>Cuántas respuestas distintas tiene disponibles el mecanismo de control.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Ejemplo: una sola persona de soporte técnico</strong>
+<p>Si toda una empresa de software tiene <strong>una sola persona</strong> atendiendo soporte, y esa persona solo sabe responder "reinicia la aplicación" sin importar el problema, la variedad de su respuesta (1) es muchísimo menor que la variedad de problemas reales de los usuarios (errores de red, datos corruptos, permisos, facturación, bugs). El resultado: la mayoría de los problemas reales <strong>no se resuelven</strong>, sin importar cuántas veces se repita la misma respuesta.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="variedad-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un sistema de e-commerce tiene un único mensaje de error genérico: "Ocurrió un problema, intenta de nuevo", que aparece igual sea que la tarjeta fue rechazada, el producto se agotó, hubo un error de red o el usuario escribió mal un dato. Según la Ley de Requisito de Variedad, ¿por qué este sistema falla como mecanismo de control?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">No falla: un solo mensaje es más simple y siempre es mejor simplificar.</button>
+<button class="quiz-opt" data-correct>Falla porque la variedad de causas posibles del error es mucho mayor que la variedad de respuestas del sistema (una sola), así que no puede guiar al usuario a resolver la causa real de cada caso.</button>
+<button class="quiz-opt">Falla porque el sistema tiene demasiada entropía.</button>
+<button class="quiz-opt">Falla porque no existe un bucle de refuerzo en el mensaje.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: hay muchas causas distintas posibles (alta variedad de perturbación) y una sola respuesta posible (variedad mínima del regulador). Como la variedad del sistema es menor a la del problema, no puede absorberla: el usuario queda sin saber qué hacer en la mayoría de los casos." data-ko="No es un problema de entropía ni de bucles de refuerzo. Es exactamente Requisito de Variedad: existen muchas causas distintas de error (alta variedad) y el sistema solo tiene una respuesta (variedad mínima), así que no puede cubrir ni distinguir la mayoría de los casos reales." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="variedad-ti">
+<div class="card">
+<h2 class="section-title">Variedad aplicada a sistemas de información</h2>
+<p class="lead">La Ley de Requisito de Variedad explica por qué ciertas decisiones de diseño en software funcionan y otras no: cada vez que un sistema debe <strong>controlar</strong> algo (errores, incidentes, seguridad, atención a usuarios), su variedad de respuesta debe estar a la altura de la variedad de lo que enfrenta.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Mecanismo</th><th scope="col">Cómo aumenta su variedad para poder controlar</th></tr></thead>
+<tbody>
+<tr><td>Manejo de excepciones</td><td>Capturar tipos específicos de error (<code>TimeoutError</code>, <code>ValidationError</code>, <code>PermissionError</code>) en vez de un único <code>catch</code> genérico, para poder reaccionar distinto ante cada causa.</td></tr>
+<tr><td>Monitoreo y alertas</td><td>Alertas específicas (CPU alta, base de datos lenta, fallo de autenticación) en vez de una sola alerta genérica de "algo falló", para que el equipo sepa exactamente qué revisar.</td></tr>
+<tr><td>Niveles de soporte (N1, N2, N3)</td><td>Escalar un caso difícil a un especialista aumenta, para ese caso puntual, la variedad de respuesta disponible del sistema de soporte completo.</td></tr>
+</tbody>
+</table>
+
+<p>Clasifica cada mecanismo según si tiene variedad suficiente o insuficiente para la situación que enfrenta.</p>
+<div class="quiz quiz-classify" data-quiz-id="variedad-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Variedad suficiente o insuficiente frente al problema que debe controlar?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un sistema de Kubernetes que reinicia automáticamente un contenedor caído, escala réplicas ante alta demanda, y redirige tráfico si un nodo falla —cada situación con su propia acción.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Suficiente</button>
+<button>Insuficiente</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un chatbot de atención al cliente que solo puede responder "consulta a un agente humano" ante cualquier pregunta, sin importar cuál sea.</span>
+<div class="quiz-classify-btns">
+<button>Suficiente</button>
+<button data-correct>Insuficiente</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un firewall con reglas distintas para bloquear escaneo de puertos, fuerza bruta de contraseñas, e inyección SQL, cada una detectada y bloqueada de forma diferente.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Suficiente</button>
+<button>Insuficiente</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un formulario de "recuperar contraseña" que es la única opción disponible para cualquier problema de acceso a la cuenta, incluida una cuenta comprometida por un atacante o bloqueada por fraude.</span>
+<div class="quiz-classify-btns">
+<button>Suficiente</button>
+<button data-correct>Insuficiente</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="viable">
+<div class="card">
+<h2 class="section-title">El Modelo de Sistema Viable (Stafford Beer)</h2>
+<p class="lead">Un sistema <strong>viable</strong> es aquel capaz de mantener una existencia independiente: sobrevive, se adapta y conserva su identidad pese a los cambios del entorno. El cibernético <strong>Stafford Beer</strong> propuso que todo sistema viable —una empresa, un organismo, un equipo— necesita cinco funciones, sin importar su tamaño.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Sistema</th><th scope="col">Función</th><th scope="col">Pregunta que responde</th></tr></thead>
+<tbody>
+<tr><td><strong>Sistema 1 — Operaciones</strong></td><td>Las unidades que hacen el trabajo primario, el propósito mismo del sistema.</td><td>¿Quién produce el valor real?</td></tr>
+<tr><td><strong>Sistema 2 — Coordinación</strong></td><td>Evita que las unidades operativas choquen o entren en conflicto entre sí.</td><td>¿Cómo evitamos que las partes se estorben entre ellas?</td></tr>
+<tr><td><strong>Sistema 3 — Control</strong></td><td>Supervisa el "aquí y ahora": asigna recursos y optimiza el desempeño interno.</td><td>¿Cómo estamos funcionando hoy, y con qué recursos?</td></tr>
+<tr><td><strong>Sistema 4 — Inteligencia</strong></td><td>Mira hacia afuera y hacia el futuro: detecta cambios del entorno y oportunidades.</td><td>¿Qué está cambiando afuera que nos debería importar?</td></tr>
+<tr><td><strong>Sistema 5 — Política</strong></td><td>Define identidad y propósito; equilibra el corto plazo (Sistema 3) con el largo plazo (Sistema 4).</td><td>¿Quiénes somos, y hacia dónde vamos?</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>La idea clave</strong>
+<p>No basta con tener Sistema 1 (gente haciendo el trabajo). Si falta Sistema 2, los equipos chocan entre sí. Si falta Sistema 4, el sistema no ve venir los cambios del entorno hasta que es demasiado tarde. Un sistema sin alguna de estas cinco funciones puede sobrevivir un tiempo, pero no es plenamente <strong>viable</strong>.</p>
+</div>
+
+<p>Relaciona cada subsistema del Modelo de Sistema Viable con su rol equivalente en una empresa.</p>
+<div class="quiz quiz-match" data-quiz-id="viable-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada subsistema con su ejemplo en una organización real.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="s1">Sistema 1 (Operaciones)</button>
+<button class="quiz-match-item" data-pair="s2">Sistema 2 (Coordinación)</button>
+<button class="quiz-match-item" data-pair="s4">Sistema 4 (Inteligencia)</button>
+<button class="quiz-match-item" data-pair="s5">Sistema 5 (Política)</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="s5">La dirección general, que define la visión de la empresa y decide sus prioridades estratégicas.</button>
+<button class="quiz-match-item" data-pair="s1">Los equipos que desarrollan y entregan el producto día a día.</button>
+<button class="quiz-match-item" data-pair="s4">El área que investiga tendencias del mercado y evalúa nuevas tecnologías para adoptar.</button>
+<button class="quiz-match-item" data-pair="s2">Los estándares de código y el calendario de releases compartido que evitan que los equipos se pisen entre sí.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="viable-ti">
+<div class="card">
+<h2 class="section-title">Viabilidad en una organización de TI</h2>
+<p class="lead">El Modelo de Sistema Viable explica un patrón muy común al crecer una startup de software: lo que funcionaba con 5 personas deja de funcionar con 200, no porque el producto haya cambiado, sino porque faltan funciones de viabilidad que antes no hacían falta.</p>
+<div class="highlight">
+<strong>Caso: una startup en crecimiento</strong>
+<p>Con 5 personas, el fundador programa (Sistema 1), decide las prioridades del día (Sistema 3), lee las noticias del sector (Sistema 4) y define el rumbo de la empresa (Sistema 5), todo al mismo tiempo, sin fricción. Al llegar a 200 ingenieros divididos en 15 equipos, esa misma persona ya no puede cumplir las cinco funciones a la vez.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="viable-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">La empresa de 200 ingenieros nunca definió estándares comunes de arquitectura ni un calendario compartido de despliegues: cada equipo decide todo por su cuenta. Cada vez es más frecuente que un equipo rompa sin querer el trabajo de otro al desplegar. ¿Qué subsistema de viabilidad falta con más claridad?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Sistema 1: falta gente escribiendo código.</button>
+<button class="quiz-opt" data-correct>Sistema 2: falta coordinación entre las unidades operativas, que es justamente lo que evita que los equipos choquen entre sí.</button>
+<button class="quiz-opt">Sistema 5: falta que la empresa defina su identidad.</button>
+<button class="quiz-opt">Ninguno: esto es normal y no tiene relación con la viabilidad de la organización.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: hay de sobra Sistema 1 (los 200 ingenieros trabajando). El síntoma descrito —equipos que se pisan entre sí al desplegar— es exactamente lo que el Sistema 2 (Coordinación) existe para prevenir." data-ko="Sobra Sistema 1 (hay 200 ingenieros trabajando), y el problema no es de identidad (Sistema 5). El síntoma —equipos que chocan entre sí sin estándares ni calendario compartido— es la falta de Sistema 2: Coordinación." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Otro síntoma en la misma empresa</strong>
+<p>El equipo de arquitectura advirtió hace un año que un competidor estaba migrando a una tecnología nueva que reduciría sus costos a la mitad, pero la dirección estaba enfocada solo en cerrar el trimestre y nunca revisó esa alerta hasta perder clientes frente al competidor.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="viable-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Aquí el Sistema 4 (Inteligencia) sí funcionó y emitió la alerta a tiempo. ¿Qué falló entonces, según el modelo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Nada falló: perder clientes frente a un competidor no tiene relación con la viabilidad.</button>
+<button class="quiz-opt" data-correct>Falló el equilibrio entre Sistema 3 y Sistema 4 que debería resolver el Sistema 5: la dirección priorizó por completo el corto plazo (cerrar el trimestre) e ignoró la señal de futuro que el Sistema 4 ya había detectado.</button>
+<button class="quiz-opt">Falló el Sistema 1, porque los ingenieros no programaron lo suficiente.</button>
+<button class="quiz-opt">Falló el Sistema 2, porque los equipos no coordinaron su código.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Sistema 4 hizo su trabajo (detectó el cambio del entorno a tiempo). Lo que falló es la función de Sistema 5: balancear el presente (Sistema 3, cerrar el trimestre) con el futuro (Sistema 4, la alerta), sin dejar que uno aplaste por completo al otro." data-ko="El problema no es de código ni de coordinación entre equipos (Sistema 1 y 2). La señal de futuro sí llegó a tiempo (Sistema 4 funcionó); lo que falló es que Sistema 5 no supo balancear esa señal contra la presión del corto plazo (Sistema 3)." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Ejercicios de razonamiento</h2>
+<p class="lead">Escenarios completos que combinan variedad y viabilidad. Razona antes de comprobar tu respuesta.</p>
+
+<div class="highlight">
+<strong>Escenario: aerolínea y cancelaciones de vuelo</strong>
+<p>Una aerolínea entrena a su personal de counter para resolver exactamente un tipo de incidente: vuelos retrasados por clima. Cuando ocurre una huelga, una falla mecánica o un problema de conexión con otra aerolínea, el personal no tiene protocolo y cada empleado improvisa una solución distinta.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Según la Ley de Requisito de Variedad, ¿cuál es la causa raíz de que el personal "improvise" ante huelgas o fallas mecánicas?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El personal no se esfuerza lo suficiente.</button>
+<button class="quiz-opt" data-correct>La variedad de protocolos de la aerolínea (solo cubre clima) es menor que la variedad real de incidentes posibles, así que frente a cualquier caso no cubierto, no hay una respuesta preparada.</button>
+<button class="quiz-opt">Los aviones tienen demasiada entropía.</button>
+<button class="quiz-opt">La aerolínea tiene un exceso de variedad en sus protocolos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el problema no es de esfuerzo individual, es estructural. Solo se preparó variedad de respuesta para un tipo de incidente (clima); frente a cualquier otro tipo, la variedad del sistema es cero, y ahí es donde aparece la improvisación." data-ko="No es un problema de esfuerzo del personal ni de entropía en los aviones. Es que la aerolínea preparó variedad de respuesta solo para un tipo de incidente (clima); ante huelgas o fallas mecánicas, esa variedad no alcanza, y por eso el personal improvisa." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:30px;">
+<strong>Escenario: ONG con un solo fundador</strong>
+<p>Una ONG de 3 personas depende por completo de su fundadora: ella decide qué proyectos aceptar, supervisa las finanzas del día a día, evalúa qué nuevas fuentes de financiamiento existen en el sector, y también define la misión de la organización. La ONG funciona bien así.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Según el Modelo de Sistema Viable, ¿por qué esto funciona bien en una ONG de 3 personas, a diferencia de la startup de 200 ingenieros que viste antes?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque a esa escala las cinco funciones (1 a 5) dejan de ser necesarias.</button>
+<button class="quiz-opt" data-correct>Porque a esa escala una sola persona puede cumplir las cinco funciones sin que se estorben entre sí; el problema de la startup no era tener pocas personas, sino que su tamaño hacía imposible que una sola persona siguiera cumpliendo las cinco funciones a la vez.</button>
+<button class="quiz-opt">Porque las ONG no necesitan ser sistemas viables.</button>
+<button class="quiz-opt">Porque en la ONG no existe el Sistema 1.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: las cinco funciones siguen siendo necesarias en cualquier tamaño, solo que a pequeña escala una sola persona puede cumplirlas todas sin conflicto. Lo que cambia con el crecimiento no es la necesidad de las funciones, sino la posibilidad de que una sola persona las siga cumpliendo todas bien." data-ko="Las cinco funciones no dejan de ser necesarias, y sí existe Sistema 1 (el trabajo de la ONG). Lo que sucede es que a pequeña escala una sola persona puede cumplirlas todas sin fricción; al crecer, eso deja de ser posible, y ahí aparecen los síntomas que viste en la startup." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="analisis">
+<div class="card">
+<h2 class="section-title">Análisis abierto</h2>
+<p class="lead">Escribe tu propio razonamiento antes de revisar la respuesta modelo. No hay una única respuesta correcta: lo importante es que tu argumento use correctamente los conceptos de esta guía.</p>
+
+<div class="quiz quiz-open" data-quiz-id="abierto-1">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Piensa en un sistema de atención al cliente que conozcas bien (un banco, una telefónica, una plataforma de streaming). ¿Qué tan variados son los problemas reales que puede tener un cliente? ¿La variedad de canales y respuestas que ofrece ese sistema alcanza para cubrir esa variedad? Si no alcanza, ¿qué consecuencia observas o esperarías observar?</p>
+<textarea class="quiz-open-input" placeholder="Escribe aquí tu análisis antes de ver la respuesta modelo…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver respuesta modelo</button>
+<div class="quiz-open-model" hidden>
+<strong>Respuesta modelo</strong>
+<p>Un buen análisis identifica primero la variedad del problema: los clientes pueden tener dudas de facturación, fallas técnicas, reclamos de fraude, cambios de plan, cancelaciones, cada una con matices distintos. Luego compara esa variedad contra la variedad real de respuesta del sistema: ¿tiene un canal por tipo de problema, o todo se atiende igual por el mismo formulario o el mismo chatbot genérico? Si la variedad de respuesta es menor que la variedad de problemas, la consecuencia esperable —según la Ley de Requisito de Variedad— es que una parte de los clientes quede sin resolver su caso real, sea derivado en bucle entre canales, o termine escalando a redes sociales buscando una "variedad" de respuesta que el sistema oficial no le ofreció.</p>
+</div>
+</div>
+
+<div class="quiz quiz-open" data-quiz-id="abierto-2">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Piensa en un equipo o proyecto grupal en el que hayas trabajado (una materia, un proyecto de software, un emprendimiento). Usando el Modelo de Sistema Viable, identifica de forma informal quién o qué cumplía cada uno de los cinco subsistemas (Operaciones, Coordinación, Control, Inteligencia, Política). ¿Faltaba claramente alguno?</p>
+<textarea class="quiz-open-input" placeholder="Escribe aquí tu análisis antes de ver la respuesta modelo…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver respuesta modelo</button>
+<div class="quiz-open-model" hidden>
+<strong>Respuesta modelo</strong>
+<p>Un buen análisis nombra explícitamente cada subsistema: Sistema 1 son quienes hacían el trabajo concreto (programar, escribir, diseñar); Sistema 2 es lo que evitaba que dos personas trabajaran sobre lo mismo o se pisaran (un repositorio compartido, una división clara de tareas, reuniones de sincronización); Sistema 3 es quien revisaba el avance y reasignaba tareas o tiempo cuando algo se atrasaba; Sistema 4 es quien estaba pendiente de referencias externas, requisitos del profesor, o tendencias que pudieran cambiar el enfoque; Sistema 5 es quien mantenía claro el objetivo final del proyecto y decidía qué priorizar cuando había tensión entre "terminar rápido" y "hacerlo bien". En la mayoría de los proyectos estudiantiles pequeños, lo que suele faltar por completo es el Sistema 2 (coordinación explícita) y el Sistema 4 (nadie mira activamente hacia afuera): es un patrón útil para reconocer en tus propios equipos futuros.</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">La Ley de Requisito de Variedad dice, en esencia, que...</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Todo sistema debe minimizar su número de respuestas posibles para ser eficiente.</button>
+<button class="quiz-opt" data-correct>Solo la variedad puede absorber variedad: el controlador necesita al menos tantas respuestas distintas como perturbaciones posibles enfrenta.</button>
+<button class="quiz-opt">La variedad no tiene relación con la capacidad de control de un sistema.</button>
+<button class="quiz-opt">Todo sistema debe tener exactamente cinco subsistemas de variedad.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: esa es la formulación clásica de Ashby. Un controlador con menos variedad que las perturbaciones que enfrenta, tarde o temprano pierde el control." data-ko="No se trata de minimizar respuestas ni de un número fijo de subsistemas (eso es el Modelo de Sistema Viable, otro concepto). La ley dice que el controlador necesita al menos tanta variedad como la perturbación que enfrenta." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Según el Modelo de Sistema Viable, un sistema con mucho Sistema 1 (gente trabajando) pero sin Sistema 2 (coordinación) es automáticamente viable.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: las cinco funciones son necesarias en conjunto. Sin Sistema 2, las unidades operativas tienden a entrar en conflicto entre sí, sin importar cuánta gente trabaje." data-ko="Tener mucho Sistema 1 no basta. Sin Sistema 2 (coordinación), las unidades operativas chocan entre sí: se necesitan las cinco funciones juntas para que el sistema sea plenamente viable." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué subsistema del Modelo de Sistema Viable es responsable de detectar cambios en el entorno y oportunidades futuras?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Sistema 1.</button>
+<button class="quiz-opt">Sistema 2.</button>
+<button class="quiz-opt" data-correct>Sistema 4.</button>
+<button class="quiz-opt">Sistema 5.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el Sistema 4 (Inteligencia) es el que mira hacia afuera y hacia el futuro." data-ko="Sistema 1 es el trabajo operativo, Sistema 2 la coordinación interna y Sistema 5 la identidad y el propósito. El que mira hacia afuera y hacia el futuro es el Sistema 4 (Inteligencia)." hidden></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Este ejemplo ilustra principalmente Requisito de Variedad, o el Modelo de Sistema Viable?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un banco solo puede responder "comuníquese a la sucursal" ante cualquier tipo de reclamo, sin importar cuál sea.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Requisito de Variedad</button>
+<button>Modelo de Sistema Viable</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una empresa crece de 10 a 500 empleados y empieza a tener conflictos constantes entre áreas porque nunca se definieron estándares comunes.</span>
+<div class="quiz-classify-btns">
+<button>Requisito de Variedad</button>
+<button data-correct>Modelo de Sistema Viable</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Aumentar la variedad de un sistema de monitoreo de software (alertas específicas en vez de una sola alerta genérica) sirve principalmente para...</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Reducir la cantidad de servidores necesarios.</button>
+<button class="quiz-opt" data-correct>Que la capacidad de respuesta del equipo iguale la variedad real de fallas posibles, permitiendo un control efectivo.</button>
+<button class="quiz-opt">Eliminar por completo la necesidad de retroalimentación.</button>
+<button class="quiz-opt">Aumentar la entropía del sistema.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: alertas específicas aumentan la variedad de respuesta del equipo, acercándola a la variedad real de fallas posibles, que es justamente lo que permite un control efectivo." data-ko="No tiene relación directa con el número de servidores ni con la entropía, y la retroalimentación sigue siendo necesaria. El objetivo es que la variedad de respuesta del equipo alcance a la variedad real de fallas posibles." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Cibernética</td><td>La ciencia del control y la comunicación en sistemas.</td></tr>
+<tr><td>Ley de Requisito de Variedad</td><td>Solo la variedad puede absorber variedad: el controlador necesita al menos tanta variedad como la perturbación.</td></tr>
+<tr><td>Variedad insuficiente</td><td>Cuando las respuestas posibles de un sistema son menos que las situaciones que debe enfrentar: pierde el control.</td></tr>
+<tr><td>Sistema viable</td><td>Un sistema capaz de mantener una existencia independiente pese a los cambios del entorno.</td></tr>
+<tr><td>Sistema 1 (Operaciones)</td><td>Quien hace el trabajo primario del sistema.</td></tr>
+<tr><td>Sistema 2 (Coordinación)</td><td>Evita conflictos entre las unidades operativas.</td></tr>
+<tr><td>Sistema 3 (Control)</td><td>Supervisa el presente y asigna recursos.</td></tr>
+<tr><td>Sistema 4 (Inteligencia)</td><td>Mira hacia afuera y hacia el futuro.</td></tr>
+<tr><td>Sistema 5 (Política)</td><td>Define identidad y equilibra presente con futuro.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🧠 Ashby y el cerebro</h3><p>W. Ross Ashby formuló su Ley de Requisito de Variedad estudiando el cerebro como un sistema regulador, décadas antes de que se aplicara a organizaciones y sistemas de software.</p></div>
+<div class="info"><h3>🏭 Beer y las fábricas de Chile</h3><p>Stafford Beer aplicó el Modelo de Sistema Viable a escala nacional en el Proyecto Cybersyn (Chile, 1971-1973), un intento pionero de coordinar en tiempo real la industria de todo un país.</p></div>
+<div class="info"><h3>🤖 DevOps y variedad</h3><p>La automatización de infraestructura (Kubernetes, auto-scaling, self-healing) es, en el fondo, una forma de aumentar la variedad de respuesta de un sistema sin necesitar más personas humanas respondiendo manualmente.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Cibernética Avanzada: Variedad y Viabilidad de los Sistemas</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Análisis abierto (respuesta modelo) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
