@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía Completa de Condicionales en Python | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>Condicionales</span></div>
+<p>Guía completa de estructuras condicionales en Python</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#quees">¿Qué es una condición?</a>
+<a href="#if">La instrucción if</a>
+<a href="#comparacion">Operadores de comparación</a>
+<a href="#elseelif">else y elif</a>
+<a href="#logicos">Operadores lógicos</a>
+<a href="#anidados">Condicionales anidados</a>
+<a href="#truthy">Truthy y falsy en if</a>
+<a href="#ternario">Condicional en una línea</a>
+<a href="#errores">Errores comunes</a>
+<a href="#ejercicios">Ejercicios</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🐍 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Condicionales <span>en Python</span></h1>
+<p>Hasta ahora tus programas ejecutan instrucciones una tras otra, sin importar los datos que reciben. Las estructuras condicionales son el primer paso para que tu código <strong>tome decisiones</strong>: ejecutar un bloque distinto según se cumpla o no una condición. Es la base sobre la que luego vas a construir bucles, funciones y, más adelante, los métodos de una clase.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Ya sabes crear variables, identificar sus tipos y leer datos del usuario. Ahora falta la pieza que le da <strong>lógica</strong> a un programa: decidir qué hacer según el valor de esos datos. Eso es exactamente lo que hacen las estructuras condicionales.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás escribir condiciones con <code>if</code>, <code>elif</code> y <code>else</code>, combinar condiciones con operadores de comparación y lógicos (<code>and</code>, <code>or</code>, <code>not</code>), anidar condicionales y evitar los errores más comunes al programar decisiones.</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Todos los bloques con el encabezado <strong>Python</strong> son editables: presiona <strong>✏️ Editar</strong> para modificar el código y <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador (usa Pyodide, un Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📖 Aprende</h3><p>Cómo Python evalúa condiciones y decide qué bloque ejecutar.</p></div>
+<div class="info"><h3>💻 Practica</h3><p>Ejemplos editables y ejecutables en cada sección.</p></div>
+<div class="info"><h3>🎯 Domina</h3><p>Operadores lógicos, anidamiento y los errores que evitan la mayoría de los principiantes.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="quees">
+<div class="card">
+<h2 class="section-title">¿Qué es una condición?</h2>
+<p class="lead">Una <strong>condición</strong> es cualquier expresión que Python puede evaluar como <code>True</code> o <code>False</code>. Ya las viste en la guía de <strong>Tipos de Datos</strong>: cualquier comparación (<code>5 &gt; 3</code>, <code>"a" == "b"</code>) produce un valor <code>bool</code>. Una estructura condicional usa ese resultado para decidir qué código ejecutar.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 20
+print(edad >= 18)
+print(type(edad >= 18))</code></pre>
+</div>
+<div class="highlight">
+<strong>La idea central</strong>
+<p><code>if</code> no es más que: "si esta expresión vale <code>True</code>, ejecuta el bloque de abajo; si no, sáltalo".</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="if">
+<div class="card">
+<h2 class="section-title">La instrucción if</h2>
+<p class="lead">En Python, un bloque <code>if</code> se abre con dos puntos <code>:</code> y su contenido se marca con <strong>indentación</strong> (4 espacios). A diferencia de otros lenguajes, Python no usa llaves <code>{}</code>: la indentación es lo que define qué instrucciones pertenecen al bloque.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 20
+
+if edad >= 18:
+    print("Eres mayor de edad")
+    print("Puedes votar")
+
+print("Este print siempre se ejecuta")</code></pre>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>Eres mayor de edad
+Puedes votar
+Este print siempre se ejecuta</pre>
+</div>
+<div class="highlight">
+<strong>Cuidado con la indentación</strong>
+<p>Todas las líneas de un mismo bloque deben tener <strong>exactamente la misma indentación</strong>. Mezclar espacios y tabulaciones, o desalinear una línea por error, produce un <code>IndentationError</code>.</p>
+</div>
+<p>Si la condición es falsa, el bloque simplemente no se ejecuta y el programa continúa después de él:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 15
+
+if edad >= 18:
+    print("Eres mayor de edad")
+
+print("Fin del programa")</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="comparacion">
+<div class="card">
+<h2 class="section-title">Operadores de comparación</h2>
+<p class="lead">Estos operadores son los que normalmente escribes dentro de un <code>if</code>. Todos devuelven un valor <code>bool</code>.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Operador</th><th scope="col">Significado</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><code>==</code></td><td>Igual a</td><td><code>edad == 18</code></td></tr>
+<tr><td><code>!=</code></td><td>Distinto de</td><td><code>edad != 18</code></td></tr>
+<tr><td><code>&gt;</code></td><td>Mayor que</td><td><code>edad &gt; 18</code></td></tr>
+<tr><td><code>&lt;</code></td><td>Menor que</td><td><code>edad &lt; 18</code></td></tr>
+<tr><td><code>&gt;=</code></td><td>Mayor o igual que</td><td><code>edad &gt;= 18</code></td></tr>
+<tr><td><code>&lt;=</code></td><td>Menor o igual que</td><td><code>edad &lt;= 18</code></td></tr>
+</tbody>
+</table>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">a = 10
+b = 20
+print(a == b)
+print(a != b)
+print(a < b)
+print(a >= 10)</code></pre>
+</div>
+<div class="highlight">
+<strong>No confundir <code>==</code> con <code>=</code></strong>
+<p><code>=</code> asigna un valor a una variable; <code>==</code> compara dos valores. Es el error más común al escribir un <code>if</code> por primera vez, y lo vas a ver de nuevo en la sección de errores comunes.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="elseelif">
+<div class="card">
+<h2 class="section-title">else y elif</h2>
+<p class="lead"><code>else</code> define el bloque que se ejecuta cuando la condición del <code>if</code> es falsa. <code>elif</code> (abreviatura de "else if") te permite encadenar varias condiciones adicionales antes de llegar al <code>else</code> final.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 15
+
+if edad >= 18:
+    print("Eres mayor de edad")
+else:
+    print("Eres menor de edad")</code></pre>
+</div>
+<p>Con <code>elif</code> puedes evaluar varias condiciones en orden. Python evalúa de arriba hacia abajo y ejecuta <strong>solo el primer bloque</strong> cuya condición sea verdadera:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nota = 75
+
+if nota >= 90:
+    print("Sobresaliente")
+elif nota >= 70:
+    print("Aprobado")
+elif nota >= 50:
+    print("En riesgo")
+else:
+    print("Reprobado")</code></pre>
+</div>
+<div class="highlight">
+<strong>Orden importa</strong>
+<p>Si hubieras escrito primero <code>elif nota >= 50</code> y luego <code>elif nota >= 70</code>, una nota de <code>75</code> caería en el primer <code>elif</code> que se cumple (<code>>= 50</code>) y nunca llegaría al segundo. Ordena las condiciones de la más específica a la más general.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="logicos">
+<div class="card">
+<h2 class="section-title">Operadores lógicos: and, or, not</h2>
+<p class="lead">Cuando una decisión depende de <strong>más de una condición</strong> a la vez, combinas expresiones booleanas con <code>and</code>, <code>or</code> y <code>not</code>.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Operador</th><th scope="col">Se cumple cuando…</th></tr></thead>
+<tbody>
+<tr><td><code>and</code></td><td>Ambas condiciones son verdaderas.</td></tr>
+<tr><td><code>or</code></td><td>Al menos una condición es verdadera.</td></tr>
+<tr><td><code>not</code></td><td>Invierte el valor de la condición.</td></tr>
+</tbody>
+</table>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 20
+tiene_carnet = True
+
+if edad >= 18 and tiene_carnet:
+    print("Puede conducir")
+else:
+    print("No puede conducir")</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">dia = "sábado"
+
+if dia == "sábado" or dia == "domingo":
+    print("Es fin de semana")
+else:
+    print("Es día de semana")</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">en_mantenimiento = False
+
+if not en_mantenimiento:
+    print("El sistema está disponible")</code></pre>
+</div>
+<div class="highlight">
+<strong>Cortocircuito</strong>
+<p>Python evalúa <code>and</code>/<code>or</code> con <strong>cortocircuito</strong>: en <code>a and b</code>, si <code>a</code> ya es <code>False</code>, ni siquiera evalúa <code>b</code>. Esto se usa mucho para evitar errores, por ejemplo: <code>edad != "" and int(edad) >= 18</code>.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="anidados">
+<div class="card">
+<h2 class="section-title">Condicionales anidados</h2>
+<p class="lead">Un <code>if</code> puede contener otro <code>if</code> dentro de su bloque. Esto es útil cuando la segunda decisión solo tiene sentido después de confirmar la primera, pero abusar del anidamiento hace el código difícil de leer.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 25
+tiene_entrada = True
+
+if edad >= 18:
+    if tiene_entrada:
+        print("Puede ingresar al evento")
+    else:
+        print("Necesita comprar una entrada")
+else:
+    print("No cumple la edad mínima")</code></pre>
+</div>
+<div class="highlight">
+<strong>Prefiere and cuando puedas</strong>
+<p>El ejemplo anterior también se puede escribir sin anidar, combinando condiciones con <code>and</code>: <code>if edad >= 18 and tiene_entrada:</code>. En general, si un anidamiento se puede aplanar con <code>and</code>/<code>or</code>, el código queda más legible.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="truthy">
+<div class="card">
+<h2 class="section-title">Truthy y falsy dentro de un if</h2>
+<p class="lead">En la guía de <strong>Tipos de Datos</strong> viste que Python considera "falsy" a valores como <code>0</code>, <code>""</code> o <code>[]</code>. Un <code>if</code> puede evaluar directamente cualquier valor, no solo comparaciones explícitas, porque Python lo convierte a <code>bool</code> internamente.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">nombre = ""
+
+if nombre:
+    print("Hola,", nombre)
+else:
+    print("No ingresaste un nombre")</code></pre>
+</div>
+<div class="highlight">
+<strong>Cuándo conviene ser explícito</strong>
+<p><code>if nombre:</code> es idiomático en Python, pero si necesitas distinguir <code>0</code> de <code>None</code> (por ejemplo, un saldo en cero no es lo mismo que "sin dato"), es más seguro comparar explícitamente: <code>if nombre != "":</code> o <code>if valor is not None:</code>.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ternario">
+<div class="card">
+<h2 class="section-title">Condicional en una línea (operador ternario)</h2>
+<p class="lead">Cuando el <code>if</code>/<code>else</code> solo decide qué <strong>valor</strong> asignar (no qué instrucciones ejecutar), Python permite escribirlo en una sola línea con la forma <code>valor_si_true if condición else valor_si_false</code>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 16
+estado = "mayor de edad" if edad >= 18 else "menor de edad"
+print(estado)</code></pre>
+</div>
+<p>Es equivalente a escribir:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 16
+if edad >= 18:
+    estado = "mayor de edad"
+else:
+    estado = "menor de edad"
+print(estado)</code></pre>
+</div>
+<div class="highlight">
+<strong>Úsalo con moderación</strong>
+<p>El operador ternario es cómodo para decisiones simples de una sola línea. Si necesitas <code>elif</code> o varias instrucciones por rama, usa el <code>if</code> normal: forzar todo a una línea perjudica la legibilidad.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="errores">
+<div class="card">
+<h2 class="section-title">Errores comunes</h2>
+<div class="info-grid">
+<div class="info"><h3>❌ Usar = en vez de ==</h3><p><code>if edad = 18:</code> produce <strong>SyntaxError</strong>. Para comparar se usa <code>==</code>, no <code>=</code>.</p></div>
+<div class="info"><h3>❌ Olvidar los dos puntos</h3><p><code>if edad >= 18</code> sin <code>:</code> al final produce <strong>SyntaxError</strong>.</p></div>
+<div class="info"><h3>❌ Indentación inconsistente</h3><p>Mezclar distintos niveles de indentación en el mismo bloque produce <strong>IndentationError</strong>.</p></div>
+<div class="info"><h3>❌ Encadenar if en vez de elif</h3><p>Usar varios <code>if</code> seguidos (en lugar de <code>elif</code>) evalúa <strong>todas</strong> las condiciones aunque la primera ya se haya cumplido, lo que puede ejecutar más de un bloque por error.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Prueba el error</h2>
+<p>Ejecuta este bloque para observar en vivo el <code>SyntaxError</code> por usar <code>=</code> en lugar de <code>==</code>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 18
+if edad = 18:
+    print("Tiene 18 años")</code></pre>
+</div>
+<div class="highlight">
+<strong>Corrígelo</strong>
+<p>Edita el bloque anterior y reemplaza <code>edad = 18</code> (dentro del <code>if</code>) por <code>edad == 18</code> para ver la diferencia.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Ejercicios Propuestos</h2>
+<p class="lead">Pon en práctica lo aprendido resolviendo los siguientes ejercicios directamente en el bloque editable.</p>
+<ol style="margin-left:25px;line-height:2">
+<li>Pide la edad de una persona con <code>input()</code> y usa <code>if</code>/<code>else</code> para imprimir si es mayor o menor de edad.</li>
+<li>Dada una variable <code>nota</code>, usa <code>if</code>/<code>elif</code>/<code>else</code> para imprimir "Sobresaliente" (≥90), "Aprobado" (≥70), "En riesgo" (≥50) o "Reprobado".</li>
+<li>Combina dos condiciones con <code>and</code> para verificar si una persona puede votar (<code>edad >= 18 and es_ciudadano</code>).</li>
+<li>Usa <code>or</code> para comprobar si un número es igual a <code>3</code> o a <code>7</code>.</li>
+<li>Escribe un <code>if</code> anidado y luego reescríbelo usando <code>and</code> para comparar ambas versiones.</li>
+<li>Escribe una expresión condicional en una línea (ternario) que asigne <code>"par"</code> o <code>"impar"</code> según el resto de dividir un número entre 2.</li>
+</ol>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>✍️ Resuelve aquí los ejercicios</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu solución a los ejercicios (puedes resolverlos uno por uno)…"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Reto Final</h2>
+<p>Escribe un programa que clasifique el <strong>Índice de Masa Corporal (IMC)</strong> a partir de estos dos valores:</p>
+<ul style="margin-left:25px;line-height:2">
+<li><code>peso = 68</code> (kg)</li>
+<li><code>altura = 1.70</code> (metros)</li>
+</ul>
+<p>El programa deberá:</p>
+<ul style="margin-left:25px;line-height:2">
+<li>Calcular el IMC con la fórmula <code>peso / (altura ** 2)</code>.</li>
+<li>Usar <code>if</code>/<code>elif</code>/<code>else</code> para clasificarlo: menor a 18.5 "Bajo peso", entre 18.5 y 24.9 "Normal", entre 25 y 29.9 "Sobrepeso", 30 o más "Obesidad".</li>
+<li>Imprimir el IMC redondeado a un decimal junto con la clasificación, usando un f-String.</li>
+</ul>
+<div class="code salida">
+<div class="code-header"><span>Salida esperada</span></div>
+<pre>IMC: 23.5 → Normal</pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Uso</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Condición simple</td><td><code>if x > 0:</code></td></tr>
+<tr><td>Alternativa</td><td><code>if x > 0: ... else: ...</code></td></tr>
+<tr><td>Varias condiciones</td><td><code>if ...: elif ...: else: ...</code></td></tr>
+<tr><td>Ambas verdaderas</td><td><code>a and b</code></td></tr>
+<tr><td>Al menos una verdadera</td><td><code>a or b</code></td></tr>
+<tr><td>Invertir</td><td><code>not a</code></td></tr>
+<tr><td>Condicional en una línea</td><td><code>x if cond else y</code></td></tr>
+<tr><td>Comprobar pertenencia</td><td><code>if x in lista:</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🐍 Sin switch</h3><p>Python no tuvo una instrucción <code>switch</code> tradicional hasta 2021: antes de eso (y todavía hoy) se usa <code>if</code>/<code>elif</code> encadenado para ese propósito.</p></div>
+<div class="info"><h3>🔗 Comparaciones encadenadas</h3><p>Python permite escribir <code>0 <= nota <= 100</code> directamente, sin necesitar <code>0 <= nota and nota <= 100</code> como en otros lenguajes.</p></div>
+<div class="info"><h3>🎯 pass como marcador</h3><p>Si necesitas dejar un bloque <code>if</code> vacío temporalmente, Python exige al menos una instrucción: para eso existe <code>pass</code>, que no hace nada.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Condicionales en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Resaltado de sintaxis (sin librerías externas) ===== */
+const PY_KEYWORDS = ["False","None","True","and","as","assert","async","await","break","class",
+  "continue","def","del","elif","else","except","finally","for","from","global","if","import",
+  "in","is","lambda","nonlocal","not","or","pass","raise","return","try","while","with","yield",
+  "print","len","int","str","float","bool","input","type","isinstance","round"];
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function highlightPython(code){
+  const escaped = escapeHtml(code);
+  const tokens = [];
+  const mask = (html) => {
+    const marker = String.fromCharCode(0xE000 + tokens.length);
+    tokens.push(html);
+    return marker;
+  };
+  let out = escaped.replace(
+    /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:[^"\\]|\\.)*"|f?'(?:[^'\\]|\\.)*')/gm,
+    (m, comment, str) => comment !== undefined
+      ? mask(`<span class="comment">${comment}</span>`)
+      : mask(`<span class="string">${str}</span>`)
+  );
+  out = out.replace(/\b\d+\.?\d*\b/g, m => mask(`<span class="number">${m}</span>`));
+  out = out.replace(new RegExp(`\\b(${PY_KEYWORDS.join("|")})\\b`, "g"), m => mask(`<span class="keyword">${m}</span>`));
+  out = out.replace(/\b([A-Za-z_]\w*)(?=\()/g, m => mask(`<span class="func">${m}</span>`));
+  out = out.replace(/[-]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
+  return out;
+}
+
+/* ===== Pyodide (Python real en el navegador), carga perezosa ===== */
+let pyodideReadyPromise = null;
+function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      const pyodide = await window.loadPyodide();
+      await pyodide.runPythonAsync(`
+import sys, io
+def __run_capture(src):
+    buf = io.StringIO()
+    old = sys.stdout
+    sys.stdout = buf
+    err = None
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.stdout = old
+    return buf.getvalue(), err
+`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+async function ejecutarPython(codigo){
+  const pyodide = await cargarPyodide();
+  const funcion = pyodide.globals.get("__run_capture");
+  const resultado = funcion(codigo);
+  const [salida, error] = resultado.toJs();
+  resultado.destroy();
+  return { salida, error };
+}
+
+/* ===== Resaltar cada ejemplo de solo lectura ===== */
+function resaltarEjemplo(bloque){
+  const codeEl = bloque.querySelector("pre code.src");
+  if (!codeEl) return;
+  codeEl.innerHTML = highlightPython(codeEl.textContent.trim());
+}
+
+/* ===== Conectar un panel de editor en blanco (ejecutar código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  textarea.addEventListener("paste", e => e.preventDefault());
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    try {
+      const { salida, error } = await ejecutarPython(textarea.value);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el intérprete de Python: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+function crearPanelEditor(mensaje){
+  const panel = document.createElement("div");
+  panel.className = "editor-panel";
+  panel.innerHTML = `
+    <div class="editor-header">
+      <span>${mensaje}</span>
+      <button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+    </div>
+    <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu propio código, inspirándote en el ejemplo de arriba, y presiona Ejecutar."></textarea>
+    <div class="output" hidden>
+      <div class="output-head">Salida</div>
+      <pre class="output-body"></pre>
+    </div>`;
+  return panel;
+}
+
+/* ===== Bloquear copiado del ejemplo (para que se escriba a mano) ===== */
+function bloquearCopiado(bloque){
+  const pre = bloque.querySelector("pre");
+  if (!pre) return;
+  const header = bloque.querySelector(".code-header span");
+  const avisar = () => {
+    if (!header) return;
+    const original = header.dataset.original || header.textContent;
+    header.dataset.original = original;
+    header.textContent = "🔒 Escríbelo tú mismo";
+    clearTimeout(header._avisoTimeout);
+    header._avisoTimeout = setTimeout(() => { header.textContent = original; }, 1600);
+  };
+  pre.addEventListener("copy", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("contextmenu", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("dragstart", e => e.preventDefault());
+}
+
+/* ===== Igualar la altura del editor a la del ejemplo ===== */
+function sincronizarAltura(bloque, panel){
+  const pre = bloque.querySelector("pre");
+  const textarea = panel.querySelector(".editor");
+  if (pre && textarea) textarea.style.minHeight = pre.offsetHeight + "px";
+}
+
+const parejas = [];
+document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
+  resaltarEjemplo(bloque);
+  bloquearCopiado(bloque);
+  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo");
+  bloque.after(panel);
+  conectarEditor(panel);
+  parejas.push([bloque, panel]);
+});
+
+document.querySelectorAll(".editor-panel.independiente").forEach(conectarEditor);
+document.querySelectorAll(".code.salida").forEach(bloquearCopiado);
+
+parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel));
+window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel)));
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

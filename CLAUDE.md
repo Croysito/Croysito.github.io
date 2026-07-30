@@ -12,6 +12,24 @@ Cada guía de `guias_bd/` (y las demás carpetas) sigue el mismo esqueleto: side
 
 Al crear una guía nueva, usar como plantilla la guía más reciente de esa carpeta (ver `guias_bd/ddl-postgresql.html` como ejemplo reciente).
 
+## Roadmap curricular: POO (2026)
+
+**Decisión (2026-07-30):** antes de "Clases y objetos" hace falta un puente de fundamentos de Python que hoy no existe como guía propia (condicionales/bucles solo aparecen de forma incidental en ejemplos de guías previas, nunca como tema enseñado). Se optó por la **Opción B**: condicionales → bucles → funciones → clases y objetos, para que "método" se presente como "una función que ya conocés, pero adentro de una clase".
+
+| # | Guía | Estado |
+|---|---|---|
+| — | Variables en Python (`variables.html`) | ✅ Publicada |
+| — | print() en Python (`print.html`) | ✅ Publicada |
+| — | String en Python (`string.html`) | ✅ Publicada |
+| — | input() en Python (`input.html`) | ✅ Publicada |
+| — | Tipos de Datos en Python (`tipos-datos.html`) | ✅ Publicada |
+| 1 | Condicionales: if/elif/else y operadores lógicos (`condicionales.html`) | ✅ Publicada (2026-07-30) |
+| 2 | Bucles: while y for (range, break/continue) (`bucles.html`) | ⏭️ **Siguiente a crear** |
+| 3 | Funciones: def, parámetros, return y scope (`funciones.html`) | Pendiente |
+| 4 | Clases y objetos desde cero (`clases-objetos.html`) | Pendiente |
+
+**Al completar una guía:** marcar su fila como "✅ Publicada" con la fecha, actualizar la tarjeta correspondiente en `index.html` (de "próximo" a "disponible", y agregar la siguiente como "próximo"), y avanzar la fila "⏭️ Siguiente a crear" a la guía que sigue en la tabla.
+
 ## Roadmap curricular: Base de Datos II (2026)
 
 **Contexto:** clases 2x/semana hasta la última semana de octubre de 2026. Objetivo: que los estudiantes terminen expertos en SQL relacional y con nivel básico/intermedio en NoSQL (MongoDB). Cadencia acordada: **1 guía nueva por semana** (clase de teoría/aula invertida) + **1 clase de práctica/laboratorio** esa misma semana sobre la misma guía (sin guía nueva ese día).
