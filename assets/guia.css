@@ -141,6 +141,7 @@ img{ max-width:100%; }
   border-top:1px dashed rgba(255,255,255,.15);
 }
 .editor-panel.independiente{ border-radius:12px; border-top:none; margin:25px 0; }
+.editor-panel.independiente .editor{ min-height:320px; }
 .editor-header span{ color:var(--verde2); font-weight:500; }
 .editor{
   width:100%; min-height:110px; background:var(--codigo); color:#e6edf3; border:none;
