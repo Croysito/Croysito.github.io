@@ -622,6 +622,15 @@ function conectarEditor(panel){
 
   textarea.addEventListener("paste", e => e.preventDefault());
 
+  textarea.addEventListener("keydown", e => {
+    if (e.key !== "Tab") return;
+    e.preventDefault();
+    const inicio = textarea.selectionStart;
+    const fin = textarea.selectionEnd;
+    textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+    textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+  });
+
   runBtn.onclick = async () => {
     const codigo = textarea.value.trim();
     output.hidden = false;
