@@ -30,6 +30,22 @@ Al crear una guía nueva, usar como plantilla la guía más reciente de esa carp
 
 **Al completar una guía:** marcar su fila como "✅ Publicada" con la fecha, actualizar la tarjeta correspondiente en `index.html` (de "próximo" a "disponible", y agregar la siguiente como "próximo"), y avanzar la fila "⏭️ Siguiente a crear" a la guía que sigue en la tabla.
 
+## Roadmap curricular: Teoría General de Sistemas (2026)
+
+**Contexto:** a diferencia de POO y BD2, TGS no tiene una cadencia fija predefinida — las guías nuevas surgen del avance real de la materia. El bloque de cibernética avanzada (Ley de Variedad + VSM) cerró con 8 grupos exponiendo temas de profundización del VSM (recursividad, atenuación/amplificación de variedad, homeostasis/ultraestabilidad, autopoiesis, cibernética de 1er/2do orden, variedad en ciberseguridad, diagnóstico organizacional práctico), lo que motivó crear un capstone que consolida esos temas en vez de repetirlos como guías sueltas.
+
+| # | Guía | Estado |
+|---|---|---|
+| — | Fundamentos y Origen de la TGS (`fundamentos-origen.html`) | ✅ Publicada |
+| — | Introducción a la Teoría General de Sistemas (`sistema.html`) | ✅ Publicada |
+| — | Modelado de Sistemas: Diagramas Causales (`modelado-sistemas.html`) | ✅ Publicada |
+| — | TGS Aplicada: Sistemas de Información (`sistemas-informacion.html`) | ✅ Publicada |
+| — | Cibernética Avanzada: Variedad y Viabilidad (`viabilidad-sistemas.html`) | ✅ Publicada |
+| 1 | Diagnóstico y Rediseño Organizacional con el VSM — recursividad, atenuación/amplificación de variedad, homeostasis/ultraestabilidad, autopoiesis, cibernética de 1er/2do orden, variedad en ciberseguridad, caso práctico integrador (`diagnostico-vsm.html`) | ✅ Publicada (2026-08-04) |
+| 2 | *(por definir según avance de la materia)* | Pendiente |
+
+**Al completar una guía:** marcar su fila como "✅ Publicada" con la fecha, actualizar la tarjeta correspondiente en `index.html` (agregarla como "disponible"), y agregar la siguiente fila cuando se defina el próximo tema según el avance real de la materia.
+
 ## Roadmap curricular: Base de Datos II (2026)
 
 **Contexto:** clases 2x/semana hasta la última semana de octubre de 2026. Objetivo: que los estudiantes terminen expertos en SQL relacional y con nivel básico/intermedio en NoSQL (MongoDB). Cadencia acordada: **1 guía nueva por semana** (clase de teoría/aula invertida) + **1 clase de práctica/laboratorio** esa misma semana sobre la misma guía (sin guía nueva ese día).

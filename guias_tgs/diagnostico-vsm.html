@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico y Rediseño Organizacional con el VSM | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">TGS <span>Diagnóstico VSM</span></div>
+<p>Diagnóstico y rediseño organizacional con el VSM</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#recursividad">Recursividad del VSM</a>
+<a href="#variedad-estrategias">Atenuación y amplificación de variedad</a>
+<a href="#homeostasis">Homeostasis y ultraestabilidad</a>
+<a href="#autopoiesis">Autopoiesis y clausura operacional</a>
+<a href="#cibernetica-ordenes">Cibernética de 1er y 2do orden</a>
+<a href="#variedad-seguridad">Variedad en ciberseguridad</a>
+<a href="#caso">Caso práctico: diagnóstico completo</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🩺 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Diagnóstico y Rediseño <span>Organizacional</span> con el VSM</h1>
+<p>Ya conocés la Ley de Requisito de Variedad y los cinco sistemas del Modelo de Sistema Viable. Esta guía te da las herramientas que usa un cibernético de verdad para <strong>diagnosticar</strong> una organización real: por qué falla, qué le falta, y cómo se rediseña para que vuelva a ser viable.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Esta guía es la continuación directa de <strong>Cibernética Avanzada: Variedad y Viabilidad de los Sistemas</strong>. No vuelve a explicar la Ley de Requisito de Variedad ni los cinco sistemas del VSM desde cero — asume que ya los manejás y te lleva un nivel más profundo: los conceptos que le dan al VSM su poder real como herramienta de diagnóstico.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Si todavía no viste la Ley de Requisito de Variedad ni los cinco sistemas (Operaciones, Coordinación, Control, Inteligencia, Política), repasa primero <a href="viabilidad-sistemas.html">Cibernética Avanzada: Variedad y Viabilidad de los Sistemas</a> antes de continuar.</p>
+</div>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía podrás usar recursividad, atenuación/amplificación de variedad, homeostasis, ultraestabilidad, autopoiesis y cibernética de segundo orden para leer los síntomas de una organización real y proponer, con esos conceptos, un rediseño concreto.</p>
+</div>
+<div class="highlight">
+<strong>📝 Sobre las actividades de este módulo</strong>
+<p>Como en la guía anterior, la mayoría de las actividades son de <strong>razonamiento aplicado</strong> sobre casos y escenarios. La guía cierra con un caso práctico integrador único: la organización ficticia <strong>NubeFácil</strong>, sobre la que vas a aplicar todos los conceptos en conjunto, igual que lo haría un consultor en cibernética organizacional.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🔁 Recursividad</h3><p>Cada parte de un sistema viable es, a su vez, un sistema viable completo.</p></div>
+<div class="info"><h3>⚖️ Homeostasis</h3><p>Cómo un sistema se mantiene estable, y qué hace cuando eso ya no alcanza.</p></div>
+<div class="info"><h3>🩺 Diagnostica</h3><p>Cierra con un caso real completo para practicar el diagnóstico de punta a punta.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="recursividad">
+<div class="card">
+<h2 class="section-title">Recursividad del VSM: sistemas dentro de sistemas</h2>
+<p class="lead">Stafford Beer no diseñó el VSM para describir una organización completa una sola vez. Lo diseñó para aplicarse <strong>recursivamente</strong>: cada Sistema 1 (Operaciones) de un sistema viable es, en sí mismo, un sistema viable completo, con sus propios cinco subsistemas adentro.</p>
+<div class="highlight">
+<strong>El principio de recursividad</strong>
+<p>Si una empresa de software es un sistema viable con sus cinco subsistemas a nivel de empresa, cada equipo de desarrollo (que es "Sistema 1" a ese nivel) tiene puertas adentro su propio Sistema 1 (programadores escribiendo código), Sistema 2 (el daily que evita que se pisen entre sí), Sistema 3 (el líder técnico asignando tareas de la semana), Sistema 4 (quien investiga nuevas herramientas para el equipo) y Sistema 5 (la meta del equipo para ese sprint o trimestre).</p>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Nivel de recursión</th><th scope="col">Ejemplo en una empresa de software</th></tr></thead>
+<tbody>
+<tr><td>Nivel 0 — la empresa completa</td><td>Dirección (S5), radar de mercado (S4), oficina de proyectos (S3), estándares y calendario compartido (S2), y todos los equipos de desarrollo (S1).</td></tr>
+<tr><td>Nivel 1 — un equipo de desarrollo (es S1 del nivel 0)</td><td>Meta del sprint (S5), investigación de herramientas (S4), líder técnico (S3), daily y convenciones de código (S2), programadores (S1).</td></tr>
+<tr><td>Nivel 2 — una persona programando (es S1 del nivel 1)</td><td>Su propia meta de la tarea (S5), su investigación puntual en documentación (S4), su propia priorización de subtareas (S3), sus propias convenciones internas de commits (S2), y el código que efectivamente escribe (S1).</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Por qué importa</strong>
+<p>La recursividad explica por qué "arreglar" la viabilidad de una empresa nunca es un solo diagnóstico: hay que revisar si cada nivel —empresa, equipo, incluso persona— tiene sus cinco funciones cubiertas. Un equipo puede ser perfectamente viable puertas adentro y aun así la empresa completa no serlo, si falta coordinación (S2) <em>entre</em> equipos.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="recursividad-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un equipo de soporte técnico funciona muy bien puertas adentro: tiene un líder que asigna casos (S3), un espacio donde investigan nuevas causas de fallas (S4) y una meta clara del trimestre (S5). Sin embargo, la empresa completa sigue sin ser viable, porque ese equipo nunca se entera de los cambios de producto que hacen los demás equipos hasta que un cliente se queja. ¿Qué explica mejor la recursividad en este caso?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Que el equipo de soporte no es un sistema viable, porque ningún subsistema puede fallar a ningún nivel.</button>
+<button class="quiz-opt" data-correct>Que la viabilidad de cada nivel es independiente pero no suficiente: el equipo puede tener sus cinco funciones resueltas puertas adentro (nivel 1) y aun así faltar una función a nivel de toda la empresa (nivel 0), como la coordinación (S2) entre equipos.</button>
+<button class="quiz-opt">Que la recursividad no aplica a equipos de soporte, solo a equipos de desarrollo.</button>
+<button class="quiz-opt">Que el problema es exclusivamente de Requisito de Variedad, sin relación con el VSM.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la recursividad significa que cada nivel se evalúa por separado. El equipo de soporte puede ser viable en su propio nivel y la empresa completa, un nivel más arriba, seguir sin serlo por falta de Sistema 2 entre equipos." data-ko="El equipo sí puede ser un sistema viable a su propio nivel (tiene S3, S4, S5 puertas adentro). El punto de la recursividad es que eso no garantiza la viabilidad del nivel superior: ahí falta Sistema 2, coordinación entre equipos." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="variedad-estrategias">
+<div class="card">
+<h2 class="section-title">Atenuación y amplificación de variedad</h2>
+<p class="lead">La Ley de Requisito de Variedad dice que la variedad del regulador debe igualar la del entorno. En la práctica, casi nunca se logra tratando de igualar variedad con variedad uno a uno: se usan dos estrategias complementarias.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Estrategia</th><th scope="col">Qué hace</th><th scope="col">Ejemplo en TI</th></tr></thead>
+<tbody>
+<tr><td><strong>Atenuación de variedad</strong></td><td>Reduce la variedad que el regulador tiene que enfrentar, filtrando o simplificando el problema antes de que llegue a él.</td><td>Una API pública que solo acepta un catálogo fijo de operaciones, en vez de aceptar cualquier consulta arbitraria a la base de datos.</td></tr>
+<tr><td><strong>Amplificación de variedad</strong></td><td>Aumenta la variedad de respuesta disponible del regulador, sin necesitar más personas humanas respondiendo una por una.</td><td>Un bot que resuelve automáticamente el 70% de los tickets repetitivos, liberando a los agentes humanos para los casos que sí necesitan criterio.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Las dos caras de la misma ley</strong>
+<p>Ninguna organización real iguala variedad con variedad contratando una persona por cada problema posible. En cambio, <strong>atenúa</strong> la variedad del entorno (categoriza, filtra, estandariza) y al mismo tiempo <strong>amplifica</strong> su propia variedad de respuesta (automatiza, delega, escala). Diagnosticar un sistema con poco control casi siempre significa preguntar cuál de las dos estrategias falta.</p>
+</div>
+
+<p>Clasifica cada mecanismo según sea principalmente atenuación o amplificación de variedad.</p>
+<div class="quiz quiz-classify" data-quiz-id="variedad-estrategias-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Atenuación o amplificación de variedad?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un formulario de reclamos que obliga a elegir entre 6 categorías predefinidas, en vez de aceptar texto libre sin estructura.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Atenuación</button>
+<button>Amplificación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un sistema de auto-scaling que agrega servidores automáticamente cuando sube la demanda, sin que nadie tenga que pedirlo.</span>
+<div class="quiz-classify-btns">
+<button>Atenuación</button>
+<button data-correct>Amplificación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una política de "solo aceptamos pedidos dentro de la ciudad" para no tener que resolver la logística de envíos a cualquier destino.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Atenuación</button>
+<button>Amplificación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Delegar la aprobación de gastos menores a los líderes de cada equipo, en vez de que todo pase por una sola gerencia central.</span>
+<div class="quiz-classify-btns">
+<button>Atenuación</button>
+<button data-correct>Amplificación</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="homeostasis">
+<div class="card">
+<h2 class="section-title">Homeostasis y ultraestabilidad</h2>
+<p class="lead"><strong>Homeostasis</strong> es la capacidad de un sistema de mantener ciertas variables esenciales dentro de un rango estable, pese a las perturbaciones del entorno, usando los mecanismos de control que ya tiene. Un termostato es homeostático: corrige la temperatura una y otra vez con el mismo mecanismo.</p>
+<div class="highlight">
+<strong>Cuando la homeostasis ya no alcanza</strong>
+<p>El cibernético <strong>W. Ross Ashby</strong> —el mismo de la Ley de Requisito de Variedad— también describió qué pasa cuando las perturbaciones son tan grandes que el mecanismo de control habitual deja de funcionar: el sistema no solo corrige el valor, sino que <strong>cambia su propia estructura o sus propios parámetros de control</strong> para encontrar una nueva forma de estabilidad. A eso Ashby lo llamó <strong>ultraestabilidad</strong>.</p>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto</th><th scope="col">Qué corrige</th><th scope="col">Ejemplo en software</th></tr></thead>
+<tbody>
+<tr><td>Homeostasis</td><td>El valor de una variable, usando el mecanismo de control que ya existe.</td><td>Un <em>circuit breaker</em> que abre y cierra el tráfico hacia un servicio caído, siguiendo siempre la misma regla.</td></tr>
+<tr><td>Ultraestabilidad</td><td>El propio mecanismo de control, cuando el de siempre ya no es suficiente.</td><td>Después de una caída masiva de un centro de datos, el sistema reconfigura automáticamente sus umbrales de auto-scaling para el resto del día, porque el patrón de tráfico normal ya no aplica.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-mc" data-quiz-id="homeostasis-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un e-commerce tiene un mecanismo que, ante una caída de tráfico anómala, primero intenta lo de siempre (agregar más servidores). Como la caída persiste y ya no es un pico normal, el sistema cambia por completo su política: reduce temporalmente las funciones no esenciales (recomendaciones, animaciones) para priorizar el checkout, algo que nunca antes había hecho. ¿Qué concepto describe mejor este segundo paso?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Homeostasis, porque sigue corrigiendo la misma variable de siempre.</button>
+<button class="quiz-opt" data-correct>Ultraestabilidad, porque el sistema no repitió su mecanismo habitual: cambió sus propias reglas de control para encontrar una nueva forma de estabilidad frente a una perturbación que el mecanismo de siempre no pudo absorber.</button>
+<button class="quiz-opt">Recursividad, porque involucra varios niveles de subsistemas.</button>
+<button class="quiz-opt">Atenuación de variedad, porque redujo funciones del sistema.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: agregar servidores es el mecanismo homeostático habitual. Cuando ese mecanismo no alcanza y el sistema cambia sus propias reglas de control (qué funciones priorizar), eso es ultraestabilidad." data-ko="El primer paso (agregar servidores) sí es homeostasis. Pero cambiar las propias reglas de control —priorizar checkout sobre otras funciones, algo que nunca hacía antes— es ultraestabilidad: el sistema modificó su propio mecanismo de control, no solo corrigió una variable con el mecanismo de siempre." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="autopoiesis">
+<div class="card">
+<h2 class="section-title">Autopoiesis y clausura operacional</h2>
+<p class="lead">Los biólogos chilenos <strong>Humberto Maturana</strong> y <strong>Francisco Varela</strong> definieron la <strong>autopoiesis</strong> (del griego "auto-producción") como la capacidad de un sistema de producir y reproducir continuamente los propios componentes que lo constituyen, manteniendo su organización mientras lo hace. Una célula es el ejemplo clásico: sus procesos internos producen las moléculas que a su vez sostienen esos mismos procesos.</p>
+<div class="highlight">
+<strong>Autopoiético vs. alopoiético</strong>
+<p>Un sistema es <strong>alopoiético</strong> cuando produce algo distinto de sí mismo (una fábrica de autos produce autos, no se produce a sí misma). Es <strong>autopoiético</strong> cuando lo que produce es su propia organización y sus propios componentes (una célula produce las moléculas que la mantienen siendo célula; una cultura organizacional se reproduce a sí misma a través de sus propios rituales).</p>
+</div>
+<div class="highlight">
+<strong>Clausura operacional</strong>
+<p>Un sistema autopoiético tiene <strong>clausura operacional</strong>: sus procesos internos se definen en referencia a sí mismos, no al entorno. El entorno puede <strong>perturbar</strong> al sistema, pero no <strong>determina</strong> cómo el sistema responde — eso lo decide la propia organización interna del sistema. Por eso la misma noticia del mercado puede perturbar a dos empresas y cada una reacciona distinto, según su propia estructura interna.</p>
+</div>
+
+<p>Relaciona cada ejemplo con el concepto que ilustra.</p>
+<div class="quiz quiz-match" data-quiz-id="autopoiesis-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada ejemplo con el concepto que mejor lo describe.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="autopoiesis">Cultura organizacional autopoiética</button>
+<button class="quiz-match-item" data-pair="alopoiesis">Sistema alopoiético</button>
+<button class="quiz-match-item" data-pair="clausura">Clausura operacional</button>
+<button class="quiz-match-item" data-pair="perturbacion">Perturbación del entorno</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="autopoiesis">Cada nuevo ingeniero es formado por otros ingenieros usando los mismos rituales (dailies, code reviews, postmortems) que ellos mismos vivieron, sin imposición externa.</button>
+<button class="quiz-match-item" data-pair="alopoiesis">Una fábrica de autopartes: su producto final es distinto de la organización que lo fabrica.</button>
+<button class="quiz-match-item" data-pair="clausura">Dos empresas reciben la misma noticia de una nueva ley y cada una decide algo distinto, según su propia estructura de decisión interna.</button>
+<button class="quiz-match-item" data-pair="perturbacion">Un competidor lanza un producto nuevo: no determina qué hace la empresa, solo dispara una reacción según cómo esté organizada internamente.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="cibernetica-ordenes">
+<div class="card">
+<h2 class="section-title">Cibernética de primer y segundo orden</h2>
+<p class="lead">La <strong>cibernética de primer orden</strong> estudia sistemas observados desde afuera: un ingeniero analiza un termostato, un consultor diagnostica una empresa con el VSM, un investigador estudia un ecosistema. El observador está fuera del sistema y, en teoría, no lo altera.</p>
+<div class="highlight">
+<strong>El giro de segundo orden</strong>
+<p>El cibernético <strong>Heinz von Foerster</strong> planteó la <strong>cibernética de segundo orden</strong>: la cibernética de los sistemas que se observan a sí mismos, donde el observador es <strong>parte</strong> del sistema observado y su propia observación cambia lo que observa. Un equipo que hace una retrospectiva no solo describe cómo trabajó: el simple hecho de observarse a sí mismo ya cambia cómo va a trabajar después.</p>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Orden</th><th scope="col">Quién observa</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Primer orden</td><td>Un observador externo al sistema, que no forma parte de él.</td><td>Un analista de datos que estudia el comportamiento de usuarios sin haber participado del diseño del producto.</td></tr>
+<tr><td>Segundo orden</td><td>Un observador que es parte del sistema, y cuya observación lo modifica.</td><td>Un equipo de UX que entrevista usuarios y nota que estos cambian su comportamiento al saber que están siendo observados.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-mc" data-quiz-id="cibernetica-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un consultor externo aplica el VSM para diagnosticar una empresa. Durante las entrevistas, los empleados empiezan a cuestionar por primera vez sus propios procesos, y varios cambian su forma de trabajar incluso antes de que el consultor entregue el informe final. ¿Qué está pasando, en términos de órdenes de cibernética?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Nada especial: el consultor sigue siendo un observador externo de primer orden, como cualquier auditoría.</button>
+<button class="quiz-opt" data-correct>El diagnóstico dejó de ser puramente de primer orden: el propio acto de observar (las entrevistas) ya está modificando al sistema observado, así que el consultor pasó a ser, en la práctica, parte del sistema que analiza — cibernética de segundo orden.</button>
+<button class="quiz-opt">Es un caso de ultraestabilidad, sin relación con el orden de la observación.</button>
+<button class="quiz-opt">Es un error del consultor: un buen diagnóstico nunca debería influir en el sistema que estudia.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: en cuanto el acto de observar (entrevistar, preguntar) cambia el comportamiento del sistema antes de cualquier conclusión formal, el observador ya no está completamente afuera. Eso es exactamente el punto de la cibernética de segundo orden." data-ko="No es ultraestabilidad (eso es sobre cambiar mecanismos de control ante perturbaciones grandes), y no es un error: es prácticamente inevitable. Cuando observar ya cambia al sistema observado, el diagnóstico se vuelve cibernética de segundo orden." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="variedad-seguridad">
+<div class="card">
+<h2 class="section-title">Variedad requerida en ciberseguridad y tolerancia a fallos</h2>
+<p class="lead">La Ley de Requisito de Variedad se aplica de forma casi literal a la seguridad informática: un atacante tiene una variedad de técnicas posibles (phishing, fuerza bruta, inyección SQL, ingeniería social, día cero), y la defensa solo controla el riesgo si su propia variedad de respuesta iguala o supera esa variedad de ataque.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Enfoque</th><th scope="col">Estrategia de variedad</th></tr></thead>
+<tbody>
+<tr><td>Defensa en profundidad (firewall + WAF + monitoreo + autenticación multifactor, cada capa distinta)</td><td>Amplificación: cada capa cubre un tipo de ataque distinto, sumando variedad de respuesta.</td></tr>
+<tr><td>Reducción de superficie de ataque (cerrar puertos innecesarios, deshabilitar servicios sin uso)</td><td>Atenuación: reduce la variedad de vías de ataque posibles antes de que lleguen a los controles.</td></tr>
+<tr><td>Un único antivirus como toda la estrategia de seguridad</td><td>Variedad insuficiente: una sola respuesta frente a una variedad de amenazas mucho mayor.</td></tr>
+</tbody>
+</table>
+
+<p>Clasifica cada práctica de seguridad según la estrategia de variedad que representa.</p>
+<div class="quiz quiz-classify" data-quiz-id="seguridad-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Atenuación de variedad, amplificación de variedad, o variedad insuficiente?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Deshabilitar todos los puertos y servicios de red que no se usan en un servidor.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Atenuación</button>
+<button>Amplificación</button>
+<button>Insuficiente</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un sistema de detección de intrusos (IDS) que aprende y bloquea automáticamente nuevos patrones de ataque sin intervención humana constante.</span>
+<div class="quiz-classify-btns">
+<button>Atenuación</button>
+<button data-correct>Amplificación</button>
+<button>Insuficiente</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Toda la estrategia de seguridad de una empresa depende de una sola contraseña compartida entre todo el equipo, sin más controles.</span>
+<div class="quiz-classify-btns">
+<button>Atenuación</button>
+<button>Amplificación</button>
+<button data-correct>Insuficiente</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="caso">
+<div class="card">
+<h2 class="section-title">Caso práctico: diagnóstico organizacional completo</h2>
+<p class="lead">Cierra la guía con un diagnóstico integrador, igual al que haría un consultor en cibernética organizacional: identificar qué concepto explica cada síntoma, y a partir de eso, proponer un rediseño.</p>
+
+<div class="highlight">
+<strong>El caso: NubeFácil</strong>
+<p><strong>NubeFácil</strong> es una app de delivery que creció de 8 a 150 empleados en 18 meses. Lo que funcionaba con el equipo fundador dejó de alcanzar, y aparecieron una serie de síntomas que el equipo directivo no logra explicar del todo.</p>
+</div>
+
+<p>Para cada síntoma, identifica qué concepto de esta guía lo explica mejor.</p>
+<div class="quiz quiz-fill" data-quiz-id="caso-fill">
+<span class="quiz-badge">Completar</span>
+
+<p>1. Cada equipo de features tiene su propio líder técnico, su propio backlog y su propia meta de sprint — puertas adentro funciona casi como una empresa completa en miniatura. Esto ilustra
+<select class="quiz-blank" data-correct="recursividad">
+<option value="">— elige —</option>
+<option value="recursividad">recursividad</option>
+<option value="atenuacion">atenuación de variedad</option>
+<option value="autopoiesis">autopoiesis</option>
+<option value="segundo-orden">cibernética de segundo orden</option>
+</select>.</p>
+
+<p>2. El equipo de soporte automatizó respuestas para el 70% de los tickets repetitivos, sin contratar más personal. Esto ilustra
+<select class="quiz-blank" data-correct="amplificacion">
+<option value="">— elige —</option>
+<option value="amplificacion">amplificación de variedad</option>
+<option value="homeostasis">homeostasis</option>
+<option value="clausura">clausura operacional</option>
+<option value="recursividad">recursividad</option>
+</select>.</p>
+
+<p>3. La API pública de NubeFácil solo acepta un catálogo fijo de operaciones predefinidas, en vez de aceptar cualquier consulta arbitraria. Esto ilustra
+<select class="quiz-blank" data-correct="atenuacion">
+<option value="">— elige —</option>
+<option value="atenuacion">atenuación de variedad</option>
+<option value="ultraestabilidad">ultraestabilidad</option>
+<option value="autopoiesis">autopoiesis</option>
+<option value="amplificacion">amplificación de variedad</option>
+</select>.</p>
+
+<p>4. Cuando un centro de datos completo falló, el sistema no solo redirigió el tráfico como siempre: reconfiguró por completo sus propios umbrales de auto-scaling para el resto del día, porque el patrón de tráfico ya no era el normal. Esto ilustra
+<select class="quiz-blank" data-correct="ultraestabilidad">
+<option value="">— elige —</option>
+<option value="homeostasis">homeostasis</option>
+<option value="ultraestabilidad">ultraestabilidad</option>
+<option value="recursividad">recursividad</option>
+<option value="atenuacion">atenuación de variedad</option>
+</select>.</p>
+
+<p>5. La cultura de NubeFácil se sostiene sola: cada nueva persona aprende los mismos rituales (dailies, code reviews, postmortems sin culpa) de otras personas del equipo, sin que nadie desde afuera los imponga. Esto ilustra
+<select class="quiz-blank" data-correct="autopoiesis">
+<option value="">— elige —</option>
+<option value="autopoiesis">autopoiesis</option>
+<option value="alopoiesis">un sistema alopoiético</option>
+<option value="primer-orden">cibernética de primer orden</option>
+<option value="homeostasis">homeostasis</option>
+</select>.</p>
+
+<p>6. El equipo de UX entrevistó usuarios para una investigación, y notó que estos cambiaban su comportamiento por el solo hecho de saber que estaban siendo observados. Esto ilustra
+<select class="quiz-blank" data-correct="segundo-orden">
+<option value="">— elige —</option>
+<option value="primer-orden">cibernética de primer orden</option>
+<option value="segundo-orden">cibernética de segundo orden</option>
+<option value="ultraestabilidad">ultraestabilidad</option>
+<option value="recursividad">recursividad</option>
+</select>.</p>
+
+<p class="quiz-progress"></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>El síntoma sin resolver</strong>
+<p>Con todo lo anterior funcionando bien, NubeFácil sigue teniendo un problema: hace seis meses, el equipo de arquitectura detectó que un competidor iba a lanzar entregas en 15 minutos, pero la alerta nunca llegó a un espacio donde se decidiera algo al respecto — cada gerencia de área estaba enfocada solo en sus propias métricas del trimestre. NubeFácil lo notó recién cuando empezó a perder usuarios.</p>
+</div>
+
+<div class="quiz quiz-open" data-quiz-id="caso-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Con lo que identificaste en la actividad anterior y el síntoma sin resolver, redacta un diagnóstico breve de NubeFácil usando el VSM: ¿qué subsistema falta o falla con más claridad en este último síntoma, y qué cambio concreto propondrías para que NubeFácil vuelva a ser plenamente viable?</p>
+<textarea class="quiz-open-input" placeholder="Escribe aquí tu diagnóstico antes de ver la respuesta modelo…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver respuesta modelo</button>
+<div class="quiz-open-model" hidden>
+<strong>Respuesta modelo</strong>
+<p>El síntoma sin resolver es, en el fondo, una falla de Sistema 5 (Política): el Sistema 4 (Inteligencia) sí funcionó y detectó la amenaza del competidor a tiempo, pero no existía ningún espacio donde el corto plazo de cada gerencia (una función parecida a Sistema 3, pero fragmentada por área) se balanceara contra esa señal de futuro. Nadie tenía el mandato de equilibrar "cerrar el trimestre" con "responder a lo que se viene". Un rediseño concreto sería crear una instancia explícita de Sistema 5 —un comité o una persona con autoridad real— cuya función sea recibir las señales de Sistema 4 y decidir cuándo el corto plazo debe ceder ante una amenaza de largo plazo, en vez de dejar que cada gerencia de área optimice solo su propia métrica sin nadie mirando el conjunto.</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">La recursividad del VSM significa que...</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Solo la empresa completa necesita los cinco subsistemas; sus partes internas no.</button>
+<button class="quiz-opt" data-correct>Cada Sistema 1 de un sistema viable es, a su vez, un sistema viable completo con sus propios cinco subsistemas.</button>
+<button class="quiz-opt">Los cinco subsistemas se repiten literalmente idénticos en cada nivel, sin adaptarse al contexto.</button>
+<button class="quiz-opt">La recursividad reemplaza a la Ley de Requisito de Variedad.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: esa es la idea central de la recursividad — cada parte operativa es, en sí misma, un sistema viable completo." data-ko="Es al revés: cada Sistema 1 (parte operativa) es, en sí mismo, un sistema viable con sus propios cinco subsistemas. La recursividad no reemplaza la Ley de Variedad; son conceptos complementarios." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">La ultraestabilidad ocurre cuando un sistema corrige una perturbación usando siempre el mismo mecanismo de control, sin cambiar nada de su propia estructura.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: eso describe homeostasis, no ultraestabilidad. La ultraestabilidad implica que el sistema cambia su propia estructura o parámetros de control cuando el mecanismo habitual ya no alcanza." data-ko="Eso es la definición de homeostasis (corregir con el mecanismo de siempre). La ultraestabilidad es distinta: el sistema cambia su propia estructura o parámetros de control cuando el mecanismo habitual deja de ser suficiente." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un sistema tiene clausura operacional cuando...</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El entorno determina directamente cómo responde el sistema en cada situación.</button>
+<button class="quiz-opt" data-correct>El entorno solo puede perturbar al sistema, pero es la propia organización interna del sistema la que determina cómo responde.</button>
+<button class="quiz-opt">El sistema deja de tener cualquier relación con su entorno.</button>
+<button class="quiz-opt">El sistema solo puede tener un único subsistema activo a la vez.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: clausura operacional no significa aislamiento del entorno, sino que la respuesta a una perturbación la define la organización interna del sistema, no el entorno directamente." data-ko="Clausura operacional no significa que el entorno determine la respuesta, ni que el sistema quede aislado de él. Significa que el entorno perturba, pero la propia estructura interna del sistema decide cómo responder." hidden></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Este ejemplo ilustra principalmente cibernética de primer orden, o de segundo orden?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un sensor mide automáticamente la temperatura de un servidor sin que eso cambie en nada el comportamiento del propio servidor.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Primer orden</button>
+<button>Segundo orden</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un equipo hace una retrospectiva sobre su propio desempeño, y el solo hecho de reflexionar sobre eso ya cambia cómo van a trabajar la próxima semana.</span>
+<div class="quiz-classify-btns">
+<button>Primer orden</button>
+<button data-correct>Segundo orden</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En términos de variedad, "defensa en profundidad" (varias capas de seguridad distintas) es un ejemplo de...</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Variedad insuficiente, porque agrega complejidad innecesaria.</button>
+<button class="quiz-opt" data-correct>Amplificación de variedad: cada capa cubre un tipo de amenaza distinto, sumando variedad de respuesta hasta acercarse a la variedad de ataques posibles.</button>
+<button class="quiz-opt">Autopoiesis, porque el sistema se protege a sí mismo.</button>
+<button class="quiz-opt">Cibernética de segundo orden, porque involucra observación.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: cada capa de seguridad distinta amplifica la variedad total de respuesta del sistema de defensa frente a la variedad de ataques posibles." data-ko="No es variedad insuficiente (es justo lo contrario: busca cubrir más variedad), ni autopoiesis ni cibernética de segundo orden. Es amplificación de variedad: sumar capas distintas amplía la variedad de respuesta disponible." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Recursividad del VSM</td><td>Cada Sistema 1 de un sistema viable es, a su vez, un sistema viable completo con sus propios cinco subsistemas.</td></tr>
+<tr><td>Atenuación de variedad</td><td>Reduce la variedad que el regulador debe enfrentar (categorizar, filtrar, estandarizar).</td></tr>
+<tr><td>Amplificación de variedad</td><td>Aumenta la variedad de respuesta del regulador sin agregar más personas (automatizar, delegar, escalar).</td></tr>
+<tr><td>Homeostasis</td><td>Mantener una variable estable usando siempre el mismo mecanismo de control.</td></tr>
+<tr><td>Ultraestabilidad</td><td>Cuando el mecanismo habitual no alcanza, el sistema cambia su propia estructura o parámetros de control.</td></tr>
+<tr><td>Autopoiesis</td><td>Un sistema que produce y reproduce continuamente sus propios componentes y su propia organización.</td></tr>
+<tr><td>Clausura operacional</td><td>El entorno perturba al sistema, pero la organización interna del sistema decide cómo responde.</td></tr>
+<tr><td>Cibernética de primer orden</td><td>El observador está fuera del sistema y no lo altera.</td></tr>
+<tr><td>Cibernética de segundo orden</td><td>El observador es parte del sistema, y observar ya lo modifica.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🧫 Maturana, Varela y la autopoiesis</h3><p>Humberto Maturana y Francisco Varela, ambos biólogos chilenos, propusieron la autopoiesis en 1972 para explicar qué distingue a lo vivo de lo no vivo — décadas después, el concepto se extendió a organizaciones y sistemas sociales.</p></div>
+<div class="info"><h3>🌀 Von Foerster y el BCL</h3><p>Heinz von Foerster fundó en 1958 el Biological Computer Laboratory, el centro donde se formalizó la cibernética de segundo orden: la cibernética que se pregunta a sí misma cómo observa.</p></div>
+<div class="info"><h3>🧠 El Homeostato de Ashby</h3><p>W. Ross Ashby construyó en 1948 el "Homeostato", una máquina electromecánica capaz de reconfigurarse a sí misma ante perturbaciones — una demostración física, décadas antes del software, de lo que hoy llamamos ultraestabilidad.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Diagnóstico y Rediseño Organizacional con el VSM</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (respuesta modelo) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
