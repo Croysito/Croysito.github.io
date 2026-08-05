@@ -101,7 +101,7 @@
 <p>La base de datos que vas a construir existe solo mientras esta página siga abierta. Si <strong>recargas la página, cierras la pestaña, o navegas a otra guía, se pierde todo</strong> y hay que volver a ejecutar los bloques desde el principio. Si te equivocás y querés empezar de cero sin recargar, usa el botón "Reiniciar base de datos" de abajo.</p>
 </div>
 <div class="info-grid">
-<div class="info"><h3>✍️ Ejecuta de verdad</h3><p>Cada bloque de código es editable: escribí, modificá, rompé cosas a propósito.</p></div>
+<div class="info"><h3>✍️ Lo escribís vos</h3><p>Cada bloque parte vacío. El enunciado te dice qué tenés que lograr — el código SQL lo escribís de cero.</p></div>
 <div class="info"><h3>🩻 Errores reales</h3><p>Los mensajes de error que vas a ver son exactamente los que da PostgreSQL en producción.</p></div>
 <div class="info"><h3>🧩 Progresivo</h3><p>Todos los ejercicios comparten la misma base de datos: lo que crees en el ejercicio 1 lo vas a usar en el 4.</p></div>
 </div>
@@ -134,23 +134,20 @@
 <section class="container" id="ddl-base">
 <div class="card">
 <h2 class="section-title">1. Tablas base: CLIENTE y PRODUCTO</h2>
-<p class="lead">Igual que en la guía teórica, empezamos por las dos tablas que no dependen de ninguna otra. Presiona <strong>▶ Ejecutar</strong> para crearlas de verdad.</p>
+<p class="lead">Igual que en la guía teórica, empezamos por las dos tablas que no dependen de ninguna otra. Escribí vos mismo las sentencias <code>CREATE TABLE</code> y presioná <strong>▶ Ejecutar</strong> para crearlas de verdad.</p>
+<div class="highlight">
+<strong>Enunciado</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><strong>cliente</strong>(<code>cliente_id</code> clave primaria autoincremental, <code>cliente_nombre VARCHAR(120)</code> obligatorio)</li>
+<li><strong>producto</strong>(<code>producto_id</code> clave primaria autoincremental, <code>producto_nombre VARCHAR(120)</code> obligatorio, <code>precio NUMERIC(10,2)</code> obligatorio con un <code>CHECK</code> que exija que sea mayor a 0, <code>activo BOOLEAN</code> obligatorio con <code>DEFAULT true</code>)</li>
+</ul>
+</div>
 <div class="editor-panel">
 <div class="editor-header">
 <span>🗄️ Ejercicio 1 — Crea las tablas base</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:260px" aria-label="Editor SQL: tablas base">CREATE TABLE cliente (
-    cliente_id      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    cliente_nombre  VARCHAR(120) NOT NULL
-);
-
-CREATE TABLE producto (
-    producto_id      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    producto_nombre  VARCHAR(120) NOT NULL,
-    precio           NUMERIC(10,2) NOT NULL CHECK (precio &gt; 0),
-    activo           BOOLEAN NOT NULL DEFAULT true
-);</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:220px" aria-label="Editor SQL: tablas base" placeholder="-- Escribe aquí los CREATE TABLE de cliente y producto según el enunciado."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>
@@ -166,24 +163,20 @@ CREATE TABLE producto (
 <section class="container" id="ddl-relaciones">
 <div class="card">
 <h2 class="section-title">2. Relaciones y claves foráneas: PEDIDO y DETALLE_PEDIDO</h2>
-<p class="lead">Ahora las tablas que sí dependen de otras. <code>detalle_pedido</code> tiene clave primaria compuesta y dos claves foráneas, cada una con su propia acción referencial.</p>
+<p class="lead">Ahora las tablas que sí dependen de otras. Escribí las sentencias <code>CREATE TABLE</code> siguiendo el enunciado.</p>
+<div class="highlight">
+<strong>Enunciado</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><strong>pedido</strong>(<code>pedido_id</code> clave primaria autoincremental, <code>fecha DATE</code> obligatoria con <code>DEFAULT CURRENT_DATE</code>, <code>cliente_id</code> obligatorio como clave foránea hacia <code>cliente</code>)</li>
+<li><strong>detalle_pedido</strong>(<code>pedido_id</code> clave foránea hacia <code>pedido</code> con <code>ON DELETE CASCADE</code>, <code>producto_id</code> clave foránea hacia <code>producto</code> con <code>ON DELETE RESTRICT</code>, <code>cantidad</code> obligatoria con un <code>CHECK</code> mayor a 0, y clave primaria compuesta por <code>pedido_id</code> y <code>producto_id</code>)</li>
+</ul>
+</div>
 <div class="editor-panel">
 <div class="editor-header">
 <span>🗄️ Ejercicio 2 — Crea pedido y detalle_pedido</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:260px" aria-label="Editor SQL: pedido y detalle_pedido">CREATE TABLE pedido (
-    pedido_id   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    fecha       DATE NOT NULL DEFAULT CURRENT_DATE,
-    cliente_id  INTEGER NOT NULL REFERENCES cliente(cliente_id)
-);
-
-CREATE TABLE detalle_pedido (
-    pedido_id    INTEGER REFERENCES pedido(pedido_id) ON DELETE CASCADE,
-    producto_id  INTEGER REFERENCES producto(producto_id) ON DELETE RESTRICT,
-    cantidad     INTEGER NOT NULL CHECK (cantidad &gt; 0),
-    PRIMARY KEY (pedido_id, producto_id)
-);</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:220px" aria-label="Editor SQL: pedido y detalle_pedido" placeholder="-- Escribe aquí los CREATE TABLE de pedido y detalle_pedido según el enunciado."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>
@@ -199,54 +192,69 @@ CREATE TABLE detalle_pedido (
 <section class="container" id="restricciones-vivo">
 <div class="card">
 <h2 class="section-title">3. Restricciones en acción</h2>
-<p class="lead">Primero cargamos datos válidos. Después, cada bloque siguiente contiene <strong>una sola sentencia que va a fallar a propósito</strong> — así podés ver, aislado, el mensaje de error exacto que corresponde a cada tipo de restricción.</p>
+<p class="lead">Primero cargamos datos válidos. Después, cada bloque siguiente te pide <strong>una sola sentencia que va a fallar a propósito</strong> — así podés ver, aislado, el mensaje de error exacto que corresponde a cada tipo de restricción.</p>
+<div class="highlight">
+<strong>📎 Sintaxis de referencia: INSERT, UPDATE y DELETE</strong>
+<p>La guía teórica de DDL no cubre estas tres instrucciones — son <strong>DML</strong> (Data Manipulation Language), tema de la próxima guía. Para este taller te alcanza con la forma general:</p>
+<div class="code" style="margin-top:10px;">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">INSERT INTO tabla (columna1, columna2) VALUES (valor1, valor2);
+
+UPDATE tabla SET columna = valor WHERE condición;
+
+DELETE FROM tabla WHERE condición;</code></pre>
+</div>
+<p>De acá en adelante, cuando el enunciado diga "inserta", "actualiza" o "borra", adaptá esta forma general con los datos que te pide cada ejercicio.</p>
+</div>
+<div class="highlight">
+<strong>Enunciado — datos válidos de partida</strong>
+<p>Inserta en <code>cliente</code> dos filas: <em>'Ana Gutiérrez'</em> y <em>'Marco Flores'</em>. Inserta en <code>producto</code> dos filas: <em>'Teclado mecánico'</em> a 250.00 y <em>'Mouse inalámbrico'</em> a 90.00.</p>
+</div>
 <div class="editor-panel">
 <div class="editor-header">
 <span>🗄️ Datos válidos de partida</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Editor SQL: datos válidos">INSERT INTO cliente (cliente_nombre) VALUES ('Ana Gutiérrez'), ('Marco Flores');
-
-INSERT INTO producto (producto_nombre, precio) VALUES ('Teclado mecánico', 250.00), ('Mouse inalámbrico', 90.00);</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: datos válidos" placeholder="-- Escribe aquí los INSERT de cliente y producto según el enunciado."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>
 </div>
 </div>
 
-<p style="margin-top:25px;"><strong>3.1 — Viola un CHECK</strong> (precio negativo):</p>
+<p style="margin-top:25px;"><strong>3.1 — Viola un CHECK:</strong> intenta insertar en <code>producto</code> un <em>'Cable USB'</em> con precio <strong>-5.00</strong>.</p>
 <div class="editor-panel">
 <div class="editor-header">
 <span>💥 Ejercicio 3.1 — CHECK</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: violación de CHECK">INSERT INTO producto (producto_nombre, precio) VALUES ('Cable USB', -5.00);</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: violación de CHECK" placeholder="-- Escribe el INSERT que debería fallar por el CHECK de precio."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>
 </div>
 </div>
 
-<p><strong>3.2 — Viola un NOT NULL</strong>:</p>
+<p><strong>3.2 — Viola un NOT NULL:</strong> intenta insertar un <code>cliente</code> con <code>cliente_nombre</code> en <code>NULL</code>.</p>
 <div class="editor-panel">
 <div class="editor-header">
 <span>💥 Ejercicio 3.2 — NOT NULL</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: violación de NOT NULL">INSERT INTO cliente (cliente_nombre) VALUES (NULL);</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: violación de NOT NULL" placeholder="-- Escribe el INSERT que debería fallar por NOT NULL."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>
 </div>
 </div>
 
-<p><strong>3.3 — Viola una clave foránea</strong> (un cliente que no existe):</p>
+<p><strong>3.3 — Viola una clave foránea:</strong> intenta insertar un <code>pedido</code> con un <code>cliente_id</code> que no existe (por ejemplo, 999).</p>
 <div class="editor-panel">
 <div class="editor-header">
 <span>💥 Ejercicio 3.3 — FOREIGN KEY</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: violación de FOREIGN KEY">INSERT INTO pedido (cliente_id) VALUES (999);</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: violación de FOREIGN KEY" placeholder="-- Escribe el INSERT que debería fallar por FOREIGN KEY."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>
@@ -264,44 +272,42 @@ INSERT INTO producto (producto_nombre, precio) VALUES ('Teclado mecánico', 250.
 <div class="card">
 <h2 class="section-title">4. CASCADE vs. RESTRICT en acción</h2>
 <p class="lead">Primero armamos un pedido completo con su detalle. Después probamos qué pasa al intentar borrar cada extremo de la relación.</p>
+<div class="highlight">
+<strong>Enunciado — 4.0</strong>
+<p>Inserta en <code>pedido</code> una fila para <code>cliente_id = 1</code>. Inserta en <code>detalle_pedido</code> dos filas para ese pedido: <code>producto_id = 1</code> con <code>cantidad = 3</code>, y <code>producto_id = 2</code> con <code>cantidad = 1</code>. Confirma con un <code>SELECT * FROM detalle_pedido;</code> al final.</p>
+</div>
 <div class="editor-panel">
 <div class="editor-header">
 <span>🗄️ Ejercicio 4.0 — Crea un pedido con detalle</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:120px" aria-label="Editor SQL: pedido con detalle">INSERT INTO pedido (cliente_id) VALUES (1);
-
-INSERT INTO detalle_pedido (pedido_id, producto_id, cantidad) VALUES (1, 1, 3), (1, 2, 1);
-
-SELECT * FROM detalle_pedido;</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:100px" aria-label="Editor SQL: pedido con detalle" placeholder="-- Escribe los INSERT del pedido y su detalle, y un SELECT final."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>
 </div>
 </div>
 
-<p style="margin-top:25px;"><strong>4.1 — Intenta borrar un producto referenciado</strong> (declarado con <code>ON DELETE RESTRICT</code>):</p>
+<p style="margin-top:25px;"><strong>4.1 — Intenta borrar un producto referenciado</strong> (declarado con <code>ON DELETE RESTRICT</code>): borra el producto con <code>producto_id = 1</code>.</p>
 <div class="editor-panel">
 <div class="editor-header">
 <span>💥 Ejercicio 4.1 — RESTRICT</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: DELETE bloqueado por RESTRICT">DELETE FROM producto WHERE producto_id = 1;</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: DELETE bloqueado por RESTRICT" placeholder="-- Escribe el DELETE que debería fallar por RESTRICT."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>
 </div>
 </div>
 
-<p><strong>4.2 — Borra el pedido</strong> (declarado con <code>ON DELETE CASCADE</code>) y comprueba qué pasó con su detalle:</p>
+<p><strong>4.2 — Borra el pedido</strong> (declarado con <code>ON DELETE CASCADE</code>) con <code>pedido_id = 1</code>, y comprueba con un <code>SELECT</code> qué pasó con su detalle:</p>
 <div class="editor-panel">
 <div class="editor-header">
 <span>🗄️ Ejercicio 4.2 — CASCADE</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: DELETE con CASCADE">DELETE FROM pedido WHERE pedido_id = 1;
-
-SELECT * FROM detalle_pedido;</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:80px" aria-label="Editor SQL: DELETE con CASCADE" placeholder="-- Escribe el DELETE del pedido y el SELECT de verificación."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>
@@ -319,42 +325,45 @@ SELECT * FROM detalle_pedido;</textarea>
 <div class="card">
 <h2 class="section-title">5. ALTER TABLE en vivo</h2>
 <p class="lead">Una tabla ya creada no es definitiva. Agregamos una columna nueva a <code>cliente</code> y comprobamos qué valor toman las filas que ya existían.</p>
+<div class="highlight">
+<strong>Enunciado — 5.1</strong>
+<p>Agrega a <code>cliente</code> una columna <code>email VARCHAR(150)</code>. Confirma con un <code>SELECT * FROM cliente;</code> al final.</p>
+</div>
 <div class="editor-panel">
 <div class="editor-header">
 <span>🗄️ Ejercicio 5.1 — Agrega una columna</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: ALTER TABLE ADD COLUMN">ALTER TABLE cliente ADD COLUMN email VARCHAR(150);
-
-SELECT * FROM cliente;</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: ALTER TABLE ADD COLUMN" placeholder="-- Escribe el ALTER TABLE ADD COLUMN y el SELECT de verificación."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>
 </div>
 </div>
 
-<p style="margin-top:25px;"><strong>5.2 — Agrega una restricción UNIQUE a la columna nueva</strong> y carga un valor:</p>
+<div class="highlight" style="margin-top:25px;">
+<strong>Enunciado — 5.2</strong>
+<p>Agrega una restricción <code>UNIQUE</code> llamada <code>cliente_email_unico</code> sobre la columna <code>email</code>. Luego actualiza el cliente <code>cliente_id = 1</code> para que su email sea <em>'ana@correo.com'</em>.</p>
+</div>
 <div class="editor-panel">
 <div class="editor-header">
 <span>🗄️ Ejercicio 5.2 — ADD CONSTRAINT UNIQUE</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: ADD CONSTRAINT UNIQUE">ALTER TABLE cliente ADD CONSTRAINT cliente_email_unico UNIQUE (email);
-
-UPDATE cliente SET email = 'ana@correo.com' WHERE cliente_id = 1;</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: ADD CONSTRAINT UNIQUE" placeholder="-- Escribe el ALTER TABLE ADD CONSTRAINT UNIQUE y el UPDATE."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>
 </div>
 </div>
 
-<p><strong>5.3 — Intenta repetir el mismo correo en otro cliente:</strong></p>
+<p><strong>5.3 — Intenta repetir el mismo correo en otro cliente:</strong> actualiza <code>cliente_id = 2</code> con el mismo email <em>'ana@correo.com'</em>.</p>
 <div class="editor-panel">
 <div class="editor-header">
 <span>💥 Ejercicio 5.3 — UNIQUE</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: violación de UNIQUE">UPDATE cliente SET email = 'ana@correo.com' WHERE cliente_id = 2;</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: violación de UNIQUE" placeholder="-- Escribe el UPDATE que debería fallar por UNIQUE."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>
@@ -368,28 +377,26 @@ UPDATE cliente SET email = 'ana@correo.com' WHERE cliente_id = 1;</textarea>
 <h2 class="section-title">6. DROP TABLE y sus dos CASCADE</h2>
 <p class="lead">Hay dos cosas distintas en esta guía que se llaman "CASCADE", y es fácil confundirlas. Vamos a verlas una junto a la otra.</p>
 
-<p><strong>6.1 — Intenta borrar producto sin CASCADE:</strong></p>
+<p><strong>6.1 — Intenta borrar producto sin CASCADE:</strong> ejecuta un <code>DROP TABLE</code> simple sobre <code>producto</code>.</p>
 <div class="editor-panel">
 <div class="editor-header">
 <span>💥 Ejercicio 6.1 — DROP TABLE bloqueado</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: DROP TABLE sin CASCADE">DROP TABLE producto;</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: DROP TABLE sin CASCADE" placeholder="-- Escribe el DROP TABLE que debería fallar por dependencias."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>
 </div>
 </div>
 
-<p><strong>6.2 — Ahora con CASCADE</strong>, y comprueba qué le pasó a <code>detalle_pedido</code>:</p>
+<p><strong>6.2 — Ahora con CASCADE:</strong> vuelve a borrar <code>producto</code>, esta vez con <code>CASCADE</code>, y comprueba con un <code>SELECT</code> qué le pasó a <code>detalle_pedido</code>.</p>
 <div class="editor-panel">
 <div class="editor-header">
 <span>🗄️ Ejercicio 6.2 — DROP TABLE ... CASCADE</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: DROP TABLE con CASCADE">DROP TABLE producto CASCADE;
-
-SELECT * FROM detalle_pedido;</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: DROP TABLE con CASCADE" placeholder="-- Escribe el DROP TABLE ... CASCADE y el SELECT de verificación."></textarea>
 <div class="output" hidden>
 <div class="output-head">Resultado</div>
 <div class="output-body"></div>

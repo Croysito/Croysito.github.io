@@ -18,6 +18,10 @@ Para reforzar una guía teórica de BD II con una clase de práctica/laboratorio
 
 Detalles del patrón (ver `taller-ddl.html`): una única instancia de `PGlite` compartida por toda la página (para que los ejercicios se acumulen sobre la misma base de datos), un botón "🔄 Reiniciar base de datos" visible desde el inicio, y un bloque permanente de "zona de pruebas libres". Los resultados de `SELECT` se renderizan como tabla; el resto de sentencias muestra un mensaje de éxito con filas afectadas, o el error real de Postgres en rojo.
 
+**Decisión (2026-08-05):** los `<textarea class="editor">` de los ejercicios guiados parten **vacíos** (con un `placeholder` corto tipo `-- Escribe aquí...`), no con el código ya resuelto. El enunciado de cada ejercicio va en prosa o en una lista dentro de un `.highlight` justo antes del `.editor-panel` (nombres de tabla/columna, tipos, restricciones, qué INSERT/UPDATE/DELETE hay que escribir), y el estudiante escribe el SQL de cero. Solo la "zona de pruebas libres" y el "Reto final" ya seguían este criterio; ahora aplica a todos los ejercicios numerados del taller.
+
+**Cuidado al aplicar esto:** antes de vaciar los editores de un taller, verificar que **todo** el SQL que el enunciado va a pedir escribir ya fue enseñado en alguna guía teórica previa (no solo el tema principal del taller). En `taller-ddl.html` la teoría de DDL no cubre INSERT/UPDATE/DELETE (eso es DML, guía #2 del roadmap de BD II, todavía no publicada) pero el taller sí los necesita para cargar datos y provocar errores — se resolvió agregando una caja `.highlight` de "Sintaxis de referencia" con la forma genérica de esas tres instrucciones (sin resolver ningún ejercicio) antes del primer uso, en vez de crear o adelantar una guía completa de DML.
+
 ## Roadmap curricular: Base de Datos II (2026)
 
 ## Roadmap curricular: POO (2026)
