@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller: SQL en Vivo — PostgreSQL Real en tu Navegador | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* Estilos propios de este taller: tabla de resultados y barra de la base de datos, con la
+   misma estética "consola oscura" que ya usa .output-body en guia.css. No toca el CSS compartido. */
+.sql-result-table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+.sql-result-table th,.sql-result-table td{ padding:8px 10px; text-align:left; border:1px solid rgba(255,255,255,.15); }
+.sql-result-table thead th{ background:rgba(255,255,255,.08); color:#8fd48a; }
+.sql-result-table td em{ color:#7d8899; font-style:italic; }
+.sql-status{ margin:4px 0 10px; color:#8fd48a; }
+.sql-meta{ margin:0 0 10px; color:#7d8899; font-size:12px; }
+.db-toolbar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:18px 0 8px; padding:16px 20px; background:var(--highlightBg); border-left:6px solid var(--verde); border-radius:8px; }
+.db-toolbar button{ background:var(--verde); color:white; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:14px; }
+.db-toolbar button:hover{ background:var(--verde2); }
+.db-toolbar button:disabled{ opacity:.5; cursor:wait; }
+.db-estado{ font-size:14px; opacity:.85; }
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>Taller SQL</span></div>
+<p>SQL en vivo con PostgreSQL real</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#zona-pruebas">Zona de pruebas libres</a>
+<a href="#ddl-base">1. Tablas base</a>
+<a href="#ddl-relaciones">2. Relaciones y claves foráneas</a>
+<a href="#restricciones-vivo">3. Restricciones en acción</a>
+<a href="#fk-vivo">4. CASCADE vs. RESTRICT</a>
+<a href="#alter-vivo">5. ALTER TABLE en vivo</a>
+<a href="#drop-vivo">6. DROP TABLE y sus dos CASCADE</a>
+<a href="#reto">Reto final</a>
+<a href="#repaso">Repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Taller de Laboratorio</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>SQL en Vivo: <span>PostgreSQL Real</span> en tu Navegador</h1>
+<p>Esto no es un simulador: es <strong>PostgreSQL de verdad</strong>, compilado a WebAssembly, corriendo enteramente en tu navegador. Cada bloque de esta guía es editable y ejecutable — vas a crear el esquema de la guía de DDL con tus propias manos y ver los errores reales que devuelve el motor cuando algo sale mal.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Este taller es la práctica de laboratorio de <strong>DDL y Restricciones en PostgreSQL</strong>. No vuelve a explicar la teoría desde cero — asume que ya la viste — y en cambio te da un PostgreSQL real para ejecutar cada sentencia y comprobar con tus propios ojos qué pasa.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Si todavía no viste la teoría, repasa primero <a href="ddl-postgresql.html">DDL y Restricciones en PostgreSQL</a> antes de continuar. Este taller reconstruye exactamente el mismo esquema (CLIENTE, PRODUCTO, PEDIDO, DETALLE_PEDIDO) que esa guía.</p>
+</div>
+<div class="highlight">
+<strong>¿Cómo es posible correr PostgreSQL en una página web?</strong>
+<p>Usa <strong>PGlite</strong>, una compilación del propio motor de PostgreSQL a <strong>WebAssembly</strong> (WASM). No es un motor distinto que imita la sintaxis de Postgres —como pasa con otras herramientas educativas basadas en SQLite— es <strong>el mismo PostgreSQL</strong>, corriendo dentro de tu navegador, sin instalar nada ni depender de ningún servidor.</p>
+</div>
+<div class="highlight">
+<strong>⚠️ Todo vive en la memoria de esta pestaña</strong>
+<p>La base de datos que vas a construir existe solo mientras esta página siga abierta. Si <strong>recargas la página, cierras la pestaña, o navegas a otra guía, se pierde todo</strong> y hay que volver a ejecutar los bloques desde el principio. Si te equivocás y querés empezar de cero sin recargar, usa el botón "Reiniciar base de datos" de abajo.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>✍️ Ejecuta de verdad</h3><p>Cada bloque de código es editable: escribí, modificá, rompé cosas a propósito.</p></div>
+<div class="info"><h3>🩻 Errores reales</h3><p>Los mensajes de error que vas a ver son exactamente los que da PostgreSQL en producción.</p></div>
+<div class="info"><h3>🧩 Progresivo</h3><p>Todos los ejercicios comparten la misma base de datos: lo que crees en el ejercicio 1 lo vas a usar en el 4.</p></div>
+</div>
+
+<div class="db-toolbar">
+<button type="button" id="resetDbBtn">🔄 Reiniciar base de datos</button>
+<span class="db-estado" id="dbEstado">La base de datos está vacía. Empieza por el ejercicio 1.</span>
+</div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Este bloque queda disponible durante toda la guía. Usalo en cualquier momento para probar una idea propia, revisar el estado de una tabla con <code>SELECT * FROM tabla;</code>, o experimentar con algo que se te ocurra a mitad de un ejercicio — sin desordenar los bloques guiados.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🧪 Escribe cualquier sentencia SQL</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Zona de pruebas libres" placeholder="Por ejemplo: SELECT * FROM cliente;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="ddl-base">
+<div class="card">
+<h2 class="section-title">1. Tablas base: CLIENTE y PRODUCTO</h2>
+<p class="lead">Igual que en la guía teórica, empezamos por las dos tablas que no dependen de ninguna otra. Presiona <strong>▶ Ejecutar</strong> para crearlas de verdad.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1 — Crea las tablas base</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:260px" aria-label="Editor SQL: tablas base">CREATE TABLE cliente (
+    cliente_id      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cliente_nombre  VARCHAR(120) NOT NULL
+);
+
+CREATE TABLE producto (
+    producto_id      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    producto_nombre  VARCHAR(120) NOT NULL,
+    precio           NUMERIC(10,2) NOT NULL CHECK (precio &gt; 0),
+    activo           BOOLEAN NOT NULL DEFAULT true
+);</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight">
+<strong>Repite la ejecución</strong>
+<p>Presiona <strong>▶ Ejecutar</strong> una segunda vez, sin cambiar nada. PostgreSQL te va a devolver un error real de tipo <code>relation "cliente" already exists</code>. Corrígelo agregando <code>IF NOT EXISTS</code> después de <code>CREATE TABLE</code> en ambas tablas, y ejecuta de nuevo para confirmar que ya no falla.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ddl-relaciones">
+<div class="card">
+<h2 class="section-title">2. Relaciones y claves foráneas: PEDIDO y DETALLE_PEDIDO</h2>
+<p class="lead">Ahora las tablas que sí dependen de otras. <code>detalle_pedido</code> tiene clave primaria compuesta y dos claves foráneas, cada una con su propia acción referencial.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2 — Crea pedido y detalle_pedido</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:260px" aria-label="Editor SQL: pedido y detalle_pedido">CREATE TABLE pedido (
+    pedido_id   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fecha       DATE NOT NULL DEFAULT CURRENT_DATE,
+    cliente_id  INTEGER NOT NULL REFERENCES cliente(cliente_id)
+);
+
+CREATE TABLE detalle_pedido (
+    pedido_id    INTEGER REFERENCES pedido(pedido_id) ON DELETE CASCADE,
+    producto_id  INTEGER REFERENCES producto(producto_id) ON DELETE RESTRICT,
+    cantidad     INTEGER NOT NULL CHECK (cantidad &gt; 0),
+    PRIMARY KEY (pedido_id, producto_id)
+);</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight">
+<strong>Probá el orden incorrecto</strong>
+<p>Bajá a la <a href="#zona-pruebas">zona de pruebas libres</a> y escribí a mano <code>CREATE TABLE otra_tabla (id INTEGER REFERENCES tabla_inexistente(id));</code>. Vas a ver el error real: <code>relation "tabla_inexistente" does not exist</code> — exactamente lo que predice la guía teórica sobre el orden de creación.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="restricciones-vivo">
+<div class="card">
+<h2 class="section-title">3. Restricciones en acción</h2>
+<p class="lead">Primero cargamos datos válidos. Después, cada bloque siguiente contiene <strong>una sola sentencia que va a fallar a propósito</strong> — así podés ver, aislado, el mensaje de error exacto que corresponde a cada tipo de restricción.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Datos válidos de partida</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Editor SQL: datos válidos">INSERT INTO cliente (cliente_nombre) VALUES ('Ana Gutiérrez'), ('Marco Flores');
+
+INSERT INTO producto (producto_nombre, precio) VALUES ('Teclado mecánico', 250.00), ('Mouse inalámbrico', 90.00);</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p style="margin-top:25px;"><strong>3.1 — Viola un CHECK</strong> (precio negativo):</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>💥 Ejercicio 3.1 — CHECK</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: violación de CHECK">INSERT INTO producto (producto_nombre, precio) VALUES ('Cable USB', -5.00);</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p><strong>3.2 — Viola un NOT NULL</strong>:</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>💥 Ejercicio 3.2 — NOT NULL</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: violación de NOT NULL">INSERT INTO cliente (cliente_nombre) VALUES (NULL);</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p><strong>3.3 — Viola una clave foránea</strong> (un cliente que no existe):</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>💥 Ejercicio 3.3 — FOREIGN KEY</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: violación de FOREIGN KEY">INSERT INTO pedido (cliente_id) VALUES (999);</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Fíjate en el patrón</strong>
+<p>Cada tipo de restricción tiene un mensaje de error distinto y reconocible: <code>violates check constraint</code>, <code>violates not-null constraint</code> y <code>violates foreign key constraint</code>. Aprender a reconocer estos tres patrones te va a ahorrar mucho tiempo depurando scripts reales.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="fk-vivo">
+<div class="card">
+<h2 class="section-title">4. CASCADE vs. RESTRICT en acción</h2>
+<p class="lead">Primero armamos un pedido completo con su detalle. Después probamos qué pasa al intentar borrar cada extremo de la relación.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.0 — Crea un pedido con detalle</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:120px" aria-label="Editor SQL: pedido con detalle">INSERT INTO pedido (cliente_id) VALUES (1);
+
+INSERT INTO detalle_pedido (pedido_id, producto_id, cantidad) VALUES (1, 1, 3), (1, 2, 1);
+
+SELECT * FROM detalle_pedido;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p style="margin-top:25px;"><strong>4.1 — Intenta borrar un producto referenciado</strong> (declarado con <code>ON DELETE RESTRICT</code>):</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>💥 Ejercicio 4.1 — RESTRICT</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: DELETE bloqueado por RESTRICT">DELETE FROM producto WHERE producto_id = 1;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p><strong>4.2 — Borra el pedido</strong> (declarado con <code>ON DELETE CASCADE</code>) y comprueba qué pasó con su detalle:</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.2 — CASCADE</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: DELETE con CASCADE">DELETE FROM pedido WHERE pedido_id = 1;
+
+SELECT * FROM detalle_pedido;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>La diferencia, en vivo</strong>
+<p><code>RESTRICT</code> bloqueó el borrado de <code>producto</code> mientras siguiera referenciado. <code>CASCADE</code> dejó borrar <code>pedido</code> y arrastró automáticamente sus filas de <code>detalle_pedido</code> — el <code>SELECT</code> final debería devolver 0 filas.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="alter-vivo">
+<div class="card">
+<h2 class="section-title">5. ALTER TABLE en vivo</h2>
+<p class="lead">Una tabla ya creada no es definitiva. Agregamos una columna nueva a <code>cliente</code> y comprobamos qué valor toman las filas que ya existían.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.1 — Agrega una columna</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: ALTER TABLE ADD COLUMN">ALTER TABLE cliente ADD COLUMN email VARCHAR(150);
+
+SELECT * FROM cliente;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p style="margin-top:25px;"><strong>5.2 — Agrega una restricción UNIQUE a la columna nueva</strong> y carga un valor:</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.2 — ADD CONSTRAINT UNIQUE</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: ADD CONSTRAINT UNIQUE">ALTER TABLE cliente ADD CONSTRAINT cliente_email_unico UNIQUE (email);
+
+UPDATE cliente SET email = 'ana@correo.com' WHERE cliente_id = 1;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p><strong>5.3 — Intenta repetir el mismo correo en otro cliente:</strong></p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>💥 Ejercicio 5.3 — UNIQUE</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: violación de UNIQUE">UPDATE cliente SET email = 'ana@correo.com' WHERE cliente_id = 2;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="drop-vivo">
+<div class="card">
+<h2 class="section-title">6. DROP TABLE y sus dos CASCADE</h2>
+<p class="lead">Hay dos cosas distintas en esta guía que se llaman "CASCADE", y es fácil confundirlas. Vamos a verlas una junto a la otra.</p>
+
+<p><strong>6.1 — Intenta borrar producto sin CASCADE:</strong></p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>💥 Ejercicio 6.1 — DROP TABLE bloqueado</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: DROP TABLE sin CASCADE">DROP TABLE producto;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p><strong>6.2 — Ahora con CASCADE</strong>, y comprueba qué le pasó a <code>detalle_pedido</code>:</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 6.2 — DROP TABLE ... CASCADE</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: DROP TABLE con CASCADE">DROP TABLE producto CASCADE;
+
+SELECT * FROM detalle_pedido;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Dos CASCADE que no son lo mismo</strong>
+<p><code>ON DELETE CASCADE</code> (sección 4) es una regla que vive <strong>dentro de una fila</strong>: borra automáticamente las filas hijas cuando se borra la fila padre. <code>DROP TABLE ... CASCADE</code> (esta sección) es una operación <strong>de estructura</strong>: borra la restricción de clave foránea que dependía de la tabla eliminada, pero <strong>no borra la tabla ni las filas de <code>detalle_pedido</code></strong> — el <code>SELECT</code> final debería seguir mostrando datos, solo que <code>detalle_pedido</code> ya no tiene ninguna clave foránea apuntando a <code>producto</code>.</p>
+</div>
+
+<div class="highlight">
+<strong>Antes de seguir al reto final</strong>
+<p>El esquema quedó parcialmente desarmado a propósito. Usa el botón <strong>🔄 Reiniciar base de datos</strong> al principio de la guía para empezar el reto siguiente con una base de datos completamente vacía.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="reto">
+<div class="card">
+<h2 class="section-title">Reto final: diseña tu propio esquema</h2>
+<p class="lead">Con la base de datos reiniciada, diseña y crea desde cero el esquema de una <strong>biblioteca</strong>, aplicando todo lo practicado en este taller.</p>
+<div class="highlight">
+<strong>Requisitos</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><strong>autor</strong>(autor_id, autor_nombre)</li>
+<li><strong>libro</strong>(libro_id, titulo, autor_id → referencia a autor, anio_publicacion con un <code>CHECK</code> razonable)</li>
+<li><strong>socio</strong>(socio_id, socio_nombre, email con <code>UNIQUE</code>)</li>
+<li><strong>prestamo</strong>(libro_id, socio_id — clave primaria compuesta, fecha_prestamo con <code>DEFAULT CURRENT_DATE</code>, fecha_devolucion que pueda quedar sin definir)</li>
+<li>Decide vos la acción referencial (<code>CASCADE</code>, <code>RESTRICT</code> o <code>SET NULL</code>) de cada clave foránea de <strong>prestamo</strong>, y justifica tu elección con un comentario <code>--</code> en el propio bloque.</li>
+</ul>
+</div>
+<p>Una vez creadas las tablas, insertá un par de filas de cada una y confirmalas con <code>SELECT * FROM tabla;</code> — todavía no hace falta que domines <code>SELECT</code> a fondo, eso es tema de la próxima guía.</p>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>🏆 Resuelve aquí el reto</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu esquema de biblioteca" placeholder="-- Diseña aquí el esquema de la biblioteca: autor, libro, socio, prestamo.
+-- Recordá justificar con un comentario la acción referencial que elijas en cada FK de prestamo."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="repaso">
+<div class="card">
+<h2 class="section-title">Repaso</h2>
+<p class="lead">Cuatro preguntas cortas sobre lo que acabas de observar en vivo. Tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Al insertar un producto con precio -5.00, PostgreSQL respondió con un error que menciona "violates check constraint". ¿Qué restricción provocó ese error?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">NOT NULL</button>
+<button class="quiz-opt">UNIQUE</button>
+<button class="quiz-opt" data-correct>CHECK (precio &gt; 0)</button>
+<button class="quiz-opt">FOREIGN KEY</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el mensaje 'violates check constraint' identifica exactamente una restricción CHECK, en este caso la que exige precio positivo." data-ko="El mensaje 'violates check constraint' es específico de las restricciones CHECK, no de NOT NULL, UNIQUE ni FOREIGN KEY, que tienen su propio texto de error distinto." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">En el ejercicio 4, borrar el producto referenciado por detalle_pedido funcionó sin problema porque PostgreSQL siempre permite borrar cualquier fila.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el borrado falló porque la clave foránea de detalle_pedido hacia producto está declarada con ON DELETE RESTRICT, que bloquea el borrado mientras existan filas hijas." data-ko="Es falso: el borrado de producto falló porque su clave foránea desde detalle_pedido usa ON DELETE RESTRICT, que impide borrar la fila padre mientras tenga filas hijas asociadas." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Después de DROP TABLE producto CASCADE, ¿qué pasó con la tabla detalle_pedido?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Se borró por completo, junto con producto.</button>
+<button class="quiz-opt">Se vació de filas, pero la tabla siguió existiendo.</button>
+<button class="quiz-opt" data-correct>Siguió existiendo con sus filas intactas; solo se eliminó la restricción de clave foránea que dependía de producto.</button>
+<button class="quiz-opt">No cambió nada, incluida la clave foránea.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: DROP TABLE ... CASCADE elimina los objetos que dependen de la tabla eliminada (en este caso, la restricción de clave foránea), pero no borra la tabla que la contiene ni sus filas." data-ko="DROP TABLE ... CASCADE no borra la tabla dependiente ni sus filas: solo elimina los objetos que dependían directamente de la tabla borrada, como la restricción de clave foránea de detalle_pedido." hidden></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Es una regla de fila (ON DELETE ...) o una operación de estructura (DROP TABLE ...)?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Al borrar un pedido, sus filas de detalle_pedido se borran automáticamente.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Regla de fila</button>
+<button>Operación de estructura</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Al eliminar la tabla producto con CASCADE, se elimina la restricción de clave foránea que apuntaba a ella.</span>
+<div class="quiz-classify-btns">
+<button>Regla de fila</button>
+<button data-correct>Operación de estructura</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet del taller</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Situación</th><th scope="col">Mensaje real de PostgreSQL</th></tr></thead>
+<tbody>
+<tr><td>Crear una tabla que ya existe</td><td><code>relation "..." already exists</code></td></tr>
+<tr><td>Referenciar una tabla que aún no existe</td><td><code>relation "..." does not exist</code></td></tr>
+<tr><td>Violar un CHECK</td><td><code>new row for relation "..." violates check constraint "..."</code></td></tr>
+<tr><td>Violar NOT NULL</td><td><code>null value in column "..." violates not-null constraint</code></td></tr>
+<tr><td>Violar UNIQUE o PRIMARY KEY duplicada</td><td><code>duplicate key value violates unique constraint "..."</code></td></tr>
+<tr><td>Insertar una FK que no existe en la tabla padre</td><td><code>violates foreign key constraint "..."</code>, detalle "Key (...) is not present in table "..."."</td></tr>
+<tr><td>Borrar una fila padre protegida por RESTRICT</td><td><code>update or delete on table "..." violates foreign key constraint "..." on table "..."</code></td></tr>
+<tr><td>DROP TABLE sin CASCADE, con dependientes</td><td><code>cannot drop table "..." because other objects depend on it</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🐘 PGlite es Postgres de verdad</h3><p>A diferencia de motores educativos basados en SQLite (como sql.js), PGlite compila el código fuente real de PostgreSQL a WebAssembly: los mismos mensajes de error y el mismo comportamiento que en un servidor de producción.</p></div>
+<div class="info"><h3>📦 Menos de 4 MB</h3><p>El motor completo de PostgreSQL comprimido para WebAssembly pesa alrededor de 3-4 MB — comparable a una foto de celular, y corre enteramente sin conexión una vez cargado.</p></div>
+<div class="info"><h3>🌳 PostgreSQL es más viejo que la Web</h3><p>El proyecto POSTGRES nació en Berkeley en 1986, ocho años antes de que existiera el primer navegador gráfico — y hoy ese mismo motor corre dentro de uno.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller: SQL en Vivo — PostgreSQL Real en tu Navegador</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* =======================================================================
+   PGlite: PostgreSQL real compilado a WebAssembly, corriendo en el navegador.
+   Mismo patrón de carga perezosa que Pyodide en las guías de POO.
+   ======================================================================= */
+const PGLITE_CDN = "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.5.4/dist/index.js";
+let pgliteReadyPromise = null;
+
+function cargarPGlite(){
+  if (!pgliteReadyPromise) {
+    pgliteReadyPromise = (async () => {
+      const { PGlite } = await import(PGLITE_CDN);
+      return new PGlite();
+    })();
+  }
+  return pgliteReadyPromise;
+}
+
+function reiniciarPGlite(){
+  pgliteReadyPromise = null;
+}
+
+async function ejecutarSQL(codigo){
+  try {
+    const db = await cargarPGlite();
+    const resultados = await db.exec(codigo);
+    return { resultados, error: null };
+  } catch (e) {
+    return { resultados: null, error: (e && e.message) ? e.message : String(e) };
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function formatearValor(v){
+  if (v === null || v === undefined) return "<em>NULL</em>";
+  return escapeHtml(v);
+}
+
+function renderizarResultados(resultados){
+  if (!resultados || !resultados.length) {
+    return '<p class="sql-status">✅ Ejecutado. No se generó ningún resultado.</p>';
+  }
+  return resultados.map(r => {
+    const columnas = (r.fields || []).map(f => f.name);
+    if (columnas.length) {
+      let html = '<table class="sql-result-table"><thead><tr>' +
+        columnas.map(c => `<th scope="col">${escapeHtml(c)}</th>`).join("") +
+        "</tr></thead><tbody>";
+      if (!r.rows || !r.rows.length) {
+        html += `<tr><td colspan="${columnas.length}"><em>(0 filas)</em></td></tr>`;
+      } else {
+        r.rows.forEach(fila => {
+          html += "<tr>" + columnas.map(c => `<td>${formatearValor(fila[c])}</td>`).join("") + "</tr>";
+        });
+      }
+      html += "</tbody></table>";
+      return html;
+    }
+    const n = typeof r.affectedRows === "number" ? r.affectedRows : null;
+    const msg = n !== null
+      ? `✅ Sentencia ejecutada (${n} fila${n === 1 ? "" : "s"} afectada${n === 1 ? "" : "s"}).`
+      : "✅ Sentencia ejecutada correctamente.";
+    return `<p class="sql-status">${msg}</p>`;
+  }).join("");
+}
+
+function conectarSqlLab(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key !== "Tab") return;
+    e.preventDefault();
+    const inicio = textarea.selectionStart;
+    const fin = textarea.selectionEnd;
+    textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+    textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe alguna sentencia SQL antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando PostgreSQL real (WebAssembly)… la primera vez puede tardar varios segundos.";
+    runBtn.disabled = true;
+    try {
+      const { resultados, error } = await ejecutarSQL(codigo);
+      if (error) {
+        outputBody.textContent = "❌ Error de PostgreSQL: " + error;
+        output.classList.add("error");
+      } else {
+        outputBody.innerHTML = renderizarResultados(resultados);
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el motor de PostgreSQL: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+document.querySelectorAll(".editor-panel").forEach(conectarSqlLab);
+
+/* ===== Botón "Reiniciar base de datos" ===== */
+const resetBtn = document.getElementById("resetDbBtn");
+const dbEstado = document.getElementById("dbEstado");
+resetBtn.addEventListener("click", () => {
+  reiniciarPGlite();
+  document.querySelectorAll(".editor-panel .output").forEach(o => { o.hidden = true; });
+  dbEstado.textContent = "🔄 Base de datos reiniciada — todo lo creado antes se perdió. Empieza de nuevo desde el ejercicio 1.";
+});
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

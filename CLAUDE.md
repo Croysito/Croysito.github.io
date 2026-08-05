@@ -12,6 +12,14 @@ Cada guía de `guias_bd/` (y las demás carpetas) sigue el mismo esqueleto: side
 
 Al crear una guía nueva, usar como plantilla la guía más reciente de esa carpeta (ver `guias_bd/ddl-postgresql.html` como ejemplo reciente).
 
+## Talleres con SQL en vivo (BD II)
+
+Para reforzar una guía teórica de BD II con una clase de práctica/laboratorio, el patrón es un **taller** (`guias_bd/taller-*.html`): mismo esqueleto de guía, pero los bloques `.code` estáticos se reemplazan por bloques `.editor-panel` editables y ejecutables (idéntica estructura HTML/CSS que usan las guías de POO con Pyodide), corriendo **PostgreSQL real compilado a WebAssembly** vía [PGlite](https://pglite.dev) (`@electric-sql/pglite`, cargado perezosamente desde jsDelivr — ver `guias_bd/taller-ddl.html` como plantilla). A diferencia de sql.js (que es SQLite, no Postgres), PGlite es el propio motor de Postgres, así que la sintaxis y los mensajes de error que ve el estudiante son exactamente los reales.
+
+Detalles del patrón (ver `taller-ddl.html`): una única instancia de `PGlite` compartida por toda la página (para que los ejercicios se acumulen sobre la misma base de datos), un botón "🔄 Reiniciar base de datos" visible desde el inicio, y un bloque permanente de "zona de pruebas libres". Los resultados de `SELECT` se renderizan como tabla; el resto de sentencias muestra un mensaje de éxito con filas afectadas, o el error real de Postgres en rojo.
+
+## Roadmap curricular: Base de Datos II (2026)
+
 ## Roadmap curricular: POO (2026)
 
 **Decisión (2026-07-30):** antes de "Clases y objetos" hace falta un puente de fundamentos de Python que hoy no existe como guía propia (condicionales/bucles solo aparecen de forma incidental en ejemplos de guías previas, nunca como tema enseñado). Se optó por la **Opción B**: condicionales → bucles → funciones → clases y objetos, para que "método" se presente como "una función que ya conocés, pero adentro de una clase".
@@ -55,6 +63,7 @@ Al crear una guía nueva, usar como plantilla la guía más reciente de esa carp
 | — | Modelado Entidad-Relación (`modelado-er.html`) | ✅ Publicada |
 | — | Modelado relacional y normalización (`normalizacion.html`) | ✅ Publicada |
 | 1 | DDL y restricciones en PostgreSQL (`ddl-postgresql.html`) | ✅ Publicada (2026-07-23) |
+| 1-taller | Taller de laboratorio de DDL con SQL en vivo (`taller-ddl.html`) | ✅ Publicada (2026-08-05) |
 | 2 | DML (INSERT/UPDATE/DELETE) + SELECT básico (WHERE/ORDER BY/LIMIT) | ⏭️ **Siguiente a crear** |
 | 3 | JOINs (todos los tipos) + Subconsultas | Pendiente |
 | 4 | Agregación (GROUP BY/HAVING) + Vistas | Pendiente |
