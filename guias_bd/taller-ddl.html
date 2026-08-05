@@ -32,6 +32,17 @@
 .db-toolbar button:hover{ background:var(--verde2); }
 .db-toolbar button:disabled{ opacity:.5; cursor:wait; }
 .db-estado{ font-size:14px; opacity:.85; }
+
+/* Bloqueo de copiar/pegar en los editores: flash de aviso + toast global */
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
 </head>
 
@@ -557,6 +568,8 @@ DELETE FROM tabla WHERE condición;</code></pre>
 
 </div>
 
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+
 <button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
 
 <script>
@@ -822,6 +835,17 @@ function escapeHtml(s){
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/* ===== Toast de aviso al bloquear copiar/pegar en los editores ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  if (!clipboardToast) return;
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
 function formatearValor(v){
   if (v === null || v === undefined) return "<em>NULL</em>";
   return escapeHtml(v);
@@ -861,13 +885,31 @@ function conectarSqlLab(panel){
   const output = panel.querySelector(".output");
   const outputBody = panel.querySelector(".output-body");
 
+  /* En este taller el código se escribe, no se copia ni se pega: bloqueamos
+     copiar/cortar/pegar/arrastrar y avisamos brevemente por qué. */
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En este taller el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  ["copy", "cut", "paste", "drop"].forEach(evt => {
+    textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); });
+  });
+
   textarea.addEventListener("keydown", e => {
-    if (e.key !== "Tab") return;
-    e.preventDefault();
-    const inicio = textarea.selectionStart;
-    const fin = textarea.selectionEnd;
-    textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
-    textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart;
+      const fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (teclaCtrl && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      avisarBloqueo();
+    }
   });
 
   runBtn.onclick = async () => {

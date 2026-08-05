@@ -22,6 +22,8 @@ Detalles del patrón (ver `taller-ddl.html`): una única instancia de `PGlite` c
 
 **Cuidado al aplicar esto:** antes de vaciar los editores de un taller, verificar que **todo** el SQL que el enunciado va a pedir escribir ya fue enseñado en alguna guía teórica previa (no solo el tema principal del taller). En `taller-ddl.html` la teoría de DDL no cubre INSERT/UPDATE/DELETE (eso es DML, guía #2 del roadmap de BD II, todavía no publicada) pero el taller sí los necesita para cargar datos y provocar errores — se resolvió agregando una caja `.highlight` de "Sintaxis de referencia" con la forma genérica de esas tres instrucciones (sin resolver ningún ejercicio) antes del primer uso, en vez de crear o adelantar una guía completa de DML.
 
+**Decisión (2026-08-05):** en los `.editor` de los talleres, copiar/cortar/pegar/soltar (drag&drop) está deshabilitado — el código se escribe a mano, no se trae de otro lado. Se bloquean los eventos `copy`/`cut`/`paste`/`drop` y, como capa extra, los atajos Ctrl/Cmd+C/V/X por `keydown`, con un aviso breve en un toast global (`#clipboardToast`) y un flash rojo (`.editor.bloqueado`) en el propio editor. Ver `conectarSqlLab()` y `mostrarAvisoPortapapeles()` en `taller-ddl.html` como referencia a copiar tal cual en los próximos talleres.
+
 ## Roadmap curricular: Base de Datos II (2026)
 
 ## Roadmap curricular: POO (2026)
