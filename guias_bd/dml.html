@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DML y SELECT básico en PostgreSQL | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>DML</span></div>
+<p>Insertar, modificar, borrar y consultar datos</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#insert">INSERT INTO</a>
+<a href="#update">UPDATE</a>
+<a href="#delete">DELETE</a>
+<a href="#select-basico">SELECT básico</a>
+<a href="#filtrado">WHERE y operadores</a>
+<a href="#orden-limite">ORDER BY y LIMIT</a>
+<a href="#razonamiento">Ejercicios de razonamiento</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🗄️ Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>DML y <span>SELECT básico</span> en PostgreSQL</h1>
+<p>Tus tablas ya existen, con sus restricciones y claves foráneas. Ahora toca llenarlas, modificarlas, vaciarlas cuando corresponda, y sobre todo: sacarles información. INSERT, UPDATE, DELETE y las primeras consultas SELECT con WHERE, ORDER BY y LIMIT.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">En la guía anterior creaste <strong>cliente</strong>, <strong>producto</strong>, <strong>pedido</strong> y <strong>detalle_pedido</strong> con <code>CREATE TABLE</code>, sus restricciones y sus claves foráneas. Esas tablas están vacías: el DDL define la estructura, pero no mete un solo dato adentro. Eso es trabajo del <strong>DML (Data Manipulation Language)</strong>: <code>INSERT</code>, <code>UPDATE</code> y <code>DELETE</code> para manipular filas, y <code>SELECT</code> para leerlas.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás insertar filas con <code>INSERT INTO</code> (una o varias a la vez), modificar filas existentes con <code>UPDATE</code>, eliminarlas con <code>DELETE</code> sin borrar la tabla completa por accidente, y escribir tus primeras consultas <code>SELECT</code> filtrando con <code>WHERE</code>, ordenando con <code>ORDER BY</code> y limitando resultados con <code>LIMIT</code>.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Encontrarás <strong>actividades cortas y autocorregibles</strong> —selección múltiple, verdadero/falso, emparejamiento, clasificación y completar espacios— repartidas a lo largo de la guía, y una sección de <strong>ejercicios de razonamiento</strong> donde se te da un escenario y debes predecir el resultado correcto antes de comprobarlo. Cada actividad te da retroalimentación inmediata.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>➕ Inserta</h3><p>Filas nuevas en el esquema que ya construiste: clientes, productos, pedidos y sus detalles.</p></div>
+<div class="info"><h3>✏️ Modifica y borra</h3><p>UPDATE y DELETE, y por qué el WHERE nunca es opcional en la práctica.</p></div>
+<div class="info"><h3>🔎 Consulta</h3><p>SELECT con WHERE, ORDER BY y LIMIT: la base de toda consulta más compleja que vendrá después.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="insert">
+<div class="card">
+<h2 class="section-title">INSERT INTO</h2>
+<p class="lead"><code>INSERT INTO</code> agrega filas nuevas a una tabla. La forma más clara siempre indica explícitamente qué columnas está llenando.</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">INSERT INTO cliente (cliente_nombre)
+VALUES ('Ana Rojas');
+
+INSERT INTO producto (producto_nombre, precio)
+VALUES ('Teclado mecánico', 250.00);</code></pre>
+</div>
+<p>Fíjate que <code>cliente_id</code> y <code>producto_id</code> no aparecen: son <code>GENERATED ALWAYS AS IDENTITY</code>, PostgreSQL los genera solos. Tampoco aparece <code>activo</code> en producto: al no especificarlo, se usa su <code>DEFAULT true</code>.</p>
+<div class="highlight">
+<strong>¿Por qué listar las columnas siempre?</strong>
+<p><code>INSERT INTO producto VALUES (1, 'Mouse', 80.00, true)</code> funciona, pero depende del orden exacto de columnas de la tabla. Si alguien agrega una columna nueva en medio con <code>ALTER TABLE</code>, ese INSERT se rompe o —peor— inserta datos en la columna equivocada sin avisar. Escribir <code>INSERT INTO producto (producto_nombre, precio) VALUES (...)</code> es inmune a ese problema.</p>
+</div>
+
+<p class="lead">Un solo <code>INSERT</code> puede cargar <strong>varias filas</strong> a la vez, separando los grupos de valores con comas:</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">INSERT INTO producto (producto_nombre, precio) VALUES
+    ('Mouse óptico', 80.00),
+    ('Monitor 24"', 620.00),
+    ('Silla ergonómica', 890.00);</code></pre>
+</div>
+<p>Es una sola instrucción, no tres: si una fila viola una restricción (por ejemplo un <code>CHECK (precio &gt; 0)</code>), <strong>ninguna</strong> de las tres se inserta.</p>
+
+<div class="highlight">
+<strong>RETURNING: recuperar el id generado</strong>
+<p>Como <code>cliente_id</code> lo genera PostgreSQL, ¿cómo sabes qué id le tocó a la fila que acabas de insertar? Con <code>RETURNING</code>, una cláusula propia de PostgreSQL que devuelve datos de la fila insertada en el mismo INSERT:</p>
+</div>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">INSERT INTO cliente (cliente_nombre)
+VALUES ('Marco Vidal')
+RETURNING cliente_id;</code></pre>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="insert-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">La tabla producto tiene: producto_id (IDENTITY), producto_nombre (NOT NULL), precio (NOT NULL, CHECK &gt; 0), activo (DEFAULT true). ¿Cuál INSERT funciona sin error?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">INSERT INTO producto (producto_id, producto_nombre, precio) VALUES (1, 'Cable USB', 15.00);</button>
+<button class="quiz-opt" data-correct>INSERT INTO producto (producto_nombre, precio) VALUES ('Cable USB', 15.00);</button>
+<button class="quiz-opt">INSERT INTO producto (producto_nombre) VALUES ('Cable USB');</button>
+<button class="quiz-opt">INSERT INTO producto (producto_nombre, precio) VALUES ('Cable USB', -15.00);</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: no se especifica producto_id (lo genera IDENTITY), producto_nombre y precio se dan explícitamente y precio es mayor a 0, y activo queda en su DEFAULT true. Todas las restricciones se cumplen." data-ko="Insertar un valor manual en una columna IDENTITY suele fallar o requiere OVERRIDING SYSTEM VALUE; omitir precio (NOT NULL sin DEFAULT) falla; y un precio negativo viola el CHECK (precio > 0). La única que respeta todas las restricciones es la que omite producto_id y da un precio positivo." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="insert-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre la instrucción: <code>INSERT INTO cliente (cliente_nombre) VALUES ('Ana Rojas') RETURNING cliente_id;</code></p>
+<p>1. La palabra clave que indica en qué tabla se inserta es
+<select class="quiz-blank" data-correct="into">
+<option value="">— elige —</option>
+<option value="into">INTO</option>
+<option value="from">FROM</option>
+<option value="set">SET</option>
+</select>.</p>
+<p>2. La cláusula que hace que PostgreSQL devuelva el cliente_id recién generado es
+<select class="quiz-blank" data-correct="returning">
+<option value="">— elige —</option>
+<option value="returning">RETURNING</option>
+<option value="output">OUTPUT</option>
+<option value="select">un SELECT aparte, no existe forma de hacerlo en el mismo INSERT</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="update">
+<div class="card">
+<h2 class="section-title">UPDATE</h2>
+<p class="lead"><code>UPDATE</code> modifica filas que ya existen. Se compone de tres partes: la tabla, las columnas nuevas con <code>SET</code>, y —casi siempre— un <code>WHERE</code> que decide a cuáles filas aplica.</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">UPDATE producto
+SET precio = 95.00
+WHERE producto_id = 2;</code></pre>
+</div>
+<p>Puedes actualizar varias columnas a la vez separándolas con comas, e incluso usar el valor actual de la columna en la expresión nueva:</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">UPDATE producto
+SET precio = precio * 1.10, activo = true
+WHERE producto_nombre = 'Silla ergonómica';</code></pre>
+</div>
+
+<div class="highlight">
+<strong>El WHERE no es opcional en la práctica</strong>
+<p><code>UPDATE producto SET precio = precio * 1.10;</code> sin WHERE es sintácticamente válido — y aumenta el precio del <strong>100% de las filas</strong> de la tabla, no solo de la que querías. PostgreSQL no pregunta "¿estás seguro?": ejecuta exactamente lo que escribiste. Antes de correr un UPDATE, es buena práctica probar el mismo WHERE en un SELECT primero, para confirmar que selecciona exactamente las filas esperadas.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="update-1">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Ejecutas: UPDATE cliente SET cliente_nombre = 'Sin nombre'; (sin cláusula WHERE). El resultado es que ninguna fila cambia, porque PostgreSQL exige un WHERE para identificar a qué fila aplica.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: PostgreSQL no exige WHERE. Sin él, el UPDATE se aplica a absolutamente todas las filas de la tabla — en este caso, todos los clientes quedarían con el mismo nombre." data-ko="Es falso: WHERE es opcional en la sintaxis de UPDATE. Si lo omites, la modificación se aplica a todas las filas de la tabla sin excepción, no a ninguna." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="delete">
+<div class="card">
+<h2 class="section-title">DELETE</h2>
+<p class="lead"><code>DELETE FROM</code> elimina filas completas. Igual que UPDATE, casi siempre necesita un <code>WHERE</code> para no borrar más de lo debido.</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">DELETE FROM detalle_pedido
+WHERE pedido_id = 5 AND producto_id = 3;
+
+DELETE FROM producto
+WHERE activo = false;</code></pre>
+</div>
+<div class="highlight">
+<strong>DELETE sin WHERE ≠ DROP TABLE</strong>
+<p><code>DELETE FROM producto;</code> sin WHERE borra <strong>todas las filas</strong> de producto, pero la tabla en sí —su estructura, columnas y restricciones— sigue existiendo, vacía. Es distinto de <code>DROP TABLE producto;</code>, que elimina la tabla por completo. Y también distinto de <code>TRUNCATE TABLE producto;</code>, una instrucción especial de PostgreSQL que vacía la tabla igual que un DELETE sin WHERE, pero es más rápida (no revisa fila por fila) y reinicia los contadores de columnas IDENTITY.</p>
+</div>
+<p>El comportamiento de un DELETE sobre las tablas relacionadas depende de las acciones <code>ON DELETE</code> definidas en la clave foránea, tal como viste en la guía de DDL: si borras un <code>pedido</code>, sus filas en <code>detalle_pedido</code> se borran en cascada (<code>ON DELETE CASCADE</code>); si intentas borrar un <code>producto</code> que ya tiene ventas, PostgreSQL lo rechaza (<code>ON DELETE RESTRICT</code>).</p>
+
+<div class="quiz quiz-classify" data-quiz-id="delete-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada instrucción según lo que le pasa a la tabla producto y a sus filas.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">DELETE FROM producto WHERE producto_id = 4;</span>
+<div class="quiz-classify-btns">
+<button data-correct>Borra solo esa fila</button>
+<button>Borra todas las filas</button>
+<button>Elimina la tabla completa</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">DELETE FROM producto;</span>
+<div class="quiz-classify-btns">
+<button>Borra solo una fila</button>
+<button data-correct>Borra todas las filas, la tabla sigue existiendo vacía</button>
+<button>Elimina la tabla completa</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">DROP TABLE producto;</span>
+<div class="quiz-classify-btns">
+<button>Borra solo una fila</button>
+<button>Borra todas las filas, la tabla sigue existiendo vacía</button>
+<button data-correct>Elimina la tabla completa (estructura incluida)</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="select-basico">
+<div class="card">
+<h2 class="section-title">SELECT básico</h2>
+<p class="lead"><code>SELECT</code> es la instrucción de lectura: no modifica nada, solo devuelve filas. La forma más simple indica qué columnas quieres y de qué tabla.</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">SELECT cliente_nombre FROM cliente;
+
+SELECT producto_nombre, precio FROM producto;
+
+SELECT * FROM producto;</code></pre>
+</div>
+<p><code>*</code> significa "todas las columnas". Es cómodo mientras exploras datos en clase, pero en código real conviene evitarlo: si alguien agrega una columna nueva a la tabla, un <code>SELECT *</code> empieza a devolver más datos de los que la aplicación esperaba.</p>
+
+<div class="highlight">
+<strong>Alias con AS</strong>
+<p>Puedes renombrar una columna en el resultado (sin cambiar su nombre real en la tabla) con <code>AS</code>: <code>SELECT precio AS precio_unitario FROM producto;</code>. Útil para que los resultados sean más legibles, especialmente con columnas calculadas.</p>
+</div>
+
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">SELECT DISTINCT activo FROM producto;</code></pre>
+</div>
+<p><code>DISTINCT</code> elimina filas duplicadas del resultado. Sobre la columna <code>activo</code> (que solo puede ser true o false), esta consulta devuelve como máximo dos filas, sin importar cuántos productos existan.</p>
+
+<div class="quiz quiz-mc" data-quiz-id="select-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">La tabla pedido tiene 200 filas, con solo 3 valores distintos de fecha. ¿Cuántas filas devuelve SELECT DISTINCT fecha FROM pedido;?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">200, una por cada fila de la tabla.</button>
+<button class="quiz-opt" data-correct>3, una por cada valor distinto de fecha.</button>
+<button class="quiz-opt">0, DISTINCT solo funciona con varias columnas.</button>
+<button class="quiz-opt">1, DISTINCT siempre agrupa todo en una sola fila.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: DISTINCT elimina duplicados del resultado. Si solo hay 3 valores distintos de fecha entre las 200 filas, el resultado tiene exactamente 3 filas." data-ko="DISTINCT elimina las filas de resultado repetidas, quedándose con una por cada valor distinto. Con 3 valores distintos de fecha, el resultado tiene 3 filas — sin importar que la tabla tenga 200." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="filtrado">
+<div class="card">
+<h2 class="section-title">WHERE y operadores</h2>
+<p class="lead"><code>WHERE</code> filtra qué filas se incluyen en el resultado (o a cuáles aplica un UPDATE/DELETE). La condición se evalúa fila por fila.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Operador</th><th scope="col">Significado</th></tr></thead>
+<tbody>
+<tr><td><code>=</code></td><td>Igual a.</td></tr>
+<tr><td><code>&lt;&gt;</code> o <code>!=</code></td><td>Distinto de.</td></tr>
+<tr><td><code>&gt; &lt; &gt;= &lt;=</code></td><td>Mayor, menor, mayor o igual, menor o igual.</td></tr>
+<tr><td><code>AND / OR / NOT</code></td><td>Combinan varias condiciones. AND exige ambas, OR exige al menos una, NOT la invierte.</td></tr>
+<tr><td><code>BETWEEN x AND y</code></td><td>Está entre x e y, ambos límites incluidos.</td></tr>
+<tr><td><code>IN (lista)</code></td><td>Coincide con alguno de los valores de la lista.</td></tr>
+<tr><td><code>LIKE 'patrón'</code></td><td>Coincide con un patrón de texto: <code>%</code> = cualquier cantidad de caracteres, <code>_</code> = exactamente un caracter.</td></tr>
+<tr><td><code>IS NULL / IS NOT NULL</code></td><td>La columna no tiene valor / sí tiene valor.</td></tr>
+</tbody>
+</table>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">SELECT producto_nombre, precio FROM producto
+WHERE precio BETWEEN 50 AND 300 AND activo = true;
+
+SELECT producto_nombre FROM producto
+WHERE producto_nombre LIKE 'Mouse%';
+
+SELECT cliente_nombre FROM cliente
+WHERE cliente_id IN (1, 4, 7);</code></pre>
+</div>
+<div class="highlight">
+<strong>Por qué "= NULL" nunca funciona</strong>
+<p><code>WHERE correo = NULL</code> no selecciona nada, nunca, aunque haya filas con correo vacío. Para SQL, NULL representa "valor desconocido", y comparar cualquier cosa contra un desconocido da como resultado otro desconocido (no verdadero). Por eso existen <code>IS NULL</code> e <code>IS NOT NULL</code> como operadores aparte: son la única forma correcta de preguntar por la ausencia de un valor.</p>
+</div>
+<div class="highlight">
+<strong>Precedencia: AND antes que OR</strong>
+<p>En <code>WHERE activo = true AND precio &gt; 500 OR precio &lt; 10</code>, PostgreSQL evalúa el AND primero, como si dijeras "(activo Y caro) O barato" — probablemente no es lo que querías. Usa paréntesis siempre que combines AND y OR: <code>WHERE activo = true AND (precio &gt; 500 OR precio &lt; 10)</code>.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="where-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada condición con lo que selecciona.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="between">precio BETWEEN 100 AND 200</button>
+<button class="quiz-match-item" data-pair="like">producto_nombre LIKE '%teclado%'</button>
+<button class="quiz-match-item" data-pair="in">cliente_id IN (2, 5, 9)</button>
+<button class="quiz-match-item" data-pair="isnull">fecha_pago IS NULL</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="isnull">Filas donde ese campo no tiene ningún valor cargado.</button>
+<button class="quiz-match-item" data-pair="in">Filas cuyo cliente_id es 2, 5 o 9.</button>
+<button class="quiz-match-item" data-pair="between">Filas con precio entre 100 y 200, límites incluidos.</button>
+<button class="quiz-match-item" data-pair="like">Filas donde el nombre contiene la palabra "teclado" en cualquier posición.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="orden-limite">
+<div class="card">
+<h2 class="section-title">ORDER BY y LIMIT</h2>
+<p class="lead">Por defecto, PostgreSQL no garantiza ningún orden particular en el resultado de un SELECT. Si el orden importa, hay que pedirlo explícitamente.</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">SELECT producto_nombre, precio FROM producto
+ORDER BY precio DESC;
+
+SELECT producto_nombre, precio FROM producto
+ORDER BY activo DESC, precio ASC;</code></pre>
+</div>
+<p><code>ASC</code> (ascendente, de menor a mayor) es el orden por defecto si no escribes nada. <code>DESC</code> invierte el orden. Cuando ordenas por varias columnas, la primera manda; la segunda solo desempata entre filas iguales en la primera.</p>
+
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">SELECT producto_nombre, precio FROM producto
+ORDER BY precio DESC
+LIMIT 3;
+
+SELECT producto_nombre, precio FROM producto
+ORDER BY precio DESC
+LIMIT 3 OFFSET 3;</code></pre>
+</div>
+<p><code>LIMIT</code> corta el resultado a las primeras N filas (según el orden aplicado). <code>OFFSET</code> salta las primeras N filas antes de empezar a contar — la combinación de ambos es la técnica clásica de <strong>paginación</strong>: la segunda consulta trae "la segunda página" de 3 productos, saltándose los 3 más caros que ya se mostraron.</p>
+<div class="highlight">
+<strong>LIMIT sin ORDER BY es una trampa</strong>
+<p><code>SELECT * FROM producto LIMIT 5;</code> sin ORDER BY te da 5 filas cualesquiera — PostgreSQL no promete cuáles, ni que sean siempre las mismas entre una ejecución y otra. Si necesitas "los 5 más caros" o "los 5 más recientes", el ORDER BY correcto no es opcional, es parte de la pregunta que estás haciendo.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="orden-limite-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Quieres los 2 productos más baratos de la tabla.</p>
+<p>1. Para ordenar de menor a mayor precio, usas ORDER BY precio
+<select class="quiz-blank" data-correct="asc">
+<option value="">— elige —</option>
+<option value="asc">ASC (o sin especificar, es el default)</option>
+<option value="desc">DESC</option>
+</select>.</p>
+<p>2. Para quedarte solo con los primeros 2 resultados, agregas
+<select class="quiz-blank" data-correct="limit">
+<option value="">— elige —</option>
+<option value="limit">LIMIT 2</option>
+<option value="where">WHERE 2</option>
+<option value="top">TOP 2</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Ejercicios de razonamiento</h2>
+<p class="lead">En estas preguntas no se te pide recordar sintaxis: se te da un escenario, y debes <strong>razonar</strong> cuál sería la respuesta correcta antes de comprobarla.</p>
+
+<div class="highlight">
+<strong>Escenario</strong>
+<p>Quieres registrar un pedido nuevo para el cliente con cliente_id = 3, con la fecha de hoy (que ya tiene DEFAULT CURRENT_DATE en la tabla), y necesitas conocer el pedido_id que PostgreSQL le asigne para usarlo enseguida en un INSERT sobre detalle_pedido.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Cuál INSERT es el correcto?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">INSERT INTO pedido (pedido_id, cliente_id) VALUES (1, 3);</button>
+<button class="quiz-opt">INSERT INTO pedido (fecha, cliente_id) VALUES (CURRENT_DATE, 3);</button>
+<button class="quiz-opt" data-correct>INSERT INTO pedido (cliente_id) VALUES (3) RETURNING pedido_id;</button>
+<button class="quiz-opt">INSERT INTO pedido VALUES (3);</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: no se especifica pedido_id (lo genera IDENTITY) ni fecha (usa su DEFAULT), solo cliente_id que es obligatorio; y RETURNING pedido_id devuelve el id generado para usarlo de inmediato." data-ko="Insertar pedido_id manualmente contradice IDENTITY; forzar fecha con CURRENT_DATE es redundante (ya es el DEFAULT) pero además no resuelve el problema de no conocer el pedido_id generado; y VALUES (3) sin lista de columnas asume el orden físico de la tabla, empezando por pedido_id, lo cual es incorrecto y frágil. La única que además captura el id generado es la que usa RETURNING." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Otro escenario</strong>
+<p>Un producto se dejó de vender ("Cable HDMI", producto_id = 8) pero ya tiene ventas registradas en detalle_pedido (la clave foránea de producto_id ahí tiene ON DELETE RESTRICT). Igual necesitas que deje de aparecer en el catálogo de productos disponibles.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué instrucción resuelve el problema sin generar un error?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">DELETE FROM producto WHERE producto_id = 8;</button>
+<button class="quiz-opt">DROP TABLE producto;</button>
+<button class="quiz-opt" data-correct>UPDATE producto SET activo = false WHERE producto_id = 8;</button>
+<button class="quiz-opt">DELETE FROM detalle_pedido; DELETE FROM producto WHERE producto_id = 8;</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: borrar el producto fallaría por el ON DELETE RESTRICT mientras existan ventas. La solución no es eliminar el dato histórico, sino marcarlo como inactivo con UPDATE — el historial de ventas queda intacto y el producto puede excluirse del catálogo filtrando por activo = true." data-ko="DELETE FROM producto fallaría por la restricción RESTRICT; DROP TABLE destruiría toda la tabla, no solo ese producto; y borrar todo detalle_pedido para poder eliminar un producto destruye el historial de ventas de todos los productos, no solo del 8. La forma correcta de 'dejar de vender' sin perder historial es un UPDATE que lo marque como inactivo." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Un último escenario</strong>
+<p>Quieres mostrar los 5 pedidos más recientes del cliente con cliente_id = 3, del más nuevo al más viejo.</p>
+</div>
+<div class="quiz quiz-fill" data-quiz-id="razonamiento-3">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Completa la consulta: SELECT * FROM pedido WHERE cliente_id = 3</p>
+<p>ORDER BY fecha
+<select class="quiz-blank" data-correct="desc">
+<option value="">— elige —</option>
+<option value="desc">DESC LIMIT 5</option>
+<option value="asc">ASC LIMIT 5</option>
+<option value="nada">(sin ORDER BY) LIMIT 5</option>
+</select>;</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Ejecutas un INSERT con varias filas en un solo VALUES, y la tercera fila viola un CHECK. ¿Qué ocurre?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Se insertan las dos primeras filas y la tercera se ignora.</button>
+<button class="quiz-opt" data-correct>No se inserta ninguna de las tres filas: el INSERT completo falla.</button>
+<button class="quiz-opt">Se insertan las tres, la tercera queda con NULL en la columna que violó el CHECK.</button>
+<button class="quiz-opt">PostgreSQL corrige automáticamente el valor para que cumpla el CHECK.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un INSERT con múltiples filas es una sola instrucción. Si cualquiera de las filas viola una restricción, toda la instrucción falla y no se inserta nada." data-ko="Un INSERT con múltiples filas se ejecuta como una sola unidad: si una fila viola una restricción, ninguna de las filas del INSERT se guarda, no solo la que falló." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">DELETE FROM cliente; (sin WHERE) elimina la tabla cliente completa, igual que DROP TABLE cliente;.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: DELETE FROM cliente; borra todas las filas, pero la tabla cliente sigue existiendo, vacía, con su estructura y restricciones intactas. DROP TABLE elimina la tabla en sí." data-ko="Es falso: DELETE FROM cliente; sin WHERE borra todas las filas, pero la tabla sigue existiendo (vacía). Eliminar la tabla completa es trabajo de DROP TABLE, no de DELETE." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál condición selecciona correctamente los pedidos que todavía no tienen fecha_entrega registrada?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">WHERE fecha_entrega = NULL</button>
+<button class="quiz-opt" data-correct>WHERE fecha_entrega IS NULL</button>
+<button class="quiz-opt">WHERE fecha_entrega = ''</button>
+<button class="quiz-opt">WHERE NOT fecha_entrega</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: IS NULL es la única forma correcta de preguntar por ausencia de valor. Comparar con = NULL nunca es verdadero, sea cual sea el contenido de la fila." data-ko="= NULL nunca funciona: comparar contra NULL da un resultado desconocido, no verdadero. La forma correcta de preguntar 'no tiene valor' es IS NULL." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué hace exactamente ORDER BY precio DESC LIMIT 1;?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Devuelve todas las filas ordenadas, pero muestra solo la columna precio.</button>
+<button class="quiz-opt" data-correct>Devuelve una sola fila: la de mayor precio.</button>
+<button class="quiz-opt">Devuelve la fila con el precio más bajo.</button>
+<button class="quiz-opt">Elimina todas las filas excepto una.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: ORDER BY precio DESC ordena de mayor a menor precio, y LIMIT 1 se queda solo con la primera fila de ese orden — la de precio más alto." data-ko="DESC ordena de mayor a menor, así que LIMIT 1 después de ese orden trae la fila con el precio MÁS ALTO, no el más bajo. Y SELECT/ORDER BY/LIMIT solo leen datos, nunca borran filas." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué conviene probar la condición de un UPDATE o DELETE con un SELECT antes de ejecutarlo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque SELECT es obligatorio antes de cualquier UPDATE en PostgreSQL.</button>
+<button class="quiz-opt" data-correct>Porque permite confirmar qué filas exactas selecciona el WHERE antes de modificarlas o borrarlas de verdad.</button>
+<button class="quiz-opt">Porque el UPDATE no funciona si no se ejecutó un SELECT antes en la misma sesión.</button>
+<button class="quiz-opt">No hay ninguna razón práctica, es solo una costumbre sin efecto real.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: como WHERE no es obligatorio y PostgreSQL no pide confirmación, correr primero SELECT * FROM tabla WHERE ...; con la misma condición te deja ver exactamente qué filas serían afectadas, antes de modificarlas o borrarlas de forma irreversible." data-ko="No es un requisito técnico de PostgreSQL, es una práctica de seguridad: como UPDATE y DELETE no piden confirmación, revisar primero con SELECT qué filas selecciona el WHERE evita modificar o borrar más filas de las que querías." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Instrucción</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>INSERT INTO tabla (cols) VALUES (...)</code></td><td>Agrega una o varias filas nuevas.</td></tr>
+<tr><td><code>... RETURNING columna</code></td><td>Devuelve datos de la fila insertada (útil para ids generados).</td></tr>
+<tr><td><code>UPDATE tabla SET col = valor WHERE ...</code></td><td>Modifica filas existentes que cumplen la condición.</td></tr>
+<tr><td><code>DELETE FROM tabla WHERE ...</code></td><td>Elimina filas que cumplen la condición (sin WHERE, elimina todas).</td></tr>
+<tr><td><code>SELECT cols FROM tabla</code></td><td>Consulta columnas específicas (o * para todas).</td></tr>
+<tr><td><code>DISTINCT</code></td><td>Elimina filas duplicadas del resultado.</td></tr>
+<tr><td><code>WHERE</code> (=, &lt;&gt;, AND/OR, BETWEEN, IN, LIKE, IS NULL)</td><td>Filtra qué filas se incluyen.</td></tr>
+<tr><td><code>ORDER BY col ASC/DESC</code></td><td>Ordena el resultado (ASC por defecto).</td></tr>
+<tr><td><code>LIMIT n OFFSET m</code></td><td>Corta el resultado a n filas, saltando las primeras m (paginación).</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🕰️ SELECT es más viejo que "SQL"</h3><p>El lenguaje se llamó originalmente SEQUEL (Structured English Query Language), diseñado por Donald Chamberlin y Raymond Boyce en IBM a inicios de los 70. Tuvo que renombrarse a SQL por un conflicto de marca registrada con otra empresa que ya usaba "SEQUEL".</p></div>
+<div class="info"><h3>🔒 UPDATE y DELETE también respetan transacciones</h3><p>Igual que el DDL en PostgreSQL, un UPDATE o DELETE ejecutado dentro de una transacción puede deshacerse con ROLLBACK mientras no se haga COMMIT. Es la red de seguridad real contra un WHERE mal escrito: si te das cuenta a tiempo, todavía puedes deshacerlo.</p></div>
+<div class="info"><h3>📄 LIMIT/OFFSET no es el único método de paginación</h3><p>Es el más simple, pero en tablas muy grandes OFFSET se vuelve lento porque PostgreSQL igual tiene que recorrer y descartar las filas saltadas. Motores y aplicaciones a gran escala suelen preferir "paginación por cursor" (seguir desde el último id visto), un tema que retomarás cuando la guía llegue a índices y optimización.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Reforzamiento: DML y SELECT básico en PostgreSQL</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- ATENZA · guía completada (fusión con ATENZA, 05/08). Solo actúa si la
+     guía se abrió desde ATENZA (con ?atenza_token=...&guia=... en la URL,
+     agregado por VerGuias del backend); accedida directo, como siempre,
+     no dispara nada nuevo. No toca el motor de quizzes de arriba: se
+     engancha a `actualizarProgreso()`, que ya existe. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api.atenza.com'; // TODO Roy: actualizar con la URL pública real del backend
+
+  var params = new URLSearchParams(location.search);
+  var token = params.get('atenza_token');
+  var guiaId = params.get('guia');
+  if (!token || !guiaId) return; // acceso público normal, sin ATENZA
+
+  var flagCompletado = QUIZ_PREFIX + 'completado-atenza';
+  if (localStorage.getItem(flagCompletado)) return; // ya se reportó, no reintentar
+
+  function progresoActual() {
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var correctas = 0;
+    ids.forEach(function (id) {
+      if (localStorage.getItem(QUIZ_PREFIX + id) === 'ok') correctas++;
+    });
+    return { correctas: correctas, total: ids.size };
+  }
+
+  function reportarSiCompleto() {
+    var p = progresoActual();
+    if (p.total === 0 || p.correctas < p.total) return;
+    localStorage.setItem(flagCompletado, '1');
+    fetch(ATENZA_API + '/api/guias/' + encodeURIComponent(guiaId) + '/completar', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token },
+    }).catch(function () {});
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    reportarSiCompleto();
+  };
+
+  reportarSiCompleto(); // por si se reabre una guía que ya estaba 100% completa
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

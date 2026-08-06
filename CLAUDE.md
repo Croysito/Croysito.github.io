@@ -12,6 +12,31 @@ Cada guía de `guias_bd/` (y las demás carpetas) sigue el mismo esqueleto: side
 
 Al crear una guía nueva, usar como plantilla la guía más reciente de esa carpeta (ver `guias_bd/ddl-postgresql.html` como ejemplo reciente).
 
+## Formatos alternativos de guía (evaluar antes de crear una guía nueva)
+
+El esqueleto lineal de arriba (sidebar + scroll por secciones) **no es la única forma posible** — es el mejor default para contenido procedimental/secuencial (sintaxis, pasos), pero no siempre es el mejor formato para contenido más conceptual/relacional (típicamente TGS, y ocasionalmente Ingeniería de Software). El motor de quizzes (`quiz-mc`, `quiz-match`, `quiz-classify`, `quiz-fill`) y la infraestructura (progreso en `localStorage`, tema oscuro) son independientes del contenedor/navegación y se reutilizan igual en cualquier formato.
+
+**Antes de crear una guía nueva, evaluar el tipo de contenido y sugerirle a Roy la(s) mejor(es) opción(es) de formato de esta lista, con el patrón lineal como default si ninguna aplica claramente mejor:**
+
+| Formato | Cuándo conviene | Encaje típico |
+|---|---|---|
+| **Lineal (default actual)** | Contenido con orden natural, procedimental | POO, BD2 (la mayoría) |
+| **Mapa conceptual navegable** (nodos = conceptos, clic expande tarjeta + quiz, líneas = relaciones) | Conceptos muy interrelacionados, sin orden fijo | TGS: `sistema.html`-style (elemento/límite/entorno) |
+| **Narrativa ramificada / caso con decisiones** (el estudiante elige, ve consecuencias, distintas ramas llevan a distintos quizzes) | Diagnóstico, toma de decisiones, casos aplicados | TGS: estilo `diagnostico-vsm.html`, capstones |
+| **Simulación/sandbox interactivo** (sliders que alimentan un diagrama en vivo) | Contenido con retroalimentación/dinámica que se entiende mejor manipulando que leyendo | TGS: diagramas causales, bucles de refuerzo/balance |
+| **Línea de tiempo interactiva** | Contenido con eje histórico/evolutivo real | TGS: origen y evolución de la teoría |
+| **Canvas zoom/pan estilo Prezi** | Narrativa "panorama → detalle → panorama" | Solo para un capstone puntual — alto costo de implementación (sin librería, en vanilla JS), riesgo de mobile/accesibilidad; no usar como default |
+
+No migrar guías ya publicadas a un formato nuevo salvo pedido explícito. La idea es pilotar formatos alternativos en guías nuevas (empezando por la guía TGS #2 "por definir" del roadmap), no reescribir lo existente.
+
+## Vincular una guía a ATENZA (opcional, 05/08)
+
+Fusión con ATENZA: el docente puede asociar una guía a una `Clase` para que el sistema sepa qué estudiantes hicieron la pre-clase (formativo, sin nota). Esto **no cambia en nada la autoría de la guía** — sigue siendo el mismo HTML autocontenido de siempre, y sigue siendo accesible en público sin ATENZA. Solo aplica a las guías que Roy decida vincular desde el panel de una `Clase` en ATENZA, no a todas.
+
+Para habilitarlo en una guía puntual: copiar el bloque `<!-- ATENZA · guía completada -->` (ver `guias_bd/dml.html` como ejemplo) al final de la guía, justo después del `</script>` del motor de quizzes y antes del Cloudflare Web Analytics. El bloque no toca el motor de quizzes existente — se engancha a `actualizarProgreso()` (ya definida arriba) para detectar cuándo el estudiante completó el 100% del quiz, y hace un `POST` silencioso al backend de ATENZA solo si la guía se abrió con `?atenza_token=...&guia=...` en la URL (eso lo agrega ATENZA al armar el link; accedida directo, como siempre, el bloque no hace nada).
+
+**Actualizar `ATENZA_API`** dentro del bloque con la URL pública real del backend antes de depender de esto en producción (hoy tiene un placeholder).
+
 ## Talleres con SQL en vivo (BD II)
 
 Para reforzar una guía teórica de BD II con una clase de práctica/laboratorio, el patrón es un **taller** (`guias_bd/taller-*.html`): mismo esqueleto de guía, pero los bloques `.code` estáticos se reemplazan por bloques `.editor-panel` editables y ejecutables (idéntica estructura HTML/CSS que usan las guías de POO con Pyodide), corriendo **PostgreSQL real compilado a WebAssembly** vía [PGlite](https://pglite.dev) (`@electric-sql/pglite`, cargado perezosamente desde jsDelivr — ver `guias_bd/taller-ddl.html` como plantilla). A diferencia de sql.js (que es SQLite, no Postgres), PGlite es el propio motor de Postgres, así que la sintaxis y los mensajes de error que ve el estudiante son exactamente los reales.
@@ -70,8 +95,8 @@ Detalles del patrón (ver `taller-ddl.html`): una única instancia de `PGlite` c
 | — | Modelado relacional y normalización (`normalizacion.html`) | ✅ Publicada |
 | 1 | DDL y restricciones en PostgreSQL (`ddl-postgresql.html`) | ✅ Publicada (2026-07-23) |
 | 1-taller | Taller de laboratorio de DDL con SQL en vivo (`taller-ddl.html`) | ✅ Publicada (2026-08-05) |
-| 2 | DML (INSERT/UPDATE/DELETE) + SELECT básico (WHERE/ORDER BY/LIMIT) | ⏭️ **Siguiente a crear** |
-| 3 | JOINs (todos los tipos) + Subconsultas | Pendiente |
+| 2 | DML (INSERT/UPDATE/DELETE) + SELECT básico (WHERE/ORDER BY/LIMIT) (`dml.html`) | ✅ Publicada (2026-08-05) |
+| 3 | JOINs (todos los tipos) + Subconsultas | ⏭️ **Siguiente a crear** |
 | 4 | Agregación (GROUP BY/HAVING) + Vistas | Pendiente |
 | 5 | Funciones de ventana + Índices y EXPLAIN | Pendiente |
 | 6 | Transacciones: ACID, aislamiento, concurrencia y bloqueos | Pendiente |
