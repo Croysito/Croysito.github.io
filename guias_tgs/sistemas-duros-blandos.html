@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metodologías de Sistemas: Duros y Blandos — SSM | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">TGS <span>SSM</span></div>
+<p>Metodologías de sistemas: duros y blandos</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#duro-blando">Sistemas duros vs. blandos</a>
+<a href="#origen">Origen del SSM</a>
+<a href="#rich-picture">Rich pictures</a>
+<a href="#catwoe">Definiciones raíz y CATWOE</a>
+<a href="#modelo-conceptual">Modelos conceptuales</a>
+<a href="#comparacion-accion">Comparación y cambios</a>
+<a href="#caso">Caso práctico: ClaseViva</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧩 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Sistemas Duros y <span>Sistemas Blandos</span>: la Metodología SSM</h1>
+<p>Ya usaste diagramas causales y el VSM para diagnosticar sistemas que tienen una estructura correcta esperando a ser encontrada. Esta guía te muestra qué hacer cuando esa suposición no aplica: cuando el verdadero problema es que nadie coincide en cuál es el problema. Conoce la Metodología de Sistemas Suaves (SSM) de Peter Checkland, diseñada específicamente para esas situaciones.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Cada vez que usaste una herramienta de la TGS hasta ahora —diagramas causales, dinámica de sistemas, el VSM— asumiste algo casi sin darte cuenta: que existía un sistema con límites claros y un objetivo compartido, y que tu trabajo era encontrar (o corregir) la estructura correcta. Esa suposición tiene nombre —<strong>pensamiento de sistemas duros</strong>— y funciona muy bien para lo que fue pensada. Esta guía te muestra qué hacer cuando deja de funcionar.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Esta guía asume que ya viste <a href="modelado-sistemas.html">Modelado de Sistemas: Diagramas Causales y Dinámica de Sistemas</a> y <a href="viabilidad-sistemas.html">Cibernética Avanzada: Variedad y Viabilidad de los Sistemas</a>. No los vuelve a explicar: los va a usar directamente como el ejemplo de referencia de "pensamiento de sistemas duros", para contrastarlos contra algo nuevo.</p>
+</div>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía vas a poder distinguir cuándo un problema pide pensamiento de sistemas duros y cuándo pide pensamiento de sistemas blandos, y vas a poder aplicar las herramientas centrales de la Metodología de Sistemas Suaves (SSM) de Peter Checkland —rich pictures, definiciones raíz con CATWOE, modelos conceptuales, y la comparación que separa cambios deseables de cambios factibles— para estructurar el debate en una situación organizacional real, ambigua y sin una única solución correcta.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🥊 Duro vs. blando</h3><p>La distinción de Checkland entre problemas con una solución técnica óptima y situaciones sin una única realidad compartida.</p></div>
+<div class="info"><h3>🖼️ Rich pictures</h3><p>Cómo capturar una situación confusa sin imponerle una estructura antes de entenderla.</p></div>
+<div class="info"><h3>🧭 CATWOE</h3><p>Las seis preguntas que convierten una idea vaga de "sistema" en una definición raíz rigurosa.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="duro-blando">
+<div class="card">
+<h2 class="section-title">Sistemas duros y sistemas blandos</h2>
+<p class="lead">El <strong>pensamiento de sistemas duros</strong> (hard systems thinking) asume que el mundo contiene sistemas reales con una función objetivo definible: existe "el" problema, y la tarea del analista es diseñar o ajustar la estructura que mejor lo resuelve. El <strong>pensamiento de sistemas blandos</strong> (soft systems thinking) parte de una suposición distinta: lo que existe no es un sistema con un objetivo compartido, sino una <strong>situación</strong> percibida de forma distinta por cada persona involucrada — al punto de que ni siquiera coinciden en cuál es el problema.</p>
+<div class="highlight">
+<strong>No es que uno sea "mejor" que el otro</strong>
+<p>No se trata de que lo duro esté anticuado y lo blando sea superior. Se trata de usar la herramienta correcta según el tipo de situación: reducir la latencia de un servicio, o corregir la estructura de un sistema viable según el VSM, son problemas duros — hay criterios objetivos para saber si la solución es mejor o peor. Decidir si una universidad debería priorizar investigación o docencia, cuando docentes y directivos ni siquiera coinciden en qué significa "calidad", es un problema blando: no hay ningún criterio técnico que zanje esa discusión.</p>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Dimensión</th><th scope="col">Sistema duro</th><th scope="col">Sistema blando</th></tr></thead>
+<tbody>
+<tr><td>Qué asume que existe</td><td>Un sistema real, con límites objetivos, que se puede modelar.</td><td>Una situación problemática, percibida de forma distinta por cada persona involucrada.</td></tr>
+<tr><td>Objetivo del análisis</td><td>Encontrar la solución técnicamente óptima.</td><td>Estructurar el debate entre visiones distintas hasta acordar cambios posibles.</td></tr>
+<tr><td>Rol de "la solución"</td><td>Una sola solución correcta, evaluable con criterios objetivos.</td><td>Varias visiones legítimas; el resultado es un acuerdo, no "la" respuesta.</td></tr>
+<tr><td>Herramientas de TGS que ya conoces</td><td>Diagramas causales y dinámica de sistemas; el VSM como diagnóstico estructural.</td><td>La Metodología de Sistemas Suaves (SSM) — el tema de esta guía.</td></tr>
+<tr><td>Ejemplo típico</td><td>Ajustar los umbrales de auto-scaling de un servidor según el tráfico real.</td><td>Un conflicto entre ventas (lanzar rápido) y desarrollo (lanzar con calidad) sobre qué significa "estar listo".</td></tr>
+</tbody>
+</table>
+
+<p>Clasifica cada situación según el tipo de pensamiento sistémico que le corresponde.</p>
+<div class="quiz quiz-classify" data-quiz-id="duro-blando-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Sistema duro o sistema blando?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Optimizar el tiempo de entrega de un algoritmo de ruteo de pedidos.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Duro</button>
+<button>Blando</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Decidir cómo debería reorganizarse un hospital cuando médicos, enfermería y administración tienen ideas opuestas sobre qué es "buena atención".</span>
+<div class="quiz-classify-btns">
+<button>Duro</button>
+<button data-correct>Blando</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Ajustar los cinco subsistemas del VSM de una empresa para que vuelva a ser viable según un diagnóstico técnico.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Duro</button>
+<button>Blando</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Resolver un conflicto entre el equipo de ventas y el de desarrollo sobre qué significa que una función esté "lista para lanzar".</span>
+<div class="quiz-classify-btns">
+<button>Duro</button>
+<button data-correct>Blando</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="duro-blando-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un consultor aplicó ingeniería de sistemas dura pura (definir el objetivo, generar alternativas, elegir la óptima) a la reorganización de un hospital, y el proyecto fracasó porque nadie se puso de acuerdo en cuál era "el" objetivo. ¿Qué explica mejor el fracaso?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El consultor no generó suficientes alternativas técnicas antes de elegir.</button>
+<button class="quiz-opt" data-correct>La situación no tenía un objetivo técnico único que optimizar: médicos, administración y pacientes partían de visiones del mundo (Weltanschauungen) distintas sobre qué es un buen resultado, así que nunca existió "la" función objetivo que el método daba por sentada.</button>
+<button class="quiz-opt">El hospital tenía demasiada variedad para que la Ley de Requisito de Variedad se pudiera aplicar.</button>
+<button class="quiz-opt">Faltaba un Sistema 4 (Inteligencia) según el VSM.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la ingeniería de sistemas dura asume consenso sobre el objetivo. Cuando distintos actores tienen visiones del mundo distintas sobre qué cuenta como buen resultado, no hay un único objetivo técnico que optimizar — esa es exactamente la clase de situación para la que se diseñó el SSM." data-ko="No es un problema de variedad ni de subsistemas del VSM: esas son herramientas de sistemas duros que asumen que sí existe un objetivo compartido. El fracaso viene de aplicar esa suposición a una situación donde los propios involucrados no coinciden en qué es un buen resultado." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="origen">
+<div class="card">
+<h2 class="section-title">El origen del SSM: cuando la ingeniería de sistemas no alcanzó</h2>
+<p class="lead"><strong>Peter Checkland</strong> trabajó quince años en la industria química (ICI) antes de unirse en 1969 a la Universidad de Lancaster con un objetivo concreto: aplicar la ingeniería de sistemas —el enfoque duro, heredado de la investigación operativa— a problemas de gestión y organización. Durante casi una década de investigación-acción con organizaciones reales, encontró una y otra vez el mismo obstáculo: el método daba por sentado que existía consenso sobre los objetivos, y en los problemas organizacionales reales ese consenso casi nunca existe.</p>
+<div class="highlight">
+<strong>De la ingeniería a la metodología</strong>
+<p>El cambio de nombre no es casual. Checkland dejó de hablar de "ingeniería de sistemas" (diseñar "el" sistema correcto para un objetivo dado) y empezó a hablar de <strong>metodología</strong> de sistemas: un proceso flexible de aprendizaje que ayuda a las propias personas involucradas a estructurar el debate y decidir, entre ellas, qué cambios tienen sentido. En 1981 publicó <em>Systems Thinking, Systems Practice</em>, documentando esa década de investigación-acción y formalizando el SSM.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="origen-mc">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué Checkland empezó a llamarla "metodología" de sistemas suaves y no "método" o "ingeniería" de sistemas suaves?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque "metodología" suena más académico que "ingeniería".</button>
+<button class="quiz-opt" data-correct>Porque no es un procedimiento fijo que produce una única solución técnica, sino un proceso flexible de aprendizaje que ayuda a los propios involucrados a estructurar el debate y decidir juntos qué cambios tienen sentido.</button>
+<button class="quiz-opt">Porque reemplaza por completo a la ingeniería de sistemas en cualquier situación, dura o blanda.</button>
+<button class="quiz-opt">Porque solo se puede aplicar una vez por organización.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el SSM no promete una solución técnica óptima como la ingeniería de sistemas dura. Es un proceso de aprendizaje que ayuda a estructurar el debate entre los involucrados, no una receta que resuelve el problema por ellos." data-ko="No es una cuestión de nombre elegante ni un reemplazo universal de la ingeniería de sistemas (que sigue siendo la herramienta correcta para problemas duros). El SSM es un proceso de aprendizaje flexible, distinto de un procedimiento técnico de un solo recorrido." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="origen-tf">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">El SSM surgió de intentar aplicar primero ingeniería de sistemas dura a problemas de gestión, y se desarrolló después de que ese enfoque fallara repetidamente en la práctica real durante años de investigación-acción.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Checkland no diseñó el SSM en el papel desde cero. Llegó a él después de años intentando aplicar ingeniería de sistemas dura a organizaciones reales y encontrar, una y otra vez, que la suposición de consenso sobre los objetivos no se sostenía." data-ko="Es verdadero: el SSM nació de la investigación-acción de Checkland en Lancaster durante los años 70, después de que el enfoque duro fallara repetidamente al toparse con problemas de gestión sin consenso sobre los objetivos." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="rich-picture">
+<div class="card">
+<h2 class="section-title">Rich pictures: dibujar la situación antes de definir el sistema</h2>
+<p class="lead">La primera tentación frente a una situación confusa es saltar directo a modelarla con un diagrama formal: causal, de flujo, de arquitectura. El SSM pide resistir esa tentación. Antes de imponer cualquier estructura, hay que capturar la situación tal como la perciben las personas involucradas, con toda su ambigüedad, sus tensiones y sus desacuerdos intactos. Esa captura informal se llama <strong>rich picture</strong> (imagen enriquecida).</p>
+<div class="highlight">
+<strong>Qué suele incluir una rich picture</strong>
+<p>No tiene notación estándar ni oficial — cada practicante desarrolla su propio estilo — pero típicamente combina: figuras simples para las personas y roles involucrados, símbolos de estructura para procesos y recursos, líneas de relación entre ellos, un símbolo de "espadas cruzadas" en los puntos de conflicto o tensión, y globos de diálogo o signos de interrogación para opiniones, quejas o confusiones que la gente expresa sobre la situación.</p>
+</div>
+<div class="highlight">
+<strong>Por qué no un diagrama causal (todavía)</strong>
+<p>Un diagrama de bucle causal ya asume qué variables importan y cómo se relacionan entre sí: es, en sí mismo, una herramienta de pensamiento duro. Una rich picture se dibuja <em>antes</em> de decidir eso, precisamente porque en una situación blanda ese "qué importa" es parte de lo que está en disputa entre los involucrados — decidirlo demasiado pronto sería imponer una sola visión sobre las demás.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="rich-picture-mc">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de las siguientes afirmaciones sobre una rich picture es correcta?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Es un diagrama de flujo formal, con símbolos estandarizados iguales en cualquier organización.</button>
+<button class="quiz-opt">Debe mostrar únicamente la estructura jerárquica oficial de la organización.</button>
+<button class="quiz-opt" data-correct>No tiene notación fija ni impone límites de sistema desde el principio: su objetivo es capturar estructuras, procesos, personas y tensiones tal como se perciben, antes de decidir qué es "el sistema".</button>
+<button class="quiz-opt">Reemplaza al diagrama causal en cualquier situación, dura o blanda.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la rich picture es deliberadamente informal y sin notación fija. Su valor está en capturar la situación completa —gente, procesos, tensiones— sin decidir todavía qué cuenta como sistema ni qué variables importan." data-ko="No es un diagrama de flujo formal ni el organigrama oficial: eso ya impondría una sola estructura sobre la situación. Tampoco reemplaza al diagrama causal en general — ese sigue siendo la herramienta correcta para problemas duros. La rich picture es informal, sin notación fija, y se dibuja antes de imponer cualquier estructura." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="catwoe">
+<div class="card">
+<h2 class="section-title">Definiciones raíz y CATWOE</h2>
+<p class="lead">Con la situación ya más clara —aunque siga siendo confusa— el SSM pide nombrar <strong>sistemas relevantes</strong>: no el sistema real, sino sistemas nocionales, útiles para pensar la situación, cada uno expresado como una <strong>definición raíz</strong>. Una definición raíz es una frase precisa que describe una <strong>transformación</strong> (T): un estado de entrada que se convierte en un estado de salida distinto, gracias a un proceso.</p>
+<div class="highlight">
+<strong>Una definición raíz bien formada pasa la prueba CATWOE</strong>
+<p>CATWOE es una mnemotecnia con seis elementos que toda definición raíz sólida debería poder responder. No es un formato rígido de redacción: es una lista de verificación para no dejar afuera algo esencial.</p>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Letra</th><th scope="col">Elemento</th><th scope="col">Pregunta que responde</th></tr></thead>
+<tbody>
+<tr><td><strong>C</strong></td><td>Clientes</td><td>¿Quién se beneficia o resulta afectado por la transformación?</td></tr>
+<tr><td><strong>A</strong></td><td>Actores</td><td>¿Quién realiza las actividades de la transformación?</td></tr>
+<tr><td><strong>T</strong></td><td>Transformación</td><td>¿Qué entrada se convierte en qué salida? (el núcleo de la definición raíz)</td></tr>
+<tr><td><strong>W</strong></td><td>Weltanschauung (cosmovisión)</td><td>¿Qué visión del mundo hace que esta transformación tenga sentido?</td></tr>
+<tr><td><strong>O</strong></td><td>Propietarios (Owners)</td><td>¿Quién podría detener o modificar el sistema? ¿Ante quién responde?</td></tr>
+<tr><td><strong>E</strong></td><td>Restricciones del entorno</td><td>¿Qué elementos externos se toman como dados, fuera del control del sistema?</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>La W es la más importante — y la más fácil de saltarse</strong>
+<p>Dos personas pueden describir casi la misma transformación T con una W distinta, y ahí es exactamente donde aparece el desacuerdo blando. "Clasificar tickets por orden de llegada" y "clasificar tickets por impacto en el cliente" son dos definiciones raíz con una T parecida pero una W distinta — y esa diferencia de cosmovisión suele ser el verdadero conflicto detrás de una situación confusa, no la transformación en sí.</p>
+</div>
+<div class="highlight">
+<strong>Ejemplo — sistema de atención de soporte de NubeFácil</strong>
+<p>"Un sistema, operado por los agentes de soporte técnico de NubeFácil (A), propiedad de la gerencia de Operaciones (O), que transforma solicitudes de ayuda sin clasificar (entrada) en solicitudes resueltas según su urgencia real para el negocio, y no según el orden de llegada (salida), en beneficio de los clientes afectados (C), dado el sistema de tickets y el personal ya disponibles (E), porque se cree que la urgencia del impacto en el cliente debe determinar el orden de atención, no quién preguntó primero (W)."</p>
+</div>
+
+<p>Relaciona cada letra de CATWOE con la pregunta que responde.</p>
+<div class="quiz quiz-match" data-quiz-id="catwoe-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada elemento de CATWOE con su definición.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="c">C — Clientes</button>
+<button class="quiz-match-item" data-pair="a">A — Actores</button>
+<button class="quiz-match-item" data-pair="t">T — Transformación</button>
+<button class="quiz-match-item" data-pair="w">W — Weltanschauung</button>
+<button class="quiz-match-item" data-pair="o">O — Propietarios</button>
+<button class="quiz-match-item" data-pair="e">E — Restricciones del entorno</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="c">Quien se beneficia o resulta afectado por la transformación.</button>
+<button class="quiz-match-item" data-pair="a">Quien realiza las actividades que llevan a cabo la transformación.</button>
+<button class="quiz-match-item" data-pair="t">El estado de entrada que se convierte en un estado de salida distinto.</button>
+<button class="quiz-match-item" data-pair="w">La visión del mundo que hace que esta transformación tenga sentido, y no otra.</button>
+<button class="quiz-match-item" data-pair="o">Quien podría detener o modificar el sistema; ante quién responde.</button>
+<button class="quiz-match-item" data-pair="e">Lo que se toma como dado desde afuera, fuera del control del sistema.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<p>Identifica qué elemento de CATWOE representa cada fragmento de la definición raíz de NubeFácil.</p>
+<div class="quiz quiz-fill" data-quiz-id="catwoe-fill">
+<span class="quiz-badge">Completar</span>
+
+<p>1. "los agentes de soporte técnico de NubeFácil", quienes ejecutan la transformación, son
+<select class="quiz-blank" data-correct="a">
+<option value="">— elige —</option>
+<option value="c">Clientes (C)</option>
+<option value="a">Actores (A)</option>
+<option value="o">Propietarios (O)</option>
+<option value="w">Weltanschauung (W)</option>
+</select>.</p>
+
+<p>2. "solicitudes sin clasificar → solicitudes resueltas según urgencia real" es
+<select class="quiz-blank" data-correct="t">
+<option value="">— elige —</option>
+<option value="t">la Transformación (T)</option>
+<option value="e">Restricciones del entorno (E)</option>
+<option value="a">Actores (A)</option>
+<option value="c">Clientes (C)</option>
+</select>.</p>
+
+<p>3. "los clientes afectados", en cuyo beneficio existe el sistema, son
+<select class="quiz-blank" data-correct="c">
+<option value="">— elige —</option>
+<option value="a">Actores (A)</option>
+<option value="c">Clientes (C)</option>
+<option value="o">Propietarios (O)</option>
+<option value="e">Restricciones del entorno (E)</option>
+</select>.</p>
+
+<p>4. "la gerencia de Operaciones", que podría cancelar o rediseñar el sistema, es
+<select class="quiz-blank" data-correct="o">
+<option value="">— elige —</option>
+<option value="w">Weltanschauung (W)</option>
+<option value="o">Propietarios (O)</option>
+<option value="t">Transformación (T)</option>
+<option value="c">Clientes (C)</option>
+</select>.</p>
+
+<p>5. "el sistema de tickets y el personal ya disponibles", tomados como dados, son
+<select class="quiz-blank" data-correct="e">
+<option value="">— elige —</option>
+<option value="e">Restricciones del entorno (E)</option>
+<option value="a">Actores (A)</option>
+<option value="w">Weltanschauung (W)</option>
+<option value="o">Propietarios (O)</option>
+</select>.</p>
+
+<p>6. "la urgencia del impacto en el cliente debe determinar el orden de atención, no quién preguntó primero" expresa
+<select class="quiz-blank" data-correct="w">
+<option value="">— elige —</option>
+<option value="c">Clientes (C)</option>
+<option value="t">Transformación (T)</option>
+<option value="w">Weltanschauung (W)</option>
+<option value="e">Restricciones del entorno (E)</option>
+</select>.</p>
+
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="modelo-conceptual">
+<div class="card">
+<h2 class="section-title">Modelos conceptuales: qué haría falta, no qué existe</h2>
+<p class="lead">A partir de una definición raíz se construye un <strong>modelo conceptual</strong>: una lista corta de actividades —entre 5 y 9, como regla práctica— en verbos de acción, ordenadas lógicamente, que serían necesarias para cumplir la transformación de esa definición raíz. El modelo conceptual <strong>no describe</strong> la organización real ni un organigrama: describe lo que sería lógicamente necesario <em>si</em> el sistema definido existiera tal cual se definió.</p>
+<div class="highlight">
+<strong>Ejemplo — modelo conceptual para la definición raíz de NubeFácil</strong>
+<p>1. Recibir la solicitud sin clasificar. 2. Evaluar su impacto potencial en el cliente. 3. Asignar un nivel de urgencia. 4. Priorizar la cola según urgencia, no según orden de llegada. 5. Asignar un agente disponible. 6. Resolver la solicitud. 7. Confirmar la resolución con el cliente. 8. Monitorear si la urgencia asignada correspondió con la urgencia real, y ajustar el criterio de asignación si no.</p>
+</div>
+<div class="highlight">
+<strong>Monitorear con las 3 E</strong>
+<p>La última actividad de un modelo conceptual suele ser de control, y para eso Checkland propone monitorear tres criterios: <strong>eficacia</strong> (¿la transformación logra el resultado buscado?), <strong>eficiencia</strong> (¿lo logra con el mínimo de recursos razonable?) y <strong>efectividad</strong> (¿ese resultado vale la pena a largo plazo, para el objetivo de más arriba?). Un sistema puede ser eficiente sin ser eficaz, y eficaz sin ser efectivo — las tres preguntas son distintas.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="modelo-mc">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un modelo conceptual construido a partir de una definición raíz muestra...</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El organigrama oficial vigente de la organización.</button>
+<button class="quiz-opt" data-correct>Las actividades lógicamente necesarias para cumplir la transformación definida en la definición raíz, no la estructura ni los puestos reales de la organización actual.</button>
+<button class="quiz-opt">Un diagrama de bucle causal con polaridades entre variables.</button>
+<button class="quiz-opt">La lista de personas que participaron en la rich picture.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el modelo conceptual es una construcción lógica derivada de la definición raíz — qué actividades harían falta para lograr esa transformación — no una descripción de cómo funciona hoy la organización real." data-ko="No es el organigrama real ni un diagrama causal (esas son otras herramientas). El modelo conceptual se deriva lógicamente de la definición raíz: muestra qué actividades serían necesarias para cumplir esa transformación, sin describir todavía cómo funciona la organización real." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="comparacion-accion">
+<div class="card">
+<h2 class="section-title">Comparar el modelo con la realidad, y decidir qué cambiar</h2>
+<p class="lead">El modelo conceptual no es una meta que imponer: es una vara de comparación. Se lo pone junto a lo que realmente pasa en la situación —la rich picture, entrevistas, observación directa— y esa comparación estructura una pregunta concreta para cada actividad del modelo: ¿existe en la realidad? ¿se hace distinto? ¿falta por completo? El objetivo no es "corregir" la realidad para que se parezca al modelo: es dar pie a una conversación informada entre las personas involucradas sobre qué cambios tendrían sentido.</p>
+<div class="highlight">
+<strong>Cambios deseables y cambios factibles</strong>
+<p>Un cambio es <strong>sistémicamente deseable</strong> cuando el modelo conceptual y la comparación lo justifican: "esto debería existir, según la lógica de la transformación que definimos". Un cambio es <strong>culturalmente factible</strong> cuando es aceptable dado el poder, las relaciones y la cultura reales de esa situación específica: "esto se puede hacer con esta gente, en este momento, sin romper algo más importante". Un cambio solo se lleva adelante si es <strong>ambas cosas a la vez</strong>.</p>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">¿Deseable?</th><th scope="col">¿Factible?</th><th scope="col">¿Qué pasa?</th></tr></thead>
+<tbody>
+<tr><td>Sí</td><td>Sí</td><td>Se implementa: es el cambio que realmente mueve la situación.</td></tr>
+<tr><td>Sí</td><td>No</td><td>Queda como propuesta "correcta en el papel" que nadie puede ejecutar todavía; a veces sirve para negociar más adelante.</td></tr>
+<tr><td>No</td><td>Sí</td><td>Se puede hacer fácil, pero no ataca la causa real de la situación: cambio cosmético.</td></tr>
+<tr><td>No</td><td>No</td><td>Se descarta.</td></tr>
+</tbody>
+</table>
+
+<p>Clasifica cada cambio propuesto según sea deseable, factible, ambos, o ninguno.</p>
+<div class="quiz quiz-classify" data-quiz-id="comparacion-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Para una empresa donde el modelo conceptual exige "validar el impacto en el cliente antes de asignar urgencia", pero hoy nadie lo hace:</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Agregar un paso obligatorio de validación de impacto, con un agente ya disponible que hoy no hace nada más que eso.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Deseable y factible</button>
+<button>Solo deseable</button>
+<button>Solo factible</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Contratar diez personas nuevas solo para validar impacto, cuando la empresa está en freno de contrataciones desde hace un año.</span>
+<div class="quiz-classify-btns">
+<button>Deseable y factible</button>
+<button data-correct>Solo deseable</button>
+<button>Solo factible</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Eliminar el paso de validación por completo para atender tickets más rápido, aunque el modelo conceptual diga que hace falta.</span>
+<div class="quiz-classify-btns">
+<button>Deseable y factible</button>
+<button>Solo deseable</button>
+<button data-correct>Solo factible</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="comparacion-mc">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Después de implementar los cambios acordados con el SSM, ¿termina ahí el proceso?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Sí: una vez implementados los cambios factibles y deseables, la situación queda resuelta de forma permanente.</button>
+<button class="quiz-opt" data-correct>No necesariamente: Checkland lo describe como un ciclo de aprendizaje — la situación puede seguir cambiando, y el proceso puede volver a aplicarse. No es una receta lineal de un solo uso.</button>
+<button class="quiz-opt">Sí, porque el SSM solo se puede aplicar una vez por organización.</button>
+<button class="quiz-opt">No, porque siempre hay que volver a dibujar la rich picture antes de implementar cualquier cambio.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el propio Checkland se alejó de presentarlo como un proceso lineal de un solo recorrido. Las situaciones blandas siguen cambiando, y el SSM está pensado como un ciclo de aprendizaje que se puede volver a recorrer, no como un procedimiento que se ejecuta una vez y queda cerrado." data-ko="El SSM no promete una resolución permanente ni de un solo uso: las situaciones blandas siguen evolucionando. Checkland lo describió cada vez más como un ciclo de aprendizaje continuo, no como una receta lineal que se aplica una sola vez." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="caso">
+<div class="card">
+<h2 class="section-title">Caso práctico: ClaseViva</h2>
+<p class="lead">Cierra la guía con un caso aplicado: usar las herramientas del SSM sobre una situación organizacional real, sin una única versión de "cuál es el problema".</p>
+
+<div class="highlight">
+<strong>El caso: ClaseViva</strong>
+<p><strong>ClaseViva</strong> es una startup edtech de tres años que provee una plataforma de evaluaciones para colegios. Los fundadores presionan por lanzar funciones nuevas cada semana para no perder terreno frente a la competencia. El equipo pedagógico insiste en que cada función nueva debería validarse pedagógicamente antes de salir, porque una función mal diseñada puede afectar la evaluación real de estudiantes. Soporte recibe quejas constantes de docentes que no entienden funciones lanzadas sin previo aviso. Cada área describe "el problema" de forma distinta — y las tres tienen razón desde su propia Weltanschauung.</p>
+</div>
+
+<p>Identifica qué elemento de CATWOE representa cada fragmento de esta definición raíz para ClaseViva: "Un sistema, operado por el equipo pedagógico de ClaseViva, propiedad de la dirección de Producto, que transforma funciones nuevas sin validar pedagógicamente en funciones aprobadas para publicación con impacto educativo comprobado, en beneficio de los docentes y estudiantes que usan la plataforma, dado el calendario de lanzamientos ya comprometido con inversores, porque se cree que una función mal validada daña más la confianza de los docentes a largo plazo que un lanzamiento retrasado."</p>
+<div class="quiz quiz-fill" data-quiz-id="caso-fill">
+<span class="quiz-badge">Completar</span>
+
+<p>1. "el equipo pedagógico de ClaseViva", quien ejecuta la validación, es
+<select class="quiz-blank" data-correct="a">
+<option value="">— elige —</option>
+<option value="a">Actores (A)</option>
+<option value="o">Propietarios (O)</option>
+<option value="c">Clientes (C)</option>
+<option value="w">Weltanschauung (W)</option>
+</select>.</p>
+
+<p>2. "funciones sin validar → funciones aprobadas con impacto comprobado" es
+<select class="quiz-blank" data-correct="t">
+<option value="">— elige —</option>
+<option value="t">la Transformación (T)</option>
+<option value="e">Restricciones del entorno (E)</option>
+<option value="c">Clientes (C)</option>
+<option value="a">Actores (A)</option>
+</select>.</p>
+
+<p>3. "los docentes y estudiantes que usan la plataforma" son
+<select class="quiz-blank" data-correct="c">
+<option value="">— elige —</option>
+<option value="o">Propietarios (O)</option>
+<option value="c">Clientes (C)</option>
+<option value="a">Actores (A)</option>
+<option value="e">Restricciones del entorno (E)</option>
+</select>.</p>
+
+<p>4. "la dirección de Producto", que podría eliminar este paso de validación, es
+<select class="quiz-blank" data-correct="o">
+<option value="">— elige —</option>
+<option value="w">Weltanschauung (W)</option>
+<option value="o">Propietarios (O)</option>
+<option value="t">Transformación (T)</option>
+<option value="c">Clientes (C)</option>
+</select>.</p>
+
+<p>5. "el calendario de lanzamientos ya comprometido con inversores", tomado como dado, es
+<select class="quiz-blank" data-correct="e">
+<option value="">— elige —</option>
+<option value="e">Restricciones del entorno (E)</option>
+<option value="a">Actores (A)</option>
+<option value="w">Weltanschauung (W)</option>
+<option value="o">Propietarios (O)</option>
+</select>.</p>
+
+<p>6. "una función mal validada daña más la confianza de los docentes que un lanzamiento retrasado" expresa
+<select class="quiz-blank" data-correct="w">
+<option value="">— elige —</option>
+<option value="c">Clientes (C)</option>
+<option value="t">Transformación (T)</option>
+<option value="w">Weltanschauung (W)</option>
+<option value="e">Restricciones del entorno (E)</option>
+</select>.</p>
+
+<p class="quiz-progress"></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>La comparación revela un vacío</strong>
+<p>Al comparar el modelo conceptual con la realidad, queda claro que hoy <strong>ninguna</strong> función pasa por validación pedagógica antes de salir a producción: se valida, a veces, después del lanzamiento, si sobra tiempo. Los fundadores proponen dos cambios posibles: <strong>(A)</strong> exigir validación pedagógica obligatoria antes de cualquier lanzamiento, sin excepción; <strong>(B)</strong> crear una validación exprés de 48 horas, obligatoria solo para funciones que tocan la evaluación de estudiantes, y opcional para el resto.</p>
+</div>
+
+<div class="quiz quiz-open" data-quiz-id="caso-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">¿Cuál de los dos cambios (A o B) es más probable que sea deseable <strong>y</strong> factible en ClaseViva, y por qué? Fundamenta usando lo que sabes de la cultura de la organización (presión de crecimiento, calendario ya comprometido con inversores).</p>
+<textarea class="quiz-open-input" placeholder="Escribe aquí tu análisis antes de ver la respuesta modelo…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver respuesta modelo</button>
+<div class="quiz-open-model" hidden>
+<strong>Respuesta modelo</strong>
+<p>El cambio B es el más probable de ser deseable y factible a la vez. Es sistémicamente deseable porque valida exactamente donde un error causaría más daño —las funciones que tocan la evaluación de estudiantes, el corazón de la Weltanschauung del equipo pedagógico— sin exigir validación en todo lo demás. Y es culturalmente factible porque no choca de frente con la presión de crecimiento ni con el calendario ya comprometido con inversores: una validación de 48 horas, acotada, es algo que los fundadores probablemente pueden aceptar. El cambio A, en cambio, es deseable en teoría (validar siempre reduce más el riesgo) pero muy probablemente no factible: los fundadores no van a aceptar frenar todos los lanzamientos, así que quedaría como una propuesta "correcta en el papel" que en la práctica nadie cumple — exactamente el resultado de un cambio deseable pero no factible.</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">La diferencia central entre pensamiento de sistemas duros y de sistemas blandos es que...</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Los sistemas duros son técnicos y los blandos son siempre sociales, sin ninguna otra diferencia.</button>
+<button class="quiz-opt" data-correct>Los sistemas duros asumen un objetivo compartido y una solución técnica óptima; los sistemas blandos asumen que distintos involucrados perciben la situación —y el propio problema— de forma distinta, sin una única realidad compartida.</button>
+<button class="quiz-opt">Los sistemas blandos no se pueden modelar de ninguna forma.</button>
+<button class="quiz-opt">Los sistemas duros solo aplican a software, y los blandos solo a personas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la distinción no es técnico vs. social, sino si existe o no un objetivo compartido y una única realidad a optimizar. Los sistemas blandos sí se modelan — con rich pictures, definiciones raíz y modelos conceptuales — solo que de forma distinta." data-ko="No es una distinción entre software y personas, ni significa que lo blando no se pueda modelar (el SSM ofrece herramientas propias para eso). La diferencia real es si existe un objetivo técnico compartido (duro) o visiones distintas sobre cuál es el problema (blando)." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Una rich picture debe dibujarse siguiendo una notación formal estándar, igual para cualquier practicante del SSM.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: las rich pictures no tienen notación estándar. Cada practicante desarrolla su propio estilo de símbolos; lo importante es capturar la situación completa, no seguir un formato fijo." data-ko="Es falso: a diferencia de un diagrama causal o UML, la rich picture no tiene notación oficial. Su valor está en capturar libremente la situación —gente, procesos, tensiones— sin un formato fijo que seguir." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En una definición raíz, la "W" de CATWOE (Weltanschauung) representa...</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Quién ejecuta la transformación.</button>
+<button class="quiz-opt">Quién podría cancelar el sistema.</button>
+<button class="quiz-opt" data-correct>La visión del mundo que hace que esa transformación en particular tenga sentido, y no otra.</button>
+<button class="quiz-opt">Las restricciones externas que se toman como dadas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: A es actores, O es propietarios, E es restricciones del entorno. La W es la cosmovisión: el supuesto de fondo que hace que definir la transformación de esa manera —y no de otra— tenga sentido para quien la propone." data-ko="Actores (A) son quienes ejecutan; Propietarios (O) son quienes podrían cancelar el sistema; Restricciones del entorno (E) son lo externo dado. La W es distinta: es la visión del mundo que justifica por qué esa transformación en particular tiene sentido." hidden></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Este cambio propuesto es sistémicamente deseable, culturalmente factible, o ambos?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El modelo conceptual pide un paso de control de calidad, y ya existe una persona disponible para hacerlo sin resistencia de nadie.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Deseable y factible</button>
+<button>Solo deseable</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El modelo conceptual pide triplicar el equipo de validación, pero la empresa está en congelamiento total de contrataciones.</span>
+<div class="quiz-classify-btns">
+<button>Deseable y factible</button>
+<button data-correct>Solo deseable</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un modelo conceptual del SSM se construye a partir de...</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La rich picture directamente, sin pasar por una definición raíz.</button>
+<button class="quiz-opt" data-correct>Una definición raíz: describe las actividades lógicamente necesarias para cumplir la transformación que esa definición raíz plantea.</button>
+<button class="quiz-opt">El organigrama actual de la organización.</button>
+<button class="quiz-opt">Los cinco subsistemas del VSM.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el modelo conceptual se deriva de una definición raíz específica, no directamente de la rich picture ni del organigrama real, y tampoco de los subsistemas del VSM (esa es otra herramienta, de sistemas duros)." data-ko="La rich picture es un paso previo, no la base directa del modelo conceptual — primero hace falta una definición raíz. Tampoco se basa en el organigrama real ni en el VSM: el modelo conceptual es una construcción lógica derivada de la definición raíz." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Sistema duro</td><td>Existe un objetivo compartido y una solución técnicamente óptima que encontrar.</td></tr>
+<tr><td>Sistema blando</td><td>Distintos involucrados perciben la situación —y el problema mismo— de forma distinta.</td></tr>
+<tr><td>Rich picture</td><td>Captura libre y sin notación fija de la situación: gente, procesos, tensiones.</td></tr>
+<tr><td>Definición raíz</td><td>Frase precisa que describe una transformación: entrada → salida, y para quién.</td></tr>
+<tr><td>CATWOE</td><td>Clientes, Actores, Transformación, Weltanschauung, Propietarios, Restricciones del entorno.</td></tr>
+<tr><td>Modelo conceptual</td><td>Actividades lógicamente necesarias para cumplir la definición raíz, no la organización real.</td></tr>
+<tr><td>Cambio deseable</td><td>Justificado por el modelo conceptual y la comparación con la realidad.</td></tr>
+<tr><td>Cambio factible</td><td>Aceptable dada la cultura, el poder y las relaciones reales de esa situación.</td></tr>
+<tr><td>Ciclo de aprendizaje</td><td>El SSM no se aplica una sola vez: la situación cambia y el proceso se puede repetir.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🧪 El químico que se volvió teórico de sistemas</h3><p>Peter Checkland trabajó quince años en la industria química (ICI) antes de unirse en 1969 a la Universidad de Lancaster a investigar por qué la ingeniería de sistemas fallaba una y otra vez en problemas de gestión.</p></div>
+<div class="info"><h3>🖊️ Sin notación oficial</h3><p>A diferencia de los diagramas de bucle causal o el UML, las rich pictures no tienen un estándar fijo — cada practicante desarrolla su propio estilo de símbolos, y eso es intencional.</p></div>
+<div class="info"><h3>🔄 De las 7 etapas al ciclo de aprendizaje</h3><p>En sus primeros escritos (1981) Checkland presentó el SSM como 7 etapas secuenciales. En trabajos posteriores insistió en que rara vez se usa así en la práctica: es un ciclo iterativo de aprendizaje, no una receta lineal de un solo recorrido.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Metodologías de Sistemas: Duros y Blandos (SSM)</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (respuesta modelo) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

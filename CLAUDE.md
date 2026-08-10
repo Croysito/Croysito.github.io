@@ -81,7 +81,8 @@ Detalles del patrón (ver `taller-ddl.html`): una única instancia de `PGlite` c
 | — | TGS Aplicada: Sistemas de Información (`sistemas-informacion.html`) | ✅ Publicada |
 | — | Cibernética Avanzada: Variedad y Viabilidad (`viabilidad-sistemas.html`) | ✅ Publicada |
 | 1 | Diagnóstico y Rediseño Organizacional con el VSM — recursividad, atenuación/amplificación de variedad, homeostasis/ultraestabilidad, autopoiesis, cibernética de 1er/2do orden, variedad en ciberseguridad, caso práctico integrador (`diagnostico-vsm.html`) | ✅ Publicada (2026-08-04) |
-| 2 | *(por definir según avance de la materia)* | Pendiente |
+| 2 | Metodologías de Sistemas: Duros y Blandos — distinción de Checkland, origen del SSM, rich pictures, definiciones raíz y CATWOE, modelos conceptuales, cambios factibles/deseables, caso práctico aplicado (`sistemas-duros-blandos.html`) | ✅ Publicada (2026-08-10) |
+| 3 | *(por definir según avance de la materia)* | Pendiente |
 
 **Al completar una guía:** marcar su fila como "✅ Publicada" con la fecha, actualizar la tarjeta correspondiente en `index.html` (agregarla como "disponible"), y agregar la siguiente fila cuando se defina el próximo tema según el avance real de la materia.
 
