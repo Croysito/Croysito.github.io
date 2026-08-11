@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía Completa de Bucles en Python | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>Bucles</span></div>
+<p>Guía completa de bucles while y for en Python</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#while">El bucle while</a>
+<a href="#breakcontinue">break y continue</a>
+<a href="#for-range">El bucle for con range()</a>
+<a href="#for-secuencias">for sobre cadenas y listas</a>
+<a href="#anidados">Bucles anidados</a>
+<a href="#errores">Errores comunes</a>
+<a href="#ejercicios">Ejercicios</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🐍 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Bucles <span>en Python</span></h1>
+<p>Ya sabes hacer que tu programa tome decisiones con <code>if</code>. El siguiente problema es distinto: ¿qué haces cuando necesitas repetir una instrucción diez veces, cien veces, o hasta que se cumpla cierta condición, sin copiar y pegar la misma línea una y otra vez? Para eso existen los <strong>bucles</strong>: <code>while</code> y <code>for</code>.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Ya sabes crear variables, leer datos del usuario y hacer que tu programa tome decisiones con <code>if</code>/<code>elif</code>/<code>else</code>. Lo que falta es repetir: pedir datos varias veces, recorrer los caracteres de un texto, imprimir una tabla completa. Eso es exactamente lo que hacen los bucles.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás repetir instrucciones con <code>while</code> mientras se cumpla una condición, recorrer secuencias con <code>for</code> y <code>range()</code>, controlar un bucle con <code>break</code> y <code>continue</code>, anidar bucles, y evitar los errores más comunes (como el temido bucle infinito).</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Todos los bloques con el encabezado <strong>Python</strong> son editables: presiona <strong>✏️ Editar</strong> para modificar el código y <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador (usa Pyodide, un Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete.</p>
+</div>
+<div class="highlight">
+<strong>⚠️ Cuidado con los bucles infinitos</strong>
+<p>Un bucle que nunca cumple su condición de salida se ejecuta para siempre y puede colgar la pestaña del navegador. Antes de ejecutar tu código, revisa siempre que exista una forma de que el bucle termine.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📖 Aprende</h3><p>La diferencia entre repetir "mientras se cumpla algo" (while) y repetir "un número conocido de veces" (for).</p></div>
+<div class="info"><h3>💻 Practica</h3><p>Ejemplos editables y ejecutables en cada sección.</p></div>
+<div class="info"><h3>🎯 Domina</h3><p>range(), break, continue, bucles anidados y los errores que evitan la mayoría de los principiantes.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="while">
+<div class="card">
+<h2 class="section-title">El bucle while</h2>
+<p class="lead">Un bucle <code>while</code> repite su bloque de instrucciones <strong>mientras</strong> una condición sea verdadera. Se escribe igual que un <code>if</code> —dos puntos e indentación— pero en vez de ejecutarse una sola vez, vuelve a evaluar la condición al terminar el bloque, y repite si sigue siendo <code>True</code>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">contador = 1
+
+while contador <= 5:
+    print(contador)
+    contador = contador + 1
+
+print("Fin del bucle")</code></pre>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>1
+2
+3
+4
+5
+Fin del bucle</pre>
+</div>
+<div class="highlight">
+<strong>El bucle infinito</strong>
+<p>Si olvidas la línea <code>contador = contador + 1</code>, la condición <code>contador <= 5</code> nunca se vuelve falsa y el bucle se repite para siempre. Todo <code>while</code> necesita algo dentro del bloque que eventualmente haga falsa la condición: eso se llama la <strong>actualización</strong> del bucle.</p>
+</div>
+<p><code>while</code> también sirve para acumular un resultado sin saber de antemano cuántas veces se va a repetir, por ejemplo pidiendo números hasta que el usuario decida parar:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">suma = 0
+numero = int(input("Número (0 para terminar): "))
+
+while numero != 0:
+    suma = suma + numero
+    numero = int(input("Número (0 para terminar): "))
+
+print("La suma total es:", suma)</code></pre>
+</div>
+<div class="highlight">
+<strong>while vs. for</strong>
+<p>Usa <code>while</code> cuando no sabes de antemano cuántas repeticiones va a haber (depende de una condición, como la respuesta del usuario). Más adelante en esta guía vas a ver <code>for</code>, la opción natural cuando sí sabes cuántas veces —o sobre qué secuencia— quieres repetir.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="breakcontinue">
+<div class="card">
+<h2 class="section-title">break y continue</h2>
+<p class="lead">Dentro de cualquier bucle, <code>break</code> y <code>continue</code> te dan control fino sobre la repetición: <code>break</code> corta el bucle por completo, y <code>continue</code> salta directamente a la siguiente repetición sin ejecutar el resto del bloque en esa vuelta.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Instrucción</th><th scope="col">Qué hace</th></tr></thead>
+<tbody>
+<tr><td><code>break</code></td><td>Termina el bucle inmediatamente, sin volver a evaluar la condición.</td></tr>
+<tr><td><code>continue</code></td><td>Salta el resto del bloque en esta vuelta y pasa directo a la siguiente repetición.</td></tr>
+</tbody>
+</table>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">while True:
+    respuesta = input("Escribe 'salir' para terminar: ")
+    if respuesta == "salir":
+        break
+    print("Escribiste:", respuesta)
+
+print("Programa terminado")</code></pre>
+</div>
+<div class="highlight">
+<strong>while True + break: el reemplazo del do-while</strong>
+<p>Python no tiene una estructura <code>do-while</code> como otros lenguajes (repetir al menos una vez, y recién después revisar la condición). El patrón <code>while True:</code> combinado con un <code>break</code> condicional adentro cumple exactamente esa función, y es muy común para pedir datos "hasta que el usuario haga algo válido".</p>
+</div>
+<p><code>continue</code> es distinto: no termina el bucle, solo se salta la vuelta actual.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">numero = 0
+
+while numero < 10:
+    numero = numero + 1
+    if numero % 2 == 0:
+        continue
+    print(numero)</code></pre>
+</div>
+<p>Salida (solo los números impares, porque los pares activan <code>continue</code> antes de llegar al <code>print</code>):</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>1
+3
+5
+7
+9</pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="for-range">
+<div class="card">
+<h2 class="section-title">El bucle for con range()</h2>
+<p class="lead">Cuando sabes exactamente cuántas veces quieres repetir algo, <code>for</code> es más directo que <code>while</code>: no necesitas crear un contador ni actualizarlo a mano. La forma más común es combinarlo con <code>range()</code>, que genera una secuencia de números.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">for i in range(5):
+    print(i)</code></pre>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>0
+1
+2
+3
+4</pre>
+</div>
+<div class="highlight">
+<strong>range(5) no incluye el 5</strong>
+<p><code>range(n)</code> genera los números desde <code>0</code> hasta <code>n - 1</code>: en total, exactamente <code>n</code> números. Esperar que <code>range(5)</code> incluya el <code>5</code> es el error de "conteo por uno" (off-by-one) más común al empezar con <code>for</code>.</p>
+</div>
+<p><code>range()</code> también acepta un inicio y un paso, no solo el final:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Forma</th><th scope="col">Genera</th></tr></thead>
+<tbody>
+<tr><td><code>range(5)</code></td><td><code>0, 1, 2, 3, 4</code></td></tr>
+<tr><td><code>range(2, 6)</code></td><td><code>2, 3, 4, 5</code></td></tr>
+<tr><td><code>range(0, 10, 2)</code></td><td><code>0, 2, 4, 6, 8</code></td></tr>
+<tr><td><code>range(10, 0, -1)</code></td><td><code>10, 9, 8, 7, 6, 5, 4, 3, 2, 1</code></td></tr>
+</tbody>
+</table>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">tabla = 7
+
+for i in range(1, 11):
+    print(tabla, "x", i, "=", tabla * i)</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="for-secuencias">
+<div class="card">
+<h2 class="section-title">for sobre cadenas y listas</h2>
+<p class="lead"><code>for</code> no solo recorre números generados por <code>range()</code>: puede recorrer directamente cualquier secuencia, como los caracteres de un <code>str</code> o los elementos de una <code>list</code>, que ya conoces de la guía de Tipos de Datos. En ese caso no necesitas índices: Python te entrega cada elemento directamente.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">for letra in "Python":
+    print(letra)</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">materias = ["POO", "Base de Datos II", "Ingeniería de Software", "TGS"]
+
+for materia in materias:
+    print("Estás inscrito en:", materia)</code></pre>
+</div>
+<div class="highlight">
+<strong>range(len(...)) casi nunca hace falta</strong>
+<p>Vas a ver mucho código (sobre todo de gente que viene de otros lenguajes) que recorre una lista así: <code>for i in range(len(materias)): print(materias[i])</code>. Funciona, pero en Python es más idiomático iterar directamente sobre los elementos, como en el ejemplo de arriba: es más corto y más difícil de romper con un índice mal calculado.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="anidados">
+<div class="card">
+<h2 class="section-title">Bucles anidados</h2>
+<p class="lead">Un bucle puede contener otro bucle completo dentro de su bloque. Por cada vuelta del bucle externo, el bucle interno se ejecuta por completo desde el principio. Es la herramienta natural para recorrer una cuadrícula, como filas y columnas.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">for fila in range(1, 4):
+    for columna in range(1, 4):
+        print(fila, "x", columna, "=", fila * columna)
+    print("--- fin de la fila", fila, "---")</code></pre>
+</div>
+<div class="highlight">
+<strong>Las repeticiones se multiplican</strong>
+<p>Si el bucle externo se repite 3 veces y el interno también 3 veces, el bloque más interno se ejecuta <code>3 × 3 = 9</code> veces en total. Con bucles anidados grandes (por ejemplo, dos <code>range(1000)</code>), el número de repeticiones crece muy rápido — vale la pena tenerlo en cuenta antes de ejecutar.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="errores">
+<div class="card">
+<h2 class="section-title">Errores comunes</h2>
+<div class="info-grid">
+<div class="info"><h3>❌ Bucle infinito</h3><p>Olvidar actualizar la variable que controla la condición de un <code>while</code> hace que nunca se vuelva falsa. El programa se cuelga y hay que forzar su cierre.</p></div>
+<div class="info"><h3>❌ Conteo por uno (off-by-one) con range()</h3><p>Esperar que <code>range(n)</code> incluya el número <code>n</code>, cuando en realidad se detiene en <code>n - 1</code>.</p></div>
+<div class="info"><h3>❌ break o continue fuera de un bucle</h3><p>Usar <code>break</code> o <code>continue</code> fuera de un <code>while</code> o un <code>for</code> produce <strong>SyntaxError</strong>: ambos solo tienen sentido dentro de un bucle.</p></div>
+<div class="info"><h3>❌ Usar while cuando conviene for</h3><p>Armar un contador manual con <code>while</code> para repetir un número fijo de veces funciona, pero es más código y más fácil de romper que usar <code>for</code> con <code>range()</code> directamente.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Descubre la sorpresa</h2>
+<p>Ejecuta este bloque tal como está: probablemente esperabas ver el número <code>5</code> al final, pero no aparece.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">for i in range(1, 5):
+    print(i)</code></pre>
+</div>
+<div class="highlight">
+<strong>Corrígelo</strong>
+<p><code>range(1, 5)</code> genera <code>1, 2, 3, 4</code>: se detiene justo antes del segundo número. Edita el bloque y cambia <code>range(1, 5)</code> por <code>range(1, 6)</code> para que el <code>5</code> sí aparezca.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Ejercicios Propuestos</h2>
+<p class="lead">Pon en práctica lo aprendido resolviendo los siguientes ejercicios directamente en el bloque editable.</p>
+<ol style="margin-left:25px;line-height:2">
+<li>Usa <code>while</code> para imprimir los números del 1 al 10.</li>
+<li>Usa <code>while True</code> junto con <code>break</code> para pedir números con <code>input()</code> hasta que el usuario escriba <code>"salir"</code>.</li>
+<li>Usa <code>for</code> con <code>range()</code> para imprimir la tabla del 7, del 7x1 al 7x10.</li>
+<li>Usa <code>continue</code> dentro de un <code>for</code> con <code>range(1, 21)</code> para imprimir solo los números impares.</li>
+<li>Usa un <code>for</code> para recorrer la cadena <code>"Python"</code> letra por letra e imprimir cada una.</li>
+<li>Escribe dos bucles anidados que impriman un cuadrado de asteriscos de 4 filas por 4 columnas.</li>
+</ol>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>✍️ Resuelve aquí los ejercicios</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu solución a los ejercicios (puedes resolverlos uno por uno)…"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Reto Final</h2>
+<p>Escribe el clásico <strong>FizzBuzz</strong>: recorre con un <code>for</code> y <code>range()</code> los números del 1 al 30, y para cada uno:</p>
+<ul style="margin-left:25px;line-height:2">
+<li>Si es divisible entre <code>3</code> y entre <code>5</code> a la vez, imprime <code>"FizzBuzz"</code>.</li>
+<li>Si es divisible solo entre <code>3</code>, imprime <code>"Fizz"</code>.</li>
+<li>Si es divisible solo entre <code>5</code>, imprime <code>"Buzz"</code>.</li>
+<li>Si no es divisible entre ninguno de los dos, imprime el número.</li>
+</ul>
+<p>Combina lo que ya sabías de la guía de Condicionales (<code>if</code>/<code>elif</code>/<code>else</code>, operador <code>%</code>) con lo nuevo de esta guía (<code>for</code> y <code>range()</code>).</p>
+<div class="code salida">
+<div class="code-header"><span>Salida esperada (primeras líneas)</span></div>
+<pre>1
+2
+Fizz
+4
+Buzz
+Fizz
+7
+8
+Fizz
+Buzz
+11
+Fizz
+13
+14
+FizzBuzz</pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Uso</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Repetir mientras se cumpla algo</td><td><code>while condición: ...</code></td></tr>
+<tr><td>Repetir "hasta que" (sin do-while)</td><td><code>while True: ... if cond: break</code></td></tr>
+<tr><td>Repetir n veces</td><td><code>for i in range(n): ...</code></td></tr>
+<tr><td>Repetir en un rango</td><td><code>for i in range(a, b): ...</code></td></tr>
+<tr><td>Repetir con paso</td><td><code>for i in range(a, b, paso): ...</code></td></tr>
+<tr><td>Recorrer una cadena</td><td><code>for letra in texto: ...</code></td></tr>
+<tr><td>Recorrer una lista</td><td><code>for elemento in lista: ...</code></td></tr>
+<tr><td>Cortar el bucle</td><td><code>break</code></td></tr>
+<tr><td>Saltar a la siguiente vuelta</td><td><code>continue</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🐍 Sin do-while</h3><p>Python nunca incluyó una estructura <code>do-while</code> nativa como C o Java: el patrón <code>while True:</code> con un <code>break</code> condicional cumple esa misma función.</p></div>
+<div class="info"><h3>🔁 for...else</h3><p>Python permite un bloque <code>else</code> al final de un <code>for</code> o un <code>while</code>, que se ejecuta solo si el bucle terminó completo, sin pasar por ningún <code>break</code>. Es poco común, pero existe.</p></div>
+<div class="info"><h3>📇 Más herramientas de iteración</h3><p>Más adelante en el curso vas a conocer <code>enumerate()</code> (para recorrer una lista con su índice a la vez) y otras herramientas que hacen que recorrer secuencias en Python sea todavía más cómodo.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Bucles en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Resaltado de sintaxis (sin librerías externas) ===== */
+const PY_KEYWORDS = ["False","None","True","and","as","assert","async","await","break","class",
+  "continue","def","del","elif","else","except","finally","for","from","global","if","import",
+  "in","is","lambda","nonlocal","not","or","pass","raise","return","try","while","with","yield",
+  "print","len","int","str","float","bool","input","type","isinstance","round"];
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function highlightPython(code){
+  const escaped = escapeHtml(code);
+  const tokens = [];
+  const mask = (html) => {
+    const marker = String.fromCharCode(0xE000 + tokens.length);
+    tokens.push(html);
+    return marker;
+  };
+  let out = escaped.replace(
+    /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:[^"\\]|\\.)*"|f?'(?:[^'\\]|\\.)*')/gm,
+    (m, comment, str) => comment !== undefined
+      ? mask(`<span class="comment">${comment}</span>`)
+      : mask(`<span class="string">${str}</span>`)
+  );
+  out = out.replace(/\b\d+\.?\d*\b/g, m => mask(`<span class="number">${m}</span>`));
+  out = out.replace(new RegExp(`\\b(${PY_KEYWORDS.join("|")})\\b`, "g"), m => mask(`<span class="keyword">${m}</span>`));
+  out = out.replace(/\b([A-Za-z_]\w*)(?=\()/g, m => mask(`<span class="func">${m}</span>`));
+  out = out.replace(/[-]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
+  return out;
+}
+
+/* ===== Pyodide (Python real en el navegador), carga perezosa ===== */
+let pyodideReadyPromise = null;
+function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      const pyodide = await window.loadPyodide();
+      await pyodide.runPythonAsync(`
+import sys, io, builtins
+from js import prompt as __js_prompt
+
+def __run_capture(src):
+    buf = io.StringIO()
+    old_stdout = sys.stdout
+    old_input = builtins.input
+    sys.stdout = buf
+
+    def __custom_input(mensaje=""):
+        respuesta = __js_prompt(str(mensaje))
+        if respuesta is None:
+            raise EOFError("Entrada cancelada por el usuario")
+        print(mensaje, end="")
+        print(respuesta)
+        return respuesta
+
+    builtins.input = __custom_input
+    err = None
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.stdout = old_stdout
+        builtins.input = old_input
+    return buf.getvalue(), err
+`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+async function ejecutarPython(codigo){
+  const pyodide = await cargarPyodide();
+  const funcion = pyodide.globals.get("__run_capture");
+  const resultado = funcion(codigo);
+  const [salida, error] = resultado.toJs();
+  resultado.destroy();
+  return { salida, error };
+}
+
+/* ===== Resaltar cada ejemplo de solo lectura ===== */
+function resaltarEjemplo(bloque){
+  const codeEl = bloque.querySelector("pre code.src");
+  if (!codeEl) return;
+  codeEl.innerHTML = highlightPython(codeEl.textContent.trim());
+}
+
+/* ===== Conectar un panel de editor en blanco (ejecutar código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  textarea.addEventListener("paste", e => e.preventDefault());
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key !== "Tab") return;
+    e.preventDefault();
+    const inicio = textarea.selectionStart;
+    const fin = textarea.selectionEnd;
+    textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+    textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    try {
+      const { salida, error } = await ejecutarPython(textarea.value);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el intérprete de Python: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+function crearPanelEditor(mensaje){
+  const panel = document.createElement("div");
+  panel.className = "editor-panel";
+  panel.innerHTML = `
+    <div class="editor-header">
+      <span>${mensaje}</span>
+      <button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+    </div>
+    <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu propio código, inspirándote en el ejemplo de arriba, y presiona Ejecutar."></textarea>
+    <div class="output" hidden>
+      <div class="output-head">Salida</div>
+      <pre class="output-body"></pre>
+    </div>`;
+  return panel;
+}
+
+/* ===== Bloquear copiado del ejemplo (para que se escriba a mano) ===== */
+function bloquearCopiado(bloque){
+  const pre = bloque.querySelector("pre");
+  if (!pre) return;
+  const header = bloque.querySelector(".code-header span");
+  const avisar = () => {
+    if (!header) return;
+    const original = header.dataset.original || header.textContent;
+    header.dataset.original = original;
+    header.textContent = "🔒 Escríbelo tú mismo";
+    clearTimeout(header._avisoTimeout);
+    header._avisoTimeout = setTimeout(() => { header.textContent = original; }, 1600);
+  };
+  pre.addEventListener("copy", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("contextmenu", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("dragstart", e => e.preventDefault());
+}
+
+/* ===== Igualar la altura del editor a la del ejemplo ===== */
+function sincronizarAltura(bloque, panel){
+  const pre = bloque.querySelector("pre");
+  const textarea = panel.querySelector(".editor");
+  if (pre && textarea) textarea.style.minHeight = pre.offsetHeight + "px";
+}
+
+const parejas = [];
+document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
+  resaltarEjemplo(bloque);
+  bloquearCopiado(bloque);
+  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo");
+  bloque.after(panel);
+  conectarEditor(panel);
+  parejas.push([bloque, panel]);
+});
+
+document.querySelectorAll(".editor-panel.independiente").forEach(conectarEditor);
+document.querySelectorAll(".code.salida").forEach(bloquearCopiado);
+
+parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel));
+window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel)));
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

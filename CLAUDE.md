@@ -63,8 +63,8 @@ Detalles del patrón (ver `taller-ddl.html`): una única instancia de `PGlite` c
 | — | input() en Python (`input.html`) | ✅ Publicada |
 | — | Tipos de Datos en Python (`tipos-datos.html`) | ✅ Publicada |
 | 1 | Condicionales: if/elif/else y operadores lógicos (`condicionales.html`) | ✅ Publicada (2026-07-30) |
-| 2 | Bucles: while y for (range, break/continue) (`bucles.html`) | ⏭️ **Siguiente a crear** |
-| 3 | Funciones: def, parámetros, return y scope (`funciones.html`) | Pendiente |
+| 2 | Bucles: while y for (range, break/continue) (`bucles.html`) | ✅ Publicada (2026-08-10) |
+| 3 | Funciones: def, parámetros, return y scope (`funciones.html`) | ⏭️ **Siguiente a crear** |
 | 4 | Clases y objetos desde cero (`clases-objetos.html`) | Pendiente |
 
 **Al completar una guía:** marcar su fila como "✅ Publicada" con la fecha, actualizar la tarjeta correspondiente en `index.html` (de "próximo" a "disponible", y agregar la siguiente como "próximo"), y avanzar la fila "⏭️ Siguiente a crear" a la guía que sigue en la tabla.
