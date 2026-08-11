@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dinámica de Sistemas: Simulación de Stocks y Flujos | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* ===== Sandbox de simulación (específico de esta guía) ===== */
+.sandbox{ background:var(--codigo); border-radius:12px; padding:22px 25px 26px; margin:22px 0 26px; color:#e6edf3; }
+.sandbox-header{ font-family:'JetBrains Mono',monospace; font-size:12.5px; letter-spacing:.03em; color:#9acd7b; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.sandbox-grid{ display:grid; grid-template-columns:1fr 1.15fr; gap:22px; align-items:start; }
+.sandbox-diagram{ background:#0a0f16; border-radius:8px; padding:8px; }
+.sandbox-diagram svg{ width:100%; height:auto; display:block; }
+.sandbox-chart canvas{ width:100%; height:210px; display:block; background:#0a0f16; border-radius:8px; }
+.controls{ margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:16px 24px; }
+.controls.una-col{ grid-template-columns:1fr; }
+.control-row label{ display:flex; justify-content:space-between; font-size:13px; color:#c9d1d9; margin-bottom:7px; font-family:'JetBrains Mono',monospace; }
+.control-row label .valor{ color:#ffd43b; font-weight:600; }
+.control-row input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:5px; border-radius:3px; background:#2a3546; outline:none; }
+.control-row input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:17px; height:17px; border-radius:50%; background:#78b159; cursor:pointer; border:3px solid #0a0f16; }
+.control-row input[type=range]::-moz-range-thumb{ width:17px; height:17px; border-radius:50%; background:#78b159; cursor:pointer; border:3px solid #0a0f16; border:none; }
+.readouts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:18px; }
+.readout{ background:#0a0f16; border-radius:8px; padding:11px 14px; }
+.readout .num{ font-family:'JetBrains Mono',monospace; font-size:19px; color:#9acd7b; font-variant-numeric:tabular-nums; }
+.readout .num.alerta{ color:#ff7b72; }
+.readout .lbl{ font-size:11px; color:#8b949e; margin-top:2px; }
+@media (max-width:760px){
+  .sandbox-grid{ grid-template-columns:1fr; }
+  .controls{ grid-template-columns:1fr; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">TGS <span>DS</span></div>
+<p>Dinámica de sistemas: stocks, flujos y simulación</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#stock-flujo">Stock y flujo cuantificados</a>
+<a href="#retraso">Retraso y oscilación</a>
+<a href="#efecto-latigo">Bucle cerrado y efecto látigo</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Guía de Aula Invertida · Sandbox interactivo</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Dinámica de Sistemas: de los <span>diagramas a la simulación</span></h1>
+<p>Ya viste qué es un stock, qué es un flujo, y que un retraso puede hacer que un sistema oscile — incluido el efecto látigo, como ejemplo leído. Esta guía es distinta: en vez de más texto, hay un almacén simulado con números reales que vas a manipular vos mismo, sección por sección, hasta generar el efecto látigo con tus propias manos.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Los diagramas de bucle causal responden <strong>qué influye en qué, y en qué dirección</strong>. No responden <strong>cuánto</strong>, ni <strong>qué tan rápido</strong>, ni qué pasa exactamente cuando dos efectos compiten en el tiempo. Para eso hace falta pasar de un diagrama a un modelo con números reales — y, una vez que el modelo existe, simularlo: correrlo hacia adelante en el tiempo y ver qué comportamiento produce.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Esta guía asume que ya viste <a href="modelado-sistemas.html">Modelado de Sistemas: Diagramas Causales</a> — en particular las secciones de <em>stock y flujo</em> y de <em>retardos y oscilación</em>. No vuelve a explicar esos conceptos desde cero: los usa como punto de partida y los convierte en algo que podés manipular con sliders, no solo leer.</p>
+</div>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía vas a poder construir la ecuación de un stock con números reales, explicar por qué un retraso en la reposición produce oscilación aunque la política de control sea razonable, y reproducir con tus propios parámetros el efecto látigo (bullwhip effect) — el mismo fenómeno que viste como ejemplo en la guía anterior, ahora generado por vos.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🔢 De cualitativo a cuantitativo</h3><p>La misma idea de stock y flujo, ahora con unidades reales y una ecuación que se puede correr en el tiempo.</p></div>
+<div class="info"><h3>🎛️ Manipulás, no leés</h3><p>Cada sección tiene un sandbox en vivo: movés un slider, el gráfico responde al instante.</p></div>
+<div class="info"><h3>🐍 El efecto látigo, de nuevo</h3><p>Lo viste como ejemplo. Esta vez lo construís vos, ajustando retraso y agresividad hasta que aparezca.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="stock-flujo">
+<div class="card">
+<h2 class="section-title">Stock y flujo, con números reales</h2>
+<p class="lead">Recordá la fórmula que ya viste: <strong>Stock(hoy) = Stock(ayer) + entrada − salida</strong>. El caso de esta guía es el almacén central de <strong>Andina Distribuciones</strong>: el stock es el inventario disponible (en cajas), la entrada es la <strong>reposición</strong> que llega de fábrica, y la salida es el <strong>despacho</strong> a los clientes. Todavía no hay ningún control automático — vos fijás ambas tasas directamente y mirás qué le pasa al inventario.</p>
+
+<div class="sandbox">
+<div class="sandbox-header">🎛️ Sandbox — Almacén de Andina Distribuciones (30 días, sin control automático)</div>
+<div class="sandbox-grid">
+<div class="sandbox-diagram">
+<svg viewBox="0 0 320 120" role="img" aria-label="Diagrama de stock y flujo: la reposición entra al inventario, el despacho sale de él, sin ningún control automático todavía">
+<defs>
+<marker id="s1a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#9acd7b"></path></marker>
+<marker id="s1b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#f2cc60"></path></marker>
+</defs>
+<text x="52" y="45" text-anchor="middle" fill="#9acd7b" font-family="JetBrains Mono, monospace" font-size="11">Reposición</text>
+<line x1="8" y1="60" x2="98" y2="60" stroke="#9acd7b" stroke-width="2" marker-end="url(#s1a)"></line>
+<rect x="102" y="25" width="116" height="70" rx="6" fill="#182233" stroke="#3a4658"></rect>
+<text x="160" y="55" text-anchor="middle" fill="#e6edf3" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600">INVENTARIO</text>
+<text x="160" y="72" text-anchor="middle" fill="#8b949e" font-family="JetBrains Mono, monospace" font-size="9.5">(stock)</text>
+<line x1="222" y1="60" x2="310" y2="60" stroke="#f2cc60" stroke-width="2" marker-end="url(#s1b)"></line>
+<text x="266" y="45" text-anchor="middle" fill="#f2cc60" font-family="JetBrains Mono, monospace" font-size="11">Despacho</text>
+</svg>
+</div>
+<div class="sandbox-chart">
+<canvas id="chart-s1" aria-label="Gráfico del inventario a lo largo de 30 días"></canvas>
+</div>
+</div>
+<div class="controls">
+<div class="control-row">
+<label>Reposición diaria <span class="valor"><span id="s1-reposicion-val">150</span> cajas/día</span></label>
+<input type="range" id="s1-reposicion" min="100" max="400" step="10" value="150">
+</div>
+<div class="control-row">
+<label>Despacho diario <span class="valor"><span id="s1-despacho-val">200</span> cajas/día</span></label>
+<input type="range" id="s1-despacho" min="100" max="400" step="10" value="200">
+</div>
+</div>
+<div class="readouts">
+<div class="readout"><div class="num" id="s1-final">—</div><div class="lbl">stock al día 30</div></div>
+<div class="readout"><div class="num" id="s1-estado">—</div><div class="lbl">qué le está pasando al inventario</div></div>
+</div>
+</div>
+
+<div class="highlight">
+<strong>Lo único que importa es la diferencia</strong>
+<p>Movés ambos sliders juntos hacia arriba o hacia abajo, en la misma proporción, y el comportamiento del inventario no cambia. Lo que determina si el stock sube, baja o se mantiene no es el valor de cada tasa por separado — es la <strong>diferencia</strong> entre entrada y salida.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="stockflujo-mc1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Ajustá el sandbox: poné reposición en 150 y despacho en 300, y dejalo correr los 30 días. ¿Qué le pasa al inventario y por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Sube constantemente, porque la reposición siempre suma al stock.</button>
+<button class="quiz-opt" data-correct>Se agota y llega a 0 (quiebre de stock) antes del día 30, porque la salida (300) supera a la entrada (150) todos los días, y el stock no puede bajar de cero.</button>
+<button class="quiz-opt">Se mantiene estable, porque el sistema todavía no tiene retraso.</button>
+<button class="quiz-opt">Oscila, porque hay dos flujos compitiendo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: sin ningún control automático, si la salida supera a la entrada todos los días, el stock baja de forma constante hasta chocar con el piso de 0 — un quiebre de stock real, no una oscilación." data-ko="No hay oscilación posible todavía (eso necesita retraso y realimentación, que llegan en las próximas secciones) ni estabilidad automática. Con salida &gt; entrada de forma constante, el inventario baja sin parar hasta agotarse en 0." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="stockflujo-fill">
+<span class="quiz-badge">Completar</span>
+<p>Con la fórmula Stock(hoy) = Stock(ayer) + entrada − salida: si el stock de ayer era 400, la reposición de hoy es 180 y el despacho de hoy es 220, el stock de hoy es
+<select class="quiz-blank" data-correct="360">
+<option value="">— elige —</option>
+<option value="800">800</option>
+<option value="360">360</option>
+<option value="440">440</option>
+<option value="180">180</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="retraso">
+<div class="card">
+<h2 class="section-title">Retraso: el mismo control, ahora con demora</h2>
+<p class="lead">Desde acá el almacén ya no fija la reposición a mano: pide automáticamente más cuando el stock está por debajo del objetivo, y menos cuando está por arriba — un bucle de balance real, con una fórmula concreta: <strong>pedido = demanda + agresividad × (objetivo − stock)</strong>. Lo único que vas a controlar en esta sección es <strong>cuántos días tarda el proveedor en entregar</strong> ese pedido. La demanda queda fija en 200 cajas/día para que puedas enfocarte solo en el efecto del retraso.</p>
+
+<div class="sandbox">
+<div class="sandbox-header">🎛️ Sandbox — mismo almacén, ahora con reposición automática (60 días)</div>
+<div class="sandbox-grid">
+<div class="sandbox-diagram">
+<svg viewBox="0 0 320 150" role="img" aria-label="Diagrama con un bucle de realimentación: el pedido depende del stock actual, y tarda un número de días en llegar como reposición">
+<defs>
+<marker id="s2a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#9acd7b"></path></marker>
+<marker id="s2b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#f2cc60"></path></marker>
+<marker id="s2c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5b9bd5"></path></marker>
+</defs>
+<text x="52" y="45" text-anchor="middle" fill="#9acd7b" font-family="JetBrains Mono, monospace" font-size="10.5">Reposición</text>
+<line x1="8" y1="60" x2="98" y2="60" stroke="#9acd7b" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#s2a)"></line>
+<text x="52" y="72" text-anchor="middle" fill="#5b9bd5" font-family="JetBrains Mono, monospace" font-size="9">(retraso: <tspan id="s2-lbl-retraso">2</tspan>d)</text>
+<rect x="102" y="25" width="116" height="70" rx="6" fill="#182233" stroke="#3a4658"></rect>
+<text x="160" y="55" text-anchor="middle" fill="#e6edf3" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600">INVENTARIO</text>
+<text x="160" y="72" text-anchor="middle" fill="#8b949e" font-family="JetBrains Mono, monospace" font-size="9.5">(stock)</text>
+<line x1="222" y1="60" x2="310" y2="60" stroke="#f2cc60" stroke-width="2" marker-end="url(#s2b)"></line>
+<text x="266" y="45" text-anchor="middle" fill="#f2cc60" font-family="JetBrains Mono, monospace" font-size="10.5">Despacho</text>
+<path d="M150,96 C150,125 30,125 20,68" fill="none" stroke="#5b9bd5" stroke-width="1.6" stroke-dasharray="3,3" marker-end="url(#s2c)"></path>
+<text x="90" y="138" text-anchor="middle" fill="#5b9bd5" font-family="JetBrains Mono, monospace" font-size="9.5">pedido según stock actual</text>
+</svg>
+</div>
+<div class="sandbox-chart">
+<canvas id="chart-s2" aria-label="Gráfico del inventario a lo largo de 60 días, con la línea del objetivo marcada"></canvas>
+</div>
+</div>
+<div class="controls una-col">
+<div class="control-row">
+<label>Tiempo de entrega del proveedor <span class="valor"><span id="s2-retraso-val">2</span> días</span></label>
+<input type="range" id="s2-retraso" min="0" max="12" step="1" value="2">
+</div>
+</div>
+<div class="readouts">
+<div class="readout"><div class="num" id="s2-diagnostico">—</div><div class="lbl">comportamiento del inventario</div></div>
+<div class="readout"><div class="num" id="s2-amplitud">—</div><div class="lbl">variación en los últimos 20 días</div></div>
+</div>
+</div>
+
+<div class="highlight">
+<strong>El almacén no ve el efecto de lo que ya pidió</strong>
+<p>Con retraso alto, el almacén sigue viendo el stock bajo <em>varios días después</em> de haber pedido más — porque ese pedido todavía no llegó. Como sigue viendo el problema, sigue pidiendo de más. Cuando todos esos pedidos acumulados llegan juntos, el stock se pasa del objetivo — y el ciclo se repite para el otro lado. Es exactamente la misma lógica que la ducha de tubería larga que ya viste, con números reales corriendo delante tuyo.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="retraso-mc1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Subí el retraso del sandbox de 2 a 10 días y compará. ¿Qué cambió, exactamente?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La fórmula del pedido cambió — con más retraso, el almacén deja de reaccionar al stock.</button>
+<button class="quiz-opt" data-correct>La fórmula del pedido es la misma; lo único distinto es cuánto tarda cada pedido en convertirse en reposición real. Ese solo cambio hace que el stock pase de corregirse suave a sobrepasar el objetivo y oscilar.</button>
+<button class="quiz-opt">El objetivo de inventario bajó, por eso el stock se comporta distinto.</button>
+<button class="quiz-opt">La demanda empezó a variar con el tiempo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el único slider de esta sección es el retraso. La política de pedido (pedido = demanda + agresividad × (objetivo−stock)) no cambió en absoluto — y aun así, el comportamiento del stock cambia radicalmente. El retraso, por sí solo, es capaz de convertir una corrección suave en oscilación." data-ko="Nada de eso cambió: la fórmula del pedido, el objetivo y la demanda quedaron fijos. El único parámetro que moviste fue el retraso — y ese cambio solo ya alcanza para pasar de una corrección suave a una oscilación." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="retraso-tf">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Un sistema con una política de control razonable (que reacciona en la dirección correcta) puede oscilar solo por tener un retraso alto entre la acción y su efecto, sin que la política en sí esté mal diseñada.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la política de pedido del sandbox reacciona en la dirección correcta (pide más cuando el stock está bajo). El problema no es la lógica de la política — es que, con retraso alto, actúa sobre información desactualizada. Eso alcanza para producir oscilación." data-ko="Es verdadero — y es exactamente lo que acabás de ver en el sandbox. La política de pedido nunca cambió y sigue siendo razonable; el retraso por sí solo es suficiente para producir oscilación." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="efecto-latigo">
+<div class="card">
+<h2 class="section-title">Bucle cerrado: reproducí el efecto látigo</h2>
+<p class="lead">Ahora tenés control total sobre la fórmula que antes estaba fija: además del retraso, podés ajustar la <strong>agresividad</strong> (qué tan fuerte reacciona el pedido a la diferencia entre stock y objetivo) y el <strong>objetivo</strong> de inventario. Con la combinación correcta, la oscilación deja de amortiguarse y empieza a <strong>crecer</strong> — el mismo efecto látigo que viste como ejemplo de cadena de suministro en la guía anterior, ahora generado por tus propios parámetros.</p>
+
+<div class="sandbox">
+<div class="sandbox-header">🎛️ Sandbox — bucle completo, todos los parámetros a tu control (90 días)</div>
+<div class="sandbox-grid">
+<div class="sandbox-diagram">
+<svg viewBox="0 0 320 150" role="img" aria-label="Diagrama con el bucle de realimentación completo: pedido = demanda + agresividad por la diferencia entre objetivo y stock, con retraso de entrega">
+<defs>
+<marker id="s3a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#9acd7b"></path></marker>
+<marker id="s3b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#f2cc60"></path></marker>
+<marker id="s3c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#ff9f6b"></path></marker>
+</defs>
+<text x="52" y="45" text-anchor="middle" fill="#9acd7b" font-family="JetBrains Mono, monospace" font-size="10.5">Reposición</text>
+<line x1="8" y1="60" x2="98" y2="60" stroke="#9acd7b" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#s3a)"></line>
+<rect x="102" y="25" width="116" height="70" rx="6" fill="#182233" stroke="#3a4658"></rect>
+<text x="160" y="55" text-anchor="middle" fill="#e6edf3" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600">INVENTARIO</text>
+<text x="160" y="72" text-anchor="middle" fill="#8b949e" font-family="JetBrains Mono, monospace" font-size="9.5">(stock)</text>
+<line x1="222" y1="60" x2="310" y2="60" stroke="#f2cc60" stroke-width="2" marker-end="url(#s3b)"></line>
+<text x="266" y="45" text-anchor="middle" fill="#f2cc60" font-family="JetBrains Mono, monospace" font-size="10.5">Despacho</text>
+<path d="M150,96 C150,132 20,132 20,68" fill="none" stroke="#ff9f6b" stroke-width="1.8" marker-end="url(#s3c)"></path>
+<text x="85" y="146" text-anchor="middle" fill="#ff9f6b" font-family="JetBrains Mono, monospace" font-size="9">pedido = demanda + agres.×(objetivo−stock)</text>
+</svg>
+</div>
+<div class="sandbox-chart">
+<canvas id="chart-s3" aria-label="Gráfico del inventario a lo largo de 90 días, con la línea del objetivo marcada"></canvas>
+</div>
+</div>
+<div class="controls">
+<div class="control-row">
+<label>Tiempo de entrega del proveedor <span class="valor"><span id="s3-retraso-val">3</span> días</span></label>
+<input type="range" id="s3-retraso" min="0" max="12" step="1" value="3">
+</div>
+<div class="control-row">
+<label>Agresividad del ajuste <span class="valor"><span id="s3-agresividad-val">0.30</span></span></label>
+<input type="range" id="s3-agresividad" min="0" max="1.5" step="0.05" value="0.3">
+</div>
+<div class="control-row">
+<label>Inventario objetivo <span class="valor"><span id="s3-objetivo-val">500</span> cajas</span></label>
+<input type="range" id="s3-objetivo" min="200" max="800" step="50" value="500">
+</div>
+</div>
+<div class="readouts">
+<div class="readout"><div class="num" id="s3-diagnostico">—</div><div class="lbl">comportamiento del inventario</div></div>
+<div class="readout"><div class="num" id="s3-amplitud">—</div><div class="lbl">variación en los últimos 25 días</div></div>
+</div>
+</div>
+
+<div class="highlight">
+<strong>Reto: hacé aparecer el efecto látigo</strong>
+<p>Subí el retraso y la agresividad al mismo tiempo hasta que el diagnóstico diga "creciente" — vas a ver que la oscilación deja de amortiguarse y cada vuelta es más grande que la anterior. Bajá cualquiera de los dos y va a volver a amortiguarse. En una cadena real, cada eslabón (minorista → mayorista → fábrica) agrega su propio retraso y su propia agresividad sobre una señal que ya viene distorsionada del eslabón anterior — por eso la oscilación se hace más grande mientras más lejos está el eslabón del consumidor final.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="latigo-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Con base en lo que probaste en el sandbox, clasificá cada combinación según el comportamiento más probable del inventario.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Retraso bajo (1 día) + agresividad baja (0.1).</span>
+<div class="quiz-classify-btns">
+<button data-correct>Se estabiliza rápido, casi sin oscilar</button>
+<button>Oscilación creciente</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Retraso alto (10 días) + agresividad alta (1.2).</span>
+<div class="quiz-classify-btns">
+<button>Se estabiliza rápido, casi sin oscilar</button>
+<button data-correct>Oscilación creciente</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Retraso alto (10 días) + agresividad baja (0.1).</span>
+<div class="quiz-classify-btns">
+<button>Oscilación creciente</button>
+<button data-correct>Oscila, pero se amortigua con el tiempo</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="latigo-mc1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En la guía anterior viste el efecto látigo descrito como "una oscilación cada vez más grande mientras más lejos está el eslabón del consumidor final". ¿Qué combinación de parámetros del sandbox produce justamente ese resultado?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Retraso alto por sí solo, sin importar la agresividad.</button>
+<button class="quiz-opt">Agresividad alta por sí solo, sin importar el retraso.</button>
+<button class="quiz-opt" data-correct>La combinación de retraso alto y agresividad alta: el retraso hace que el almacén reaccione sobre información vieja, y la agresividad alta amplifica esa reacción cada vez que corrige — juntos hacen que cada vuelta del bucle sea más grande que la anterior en vez de amortiguarse.</button>
+<button class="quiz-opt">Un objetivo de inventario muy alto, sin relación con retraso ni agresividad.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: ni el retraso ni la agresividad por separado alcanzan siempre para producir una oscilación creciente — es la combinación de ambos la que hace que la corrección llegue tarde (retraso) y además sea desproporcionada (agresividad), amplificando la desviación en cada vuelta." data-ko="El objetivo de inventario desplaza el nivel promedio, pero no es la causa de la oscilación creciente. Lo que produce el crecimiento es la combinación de retraso alto (información vieja) y agresividad alta (corrección desproporcionada) actuando juntos." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="repaso-stockflujo">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Es un stock (nivel acumulado) o un flujo (tasa de cambio)?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Temperatura actual de un cuarto frío.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Stock</button>
+<button>Flujo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cajas despachadas por día en el almacén.</span>
+<div class="quiz-classify-btns">
+<button>Stock</button>
+<button data-correct>Flujo</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="repaso-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada término con su definición dentro del modelo del almacén.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="retraso">Retraso</button>
+<button class="quiz-match-item" data-pair="agresividad">Agresividad</button>
+<button class="quiz-match-item" data-pair="objetivo">Objetivo de inventario</button>
+<button class="quiz-match-item" data-pair="latigo">Efecto látigo</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="retraso">Días entre que se coloca un pedido y llega como reposición real.</button>
+<button class="quiz-match-item" data-pair="agresividad">Qué tan fuerte reacciona el pedido a la diferencia entre stock actual y objetivo.</button>
+<button class="quiz-match-item" data-pair="objetivo">El nivel de stock que la política de reposición intenta mantener.</button>
+<button class="quiz-match-item" data-pair="latigo">Oscilación que crece en vez de amortiguarse, típica de retraso y agresividad altos combinados.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-mc1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Sin cambiar la política de reposición ni la demanda, ¿qué solo parámetro alcanza para convertir una corrección suave en oscilación?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El nombre de la empresa del caso.</button>
+<button class="quiz-opt" data-correct>El retraso entre colocar el pedido y que llegue como reposición real.</button>
+<button class="quiz-opt">El color de la línea en el gráfico.</button>
+<button class="quiz-opt">La cantidad de días que dura la simulación.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: lo viste en la sección de retraso — moviendo solo ese slider, con la misma fórmula de pedido, el comportamiento pasa de estable a oscilante." data-ko="La duración de la simulación y el color del gráfico no cambian el comportamiento del sistema. El parámetro que alcanza por sí solo para producir oscilación, con la política de pedido sin cambios, es el retraso." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-mc2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Un bucle de balance con retraso alto y agresividad alta puede volverse inestable (oscilación creciente) aunque cada una de sus reglas, vista por separado, parezca razonable.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: 'pedir más cuando falta stock' es una regla razonable, y 'reaccionar rápido' también lo parece en aislamiento. El problema aparece cuando ambas se combinan con un retraso alto — la inestabilidad es una propiedad del bucle completo, no de una regla individual mal diseñada." data-ko="Es verdadero: cada regla por separado (reponer cuando falta stock, reaccionar con fuerza) puede sonar razonable. La inestabilidad surge de la combinación —retraso alto más agresividad alta— no de que una sola regla esté mal pensada." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Ecuación del stock</td><td>Stock(hoy) = Stock(ayer) + entrada − salida. Solo cambia a través de sus flujos.</td></tr>
+<tr><td>Política de reposición</td><td>pedido = demanda + agresividad × (objetivo − stock).</td></tr>
+<tr><td>Retraso</td><td>Días entre colocar el pedido y que llegue como reposición real. Por sí solo puede producir oscilación.</td></tr>
+<tr><td>Agresividad</td><td>Qué tan fuerte corrige el pedido la diferencia entre stock y objetivo. Alta + retraso alto = inestabilidad.</td></tr>
+<tr><td>Oscilación amortiguada</td><td>Sobrepasa el objetivo, pero cada vuelta es más chica que la anterior — termina estabilizándose.</td></tr>
+<tr><td>Efecto látigo</td><td>Oscilación que crece en cada vuelta en vez de amortiguarse. Se amplifica en cada eslabón de una cadena real.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🏭 Nació observando fábricas reales</h3><p>Jay Forrester, ingeniero del MIT, fundó la Dinámica de Sistemas en los años 50 después de estudiar por qué las fábricas de General Electric tenían ciclos de contratación y despido que oscilaban mucho más de lo que explicaba la demanda real de sus productos.</p></div>
+<div class="info"><h3>🎲 Un juego que hace sentir el efecto látigo</h3><p>El MIT diseñó "The Beer Distribution Game": equipos que gestionan distintos eslabones de una cadena de suministro de cerveza, sin poder comunicarse entre sí. Casi siempre termina en oscilaciones enormes, aunque cada jugador tome decisiones razonables — la inestabilidad es del sistema, no de las personas.</p></div>
+<div class="info"><h3>🍼 El caso que le dio nombre</h3><p>Procter & Gamble notó que los pedidos de pañales que recibía de sus distribuidores fluctuaban muchísimo más que las compras reales de los consumidores finales, que son casi constantes. Ese caso fue el que popularizó el término "efecto látigo" (bullwhip effect) en cadenas de suministro.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Dinámica de Sistemas: Stocks, Flujos y Simulación</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===================================================================
+   Motor de simulación — Dinámica de Sistemas (específico de esta guía)
+   =================================================================== */
+
+/* pedido = reposicionFija, si se especifica (lazo abierto);
+   si no, pedido = demanda + k*(objetivo - stock) (bucle de balance) */
+function simularAlmacen({ dias, S0, demanda, reposicionFija, objetivo, k, retraso }) {
+  const S = [S0];
+  const O = [];
+  for (let t = 0; t <= dias; t++) {
+    const orden = (reposicionFija != null) ? reposicionFija : Math.max(0, demanda + k * (objetivo - S[t]));
+    O.push(orden);
+    if (t < dias) {
+      const idx = t - retraso;
+      const entrada = idx >= 0 ? O[idx] : orden;
+      const siguiente = Math.max(0, S[t] + entrada - demanda);
+      S.push(siguiente);
+    }
+  }
+  return { S, O };
+}
+
+/* Amplitud (máx-mín) de un tramo final de la serie, para diagnosticar el comportamiento */
+function amplitud(serie) {
+  return Math.max(...serie) - Math.min(...serie);
+}
+
+function diagnosticoOscilacion(serie) {
+  const n = serie.length;
+  if (n < 9) return "estable";
+  const t1 = serie.slice(0, Math.floor(n / 3));
+  const t3 = serie.slice(Math.floor((2 * n) / 3));
+  const amp1 = amplitud(t1);
+  const amp3 = amplitud(t3);
+  if (amp3 > 15 && amp3 > amp1 * 1.3) return "creciente";
+  if (amp3 < 8) return "estable";
+  return "amortiguada";
+}
+
+function dibujarSerie(canvas, serie, objetivo) {
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth || 400, cssH = canvas.clientHeight || 210;
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  const pad = { l: 42, r: 12, t: 12, b: 20 };
+  const w = cssW - pad.l - pad.r, h = cssH - pad.t - pad.b;
+  const dias = serie.length - 1;
+  const valores = objetivo != null ? [...serie, objetivo] : serie;
+  const max = Math.max(...valores);
+  const min = Math.min(...valores, 0);
+  const rango = (max - min) || 1;
+  const x = i => pad.l + (i / dias) * w;
+  const y = v => pad.t + h - ((v - min) / rango) * h;
+
+  ctx.strokeStyle = "rgba(255,255,255,.08)";
+  ctx.fillStyle = "#8b949e";
+  ctx.font = "10.5px 'JetBrains Mono', monospace";
+  for (let i = 0; i <= 4; i++) {
+    const v = min + (rango * i) / 4;
+    const yy = y(v);
+    ctx.beginPath();
+    ctx.moveTo(pad.l, yy);
+    ctx.lineTo(pad.l + w, yy);
+    ctx.stroke();
+    ctx.fillText(Math.round(v), 2, yy + 3);
+  }
+
+  if (objetivo != null) {
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = "#ffd43b";
+    ctx.beginPath();
+    ctx.moveTo(pad.l, y(objetivo));
+    ctx.lineTo(pad.l + w, y(objetivo));
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  ctx.strokeStyle = "#78b159";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  serie.forEach((v, i) => {
+    const px = x(i), py = y(v);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  });
+  ctx.stroke();
+
+  ctx.fillStyle = "#8b949e";
+  const paso = Math.max(1, Math.round(dias / 6));
+  for (let d = 0; d <= dias; d += paso) ctx.fillText(d + "d", x(d) - 8, cssH - 5);
+}
+
+/* ---- Sandbox 1: stock y flujo sin control (lazo abierto) ---- */
+const s1repo = document.getElementById("s1-reposicion");
+const s1desp = document.getElementById("s1-despacho");
+function actualizarSandbox1() {
+  const reposicion = +s1repo.value;
+  const despacho = +s1desp.value;
+  document.getElementById("s1-reposicion-val").textContent = reposicion;
+  document.getElementById("s1-despacho-val").textContent = despacho;
+  const { S } = simularAlmacen({ dias: 30, S0: 300, demanda: despacho, reposicionFija: reposicion, objetivo: null, k: 0, retraso: 0 });
+  dibujarSerie(document.getElementById("chart-s1"), S, null);
+  const final = S[S.length - 1];
+  const quiebre = S.some(v => v === 0);
+  const finalEl = document.getElementById("s1-final");
+  finalEl.textContent = Math.round(final) + " cajas";
+  finalEl.classList.toggle("alerta", quiebre);
+  document.getElementById("s1-estado").textContent = quiebre ? "Quiebre de stock" : (reposicion > despacho ? "Acumulando" : reposicion < despacho ? "Vaciándose" : "Estable");
+}
+s1repo.addEventListener("input", actualizarSandbox1);
+s1desp.addEventListener("input", actualizarSandbox1);
+
+/* ---- Sandbox 2: bucle de balance con retraso (agresividad y objetivo fijos) ---- */
+const s2retraso = document.getElementById("s2-retraso");
+function actualizarSandbox2() {
+  const retraso = +s2retraso.value;
+  document.getElementById("s2-retraso-val").textContent = retraso;
+  document.getElementById("s2-lbl-retraso").textContent = retraso;
+  const { S } = simularAlmacen({ dias: 60, S0: 300, demanda: 200, reposicionFija: null, objetivo: 500, k: 0.12, retraso });
+  dibujarSerie(document.getElementById("chart-s2"), S, 500);
+  document.getElementById("s2-diagnostico").textContent = diagnosticoOscilacion(S);
+  document.getElementById("s2-amplitud").textContent = Math.round(amplitud(S.slice(-20))) + " cajas";
+}
+s2retraso.addEventListener("input", actualizarSandbox2);
+
+/* ---- Sandbox 3: bucle completo, todos los parámetros ---- */
+const s3retraso = document.getElementById("s3-retraso");
+const s3agres = document.getElementById("s3-agresividad");
+const s3obj = document.getElementById("s3-objetivo");
+function actualizarSandbox3() {
+  const retraso = +s3retraso.value;
+  const k = +s3agres.value;
+  const objetivo = +s3obj.value;
+  document.getElementById("s3-retraso-val").textContent = retraso;
+  document.getElementById("s3-agresividad-val").textContent = k.toFixed(2);
+  document.getElementById("s3-objetivo-val").textContent = objetivo;
+  const { S } = simularAlmacen({ dias: 90, S0: 300, demanda: 200, reposicionFija: null, objetivo, k, retraso });
+  dibujarSerie(document.getElementById("chart-s3"), S, objetivo);
+  const diag = diagnosticoOscilacion(S);
+  const diagEl = document.getElementById("s3-diagnostico");
+  diagEl.textContent = diag;
+  diagEl.classList.toggle("alerta", diag === "creciente");
+  document.getElementById("s3-amplitud").textContent = Math.round(amplitud(S.slice(-25))) + " cajas";
+}
+s3retraso.addEventListener("input", actualizarSandbox3);
+s3agres.addEventListener("input", actualizarSandbox3);
+s3obj.addEventListener("input", actualizarSandbox3);
+
+/* Dibujo inicial y recálculo al cambiar el tamaño de ventana */
+actualizarSandbox1();
+actualizarSandbox2();
+actualizarSandbox3();
+window.addEventListener("resize", () => {
+  actualizarSandbox1();
+  actualizarSandbox2();
+  actualizarSandbox3();
+});
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
