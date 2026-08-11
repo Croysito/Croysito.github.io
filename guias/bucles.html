@@ -499,7 +499,7 @@ function highlightPython(code){
   out = out.replace(/\b\d+\.?\d*\b/g, m => mask(`<span class="number">${m}</span>`));
   out = out.replace(new RegExp(`\\b(${PY_KEYWORDS.join("|")})\\b`, "g"), m => mask(`<span class="keyword">${m}</span>`));
   out = out.replace(/\b([A-Za-z_]\w*)(?=\()/g, m => mask(`<span class="func">${m}</span>`));
-  out = out.replace(/[-]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
+  out = out.replace(/[\uE000-\uF8FF]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
   return out;
 }
 

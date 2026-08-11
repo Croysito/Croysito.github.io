@@ -41,9 +41,9 @@ body{
   transition:background .25s,color .25s;
 }
 a{ text-decoration:none; color:inherit; }
-code{ font-family:'JetBrains Mono',monospace; background:var(--grisClaro); padding:2px 6px; border-radius:4px; font-size:.92em; }
+code{ font-family:'JetBrains Mono',monospace; background:var(--grisClaro); padding:2px 6px; border-radius:4px; font-size:.92em; font-variant-ligatures:none; -webkit-font-feature-settings:"liga" 0,"calt" 0; font-feature-settings:"liga" 0,"calt" 0; }
 pre code{ background:none; padding:0; border-radius:0; font-size:inherit; }
-pre{ font-family:'JetBrains Mono',monospace; }
+pre{ font-family:'JetBrains Mono',monospace; font-variant-ligatures:none; -webkit-font-feature-settings:"liga" 0,"calt" 0; font-feature-settings:"liga" 0,"calt" 0; }
 img{ max-width:100%; }
 
 /* SIDEBAR */
@@ -146,7 +146,8 @@ img{ max-width:100%; }
 .editor{
   width:100%; min-height:110px; background:var(--codigo); color:#e6edf3; border:none;
   padding:25px; font-family:'JetBrains Mono',monospace; font-size:15px; line-height:1.7;
-  resize:vertical; display:block;
+  resize:vertical; display:block; font-variant-ligatures:none;
+  -webkit-font-feature-settings:"liga" 0,"calt" 0; font-feature-settings:"liga" 0,"calt" 0;
 }
 .editor::placeholder{ color:#5b6472; font-style:italic; }
 .editor:focus{ outline:2px solid var(--verde); outline-offset:-2px; }
@@ -154,7 +155,7 @@ img{ max-width:100%; }
 .output{ border-top:1px solid rgba(255,255,255,.12); }
 .output-head{ padding:10px 20px; background:#010409; color:#8fd48a; font-size:12px; letter-spacing:.5px; text-transform:uppercase; }
 .output.error .output-head{ color:#ff8a8a; }
-.output-body{ padding:20px 25px; margin:0; color:#e6edf3; font-family:'JetBrains Mono',monospace; font-size:14px; white-space:pre-wrap; word-break:break-word; }
+.output-body{ padding:20px 25px; margin:0; color:#e6edf3; font-family:'JetBrains Mono',monospace; font-size:14px; white-space:pre-wrap; word-break:break-word; font-variant-ligatures:none; -webkit-font-feature-settings:"liga" 0,"calt" 0; font-feature-settings:"liga" 0,"calt" 0; }
 .output.error .output-body{ color:#ffb4b4; }
 
 .string{ color:#a5d6ff; }
