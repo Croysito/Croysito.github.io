@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller de Repaso: De Variables a Bucles en Python | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* Bloqueo de copiar/pegar en los editores: flash de aviso + toast global.
+   Mismo patrón que los talleres de Base de Datos II (ver taller-ddl.html / taller-dml.html). */
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>Taller</span></div>
+<p>Repaso integrador: de variables a bucles</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#zona-pruebas">Zona de pruebas libres</a>
+<a href="#aritmetica">1. Aritmética y entrada de datos</a>
+<a href="#cadenas">2. Cadenas de texto</a>
+<a href="#numeros-bucles">3. Números con bucles</a>
+<a href="#listas">4. Recorrer listas</a>
+<a href="#reto">Reto final</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Taller de Repaso</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>De Variables a Bucles: <span>Taller Integrador</span></h1>
+<p>Ya viste variables, <code>print()</code>, cadenas, <code>input()</code>, tipos de datos, condicionales y bucles como temas separados. Este taller no enseña nada nuevo: te da <strong>16 problemas cortos más un reto final</strong>, muchos de ellos adaptados del <a href="https://sites.google.com/uab.edu.bo/ii-competencia-programacionuab/banco-de-preguntas/inicial" target="_blank" rel="noopener">banco de preguntas de la Competencia de Programación de la UAB</a>, para que combines todo lo que ya sabes resolviendo problemas de verdad.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Este taller es la práctica integradora de todo lo visto hasta ahora: <a href="variables.html">Variables</a>, <a href="print.html">print()</a>, <a href="string.html">String</a>, <a href="input.html">input()</a>, <a href="tipos-datos.html">Tipos de Datos</a>, <a href="condicionales.html">Condicionales</a> y <a href="bucles.html">Bucles</a>. No repite la teoría de ninguna de esas guías — si algo no te suena, es el momento de volver a repasarla antes de seguir.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Este taller asume que ya completaste las siete guías anteriores de POO. Ningún ejercicio usa nada que no se haya explicado ahí — ni listas indexadas (<code>lista[0]</code>), ni métodos como <code>.append()</code>, ni funciones propias: eso todavía no lo viste, y llega en la próxima guía.</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Cada ejercicio trae un editor <strong>vacío</strong>: el enunciado te dice qué tenés que lograr, y vos escribís el código Python de cero. Presiona <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador con Pyodide (Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete.</p>
+</div>
+<div class="highlight">
+<strong>✋ Se escribe a mano</strong>
+<p>En este taller, copiar y pegar código en los editores está deshabilitado (incluido arrastrar y soltar). La idea es que practiques escribiendo la sintaxis vos mismo, no que la traigas de otro lado.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🧩 Integrador</h3><p>Cada bloque de ejercicios mezcla temas de más de una guía anterior.</p></div>
+<div class="info"><h3>🏆 Con banco real</h3><p>Varios problemas están adaptados del banco de la Competencia de Programación UAB.</p></div>
+<div class="info"><h3>🎯 Reto final</h3><p>Un problema más largo que combina todo, al estilo de un ejercicio de examen.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Este bloque queda disponible durante todo el taller. Usalo en cualquier momento para probar una idea suelta, revisar cómo se comporta una instrucción, o experimentar algo que se te ocurra a mitad de un ejercicio — sin desordenar los bloques numerados.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🧪 Escribe cualquier código Python</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu código">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Zona de pruebas libres" placeholder="# Por ejemplo: print(2 ** 10)"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="aritmetica">
+<div class="card">
+<h2 class="section-title">1. Aritmética y entrada de datos</h2>
+<p class="lead">Tres problemas que combinan <code>input()</code>, conversión de tipos y operadores aritméticos (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>//</code>, <code>%</code>).</p>
+
+<div class="highlight">
+<strong>Enunciado — 1.1: Celsius a Fahrenheit</strong>
+<p>Pide al usuario una temperatura en grados Celsius con <code>input()</code>, conviértela a <code>float</code>, y calcula la temperatura equivalente en Fahrenheit con la fórmula <code>F = C * 9 / 5 + 32</code>. Imprime el resultado con 2 decimales (usa <code>round()</code> o un f-string con <code>:.2f</code>).</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 1.1 — Celsius a Fahrenheit</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: Celsius a Fahrenheit" placeholder="# Pide la temperatura en Celsius, conviértela a Fahrenheit
+# e imprime el resultado con 2 decimales."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.2: Duración en milisegundos</strong>
+<p>Pide al usuario, con tres <code>input()</code> separados, cuántas horas, minutos y segundos duró algo (enteros). Calcula e imprime la duración total en milisegundos, sabiendo que 1 hora = 3.600.000 ms, 1 minuto = 60.000 ms y 1 segundo = 1.000 ms.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 1.2 — Duración en milisegundos</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: duración en milisegundos" placeholder="# Pide horas, minutos y segundos por separado
+# e imprime el total en milisegundos."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.3: Invertir un número de dos cifras</strong>
+<p>Pide un número entero de dos cifras (por ejemplo, <code>23</code>) y calcula el número con las cifras invertidas (<code>32</code>) usando solo operadores aritméticos — <code>//</code> y <code>%</code> — <strong>sin convertirlo a texto</strong>. Pista: la cifra de las unidades es <code>numero % 10</code>, y la de las decenas es <code>numero // 10</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 1.3 — Invertir un número de dos cifras</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: invertir número de dos cifras" placeholder="# Pide un número de dos cifras y muestra sus cifras invertidas
+# usando // y %, sin convertir a texto."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="cadenas">
+<div class="card">
+<h2 class="section-title">2. Cadenas de texto</h2>
+<p class="lead">Cinco problemas sobre <code>str</code>: indexado, slicing, <code>in</code>, y algunos de los métodos que ya conoces de la guía de String.</p>
+
+<div class="highlight">
+<strong>Enunciado — 2.1: ¿Contiene la letra?</strong>
+<p>Pide una palabra y luego una sola letra. Usa el operador <code>in</code> para imprimir si esa letra aparece o no dentro de la palabra.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.1 — ¿Contiene la letra?</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: contiene la letra" placeholder="# Pide una palabra y una letra, e imprime si la letra
+# aparece en la palabra usando el operador in."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.2: Invertir una cadena</strong>
+<p>Pide una palabra e imprímela invertida, usando slicing con paso negativo (<code>[::-1]</code>) — sin bucles.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.2 — Invertir una cadena</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: invertir cadena" placeholder="# Pide una palabra e imprímela invertida con [::-1]."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.3: Contar vocales</strong>
+<p>Pide una frase. Recorre cada carácter con un <code>for</code> y cuenta cuántas vocales tiene en total (a, e, i, o, u — usa <code>.lower()</code> para que no importen las mayúsculas). Imprime el total.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.3 — Contar vocales</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: contar vocales" placeholder="# Pide una frase, recórrela con for y cuenta las vocales."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.4: ¿Es palíndromo?</strong>
+<p>Pide una palabra y di si es palíndroma (se lee igual al derecho y al revés, como "reconocer"). Usa <code>.lower()</code> para ignorar mayúsculas y compárala con su versión invertida.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.4 — ¿Es palíndromo?</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: es palíndromo" placeholder="# Pide una palabra y compárala con su versión invertida."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.5: Contar palabras de una frase</strong>
+<p>Pide una frase e imprime cuántas palabras tiene, usando <code>.split()</code> (que separa por espacios y devuelve una lista) junto con <code>len()</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.5 — Contar palabras</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: contar palabras" placeholder="# Pide una frase e imprime cuántas palabras tiene con .split() y len()."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="numeros-bucles">
+<div class="card">
+<h2 class="section-title">3. Números con bucles</h2>
+<p class="lead">Cuatro clásicos que necesitan repetir instrucciones con <code>while</code> o <code>for</code>: no hay forma corta sin un bucle.</p>
+
+<div class="highlight">
+<strong>Enunciado — 3.1: Contar dígitos de un número</strong>
+<p>Pide un entero positivo y cuenta cuántos dígitos tiene, usando un <code>while</code> que lo vaya dividiendo entre 10 con <code>//</code> hasta llegar a 0.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 3.1 — Contar dígitos</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: contar dígitos" placeholder="# Pide un entero positivo y cuenta sus dígitos con while y //."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.2: Factorial</strong>
+<p>Pide un entero <code>n</code> (mayor o igual a 0) y calcula su factorial (<code>n! = n × (n-1) × ... × 1</code>, y <code>0! = 1</code>) usando un <code>for</code> con <code>range()</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 3.2 — Factorial</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: factorial" placeholder="# Pide n y calcula n! con un for y range()."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.3: ¿Es número primo?</strong>
+<p>Pide un entero mayor a 1 y di si es primo. Recorre con un <code>for</code> los posibles divisores entre 2 y <code>numero - 1</code>: si alguno divide exacto (<code>%</code> igual a 0), no es primo — puedes cortar el bucle con <code>break</code> apenas lo encuentres.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 3.3 — ¿Es primo?</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: es primo" placeholder="# Pide un entero mayor a 1 y di si es primo, con for + break."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.4: Primeros términos de Fibonacci</strong>
+<p>Pide cuántos términos <code>n</code> quiere ver el usuario, e imprime los primeros <code>n</code> términos de la sucesión de Fibonacci (cada término es la suma de los dos anteriores: <code>0, 1, 1, 2, 3, 5, 8, 13, ...</code>). Usa dos variables para llevar "el actual" y "el siguiente", y actualízalas dentro de un bucle.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 3.4 — Fibonacci</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: Fibonacci" placeholder="# Pide n e imprime los primeros n términos de Fibonacci."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="listas">
+<div class="card">
+<h2 class="section-title">4. Recorrer listas</h2>
+<p class="lead">En la guía de Tipos de Datos viste <code>list</code> solo como un tipo más, y en Bucles aprendiste a recorrer una con <code>for elemento in lista</code>. Todavía no viste indexado (<code>lista[0]</code>) ni métodos como <code>.append()</code> — no los necesitas para nada de esta sección: alcanza con recorrer y acumular.</p>
+
+<div class="highlight">
+<strong>Enunciado — 4.1: Suma de los números pares</strong>
+<p>Escribe en el editor la lista <code>numeros = [4, 7, 10, 15, 22, 3, 8]</code> y, con un <code>for</code>, suma solo los elementos pares. Imprime el total.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 4.1 — Suma de los pares</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: suma de los pares" placeholder="# Escribe la lista numeros = [4, 7, 10, 15, 22, 3, 8]
+# y suma solo los elementos pares con un for."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.2: El mayor de la lista</strong>
+<p>Con la lista <code>edades = [19, 23, 18, 31, 22, 27]</code>, encuentra el valor más grande recorriéndola con un <code>for</code> — <strong>sin usar la función <code>max()</code></strong>. Pista: guarda el primer elemento como "el mayor hasta ahora" y compáralo con cada elemento siguiente.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 4.2 — El mayor de la lista</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: el mayor de la lista" placeholder="# Escribe la lista edades = [19, 23, 18, 31, 22, 27]
+# y encuentra el mayor sin usar max()."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.3: Contar positivos</strong>
+<p>Con la lista <code>valores = [5, -3, 8, -1, 0, 12, -7]</code>, cuenta cuántos elementos son estrictamente positivos (mayores a 0) e imprime el total.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 4.3 — Contar positivos</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: contar positivos" placeholder="# Escribe la lista valores = [5, -3, 8, -1, 0, 12, -7]
+# y cuenta cuántos son positivos."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.4: Producto de todos los elementos</strong>
+<p>Con la lista <code>factores = [2, 3, 4, 5]</code>, calcula el producto de todos sus elementos (2 × 3 × 4 × 5) recorriéndola con un <code>for</code> y acumulando en una variable que empieza en 1 (no en 0 — piensa por qué).</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 4.4 — Producto de todos los elementos</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: producto de elementos" placeholder="# Escribe la lista factores = [2, 3, 4, 5]
+# y calcula el producto de todos sus elementos."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="reto">
+<div class="card">
+<h2 class="section-title">Reto final: Boletín de notas del curso</h2>
+<p class="lead">Un solo problema que combina todo lo practicado en este taller: listas, bucles, condicionales, acumuladores y f-strings.</p>
+<div class="highlight">
+<strong>Datos de partida</strong>
+<p>Escribe en el editor esta lista (notas sobre 20, aprobado desde 11): <code>notas = [15, 8, 20, 3, 12, 18, 6, 10, 19, 2]</code></p>
+</div>
+<div class="highlight">
+<strong>Requisitos</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><strong>1.</strong> Con un <code>for</code>, calcula el <strong>promedio</strong> del curso (suma de todas las notas dividida entre la cantidad — usa <code>len()</code> para la cantidad). Imprímelo con 2 decimales.</li>
+<li><strong>2.</strong> En el mismo recorrido (o en otro), cuenta cuántos estudiantes <strong>aprobaron</strong> (nota mayor o igual a 11) y cuántos <strong>reprobaron</strong>. Imprime ambos totales.</li>
+<li><strong>3.</strong> Sin usar <code>max()</code> ni <code>min()</code>, encuentra la <strong>nota más alta</strong> y la <strong>nota más baja</strong> del curso. Imprímelas.</li>
+<li><strong>4.</strong> Según el promedio que calculaste en el punto 1, imprime un mensaje con <code>if</code>/<code>elif</code>/<code>else</code>: <em>"Buen rendimiento general"</em> si el promedio es mayor o igual a 14, <em>"Rendimiento regular"</em> si está entre 11 y 14, o <em>"Rendimiento bajo"</em> si es menor a 11.</li>
+</ul>
+</div>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>🏆 Resuelve aquí el reto</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu solución al reto final" placeholder="# notas = [15, 8, 20, 3, 12, 18, 6, 10, 19, 2]
+# 1. Promedio del curso (2 decimales).
+# 2. Cantidad de aprobados y reprobados (nota >= 11).
+# 3. Nota más alta y más baja, sin max() ni min().
+# 4. Mensaje según el promedio, con if/elif/else."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet del taller</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Herramienta</th><th scope="col">Para qué la usaste hoy</th></tr></thead>
+<tbody>
+<tr><td><code>int(input(...))</code> / <code>float(input(...))</code></td><td>Leer y convertir datos del usuario.</td></tr>
+<tr><td><code>//</code> y <code>%</code></td><td>División entera y resto, para separar cifras sin convertir a texto.</td></tr>
+<tr><td><code>round(x, 2)</code> / <code>f"{x:.2f}"</code></td><td>Mostrar decimales redondeados.</td></tr>
+<tr><td><code>cadena[::-1]</code></td><td>Invertir una cadena con slicing.</td></tr>
+<tr><td><code>in</code></td><td>Comprobar si un carácter o valor está dentro de otro.</td></tr>
+<tr><td><code>.lower()</code> / <code>.split()</code> / <code>len()</code></td><td>Normalizar texto, separar palabras y contar.</td></tr>
+<tr><td><code>while</code> con <code>//</code></td><td>Repetir mientras un número siga teniendo cifras.</td></tr>
+<tr><td><code>for i in range(...)</code> + <code>break</code></td><td>Recorrer un rango y cortar apenas se cumple una condición.</td></tr>
+<tr><td><code>for elemento in lista</code></td><td>Recorrer una lista sin necesitar índices.</td></tr>
+<tr><td>Acumulador (<code>suma = 0</code>, <code>producto = 1</code>)</td><td>Ir sumando o multiplicando dentro de un bucle.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🏆 De dónde salieron estos problemas</h3><p>Varios ejercicios de este taller están inspirados en el <a href="https://sites.google.com/uab.edu.bo/ii-competencia-programacionuab/banco-de-preguntas/inicial" target="_blank" rel="noopener">banco de preguntas de nivel inicial de la Competencia de Programación UAB</a> — vale la pena revisarlo si te gustó resolver este tipo de problemas.</p></div>
+<div class="info"><h3>🔢 El factorial crece muy rápido</h3><p><code>20!</code> ya es un número de 19 cifras. Python maneja enteros de tamaño arbitrario sin desbordarse, algo que muchos otros lenguajes no hacen sin ayuda extra.</p></div>
+<div class="info"><h3>🐢 ¿Por qué probar hasta n-1 para primos?</h3><p>El ejercicio 3.3 revisa todos los divisores posibles, pero en realidad alcanza con probar hasta la raíz cuadrada de <code>n</code>: si no encontró ningún divisor hasta ahí, tampoco va a encontrar uno más grande. Es una optimización que vas a poder aplicar cuando veas funciones matemáticas más adelante.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller de Repaso: De Variables a Bucles en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Pyodide (Python real en el navegador), carga perezosa ===== */
+let pyodideReadyPromise = null;
+function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      const pyodide = await window.loadPyodide();
+      await pyodide.runPythonAsync(`
+import sys, io, builtins
+from js import prompt as __js_prompt
+
+def __run_capture(src):
+    buf = io.StringIO()
+    old_stdout = sys.stdout
+    old_input = builtins.input
+    sys.stdout = buf
+
+    def __custom_input(mensaje=""):
+        respuesta = __js_prompt(str(mensaje))
+        if respuesta is None:
+            raise EOFError("Entrada cancelada por el usuario")
+        print(mensaje, end="")
+        print(respuesta)
+        return respuesta
+
+    builtins.input = __custom_input
+    err = None
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.stdout = old_stdout
+        builtins.input = old_input
+    return buf.getvalue(), err
+`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+async function ejecutarPython(codigo){
+  const pyodide = await cargarPyodide();
+  const funcion = pyodide.globals.get("__run_capture");
+  const resultado = funcion(codigo);
+  const [salida, error] = resultado.toJs();
+  resultado.destroy();
+  return { salida, error };
+}
+
+/* ===== Toast de aviso al bloquear copiar/pegar en los editores ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  if (!clipboardToast) return;
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
+/* ===== Conectar un panel de editor (bloqueado a copiar/pegar, ejecuta código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En este taller el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  ["copy", "cut", "paste", "drop"].forEach(evt => {
+    textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); });
+  });
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart;
+      const fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (teclaCtrl && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      avisarBloqueo();
+    }
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    try {
+      const { salida, error } = await ejecutarPython(codigo);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el intérprete de Python: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+document.querySelectorAll(".editor-panel").forEach(conectarEditor);
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
