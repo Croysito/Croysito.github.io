@@ -98,6 +98,7 @@ Detalles del patrón (ver `taller-ddl.html`): una única instancia de `PGlite` c
 | 1 | DDL y restricciones en PostgreSQL (`ddl-postgresql.html`) | ✅ Publicada (2026-07-23) |
 | 1-taller | Taller de laboratorio de DDL con SQL en vivo (`taller-ddl.html`) | ✅ Publicada (2026-08-05) |
 | 2 | DML (INSERT/UPDATE/DELETE) + SELECT básico (WHERE/ORDER BY/LIMIT) (`dml.html`) | ✅ Publicada (2026-08-05) |
+| 2-taller | Taller de laboratorio de DML y SELECT básico con SQL en vivo (`taller-dml.html`) | ✅ Publicada (2026-08-11) |
 | 3 | JOINs (todos los tipos) + Subconsultas | ⏭️ **Siguiente a crear** |
 | 4 | Agregación (GROUP BY/HAVING) + Vistas | Pendiente |
 | 5 | Funciones de ventana + Índices y EXPLAIN | Pendiente |

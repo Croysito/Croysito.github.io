@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller: DML y SELECT en Vivo — PostgreSQL Real en tu Navegador | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* Estilos propios de este taller: tabla de resultados y barra de la base de datos, con la
+   misma estética "consola oscura" que ya usa .output-body en guia.css. No toca el CSS compartido. */
+.sql-result-table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+.sql-result-table th,.sql-result-table td{ padding:8px 10px; text-align:left; border:1px solid rgba(255,255,255,.15); }
+.sql-result-table thead th{ background:rgba(255,255,255,.08); color:#8fd48a; }
+.sql-result-table td em{ color:#7d8899; font-style:italic; }
+.sql-status{ margin:4px 0 10px; color:#8fd48a; }
+.sql-meta{ margin:0 0 10px; color:#7d8899; font-size:12px; }
+.db-toolbar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:18px 0 8px; padding:16px 20px; background:var(--highlightBg); border-left:6px solid var(--verde); border-radius:8px; }
+.db-toolbar button{ background:var(--verde); color:white; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:14px; }
+.db-toolbar button:hover{ background:var(--verde2); }
+.db-toolbar button:disabled{ opacity:.5; cursor:wait; }
+.db-toolbar button.secundario{ background:transparent; color:var(--verde); border:2px solid var(--verde); }
+.db-estado{ font-size:14px; opacity:.85; }
+
+/* Bloqueo de copiar/pegar en los editores: flash de aviso + toast global */
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>Taller DML</span></div>
+<p>SQL en vivo con PostgreSQL real</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#zona-pruebas">Zona de pruebas libres</a>
+<a href="#preparar">Prepara tu base de datos</a>
+<a href="#insert-vivo">1. INSERT: carga tus datos</a>
+<a href="#update-vivo">2. UPDATE con cuidado</a>
+<a href="#delete-vivo">3. DELETE, RESTRICT y CASCADE</a>
+<a href="#select-vivo">4. SELECT básico y alias</a>
+<a href="#where-vivo">5. WHERE en profundidad</a>
+<a href="#orden-limite-vivo">6. ORDER BY y LIMIT</a>
+<a href="#reto">Reto final</a>
+<a href="#repaso">Repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Taller de Laboratorio</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>DML en Vivo: INSERT, UPDATE, DELETE y <span>SELECT</span> Real</h1>
+<p>Otra vez PostgreSQL de verdad, compilado a WebAssembly, corriendo enteramente en tu navegador. Esta vez no vas a crear tablas: vas a <strong>llenarlas, modificarlas, borrar con cuidado y sobre todo consultarlas</strong> — viendo en vivo qué filas exactas selecciona cada WHERE antes de confiar en él.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Este taller es la práctica de laboratorio de <strong>DML y SELECT básico en PostgreSQL</strong>. No vuelve a explicar la teoría desde cero —asume que ya la viste— y en cambio te da un PostgreSQL real para insertar, actualizar, borrar y consultar datos, viendo exactamente lo que responde el motor.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Si todavía no viste la teoría, repasa primero <a href="dml.html">DML y SELECT básico en PostgreSQL</a> antes de continuar. Este taller reconstruye el mismo esquema (CLIENTE, PRODUCTO, PEDIDO, DETALLE_PEDIDO) de la guía de DDL y lo va llenando con datos a medida que avanzas.</p>
+</div>
+<div class="highlight">
+<strong>⚠️ Todo vive en la memoria de esta pestaña</strong>
+<p>Esta página corre su <strong>propia</strong> base de datos, independiente de cualquier otro taller que hayas abierto antes. Existe solo mientras esta pestaña siga abierta: si <strong>recargas la página, la cierras, o navegas a otra guía, se pierde todo</strong> y hay que empezar de nuevo desde "Prepara tu base de datos". Si te equivocás y querés reiniciar sin recargar, usa el botón "Reiniciar base de datos" de abajo.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>✍️ Lo escribís vos</h3><p>Cada bloque parte vacío. El enunciado te dice qué tenés que lograr — el código SQL lo escribís de cero.</p></div>
+<div class="info"><h3>🩻 Errores reales</h3><p>Los mensajes de error que vas a ver son exactamente los que da PostgreSQL en producción.</p></div>
+<div class="info"><h3>🧩 Progresivo</h3><p>Los datos que insertes en la sección 1 son los que vas a actualizar, borrar y consultar en el resto de la guía.</p></div>
+</div>
+
+<div class="db-toolbar">
+<button type="button" id="resetDbBtn">🔄 Reiniciar base de datos</button>
+<span class="db-estado" id="dbEstado">La base de datos está vacía. Baja a "Prepara tu base de datos" para empezar.</span>
+</div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Este bloque queda disponible durante toda la guía. Usalo en cualquier momento para probar una idea propia, revisar el estado de una tabla con <code>SELECT * FROM tabla;</code>, o experimentar con algo que se te ocurra a mitad de un ejercicio — sin desordenar los bloques guiados.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🧪 Escribe cualquier sentencia SQL</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Zona de pruebas libres" placeholder="Por ejemplo: SELECT * FROM producto;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="preparar">
+<div class="card">
+<h2 class="section-title">Prepara tu base de datos</h2>
+<p class="lead">Este bloque <strong>no es un ejercicio</strong> — ya viene resuelto. Reconstruye las cuatro tablas de la guía de DDL y las deja pobladas con un catálogo inicial de clientes y productos, para que el resto del taller tenga datos reales sobre los cuales trabajar. Ejecútalo tal cual, una sola vez, antes de seguir.</p>
+<div class="highlight">
+<strong>Qué hace este bloque</strong>
+<p>Crea <code>cliente</code>, <code>producto</code>, <code>pedido</code> y <code>detalle_pedido</code> con las mismas restricciones y claves foráneas de la guía de DDL, e inserta 5 clientes y 7 productos (uno de ellos, "Webcam HD", ya inactivo). Las tablas <code>pedido</code> y <code>detalle_pedido</code> quedan vacías a propósito: vas a llenarlas vos en la sección siguiente.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🏗️ Ejecuta esta preparación tal cual</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:340px" aria-label="Script de preparación de la base de datos">CREATE TABLE IF NOT EXISTS cliente (
+    cliente_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cliente_nombre VARCHAR(120) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS producto (
+    producto_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    producto_nombre VARCHAR(120) NOT NULL,
+    precio NUMERIC(10,2) NOT NULL CHECK (precio > 0),
+    activo BOOLEAN NOT NULL DEFAULT true
+);
+
+CREATE TABLE IF NOT EXISTS pedido (
+    pedido_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+    cliente_id INTEGER NOT NULL REFERENCES cliente(cliente_id)
+);
+
+CREATE TABLE IF NOT EXISTS detalle_pedido (
+    pedido_id INTEGER REFERENCES pedido(pedido_id) ON DELETE CASCADE,
+    producto_id INTEGER REFERENCES producto(producto_id) ON DELETE RESTRICT,
+    cantidad INTEGER NOT NULL CHECK (cantidad > 0),
+    PRIMARY KEY (pedido_id, producto_id)
+);
+
+INSERT INTO cliente (cliente_nombre) VALUES
+    ('Ana Gutiérrez'),
+    ('Marco Flores'),
+    ('Lucía Paredes'),
+    ('Diego Rojas'),
+    ('Valeria Suárez');
+
+INSERT INTO producto (producto_nombre, precio, activo) VALUES
+    ('Teclado mecánico', 250.00, true),
+    ('Mouse inalámbrico', 90.00, true),
+    ('Monitor 24"', 620.00, true),
+    ('Silla ergonómica', 890.00, true),
+    ('Cable HDMI', 35.00, true),
+    ('Webcam HD', 180.00, false),
+    ('Auriculares USB', 145.00, true);
+
+SELECT * FROM cliente;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight">
+<strong>Confirma los ids</strong>
+<p>El resultado final debería mostrarte 5 clientes con <code>cliente_id</code> del 1 al 5, en el mismo orden en que fueron insertados. El resto de esta guía asume exactamente esos ids — si algo no coincide, usa "🔄 Reiniciar base de datos" y vuelve a ejecutar este bloque.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="insert-vivo">
+<div class="card">
+<h2 class="section-title">1. INSERT: carga tus propios datos</h2>
+<p class="lead">El catálogo de clientes y productos ya existe. Ahora te toca registrar pedidos reales — y algún error a propósito para comprobar que un INSERT con varias filas es todo o nada.</p>
+
+<div class="highlight">
+<strong>Enunciado — 1.1</strong>
+<p>Inserta dos clientes nuevos en una <strong>sola</strong> instrucción <code>INSERT</code>: <em>'Jorge Peña'</em> y <em>'Carla Núñez'</em>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.1 — Dos clientes en un solo INSERT</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: dos clientes nuevos" placeholder="-- Escribe aquí el INSERT con las dos filas de cliente."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.2</strong>
+<p>Registra un pedido para <code>cliente_id = 1</code> (Ana Gutiérrez), sin especificar la fecha (deja que use su <code>DEFAULT</code>), y agrega <code>RETURNING pedido_id</code> para ver qué id le tocó. Justo debajo, en una segunda sentencia dentro del mismo bloque, inserta en <code>detalle_pedido</code> dos filas para ese pedido: <code>producto_id = 1</code> con <code>cantidad = 2</code>, y <code>producto_id = 3</code> con <code>cantidad = 1</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.2 — Primer pedido con RETURNING</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Editor SQL: primer pedido" placeholder="-- Escribe el INSERT INTO pedido ... RETURNING pedido_id;
+-- y el INSERT INTO detalle_pedido con las dos filas."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.3</strong>
+<p>Registra un segundo pedido para <code>cliente_id = 2</code> (Marco Flores). Inserta en <code>detalle_pedido</code> tres filas: <code>producto_id = 2</code> cantidad 1, <code>producto_id = 4</code> cantidad 1, y <code>producto_id = 5</code> cantidad 3.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.3 — Segundo pedido</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Editor SQL: segundo pedido" placeholder="-- Escribe el INSERT INTO pedido ... RETURNING pedido_id;
+-- y el INSERT INTO detalle_pedido con las tres filas."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.4</strong>
+<p>Registra un tercer pedido para <code>cliente_id = 3</code> (Lucía Paredes), con una fila de detalle: <code>producto_id = 7</code> cantidad 2.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.4 — Tercer pedido</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: tercer pedido" placeholder="-- Escribe el INSERT INTO pedido ... RETURNING pedido_id;
+-- y el INSERT INTO detalle_pedido con la fila de detalle."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p style="margin-top:25px;"><strong>1.5 — Comprueba el todo o nada:</strong> intenta insertar dos productos en una <strong>sola</strong> instrucción: <em>'Cargador USB-C'</em> a 45.00 (válido) y <em>'Cable roto'</em> a <strong>-10.00</strong> (viola el CHECK de precio positivo).</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>💥 Ejercicio 1.5 — INSERT con una fila inválida</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: INSERT que debería fallar por completo" placeholder="-- Escribe el INSERT con las dos filas de producto en una sola instrucción."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Confirma con un SELECT</strong>
+<p>Corre <code>SELECT * FROM producto WHERE producto_nombre = 'Cargador USB-C';</code> en la zona de pruebas libres. No debería devolver ninguna fila: aunque el primer valor era válido, el INSERT es una sola instrucción, y falló entera por culpa del segundo valor.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="update-vivo">
+<div class="card">
+<h2 class="section-title">2. UPDATE con cuidado</h2>
+<p class="lead">Cada UPDATE de esta sección lleva un WHERE preciso. Fijate qué tan fácil sería, si te lo olvidás, modificar toda la tabla de una sola vez.</p>
+
+<div class="highlight">
+<strong>Enunciado — 2.1</strong>
+<p>Sube el precio de <em>'Cable HDMI'</em> un 20% (usa <code>precio = precio * 1.20</code>), filtrando por <code>producto_nombre</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.1 — Sube un precio</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: aumento de precio" placeholder="-- Escribe el UPDATE de producto para Cable HDMI."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.2</strong>
+<p><em>'Auriculares USB'</em> ya tiene una venta registrada (la insertaste en el ejercicio 1.4), así que no se puede borrar sin más — pero se dejó de vender. Márcalo inactivo con <code>UPDATE</code> en lugar de borrarlo.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.2 — Descontinúa sin perder el historial</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: marcar producto inactivo" placeholder="-- Escribe el UPDATE que marca Auriculares USB como inactivo."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.3</strong>
+<p>Actualiza <em>'Silla ergonómica'</em> subiendo su precio un 5% <strong>y</strong> confirmando <code>activo = true</code> en la misma instrucción, separando ambas columnas con una coma dentro del <code>SET</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.3 — SET con dos columnas</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: SET con dos columnas" placeholder="-- Escribe el UPDATE con precio y activo en el mismo SET."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>No lo ejecutes aquí, pero pensalo</strong>
+<p><code>UPDATE producto SET precio = precio * 1.10;</code> sin WHERE es sintácticamente válido, y subiría el precio del <strong>100% de los productos</strong> de un solo golpe — incluidos los que acabás de dejar en un valor específico. Si querés sentir el efecto sin arriesgar el resto del taller, probalo en la zona de pruebas libres y después usa "🔄 Reiniciar base de datos" para volver a empezar.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="delete-vivo">
+<div class="card">
+<h2 class="section-title">3. DELETE, RESTRICT y CASCADE</h2>
+<p class="lead">Los mismos dos comportamientos de la guía de DDL, ahora vistos desde el lado de DML: qué pasa cuando borrás una fila que otra tabla está referenciando.</p>
+
+<p><strong>3.1 — Intenta borrar un producto con ventas:</strong> <em>'Teclado mecánico'</em> (<code>producto_id = 1</code>) ya está referenciado en <code>detalle_pedido</code> desde el ejercicio 1.2, y esa clave foránea usa <code>ON DELETE RESTRICT</code>.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>💥 Ejercicio 3.1 — DELETE bloqueado por RESTRICT</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: DELETE bloqueado" placeholder="-- Escribe el DELETE que debería fallar por RESTRICT."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p style="margin-top:25px;"><strong>3.2 — Borra el pedido de Lucía Paredes</strong> (<code>pedido_id = 3</code>, del ejercicio 1.4). Su clave foránea desde <code>detalle_pedido</code> usa <code>ON DELETE CASCADE</code>: comprueba con un <code>SELECT</code> qué pasó con su detalle.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.2 — DELETE con CASCADE</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:80px" aria-label="Editor SQL: DELETE con CASCADE" placeholder="-- Escribe el DELETE del pedido y el SELECT de verificación sobre detalle_pedido."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>DELETE nunca es DROP TABLE</strong>
+<p><code>DELETE FROM producto;</code> sin WHERE borraría todas las filas de producto, pero la tabla —estructura, columnas y restricciones— seguiría existiendo, vacía. No lo ejecutes acá (arruinaría el resto del taller): es sintácticamente válido, y esa es justamente la trampa. Es distinto de <code>DROP TABLE producto;</code>, que elimina la tabla entera, y de <code>TRUNCATE TABLE producto;</code>, que vacía la tabla más rápido que un DELETE y reinicia el contador IDENTITY.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="select-vivo">
+<div class="card">
+<h2 class="section-title">4. SELECT básico y alias</h2>
+<p class="lead">Ya hay datos reales cargados. Empezamos por lo más simple: elegir columnas, renombrarlas con <code>AS</code>, y eliminar duplicados con <code>DISTINCT</code>.</p>
+
+<div class="highlight">
+<strong>Enunciado — 4.1</strong>
+<p>Selecciona <code>producto_nombre</code> y <code>precio</code> de todos los productos, renombrando la columna <code>precio</code> como <code>precio_unitario</code> con <code>AS</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.1 — SELECT con alias</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: SELECT con alias" placeholder="-- Escribe el SELECT con AS precio_unitario."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.2</strong>
+<p>Antes de ejecutar, predice: ¿cuántas filas distintas puede devolver la columna <code>activo</code> de <code>producto</code>? Después escribe la consulta con <code>DISTINCT</code> para comprobarlo.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.2 — DISTINCT</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: SELECT DISTINCT" placeholder="-- Escribe el SELECT DISTINCT sobre la columna activo."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="where-vivo">
+<div class="card">
+<h2 class="section-title">5. WHERE en profundidad</h2>
+<p class="lead">BETWEEN, IN, LIKE e IS NULL, uno por uno, sobre los datos que ya cargaste.</p>
+
+<div class="highlight">
+<strong>Enunciado — 5.1</strong>
+<p>Selecciona <code>producto_nombre</code> y <code>precio</code> de los productos <strong>activos</strong> con precio entre 50 y 300 (ambos límites incluidos).</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.1 — BETWEEN y AND</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: WHERE con BETWEEN" placeholder="-- Escribe el SELECT con WHERE precio BETWEEN ... AND activo = true."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 5.2</strong>
+<p>Selecciona <code>cliente_nombre</code> de los clientes cuyo <code>cliente_id</code> esté en la lista (1, 3, 6, 7).</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.2 — IN</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: WHERE con IN" placeholder="-- Escribe el SELECT con WHERE cliente_id IN (...)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 5.3</strong>
+<p>Selecciona <code>producto_nombre</code> de los productos cuyo nombre contenga la palabra "USB" en cualquier posición.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.3 — LIKE</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: WHERE con LIKE" placeholder="-- Escribe el SELECT con WHERE producto_nombre LIKE '%USB%'."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 5.4</strong>
+<p>Agrega a <code>pedido</code> una columna <code>fecha_entrega DATE</code> (puede quedar sin definir). Luego, en una segunda sentencia, registra la fecha de entrega de <strong>hoy</strong> solo para el <code>pedido_id = 1</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.4 — ALTER TABLE + UPDATE</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:80px" aria-label="Editor SQL: ALTER TABLE y UPDATE" placeholder="-- Escribe el ALTER TABLE ADD COLUMN fecha_entrega
+-- y el UPDATE que la completa solo para pedido_id = 1."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p style="margin-top:25px;"><strong>5.5 — Encuentra los pedidos sin entrega:</strong> selecciona todas las columnas de <code>pedido</code> donde <code>fecha_entrega</code> todavía no tiene valor.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.5 — IS NULL</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: WHERE con IS NULL" placeholder="-- Escribe el SELECT con WHERE fecha_entrega IS NULL."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Probá el error clásico</strong>
+<p>Bajá a la <a href="#zona-pruebas">zona de pruebas libres</a> y escribí <code>SELECT * FROM pedido WHERE fecha_entrega = NULL;</code>. Vas a ver que <strong>no devuelve ninguna fila</strong>, ni siquiera las que sí tienen <code>fecha_entrega</code> en NULL — la prueba en vivo de por qué <code>= NULL</code> nunca funciona.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="orden-limite-vivo">
+<div class="card">
+<h2 class="section-title">6. ORDER BY y LIMIT</h2>
+<p class="lead">Ordenar el resultado y cortarlo a un tamaño manejable — la base de la paginación.</p>
+
+<div class="highlight">
+<strong>Enunciado — 6.1</strong>
+<p>Selecciona <code>producto_nombre</code> y <code>precio</code> de los productos <strong>activos</strong>, ordenados de mayor a menor precio.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 6.1 — ORDER BY DESC</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: ORDER BY DESC" placeholder="-- Escribe el SELECT con WHERE activo = true y ORDER BY precio DESC."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 6.2</strong>
+<p>Selecciona <code>producto_nombre</code>, <code>precio</code> y <code>activo</code> de <strong>todos</strong> los productos, ordenados primero por <code>activo</code> descendente (los activos primero) y, dentro de cada grupo, por <code>precio</code> ascendente.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 6.2 — Orden por dos columnas</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: ORDER BY con dos columnas" placeholder="-- Escribe el SELECT con ORDER BY activo DESC, precio ASC."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 6.3</strong>
+<p>Con los productos ordenados de mayor a menor precio, trae la "segunda página" de 3: salta los 3 más caros y trae los 3 siguientes.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 6.3 — LIMIT con OFFSET</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: LIMIT con OFFSET" placeholder="-- Escribe el SELECT con ORDER BY precio DESC LIMIT 3 OFFSET 3."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="reto">
+<div class="card">
+<h2 class="section-title">Reto final: un día de operaciones</h2>
+<p class="lead">Sin reiniciar la base de datos, resuelve estos tres desafíos combinando todo lo practicado en este taller. Todavía no viste JOIN (es la próxima guía) — no lo necesitás para nada de esto.</p>
+<div class="highlight">
+<strong>Requisitos</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><strong>1.</strong> Inserta un cliente nuevo (el nombre que quieras) y registra un pedido para ese cliente con al menos 2 filas en <code>detalle_pedido</code>. Usa <code>RETURNING</code> para conocer el <code>pedido_id</code> generado antes de insertar el detalle.</li>
+<li><strong>2.</strong> En una <strong>única</strong> instrucción <code>UPDATE</code>, sube un 15% el precio de todos los productos activos con precio menor a 100. Pensá primero cuáles productos cumplen esa condición.</li>
+<li><strong>3.</strong> Escribe un <code>SELECT</code> que muestre <code>producto_nombre</code> y <code>precio</code> (con alias <code>precio_unitario</code>) de los <strong>3 productos activos más caros</strong>, ordenados de mayor a menor.</li>
+</ul>
+</div>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>🏆 Resuelve aquí el reto</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu solución al reto final" placeholder="-- 1. Cliente nuevo + pedido con al menos 2 filas de detalle (usa RETURNING).
+-- 2. UPDATE que sube 15% el precio de los productos activos con precio menor a 100.
+-- 3. SELECT de los 3 productos activos más caros, con alias precio_unitario."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="repaso">
+<div class="card">
+<h2 class="section-title">Repaso</h2>
+<p class="lead">Seis preguntas cortas sobre lo que acabas de observar en vivo. Tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 1.5 intentaste insertar dos productos en una sola instrucción: uno válido y otro con precio negativo. ¿Qué pasó de verdad?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Se insertó 'Cargador USB-C' y falló solo 'Cable roto'.</button>
+<button class="quiz-opt" data-correct>No se insertó ninguno de los dos: el INSERT completo falló.</button>
+<button class="quiz-opt">Se insertaron ambos, y 'Cable roto' quedó con precio en NULL.</button>
+<button class="quiz-opt">PostgreSQL corrigió automáticamente el precio negativo a positivo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: comprobaste con el SELECT posterior que 'Cargador USB-C' tampoco quedó guardado. Un INSERT con varias filas es una sola instrucción: si cualquier fila viola una restricción, ninguna se guarda." data-ko="El SELECT posterior mostró que 'Cargador USB-C' no quedó guardado, aunque su fila era válida. Un INSERT con varias filas es una sola unidad: si una fila viola el CHECK, toda la instrucción falla y no se guarda nada." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">En el ejercicio 3.1, PostgreSQL te dejó borrar 'Teclado mecánico' sin problema, porque DELETE siempre tiene prioridad sobre las claves foráneas.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el borrado falló porque la clave foránea de detalle_pedido hacia producto usa ON DELETE RESTRICT, que bloquea el borrado del padre mientras tenga filas hijas asociadas." data-ko="Es falso: el DELETE fue rechazado. La clave foránea de detalle_pedido hacia producto está declarada con ON DELETE RESTRICT, que impide borrar la fila padre mientras existan filas hijas que la referencien." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 3.2 borraste el pedido de Lucía Paredes y sus filas de detalle_pedido desaparecieron solas, sin que las borraras a mano. ¿Por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque todo DELETE en PostgreSQL borra automáticamente las tablas relacionadas.</button>
+<button class="quiz-opt" data-correct>Porque la clave foránea de detalle_pedido hacia pedido está declarada con ON DELETE CASCADE.</button>
+<button class="quiz-opt">Porque detalle_pedido no tenía ninguna fila para ese pedido.</button>
+<button class="quiz-opt">Porque usaste TRUNCATE en vez de DELETE.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: ON DELETE CASCADE es la regla, definida en la clave foránea de detalle_pedido hacia pedido, que borra automáticamente las filas hijas cuando se borra la fila padre." data-ko="No es un comportamiento general de DELETE, sino específico de esa clave foránea: detalle_pedido.pedido_id está declarada con ON DELETE CASCADE, que arrastra el borrado a las filas hijas." hidden></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada instrucción según lo que le pasaría a la tabla producto y a sus filas si la ejecutaras (no la ejecutes: solo razona).</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">DELETE FROM producto;</span>
+<div class="quiz-classify-btns">
+<button data-correct>Borra todas las filas, la tabla sigue existiendo</button>
+<button>Elimina la tabla completa</button>
+<button>Vacía la tabla y reinicia el contador IDENTITY</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">DROP TABLE producto;</span>
+<div class="quiz-classify-btns">
+<button>Borra todas las filas, la tabla sigue existiendo</button>
+<button data-correct>Elimina la tabla completa</button>
+<button>Vacía la tabla y reinicia el contador IDENTITY</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">TRUNCATE TABLE producto;</span>
+<div class="quiz-classify-btns">
+<button>Borra todas las filas, la tabla sigue existiendo</button>
+<button>Elimina la tabla completa</button>
+<button data-correct>Vacía la tabla y reinicia el contador IDENTITY</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 5.5 filtraste con fecha_entrega IS NULL. ¿Por qué WHERE fecha_entrega = NULL nunca hubiera funcionado, ni siquiera para las filas que sí tienen NULL ahí?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque = NULL es un error de sintaxis y PostgreSQL lo rechaza.</button>
+<button class="quiz-opt" data-correct>Porque NULL representa "desconocido", y comparar cualquier cosa contra un desconocido nunca da verdadero.</button>
+<button class="quiz-opt">Porque = NULL solo funciona con columnas numéricas.</button>
+<button class="quiz-opt">Porque hay que usar NULL entre comillas: = 'NULL'.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: en SQL, NULL no es un valor comparable, es la ausencia de uno. Cualquier comparación (=, <>, etc.) contra NULL da un resultado desconocido, que WHERE trata como si fuera falso — por eso existen IS NULL e IS NOT NULL." data-ko="No es un error de sintaxis ni un tema de tipos de dato: NULL representa 'desconocido', y comparar algo contra un desconocido con = da otro desconocido, nunca verdadero. IS NULL existe justamente para resolver este caso." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="repaso-5">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre el ejercicio 6.3: SELECT producto_nombre, precio FROM producto ORDER BY precio DESC LIMIT 3 OFFSET 3;</p>
+<p>1. Antes de aplicar LIMIT y OFFSET, el resultado queda ordenado de
+<select class="quiz-blank" data-correct="mayor">
+<option value="">— elige —</option>
+<option value="mayor">precio más alto a más bajo</option>
+<option value="menor">precio más bajo a más alto</option>
+</select>.</p>
+<p>2. OFFSET 3 hace que la consulta
+<select class="quiz-blank" data-correct="salta">
+<option value="">— elige —</option>
+<option value="salta">salte los 3 productos más caros antes de empezar a contar</option>
+<option value="repite">devuelva los mismos 3 productos más caros dos veces</option>
+<option value="filtra">filtre los productos con precio menor a 3</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet del taller</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Instrucción</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>INSERT INTO tabla (cols) VALUES (...)</code></td><td>Agrega una o varias filas nuevas (todo o nada si son varias).</td></tr>
+<tr><td><code>... RETURNING columna</code></td><td>Devuelve datos de la fila insertada (útil para ids generados por IDENTITY).</td></tr>
+<tr><td><code>UPDATE tabla SET col = valor WHERE ...</code></td><td>Modifica filas existentes que cumplen la condición.</td></tr>
+<tr><td><code>DELETE FROM tabla WHERE ...</code></td><td>Elimina filas que cumplen la condición (sin WHERE, elimina todas).</td></tr>
+<tr><td><code>SELECT cols AS alias FROM tabla</code></td><td>Consulta columnas específicas, opcionalmente renombradas.</td></tr>
+<tr><td><code>DISTINCT</code></td><td>Elimina filas duplicadas del resultado.</td></tr>
+<tr><td><code>WHERE</code> (=, BETWEEN, IN, LIKE, IS NULL)</td><td>Filtra qué filas se incluyen.</td></tr>
+<tr><td><code>ORDER BY col ASC/DESC</code></td><td>Ordena el resultado (ASC por defecto).</td></tr>
+<tr><td><code>LIMIT n OFFSET m</code></td><td>Corta el resultado a n filas, saltando las primeras m (paginación).</td></tr>
+</tbody>
+</table>
+<table class="tabla" style="margin-top:20px;">
+<thead><tr><th scope="col">Situación que viviste en este taller</th><th scope="col">Mensaje real de PostgreSQL</th></tr></thead>
+<tbody>
+<tr><td>Ejercicio 1.5: violar un CHECK dentro de un INSERT múltiple</td><td><code>new row for relation "producto" violates check constraint "..."</code></td></tr>
+<tr><td>Ejercicio 3.1: borrar una fila padre protegida por RESTRICT</td><td><code>update or delete on table "producto" violates foreign key constraint "..." on table "detalle_pedido"</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🐘 RETURNING no es SQL estándar</h3><p>Es una extensión propia de PostgreSQL. Otros motores resuelven "¿qué id generó mi INSERT?" de formas distintas —SQL Server usa <code>OUTPUT</code>, MySQL expone <code>LAST_INSERT_ID()</code>— sin una cláusula tan directa como RETURNING dentro de la misma instrucción.</p></div>
+<div class="info"><h3>🔢 Un INSERT fallido puede dejar huecos en el IDENTITY</h3><p>El contador de una columna IDENTITY no forma parte de la transacción: aunque tu INSERT fallara por completo en el ejercicio 1.5, PostgreSQL ya había "gastado" los próximos valores de la secuencia antes de detectar el error. Por eso no es raro ver ids no consecutivos en tablas reales.</p></div>
+<div class="info"><h3>🔍 Sin índice, WHERE revisa fila por fila</h3><p>Cada consulta de esta guía recorrió la tabla entera comparando fila por fila contra la condición del WHERE. Con miles de filas eso se nota — el tema de índices y EXPLAIN, más adelante en el curso, es exactamente sobre cómo evitarlo.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller: DML y SELECT en Vivo — PostgreSQL Real en tu Navegador</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* =======================================================================
+   PGlite: PostgreSQL real compilado a WebAssembly, corriendo en el navegador.
+   Mismo patrón de carga perezosa que Pyodide en las guías de POO.
+   ======================================================================= */
+const PGLITE_CDN = "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.5.4/dist/index.js";
+let pgliteReadyPromise = null;
+
+function cargarPGlite(){
+  if (!pgliteReadyPromise) {
+    pgliteReadyPromise = (async () => {
+      const { PGlite } = await import(PGLITE_CDN);
+      return new PGlite();
+    })();
+  }
+  return pgliteReadyPromise;
+}
+
+function reiniciarPGlite(){
+  pgliteReadyPromise = null;
+}
+
+async function ejecutarSQL(codigo){
+  try {
+    const db = await cargarPGlite();
+    const resultados = await db.exec(codigo);
+    return { resultados, error: null };
+  } catch (e) {
+    return { resultados: null, error: (e && e.message) ? e.message : String(e) };
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* ===== Toast de aviso al bloquear copiar/pegar en los editores ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  if (!clipboardToast) return;
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
+function formatearValor(v){
+  if (v === null || v === undefined) return "<em>NULL</em>";
+  return escapeHtml(v);
+}
+
+function renderizarResultados(resultados){
+  if (!resultados || !resultados.length) {
+    return '<p class="sql-status">✅ Ejecutado. No se generó ningún resultado.</p>';
+  }
+  return resultados.map(r => {
+    const columnas = (r.fields || []).map(f => f.name);
+    if (columnas.length) {
+      let html = '<table class="sql-result-table"><thead><tr>' +
+        columnas.map(c => `<th scope="col">${escapeHtml(c)}</th>`).join("") +
+        "</tr></thead><tbody>";
+      if (!r.rows || !r.rows.length) {
+        html += `<tr><td colspan="${columnas.length}"><em>(0 filas)</em></td></tr>`;
+      } else {
+        r.rows.forEach(fila => {
+          html += "<tr>" + columnas.map(c => `<td>${formatearValor(fila[c])}</td>`).join("") + "</tr>";
+        });
+      }
+      html += "</tbody></table>";
+      return html;
+    }
+    const n = typeof r.affectedRows === "number" ? r.affectedRows : null;
+    const msg = n !== null
+      ? `✅ Sentencia ejecutada (${n} fila${n === 1 ? "" : "s"} afectada${n === 1 ? "" : "s"}).`
+      : "✅ Sentencia ejecutada correctamente.";
+    return `<p class="sql-status">${msg}</p>`;
+  }).join("");
+}
+
+function conectarSqlLab(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  /* En este taller el código se escribe, no se copia ni se pega: bloqueamos
+     copiar/cortar/pegar/arrastrar y avisamos brevemente por qué. */
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En este taller el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  ["copy", "cut", "paste", "drop"].forEach(evt => {
+    textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); });
+  });
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart;
+      const fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (teclaCtrl && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      avisarBloqueo();
+    }
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe alguna sentencia SQL antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando PostgreSQL real (WebAssembly)… la primera vez puede tardar varios segundos.";
+    runBtn.disabled = true;
+    try {
+      const { resultados, error } = await ejecutarSQL(codigo);
+      if (error) {
+        outputBody.textContent = "❌ Error de PostgreSQL: " + error;
+        output.classList.add("error");
+      } else {
+        outputBody.innerHTML = renderizarResultados(resultados);
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el motor de PostgreSQL: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+document.querySelectorAll(".editor-panel").forEach(conectarSqlLab);
+
+/* ===== Botón "Reiniciar base de datos" ===== */
+const resetBtn = document.getElementById("resetDbBtn");
+const dbEstado = document.getElementById("dbEstado");
+resetBtn.addEventListener("click", () => {
+  reiniciarPGlite();
+  document.querySelectorAll(".editor-panel .output").forEach(o => { o.hidden = true; });
+  dbEstado.textContent = "🔄 Base de datos reiniciada — todo lo creado antes se perdió. Vuelve a ejecutar 'Prepara tu base de datos'.";
+});
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
