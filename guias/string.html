@@ -1346,17 +1346,29 @@ function cargarPyodide(){
       });
       const pyodide = await window.loadPyodide();
       await pyodide.runPythonAsync(`
-import sys, io
+import sys, io, time
+
+__LIMITE_SEGUNDOS = 8
+
 def __run_capture(src):
     buf = io.StringIO()
     old = sys.stdout
     sys.stdout = buf
+    inicio = time.time()
+
+    def __watchdog(frame, event, arg):
+        if time.time() - inicio > __LIMITE_SEGUNDOS:
+            raise TimeoutError(f"El código tardó más de {__LIMITE_SEGUNDOS} segundos en ejecutarse (¿bucle infinito?) y fue detenido.")
+        return __watchdog
+
     err = None
+    sys.settrace(__watchdog)
     try:
         exec(compile(src, "<code>", "exec"), {})
     except Exception as e:
         err = f"{type(e).__name__}: {e}"
     finally:
+        sys.settrace(None)
         sys.stdout = old
     return buf.getvalue(), err
 `);

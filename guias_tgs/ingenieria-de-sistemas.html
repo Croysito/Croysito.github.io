@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ingeniería de Sistemas: de la Teoría a la Práctica Profesional | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="deck-mode">
+
+<div class="deck-topbar">
+<button class="deck-icon-btn" id="deckMenuBtn" aria-label="Abrir índice de la presentación">☰</button>
+<div class="deck-progress-track"><div class="deck-progress-fill" id="deckFill"></div></div>
+<span class="deck-counter" id="deckCounter">1 / 1</span>
+<button class="deck-icon-btn" id="deckThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="deck-menu-overlay" id="deckMenuOverlay"></div>
+<nav class="deck-menu-panel" id="deckMenuPanel" aria-label="Índice de la presentación">
+<h3>Índice</h3>
+<div class="deck-menu-list">
+<button data-slide="0">🏠 Portada</button>
+<button data-slide="4">1 · Origen de la disciplina</button>
+<button data-slide="8">2 · El ciclo de vida en V</button>
+<button data-slide="14">3 · Requisitos con CATWOE</button>
+<button data-slide="20">4 · Arquitectura y trade-offs</button>
+<button data-slide="24">5 · Verificación vs. validación</button>
+<button data-slide="28">6 · Caso práctico: Biblioteca UAB</button>
+<button data-slide="31">Repaso final</button>
+<button data-slide="37">Cheat Sheet</button>
+<button data-slide="39">Cierre</button>
+</div>
+</nav>
+
+<div class="deck-viewport" id="deckViewport">
+
+<!-- 0 · PORTADA -->
+<section class="slide slide-title-slide active">
+<div class="slide-inner">
+<span class="slide-eyebrow">🛠️ Guía de Aula Invertida · Presentación</span>
+<h1 class="slide-title">Ingeniería de <span>Sistemas</span>: de la Teoría a la Práctica</h1>
+<p class="slide-lead">El nombre de tu facultad no es casualidad. Esta es la disciplina profesional que todo lo visto en TGS hace posible.</p>
+<div class="author" style="justify-content:center;">
+<div class="avatar">RC</div>
+<div style="text-align:left;"><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+<p class="slide-hint">👁 <span id="viewCount">—</span> vistas · Usa las flechas ← → , el teclado o desliza para navegar</p>
+</div>
+</section>
+
+<!-- 1 · BIENVENIDA -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Introducción</p>
+<h2 class="slide-title">Bienvenido</h2>
+<div class="slide-body">
+<p>En <strong>TGS Aplicada: Sistemas de Información como Sistemas</strong> viste, de pasada, que el programa Apolo de la NASA popularizó la disciplina de "Ingeniería de Sistemas" a gran escala.</p>
+<p>Esta presentación retoma esa mención y la desarrolla por completo: no como una anécdota, sino como la profesión para la que te estás formando.</p>
+</div>
+</div>
+</section>
+
+<!-- 2 · PRERREQUISITO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Introducción</p>
+<h2 class="slide-title">Antes de empezar</h2>
+<div class="slide-body highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Esta presentación da por sabido lo visto en <a href="sistemas-informacion.html">TGS Aplicada: Sistemas de Información como Sistemas</a> (límite, entorno, subsistemas, entrada-proceso-salida) y en <a href="sistemas-duros-blandos.html">Metodologías de Sistemas: Duros y Blandos (SSM)</a> (definiciones raíz y CATWOE). No los vuelve a explicar: los usa directamente como herramientas de trabajo.</p>
+</div>
+</div>
+</section>
+
+<!-- 3 · OBJETIVO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Introducción</p>
+<h2 class="slide-title">Objetivo del módulo</h2>
+<div class="slide-body">
+<ul>
+<li>Explicar el origen y el objeto de estudio de la Ingeniería de Sistemas como disciplina.</li>
+<li>Ubicar cualquier actividad de un proyecto dentro del ciclo de vida en V.</li>
+<li>Redactar requisitos usando CATWOE.</li>
+<li>Evaluar alternativas de arquitectura con un estudio de trade-offs.</li>
+<li>Distinguir verificación de validación en un proyecto real.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<!-- 4 · DIVISOR 1 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 1</p>
+<h2 class="slide-title">Origen de la disciplina</h2>
+</div>
+</section>
+
+<!-- 5 · ORIGEN TIMELINE -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">1 · Origen de la disciplina</p>
+<h2 class="slide-title">De los laboratorios Bell a la Luna</h2>
+<div class="slide-visual diagrama-caja">
+<svg viewBox="0 0 760 170" role="img" aria-label="Línea de tiempo: Bell Labs años 1940, Programa Apolo años 1960-70, fundación del INCOSE en 1990">
+<line class="dg-linea" x1="50" y1="90" x2="710" y2="90"/>
+<circle class="dg-nodo" cx="100" cy="90" r="9"/>
+<circle class="dg-nodo" cx="380" cy="90" r="9"/>
+<circle class="dg-nodo" cx="660" cy="90" r="9"/>
+<text class="dg-texto" x="100" y="60" text-anchor="middle" font-size="14">Años 1940</text>
+<text class="dg-texto" x="100" y="120" text-anchor="middle">Bell Telephone</text>
+<text class="dg-texto" x="100" y="136" text-anchor="middle">Laboratories</text>
+<text class="dg-texto" x="380" y="60" text-anchor="middle" font-size="14">Años 1960–70</text>
+<text class="dg-texto" x="380" y="120" text-anchor="middle">Programa Apolo</text>
+<text class="dg-texto" x="380" y="136" text-anchor="middle">(NASA)</text>
+<text class="dg-texto" x="660" y="60" text-anchor="middle" font-size="14">1990</text>
+<text class="dg-texto" x="660" y="120" text-anchor="middle">Fundación del</text>
+<text class="dg-texto" x="660" y="136" text-anchor="middle">INCOSE</text>
+</svg>
+</div>
+<div class="slide-body">
+<p>El término <strong>"systems engineering"</strong> se usó formalmente por primera vez en <strong>Bell Telephone Laboratories</strong>, en la década de 1940, para gestionar sistemas de telecomunicaciones demasiado grandes y complejos como para diseñarlos pieza por pieza. Tres décadas después, el <strong>programa Apolo</strong> la llevó a otra escala. En 1990 se fundó el <strong>INCOSE</strong>, que hoy publica el <em>Systems Engineering Handbook</em>, la referencia mundial de la profesión.</p>
+</div>
+</div>
+</section>
+
+<!-- 6 · SW VS SISTEMAS -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">1 · Origen de la disciplina</p>
+<h2 class="slide-title">¿Por qué "Ingeniería de Sistemas" y no "de Software"?</h2>
+<div class="slide-body highlight">
+<p>La Ingeniería de Software se concentra en construir <strong>código</strong>: aplicaciones, servicios, algoritmos. La Ingeniería de Sistemas mira más arriba en la jerarquía que ya conocés de TGS: coordina el <strong>sistema completo</strong> —hardware, software, personas, procesos e interfaces entre todos ellos— para que, en conjunto, cumplan un propósito.</p>
+<p>El nombre de tu facultad es intencional: te prepara para ver más allá del código, hacia el sistema completo del que ese código es apenas un subsistema.</p>
+</div>
+</div>
+</section>
+
+<!-- 7 · ACTIVIDAD origen-mc -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">1 · Origen de la disciplina</p>
+<div class="quiz quiz-mc" data-quiz-id="origen-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un hospital digitaliza su historia clínica. El proyecto incluye escribir el software, comprar tablets para el personal médico, rediseñar el proceso de admisión de pacientes, y capacitar al personal para usar el nuevo flujo. ¿Qué disciplina describe mejor la coordinación de <strong>todo</strong> ese proyecto, y no solo del código?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ingeniería de Software, porque el software es el componente más importante.</button>
+<button class="quiz-opt" data-correct>Ingeniería de Sistemas: coordina el software, el hardware (tablets), los procesos (admisión) y a las personas (capacitación) como un solo sistema con un propósito compartido, no solo el código.</button>
+<button class="quiz-opt">Ninguna disciplina formal cubre este tipo de proyectos.</button>
+<button class="quiz-opt">Administración de Empresas, porque involucra personas y procesos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el software es apenas un subsistema del sistema completo. Coordinar hardware, procesos y personas junto con el software, hacia un propósito común, es exactamente el objeto de estudio de la Ingeniería de Sistemas." data-ko="El software es solo una parte del proyecto. Lo que coordina hardware, procesos, personas y software juntos, como un sistema completo con un propósito compartido, es la Ingeniería de Sistemas — la disciplina que sí tiene un cuerpo de conocimiento formal para esto (INCOSE)." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 8 · DIVISOR 2 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 2</p>
+<h2 class="slide-title">El ciclo de vida en V</h2>
+</div>
+</section>
+
+<!-- 9 · LA V (SVG) -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · El ciclo de vida en V</p>
+<h2 class="slide-title">Definir, y verificar contra lo definido</h2>
+<div class="slide-visual diagrama-caja">
+<svg viewBox="0 0 800 440" role="img" aria-label="Diagrama en V: concepción, requisitos, arquitectura, diseño e implementación en el lado izquierdo; pruebas de componente, verificación de integración, validación y operación en el lado derecho">
+<text class="dg-texto small" x="140" y="18" text-anchor="middle">↓ DEFINE</text>
+<text class="dg-texto small" x="660" y="18" text-anchor="middle">VERIFICA ↑</text>
+<polyline class="dg-linea" points="40,50 140,140 240,230 340,320 400,380 460,320 560,230 660,140 760,50"/>
+<line class="dg-conector" x1="140" y1="140" x2="660" y2="140"/>
+<line class="dg-conector" x1="240" y1="230" x2="560" y2="230"/>
+<line class="dg-conector" x1="340" y1="320" x2="460" y2="320"/>
+<circle class="dg-nodo" cx="40" cy="50" r="8"/>
+<circle class="dg-nodo" cx="140" cy="140" r="8"/>
+<circle class="dg-nodo" cx="240" cy="230" r="8"/>
+<circle class="dg-nodo" cx="340" cy="320" r="8"/>
+<circle class="dg-nodo vertice" cx="400" cy="380" r="9"/>
+<circle class="dg-nodo" cx="460" cy="320" r="8"/>
+<circle class="dg-nodo" cx="560" cy="230" r="8"/>
+<circle class="dg-nodo" cx="660" cy="140" r="8"/>
+<circle class="dg-nodo" cx="760" cy="50" r="8"/>
+<text class="dg-texto" x="15" y="30" text-anchor="start" font-size="13">CONCEPCIÓN</text>
+<text class="dg-texto" x="140" y="118" text-anchor="middle" font-size="13">REQUISITOS</text>
+<text class="dg-texto" x="240" y="208" text-anchor="middle" font-size="13">ARQUITECTURA</text>
+<text class="dg-texto" x="340" y="298" text-anchor="middle" font-size="13">DISEÑO</text>
+<text class="dg-texto" x="400" y="412" text-anchor="middle" font-size="13">IMPLEMENTACIÓN</text>
+<text class="dg-texto" x="460" y="298" text-anchor="middle" font-size="13">PRUEBAS</text>
+<text class="dg-texto" x="560" y="208" text-anchor="middle" font-size="13">INTEGRACIÓN</text>
+<text class="dg-texto" x="660" y="118" text-anchor="middle" font-size="13">VALIDACIÓN</text>
+<text class="dg-texto" x="785" y="30" text-anchor="end" font-size="13">OPERACIÓN</text>
+</svg>
+</div>
+<div class="slide-body">
+<p>El lado izquierdo <strong>define</strong> el sistema con detalle creciente, el vértice es la <strong>implementación</strong>, y el lado derecho <strong>verifica</strong> cada nivel, de abajo hacia arriba — cada etapa contra su pareja de definición.</p>
+</div>
+</div>
+</section>
+
+<!-- 10 · TABLA PAREJAS -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · El ciclo de vida en V</p>
+<h2 class="slide-title">Las tres parejas de la V</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Etapa de definición (baja)</th><th scope="col">Su pareja de verificación (sube)</th></tr></thead>
+<tbody>
+<tr><td>Requisitos: qué debe lograr el sistema, y para quién.</td><td>Validación: ¿el sistema terminado satisface la necesidad original?</td></tr>
+<tr><td>Arquitectura: cómo se divide el sistema en subsistemas.</td><td>Verificación de integración: ¿los subsistemas funcionan juntos?</td></tr>
+<tr><td>Diseño detallado: cómo se construye cada componente.</td><td>Pruebas de componente: ¿cada pieza cumple su especificación?</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- 11 · POR QUÉ IMPORTA LA V -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · El ciclo de vida en V</p>
+<h2 class="slide-title">Por qué importa la forma de "V"</h2>
+<div class="slide-body highlight">
+<p>La V deja explícito <strong>contra qué</strong> se prueba cada cosa: las pruebas de componente se comparan contra el diseño detallado, la integración contra la arquitectura, y la validación final contra los requisitos originales — no contra lo que el equipo terminó construyendo.</p>
+<p>Sin esa relación explícita, es fácil terminar "verificando" un sistema contra sí mismo, en vez de contra lo que realmente se pidió.</p>
+</div>
+</div>
+</section>
+
+<!-- 12 · ACTIVIDAD ciclo-vida-match -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · El ciclo de vida en V</p>
+<div class="quiz quiz-match" data-quiz-id="ciclo-vida-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada etapa del lado izquierdo con su pareja del lado derecho de la V.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="requisitos">Requisitos</button>
+<button class="quiz-match-item" data-pair="arquitectura">Arquitectura</button>
+<button class="quiz-match-item" data-pair="diseno">Diseño detallado</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="diseno">Pruebas de componente: cada pieza cumple su propia especificación.</button>
+<button class="quiz-match-item" data-pair="requisitos">Validación: el sistema terminado satisface la necesidad original.</button>
+<button class="quiz-match-item" data-pair="arquitectura">Verificación de integración: los subsistemas funcionan juntos como se diseñó.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 13 · ACTIVIDAD ciclo-vida-mc -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · El ciclo de vida en V</p>
+<div class="quiz quiz-mc" data-quiz-id="ciclo-vida-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un equipo termina de construir un sistema y recién en ese momento se sienta a decidir contra qué documento va a comparar los resultados de las pruebas finales. ¿Qué principio del ciclo de vida en V no está respetando?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ninguno: la V no exige decidir eso de antemano.</button>
+<button class="quiz-opt" data-correct>Que cada etapa de verificación debe compararse contra su etapa de definición pareja, decidida desde el principio del proyecto — no contra un criterio inventado recién al final.</button>
+<button class="quiz-opt">El principio de homeostasis del sistema.</button>
+<button class="quiz-opt">El principio de equifinalidad.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la V exige que cada verificación tenga su criterio de comparación fijado desde la etapa de definición correspondiente, no improvisado al final." data-ko="No es un problema de homeostasis ni de equifinalidad. El problema es específico de la V: cada verificación debe compararse contra un criterio fijado en su etapa de definición correspondiente, no inventado al final." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 14 · DIVISOR 3 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 3</p>
+<h2 class="slide-title">Requisitos con CATWOE</h2>
+</div>
+</section>
+
+<!-- 15 · DE CATWOE A REQUISITO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Requisitos con CATWOE</p>
+<h2 class="slide-title">De CATWOE a requisito</h2>
+<div class="slide-body">
+<p>Una definición raíz bien construida, con su CATWOE completo, <strong>ya es</strong> casi un requisito de ingeniería bien escrito: la <strong>T</strong> (transformación) da el requisito funcional central, y la <strong>W</strong> (Weltanschauung) da la razón de fondo que ese requisito debe cumplir.</p>
+</div>
+</div>
+</section>
+
+<!-- 16 · EJEMPLO BIBLIOTECA -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Requisitos con CATWOE</p>
+<h2 class="slide-title">Ejemplo: Biblioteca Central UAB</h2>
+<div class="slide-body highlight">
+<p>Definición raíz: "Un sistema, operado por el personal de la biblioteca, propiedad de la Dirección Académica, que transforma solicitudes de préstamo de libros en préstamos registrados con fecha de devolución controlada, en beneficio de los estudiantes y docentes, dado el catálogo físico ya existente, porque se cree que un libro prestado sin fecha de devolución clara termina perdido para el resto de la comunidad."</p>
+<p>Requisito funcional que se deriva: <em>"El sistema debe registrar cada préstamo con una fecha de devolución, y notificar cuando esté vencida."</em></p>
+</div>
+</div>
+</section>
+
+<!-- 17 · POR QUÉ IMPORTA LA W -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Requisitos con CATWOE</p>
+<h2 class="slide-title">Por qué la W importa tanto</h2>
+<div class="slide-body highlight">
+<p>Capturar solo la T ("registrar préstamos") no explica <strong>por qué</strong> hace falta la fecha de devolución ni la notificación. Es la W ("un libro sin fecha de devolución clara se pierde") la que justifica ese requisito específico — y la que permite distinguir un requisito real de un capricho de implementación.</p>
+</div>
+</div>
+</section>
+
+<!-- 18 · ACTIVIDAD requisitos-mc -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Requisitos con CATWOE</p>
+<div class="quiz quiz-mc" data-quiz-id="requisitos-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un cliente pide: "quiero que el botón de guardar sea de color verde". ¿Cómo evaluarías esta petición usando CATWOE?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Es un requisito válido tal cual, sin necesidad de más análisis: el cliente lo pidió.</button>
+<button class="quiz-opt" data-correct>Hace falta preguntar la W detrás del pedido: si la razón es "para que los usuarios daltónicos distingan guardar de cancelar", el requisito real es de accesibilidad y el verde es solo una posible implementación.</button>
+<button class="quiz-opt">Nunca se debe preguntar el porqué de un pedido del cliente.</button>
+<button class="quiz-opt">Es imposible convertir preferencias de color en un requisito de ingeniería.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: sin la W, 'botón verde' podría ser cualquier cosa, desde un capricho estético hasta un requisito serio de accesibilidad. Preguntar el porqué (la W) es lo que separa un requisito real de una preferencia de implementación." data-ko="Aceptar el pedido tal cual, sin preguntar el porqué, es exactamente el error que CATWOE ayuda a evitar. La W detrás del pedido es lo que revela si 'verde' es el requisito real o solo una implementación posible entre varias." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 19 · ACTIVIDAD requisitos-classify -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Requisitos con CATWOE</p>
+<p style="margin-bottom:10px;">Clasifica cada petición según sea un requisito real (justificado por una W) o una preferencia de implementación.</p>
+<div class="quiz quiz-classify" data-quiz-id="requisitos-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Requisito real, o preferencia de implementación?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"El sistema debe evitar que se preste un libro del que no queden ejemplares disponibles."</span>
+<div class="quiz-classify-btns">
+<button data-correct>Requisito real</button>
+<button>Preferencia de implementación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Quiero que la pantalla de préstamos use la tipografía Comic Sans."</span>
+<div class="quiz-classify-btns">
+<button>Requisito real</button>
+<button data-correct>Preferencia de implementación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"El sistema debe notificar al estudiante antes de que venza el plazo de devolución."</span>
+<div class="quiz-classify-btns">
+<button data-correct>Requisito real</button>
+<button>Preferencia de implementación</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 20 · DIVISOR 4 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 4</p>
+<h2 class="slide-title">Arquitectura y trade-offs</h2>
+</div>
+</section>
+
+<!-- 21 · TRADE-OFFS CONCEPTO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">4 · Arquitectura y trade-offs</p>
+<h2 class="slide-title">No existe "la" arquitectura correcta</h2>
+<div class="slide-body">
+<p>Ya viste que dos arquitecturas completamente distintas pueden cumplir igual de bien el mismo objetivo — eso es <strong>equifinalidad</strong>. Por eso la Ingeniería de Sistemas usa una técnica formal para elegir: el <strong>estudio de trade-offs</strong> (análisis de alternativas), que compara opciones contra criterios explícitos, en vez de elegir por moda o preferencia personal.</p>
+</div>
+</div>
+</section>
+
+<!-- 22 · TABLA MONOLITO VS MICROSERVICIOS -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">4 · Arquitectura y trade-offs</p>
+<h2 class="slide-title">Ejemplo: Biblioteca Central UAB</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Criterio</th><th scope="col">Monolito</th><th scope="col">Microservicios</th></tr></thead>
+<tbody>
+<tr><td>Costo y tiempo de desarrollo inicial</td><td>Bajo</td><td>Alto</td></tr>
+<tr><td>Facilidad de mantenimiento a largo plazo</td><td>Media</td><td>Alta</td></tr>
+<tr><td>Escalabilidad ante mucho tráfico</td><td>Limitada</td><td>Alta</td></tr>
+</tbody>
+</table>
+<p class="slide-lead" style="margin-top:16px;">Una biblioteca de una sola universidad, con tráfico bajo y un equipo pequeño, probablemente no necesita la complejidad de microservicios.</p>
+</div>
+</section>
+
+<!-- 23 · ACTIVIDAD arquitectura-mc -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">4 · Arquitectura y trade-offs</p>
+<div class="quiz quiz-mc" data-quiz-id="arquitectura-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un equipo elige arquitectura de microservicios para el sistema de la biblioteca "porque es lo que usan las grandes empresas de tecnología", sin comparar contra los criterios reales del proyecto. ¿Qué principio está ignorando?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ninguno: microservicios es siempre la mejor opción técnica disponible.</button>
+<button class="quiz-opt" data-correct>El estudio de trade-offs: elegir una arquitectura debe basarse en comparar alternativas contra los criterios reales de este proyecto específico, no en copiar lo que usa otra organización con un contexto distinto.</button>
+<button class="quiz-opt">El principio de entropía.</button>
+<button class="quiz-opt">La Ley de Requisito de Variedad.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: no existe una arquitectura universalmente 'mejor' (equifinalidad). El estudio de trade-offs exige comparar alternativas contra los criterios reales del proyecto en cuestión." data-ko="No es un problema de entropía ni de variedad requerida. El problema es específico: elegir sin comparar contra los criterios reales del proyecto es ignorar el estudio de trade-offs." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 24 · DIVISOR 5 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 5</p>
+<h2 class="slide-title">Verificación vs. validación</h2>
+</div>
+</section>
+
+<!-- 25 · DISTINCIÓN DE BOEHM -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">5 · Verificación vs. validación</p>
+<h2 class="slide-title">La distinción de Boehm</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Pregunta</th><th scope="col">Se compara contra…</th></tr></thead>
+<tbody>
+<tr><td><strong>Verificación:</strong> ¿estamos construyendo el sistema correctamente?</td><td>La especificación o el diseño documentado.</td></tr>
+<tr><td><strong>Validación:</strong> ¿estamos construyendo el sistema correcto?</td><td>La necesidad real del usuario (la W de la definición raíz).</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- 26 · SE PUEDE VERIFICAR Y NO VALIDAR -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">5 · Verificación vs. validación</p>
+<h2 class="slide-title">Se puede verificar y no validar</h2>
+<div class="slide-body highlight">
+<p>Un sistema puede pasar todas las pruebas contra su especificación (verificación exitosa) y aun así no resolver el problema real de nadie, si el requisito documentado nunca capturó bien la W verdadera. Por eso ambas preguntas son necesarias, y ninguna reemplaza a la otra.</p>
+</div>
+</div>
+</section>
+
+<!-- 27 · ACTIVIDAD vv-classify -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">5 · Verificación vs. validación</p>
+<p style="margin-bottom:10px;">Clasifica cada actividad según responda a verificación o a validación.</p>
+<div class="quiz quiz-classify" data-quiz-id="vv-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Verificación o validación?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una prueba unitaria comprueba que la función de cálculo de fecha de devolución suma exactamente 15 días, tal como dice el diseño.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Verificación</button>
+<button>Validación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un grupo de bibliotecarios usa el sistema durante un mes y opina si realmente redujo los libros perdidos.</span>
+<div class="quiz-classify-btns">
+<button>Verificación</button>
+<button data-correct>Validación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un revisor compara el código contra el documento de requisitos, línea por línea.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Verificación</button>
+<button>Validación</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 28 · DIVISOR 6 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 6</p>
+<h2 class="slide-title">Caso práctico: Biblioteca UAB</h2>
+</div>
+</section>
+
+<!-- 29 · ACTIVIDAD caso-fill -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">6 · Caso práctico: Biblioteca UAB</p>
+<p style="margin-bottom:10px;">Clasifica cada actividad del proyecto según a qué etapa del ciclo de vida en V pertenece.</p>
+<div class="quiz quiz-fill" data-quiz-id="caso-fill">
+<span class="quiz-badge">Completar</span>
+
+<p>1. Entrevistar a bibliotecarios y estudiantes para entender por qué se pierden libros hoy es
+<select class="quiz-blank" data-correct="requisitos">
+<option value="">— elige —</option>
+<option value="requisitos">Requisitos</option>
+<option value="arquitectura">Arquitectura</option>
+<option value="implementacion">Implementación</option>
+<option value="validacion">Validación</option>
+</select>.</p>
+
+<p>2. Decidir si el sistema será web o de escritorio, y con qué base de datos, es
+<select class="quiz-blank" data-correct="arquitectura">
+<option value="">— elige —</option>
+<option value="requisitos">Requisitos</option>
+<option value="arquitectura">Arquitectura</option>
+<option value="pruebas-componente">Pruebas de componente</option>
+<option value="validacion">Validación</option>
+</select>.</p>
+
+<p>3. Escribir el código que registra un préstamo en la base de datos es
+<select class="quiz-blank" data-correct="implementacion">
+<option value="">— elige —</option>
+<option value="implementacion">Implementación</option>
+<option value="arquitectura">Arquitectura</option>
+<option value="verificacion-integracion">Verificación de integración</option>
+<option value="validacion">Validación</option>
+</select>.</p>
+
+<p>4. Un bibliotecario prueba si puede registrar un préstamo real sin errores, comparando el resultado contra el diseño detallado, es
+<select class="quiz-blank" data-correct="pruebas-componente">
+<option value="">— elige —</option>
+<option value="requisitos">Requisitos</option>
+<option value="pruebas-componente">Pruebas de componente</option>
+<option value="arquitectura">Arquitectura</option>
+<option value="validacion">Validación</option>
+</select>.</p>
+
+<p>5. Comprobar que el módulo de préstamos y el de notificaciones funcionan juntos como se diseñó es
+<select class="quiz-blank" data-correct="verificacion-integracion">
+<option value="">— elige —</option>
+<option value="verificacion-integracion">Verificación de integración</option>
+<option value="requisitos">Requisitos</option>
+<option value="implementacion">Implementación</option>
+<option value="validacion">Validación</option>
+</select>.</p>
+
+<p>6. Los estudiantes usan el sistema un mes, y la biblioteca mide si de verdad bajaron los libros perdidos, es
+<select class="quiz-blank" data-correct="validacion">
+<option value="">— elige —</option>
+<option value="validacion">Validación</option>
+<option value="pruebas-componente">Pruebas de componente</option>
+<option value="arquitectura">Arquitectura</option>
+<option value="requisitos">Requisitos</option>
+</select>.</p>
+
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 30 · CONTEXTO + ACTIVIDAD caso-abierto -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">6 · Caso práctico: Biblioteca UAB</p>
+<div class="highlight" style="margin-bottom:16px;">
+<strong>Una petición de último momento</strong>
+<p>Con el sistema ya en pruebas, un profesor pide agregar un botón que envíe un correo automático de recordatorio 3 días antes del vencimiento del préstamo.</p>
+</div>
+<div class="quiz quiz-open" data-quiz-id="caso-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Usando CATWOE (la W: "un libro sin fecha de devolución clara se pierde") y verificación vs. validación: ¿es un requisito real o una preferencia de implementación? Si se agrega, ¿contra qué se verifica y contra qué se valida?</p>
+<textarea class="quiz-open-input" placeholder="Escribe aquí tu análisis antes de ver la respuesta modelo…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver respuesta modelo</button>
+<div class="quiz-open-model" hidden>
+<strong>Respuesta modelo</strong>
+<p>Es un requisito real: se deriva directamente de la W del proyecto, porque un recordatorio automático reduce exactamente el riesgo que esa W describe. Se debería <strong>verificar</strong> comprobando que el correo se envía exactamente 3 días antes, tal como quedó especificado en el diseño, y <strong>validar</strong> midiendo, después de un tiempo de uso real, si efectivamente bajó la cantidad de préstamos vencidos sin devolver.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 31 · DIVISOR REPASO + TRACKER -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Repaso final</p>
+<h2 class="slide-title">Repaso final</h2>
+<div class="quiz-tracker" style="max-width:520px;margin:20px auto 0;text-align:left;">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la presentación</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+</div>
+</section>
+
+<!-- 32 · repaso-1 -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">El término "systems engineering" se usó formalmente por primera vez en...</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La NASA, durante el programa Apolo.</button>
+<button class="quiz-opt" data-correct>Bell Telephone Laboratories, en la década de 1940, para gestionar sistemas de telecomunicaciones demasiado grandes para diseñarlos sin una visión de conjunto.</button>
+<button class="quiz-opt">El INCOSE, al fundarse en 1990.</button>
+<button class="quiz-opt">El MIT, junto con la Dinámica de Sistemas de Forrester.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Bell Labs acuñó el término en los años 40. El programa Apolo la popularizó a gran escala décadas después, y el INCOSE (1990) formalizó su cuerpo de conocimiento — pero el origen del término es anterior a ambos." data-ko="El programa Apolo popularizó la disciplina a gran escala, y el INCOSE formalizó su cuerpo de conocimiento en 1990 — pero el término se usó formalmente por primera vez antes, en Bell Telephone Laboratories, en la década de 1940." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 33 · repaso-2 -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">En el ciclo de vida en V, la validación se compara contra el diseño detallado del sistema.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la validación se compara contra los requisitos originales (la necesidad real), no contra el diseño detallado. Son las pruebas de componente las que se comparan contra el diseño." data-ko="Es falso: la validación es la pareja de los requisitos, no del diseño detallado. Compara el sistema terminado contra la necesidad original; el diseño detallado tiene su propia pareja: las pruebas de componente." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 34 · repaso-3 -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En una definición raíz usada como requisito, ¿qué elemento de CATWOE explica <strong>por qué</strong> ese requisito importa, y no solo qué hace?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La T (Transformación).</button>
+<button class="quiz-opt" data-correct>La W (Weltanschauung): la visión del mundo que justifica por qué esa transformación en particular —y ese requisito derivado de ella— tiene sentido.</button>
+<button class="quiz-opt">La O (Propietarios).</button>
+<button class="quiz-opt">La E (Restricciones del entorno).</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la T describe QUÉ hace el sistema; la W explica POR QUÉ ese requisito importa. Sin la W, es imposible distinguir un requisito real de una preferencia de implementación." data-ko="La T (transformación) describe qué hace el sistema, no por qué importa. Los Propietarios y las Restricciones del entorno son otros elementos de CATWOE. La W es específicamente la que justifica el porqué detrás del requisito." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 35 · repaso-classify -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Esta actividad corresponde a verificación o a validación?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Confirmar que el sistema calcula la fecha de devolución exactamente como dice el documento de diseño.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Verificación</button>
+<button>Validación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Preguntar a los usuarios reales, meses después, si el problema que originó el proyecto de verdad se resolvió.</span>
+<div class="quiz-classify-btns">
+<button>Verificación</button>
+<button data-correct>Validación</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 36 · repaso-4 -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un estudio de trade-offs (análisis de alternativas) sirve principalmente para...</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Demostrar que siempre existe una única arquitectura correcta.</button>
+<button class="quiz-opt" data-correct>Comparar alternativas de arquitectura contra criterios explícitos del proyecto real, en vez de elegir por moda o preferencia personal.</button>
+<button class="quiz-opt">Reemplazar la etapa de requisitos del ciclo de vida en V.</button>
+<button class="quiz-opt">Verificar que el código cumple su especificación.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: como distintas arquitecturas pueden lograr el mismo objetivo igual de bien (equifinalidad), el estudio de trade-offs compara alternativas contra los criterios reales del proyecto." data-ko="No demuestra que exista una única arquitectura correcta, no reemplaza la etapa de requisitos, y no es lo mismo que verificar código. Sirve para comparar alternativas de arquitectura contra criterios explícitos del proyecto." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 37 · CHEAT SHEET -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Referencia</p>
+<h2 class="slide-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Ingeniería de Sistemas</td><td>Coordina hardware, software, procesos y personas como un solo sistema.</td></tr>
+<tr><td>INCOSE</td><td>Organismo internacional (1990) que formaliza el cuerpo de conocimiento.</td></tr>
+<tr><td>Ciclo de vida en V</td><td>El lado izquierdo define; el derecho verifica cada nivel, de abajo hacia arriba.</td></tr>
+<tr><td>Requisito vía CATWOE</td><td>La T da el requisito funcional; la W explica por qué importa.</td></tr>
+<tr><td>Estudio de trade-offs</td><td>Compara alternativas de arquitectura contra criterios explícitos.</td></tr>
+<tr><td>Verificación</td><td>¿Construimos el sistema correctamente? Contra la especificación.</td></tr>
+<tr><td>Validación</td><td>¿Construimos el sistema correcto? Contra la necesidad real (la W).</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- 38 · SABÍAS QUE -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Referencia</p>
+<h2 class="slide-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>☎️ Nació en los laboratorios Bell</h3><p>El término "systems engineering" se usó formalmente por primera vez en Bell Telephone Laboratories, en los años 40.</p></div>
+<div class="info"><h3>🌐 INCOSE y su manual</h3><p>El INCOSE, fundado en 1990, publica el Systems Engineering Handbook, referencia en toda la industria.</p></div>
+<div class="info"><h3>🔤 La V se formalizó después</h3><p>El ciclo de vida en V ya se practicaba de forma intuitiva desde los años 60-70, pero se formalizó recién en 1991 (Forsberg y Mooz).</p></div>
+</div>
+</div>
+</section>
+
+<!-- 39 · CIERRE -->
+<section class="slide slide-title-slide">
+<div class="slide-inner">
+<h2 class="slide-title">Ingeniería de <span>Sistemas</span></h2>
+<p class="slide-lead">De la Teoría a la Práctica Profesional</p>
+<div class="slide-body" style="text-align:center;">
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<p><strong>Ing. Roy Carrasco</strong><br>Universidad Adventista de Bolivia · 2026</p>
+</div>
+</div>
+</section>
+
+</div>
+
+<button class="deck-nav-btn deck-nav-prev" id="deckPrev" aria-label="Diapositiva anterior">←</button>
+<button class="deck-nav-btn deck-nav-next" id="deckNext" aria-label="Diapositiva siguiente">→</button>
+
+<script>
+
+/* =========================================================
+   Motor de presentación (deck slide-a-slide). Reutilizable
+   tal cual en futuras guías con formato PPT-style.
+   ========================================================= */
+const slides = [...document.querySelectorAll(".slide")];
+const deckFill = document.getElementById("deckFill");
+const deckCounter = document.getElementById("deckCounter");
+const deckPrev = document.getElementById("deckPrev");
+const deckNext = document.getElementById("deckNext");
+const deckViewport = document.getElementById("deckViewport");
+const DECK_KEY = "tgs-deck-pos-" + location.pathname;
+
+let current = 0;
+
+function irA(index, silencioso){
+  index = Math.max(0, Math.min(slides.length - 1, index));
+  slides[current].classList.remove("active");
+  current = index;
+  slides[current].classList.add("active");
+  slides[current].scrollTop = 0;
+  deckFill.style.width = ((current + 1) / slides.length * 100) + "%";
+  deckCounter.textContent = (current + 1) + " / " + slides.length;
+  deckPrev.disabled = current === 0;
+  deckNext.disabled = current === slides.length - 1;
+  document.querySelectorAll(".deck-menu-list button").forEach(b => {
+    b.classList.toggle("current", Number(b.dataset.slide) === current);
+  });
+  if (!silencioso) { try { localStorage.setItem(DECK_KEY, String(current)); } catch(e){} }
+}
+
+function siguiente(){ irA(current + 1); }
+function anterior(){ irA(current - 1); }
+
+deckNext.addEventListener("click", siguiente);
+deckPrev.addEventListener("click", anterior);
+
+/* Restaurar posición guardada */
+(function(){
+  let guardado = 0;
+  try { guardado = parseInt(localStorage.getItem(DECK_KEY), 10) || 0; } catch(e){}
+  irA(guardado, true);
+})();
+
+/* Navegación por teclado (evita interferir con selects/textareas) */
+document.addEventListener("keydown", e => {
+  const tag = document.activeElement ? document.activeElement.tagName : "";
+  if (["SELECT", "TEXTAREA", "INPUT"].includes(tag)) return;
+  if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); siguiente(); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); anterior(); }
+  else if (e.key === "Home") { e.preventDefault(); irA(0); }
+  else if (e.key === "End") { e.preventDefault(); irA(slides.length - 1); }
+});
+
+/* Navegación por swipe (táctil) */
+let touchX = null;
+deckViewport.addEventListener("touchstart", e => { touchX = e.touches[0].clientX; }, {passive:true});
+deckViewport.addEventListener("touchend", e => {
+  if (touchX === null) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) { dx < 0 ? siguiente() : anterior(); }
+  touchX = null;
+}, {passive:true});
+
+/* Menú de índice */
+const deckMenuBtn = document.getElementById("deckMenuBtn");
+const deckMenuPanel = document.getElementById("deckMenuPanel");
+const deckMenuOverlay = document.getElementById("deckMenuOverlay");
+function abrirDeckMenu(){ deckMenuPanel.classList.add("show"); deckMenuOverlay.classList.add("show"); }
+function cerrarDeckMenu(){ deckMenuPanel.classList.remove("show"); deckMenuOverlay.classList.remove("show"); }
+deckMenuBtn.addEventListener("click", abrirDeckMenu);
+deckMenuOverlay.addEventListener("click", cerrarDeckMenu);
+document.querySelectorAll(".deck-menu-list button").forEach(b => {
+  b.addEventListener("click", () => { irA(Number(b.dataset.slide)); cerrarDeckMenu(); });
+});
+
+/* Tema claro / oscuro */
+const deckThemeBtn = document.getElementById("deckThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  deckThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+deckThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) — igual al de las demás guías TGS ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (respuesta modelo) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
