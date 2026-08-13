@@ -191,14 +191,14 @@
 <p>1. La dependencia empleado_id → nombre es una dependencia
 <select class="quiz-blank" data-correct="directa">
 <option value="">— elige —</option>
-<option value="directa">directa</option>
 <option value="transitiva">transitiva</option>
+<option value="directa">directa</option>
 </select>.</p>
 <p>2. La dependencia empleado_id → depto_nombre (a través de depto_id) es una dependencia
 <select class="quiz-blank" data-correct="transitiva">
 <option value="">— elige —</option>
-<option value="directa">directa</option>
 <option value="transitiva">transitiva</option>
+<option value="directa">directa</option>
 </select>.</p>
 <p class="quiz-progress"></p>
 </div>
@@ -280,9 +280,10 @@
 <p class="quiz-q">Una tabla PRODUCTO tiene una columna "categorias" que guarda valores como "Electrónica, Hogar". ¿Qué regla de 1FN se está violando?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">La clave primaria no está bien elegida.</button>
-<button class="quiz-opt" data-correct>Atomicidad: la columna guarda varios valores en una sola celda.</button>
+<button class="quiz-opt" data-correct>Atomicidad: falta un solo valor por celda.</button>
 <button class="quiz-opt">Hay una dependencia transitiva.</button>
 <button class="quiz-opt">Hay una dependencia parcial.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: 1FN exige que cada celda contenga un único valor atómico. 'Electrónica, Hogar' en una sola celda viola esa regla." data-ko="Las dependencias parciales y transitivas se evalúan en 2FN y 3FN, no en 1FN. El problema aquí es que la celda no es atómica: contiene varios valores." hidden></p>
 </div>
@@ -311,14 +312,14 @@
 <p>1. producto_nombre depende
 <select class="quiz-blank" data-correct="parcial">
 <option value="">— elige —</option>
-<option value="parcial">parcialmente</option>
 <option value="completamente">completamente</option>
+<option value="parcial">parcialmente</option>
 </select> de la clave primaria.</p>
 <p>2. cantidad depende
 <select class="quiz-blank" data-correct="completamente">
 <option value="">— elige —</option>
-<option value="parcial">parcialmente</option>
 <option value="completamente">completamente</option>
+<option value="parcial">parcialmente</option>
 </select> de la clave primaria.</p>
 <p class="quiz-progress"></p>
 </div>
@@ -347,8 +348,9 @@
 <div class="quiz-opts">
 <button class="quiz-opt">Porque depto_nombre no es atómico.</button>
 <button class="quiz-opt">Porque depende solo de una parte de la clave primaria.</button>
-<button class="quiz-opt" data-correct>Porque depende de depto_id, que es un atributo no clave, en lugar de depender directamente de empleado_id.</button>
+<button class="quiz-opt" data-correct>Porque depende de depto_id, un atributo no clave.</button>
 <button class="quiz-opt">Porque la tabla no tiene clave primaria.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: depto_nombre depende transitivamente de empleado_id, a través del atributo no clave depto_id. Eso es justamente lo que 3FN prohíbe." data-ko="El problema no es atomicidad (eso es 1FN) ni dependencia parcial (eso requiere clave compuesta, y aquí la clave es solo empleado_id). Es una dependencia transitiva a través de depto_id." hidden></p>
 </div>
@@ -385,6 +387,7 @@
 <div class="quiz-opts inline">
 <button class="quiz-opt" data-correct>Verdadero</button>
 <button class="quiz-opt">Falso</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: BCNF es más estricta que 3FN, así que cualquier tabla en BCNF automáticamente cumple también 3FN. Lo contrario no siempre es cierto." data-ko="Es verdadero: BCNF exige más que 3FN (sin la excepción de los atributos primos), así que toda tabla en BCNF ya cumple 3FN por definición." hidden></p>
 </div>
@@ -407,9 +410,10 @@
 <p class="quiz-q">PEDIDO_RAW ya tiene todos sus atributos atómicos (ninguna celda guarda varios valores). Al revisar 2FN, ¿qué atributos violan la dependencia completa respecto a la clave {pedido_id, producto_id}?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Solo cantidad.</button>
-<button class="quiz-opt" data-correct>fecha, cliente_id y cliente_nombre (dependen solo de pedido_id); producto_nombre y precio (dependen solo de producto_id).</button>
 <button class="quiz-opt">Ningún atributo: la tabla ya cumple 2FN.</button>
 <button class="quiz-opt">Todos los atributos, incluyendo cantidad.</button>
+<button class="quiz-opt" data-correct>fecha, cliente_id, cliente_nombre, producto_nombre y precio.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: fecha y los datos del cliente dependen solo de pedido_id, y los datos del producto dependen solo de producto_id. Ambos son casos de dependencia parcial. Solo cantidad depende de la clave completa." data-ko="Fíjate en cada atributo por separado: fecha/cliente_id/cliente_nombre solo necesitan pedido_id; producto_nombre/precio solo necesitan producto_id. Ambos grupos dependen de una PARTE de la clave, no de la clave completa." hidden></p>
 </div>
@@ -423,10 +427,11 @@
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">Dentro de la nueva tabla PEDIDO(pedido_id, fecha, cliente_id, cliente_nombre), ¿qué violación queda todavía, y cuál es la solución?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>Dependencia transitiva: cliente_nombre depende de cliente_id, no de pedido_id.</button>
 <button class="quiz-opt">Ninguna: PEDIDO ya está en 3FN.</button>
-<button class="quiz-opt" data-correct>Dependencia transitiva: cliente_nombre depende de cliente_id, no directamente de pedido_id. Se corrige separando CLIENTE(cliente_id, cliente_nombre).</button>
 <button class="quiz-opt">Dependencia parcial, porque pedido_id no es una clave compuesta.</button>
 <button class="quiz-opt">Falta de atomicidad en cliente_nombre.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: pedido_id → cliente_id → cliente_nombre es una cadena transitiva. La solución en 3FN es siempre la misma: separar el atributo transitivo en su propia tabla." data-ko="La clave de PEDIDO ya es una sola columna (pedido_id), así que no puede haber dependencia parcial. El problema es la cadena pedido_id → cliente_id → cliente_nombre: una dependencia transitiva." hidden></p>
 </div>
@@ -448,9 +453,10 @@
 <p class="quiz-q">Una universidad modela "Persona", que se especializa en "Estudiante" y "Docente". Un mismo individuo puede ser estudiante de posgrado y docente de pregrado al mismo tiempo. ¿Qué tipo de solapamiento es este?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Total y disjunta.</button>
-<button class="quiz-opt" data-correct>Parcial y solapada (si además puede haber personas registradas que no son ni una cosa ni la otra) o total y solapada (si toda Persona debe ser al menos una de las dos).</button>
+<button class="quiz-opt" data-correct>Solapada: parcial o total, según si toda Persona debe pertenecer a alguna subclase.</button>
 <button class="quiz-opt">No es una jerarquía ISA válida.</button>
 <button class="quiz-opt">Total y disjunta, porque son dos subclases distintas.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: como una misma Persona puede pertenecer a ambas subclases simultáneamente, la jerarquía es solapada, no disjunta." data-ko="La clave es que una misma Persona puede ser Estudiante Y Docente a la vez: eso es exactamente lo que define una jerarquía solapada, no disjunta." hidden></p>
 </div>
@@ -464,9 +470,10 @@
 <p class="quiz-q">¿En qué forma normal está esta tabla como máximo, y qué falla?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Solo cumple 1FN, porque tiene un atributo multivaluado.</button>
-<button class="quiz-opt" data-correct>Cumple 2FN (la clave es una sola columna, no puede haber dependencia parcial), pero no 3FN, porque editorial_nombre y editorial_pais dependen transitivamente de isbn a través de editorial_id.</button>
 <button class="quiz-opt">Ya está en 3FN, no hace falta cambiar nada.</button>
+<button class="quiz-opt" data-correct>Cumple 2FN, pero no 3FN (dependencia transitiva).</button>
 <button class="quiz-opt">No cumple ni 1FN.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: con clave simple (isbn), 2FN se cumple automáticamente. Pero editorial_nombre/editorial_pais dependen de editorial_id, no directamente de isbn: es una dependencia transitiva que rompe 3FN." data-ko="No hay atributos multivaluados (1FN se cumple) ni clave compuesta (2FN se cumple automáticamente con clave simple). El problema es la cadena isbn → editorial_id → editorial_nombre/editorial_pais: dependencia transitiva, viola 3FN." hidden></p>
 </div>
@@ -480,9 +487,10 @@
 <p class="quiz-q">Si además se cumple la regla "cada mecánico solo trabaja en una sucursal fija" (mecanico_id → sucursal_id), y sucursal_id se agrega como columna, ¿qué problema aparece?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Ninguno, la tabla queda perfectamente normalizada.</button>
-<button class="quiz-opt" data-correct>mecanico_id no es superclave de HORARIO, así que mecanico_id → sucursal_id viola BCNF (y probablemente también 3FN, si sucursal_id no es parte de ninguna clave candidata).</button>
 <button class="quiz-opt">Se viola 1FN porque sucursal_id no es atómico.</button>
 <button class="quiz-opt">Se viola 2FN porque la clave de HORARIO es una sola columna.</button>
+<button class="quiz-opt" data-correct>mecanico_id no es superclave de HORARIO, así que mecanico_id → sucursal_id viola BCNF.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: mecanico_id determina sucursal_id, pero mecanico_id por sí solo no identifica una fila de HORARIO (la clave es {vehiculo_placa, dia_semana} o similar). Eso es justo el patrón que viola BCNF." data-ko="sucursal_id sí es atómico, y la clave de HORARIO es compuesta (más de una columna), así que 2FN no es el problema directo aquí. El problema es que mecanico_id, que no es superclave, determina sucursal_id: viola BCNF." hidden></p>
 </div>
@@ -506,10 +514,11 @@
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">¿Cuál de estas es una tabla por subclase, en el mapeo de una jerarquía ISA?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>Una tabla para la superclase y una por cada subclase.</button>
 <button class="quiz-opt">Una sola tabla con columna "tipo" para distinguir subtipos.</button>
-<button class="quiz-opt" data-correct>Una tabla para la superclase y una tabla por cada subclase, unidas por clave primaria que también es foránea.</button>
 <button class="quiz-opt">Una tabla por subclase que repite los atributos de la superclase.</button>
 <button class="quiz-opt">Ninguna tabla: las jerarquías ISA no se pueden representar en relacional.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: 'tabla por subclase' es exactamente eso: superclase en su propia tabla, cada subclase en la suya, conectadas por PK/FK compartida." data-ko="La opción de la columna 'tipo' es la estrategia de tabla única; repetir atributos es tabla por clase completa. Tabla por subclase separa superclase y subclases en tablas distintas unidas por PK/FK." hidden></p>
 </div>
@@ -520,6 +529,7 @@
 <div class="quiz-opts inline">
 <button class="quiz-opt">Verdadero</button>
 <button class="quiz-opt" data-correct>Falso</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: es al revés. X → Y significa que X determina Y, no al contrario." data-ko="Es al revés: en X → Y, X es el determinante y Y es el dependiente. X determina Y." hidden></p>
 </div>
@@ -532,6 +542,7 @@
 <button class="quiz-opt" data-correct>2FN</button>
 <button class="quiz-opt">3FN</button>
 <button class="quiz-opt">BCNF</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: 2FN es la que exige que todo atributo no clave dependa de la clave completa, eliminando dependencias parciales." data-ko="1FN trata atomicidad; 3FN y BCNF tratan dependencias transitivas y superclaves. La que elimina dependencias parciales es específicamente 2FN." hidden></p>
 </div>
@@ -540,10 +551,11 @@
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">¿Cuál de estas anomalías ocurre cuando no puedes registrar un dato nuevo porque depende de la existencia de otro registro no relacionado?</p>
 <div class="quiz-opts">
-<button class="quiz-opt" data-correct>Anomalía de inserción.</button>
 <button class="quiz-opt">Anomalía de eliminación.</button>
 <button class="quiz-opt">Anomalía de actualización.</button>
+<button class="quiz-opt" data-correct>Anomalía de inserción.</button>
 <button class="quiz-opt">No es una anomalía, es un diseño correcto.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: no poder insertar un cliente nuevo sin un pedido es el ejemplo clásico de anomalía de inserción." data-ko="La eliminación pierde datos al borrar una fila; la actualización genera inconsistencias al modificar datos repetidos. No poder insertar por una dependencia artificial es anomalía de inserción." hidden></p>
 </div>
@@ -554,8 +566,9 @@
 <div class="quiz-opts">
 <button class="quiz-opt">Ninguna, son exactamente lo mismo.</button>
 <button class="quiz-opt">3FN aplica solo a claves compuestas; BCNF aplica solo a claves simples.</button>
-<button class="quiz-opt" data-correct>3FN permite que Y sea parte de una clave candidata aunque X no sea superclave; BCNF no permite esa excepción.</button>
 <button class="quiz-opt">BCNF es menos estricta que 3FN.</button>
+<button class="quiz-opt" data-correct>3FN permite una excepción que BCNF no permite.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: BCNF exige que todo determinante sea superclave, sin excepciones. 3FN sí tiene esa excepción cuando el dependiente es un atributo primo." data-ko="BCNF es MÁS estricta que 3FN, no menos, y ambas pueden aplicar a claves simples o compuestas. La diferencia real es la excepción que 3FN permite y BCNF no." hidden></p>
 </div>

@@ -117,9 +117,10 @@
 <p class="quiz-q">Un equipo de soporte técnico funciona muy bien puertas adentro: tiene un líder que asigna casos (S3), un espacio donde investigan nuevas causas de fallas (S4) y una meta clara del trimestre (S5). Sin embargo, la empresa completa sigue sin ser viable, porque ese equipo nunca se entera de los cambios de producto que hacen los demás equipos hasta que un cliente se queja. ¿Qué explica mejor la recursividad en este caso?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Que el equipo de soporte no es un sistema viable, porque ningún subsistema puede fallar a ningún nivel.</button>
-<button class="quiz-opt" data-correct>Que la viabilidad de cada nivel es independiente pero no suficiente: el equipo puede tener sus cinco funciones resueltas puertas adentro (nivel 1) y aun así faltar una función a nivel de toda la empresa (nivel 0), como la coordinación (S2) entre equipos.</button>
+<button class="quiz-opt" data-correct>Que la viabilidad de un nivel no garantiza la viabilidad del nivel superior.</button>
 <button class="quiz-opt">Que la recursividad no aplica a equipos de soporte, solo a equipos de desarrollo.</button>
 <button class="quiz-opt">Que el problema es exclusivamente de Requisito de Variedad, sin relación con el VSM.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: la recursividad significa que cada nivel se evalúa por separado. El equipo de soporte puede ser viable en su propio nivel y la empresa completa, un nivel más arriba, seguir sin serlo por falta de Sistema 2 entre equipos." data-ko="El equipo sí puede ser un sistema viable a su propio nivel (tiene S3, S4, S5 puertas adentro). El punto de la recursividad es que eso no garantiza la viabilidad del nivel superior: ahí falta Sistema 2, coordinación entre equipos." hidden></p>
 </div>
@@ -202,9 +203,10 @@
 <p class="quiz-q">Un e-commerce tiene un mecanismo que, ante una caída de tráfico anómala, primero intenta lo de siempre (agregar más servidores). Como la caída persiste y ya no es un pico normal, el sistema cambia por completo su política: reduce temporalmente las funciones no esenciales (recomendaciones, animaciones) para priorizar el checkout, algo que nunca antes había hecho. ¿Qué concepto describe mejor este segundo paso?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Homeostasis, porque sigue corrigiendo la misma variable de siempre.</button>
-<button class="quiz-opt" data-correct>Ultraestabilidad, porque el sistema no repitió su mecanismo habitual: cambió sus propias reglas de control para encontrar una nueva forma de estabilidad frente a una perturbación que el mecanismo de siempre no pudo absorber.</button>
 <button class="quiz-opt">Recursividad, porque involucra varios niveles de subsistemas.</button>
+<button class="quiz-opt" data-correct>Ultraestabilidad: el sistema cambió sus propias reglas de control.</button>
 <button class="quiz-opt">Atenuación de variedad, porque redujo funciones del sistema.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: agregar servidores es el mecanismo homeostático habitual. Cuando ese mecanismo no alcanza y el sistema cambia sus propias reglas de control (qué funciones priorizar), eso es ultraestabilidad." data-ko="El primer paso (agregar servidores) sí es homeostasis. Pero cambiar las propias reglas de control —priorizar checkout sobre otras funciones, algo que nunca hacía antes— es ultraestabilidad: el sistema modificó su propio mecanismo de control, no solo corrigió una variable con el mecanismo de siempre." hidden></p>
 </div>
@@ -268,9 +270,10 @@
 <p class="quiz-q">Un consultor externo aplica el VSM para diagnosticar una empresa. Durante las entrevistas, los empleados empiezan a cuestionar por primera vez sus propios procesos, y varios cambian su forma de trabajar incluso antes de que el consultor entregue el informe final. ¿Qué está pasando, en términos de órdenes de cibernética?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Nada especial: el consultor sigue siendo un observador externo de primer orden, como cualquier auditoría.</button>
-<button class="quiz-opt" data-correct>El diagnóstico dejó de ser puramente de primer orden: el propio acto de observar (las entrevistas) ya está modificando al sistema observado, así que el consultor pasó a ser, en la práctica, parte del sistema que analiza — cibernética de segundo orden.</button>
 <button class="quiz-opt">Es un caso de ultraestabilidad, sin relación con el orden de la observación.</button>
 <button class="quiz-opt">Es un error del consultor: un buen diagnóstico nunca debería influir en el sistema que estudia.</button>
+<button class="quiz-opt" data-correct>Cibernética de segundo orden: el acto de observar ya modificó al sistema.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: en cuanto el acto de observar (entrevistar, preguntar) cambia el comportamiento del sistema antes de cualquier conclusión formal, el observador ya no está completamente afuera. Eso es exactamente el punto de la cibernética de segundo orden." data-ko="No es ultraestabilidad (eso es sobre cambiar mecanismos de control ante perturbaciones grandes), y no es un error: es prácticamente inevitable. Cuando observar ya cambia al sistema observado, el diagnóstico se vuelve cibernética de segundo orden." hidden></p>
 </div>
@@ -351,8 +354,8 @@
 <p>2. El equipo de soporte automatizó respuestas para el 70% de los tickets repetitivos, sin contratar más personal. Esto ilustra
 <select class="quiz-blank" data-correct="amplificacion">
 <option value="">— elige —</option>
-<option value="amplificacion">amplificación de variedad</option>
 <option value="homeostasis">homeostasis</option>
+<option value="amplificacion">amplificación de variedad</option>
 <option value="clausura">clausura operacional</option>
 <option value="recursividad">recursividad</option>
 </select>.</p>
@@ -360,9 +363,9 @@
 <p>3. La API pública de NubeFácil solo acepta un catálogo fijo de operaciones predefinidas, en vez de aceptar cualquier consulta arbitraria. Esto ilustra
 <select class="quiz-blank" data-correct="atenuacion">
 <option value="">— elige —</option>
-<option value="atenuacion">atenuación de variedad</option>
 <option value="ultraestabilidad">ultraestabilidad</option>
 <option value="autopoiesis">autopoiesis</option>
+<option value="atenuacion">atenuación de variedad</option>
 <option value="amplificacion">amplificación de variedad</option>
 </select>.</p>
 
@@ -370,9 +373,9 @@
 <select class="quiz-blank" data-correct="ultraestabilidad">
 <option value="">— elige —</option>
 <option value="homeostasis">homeostasis</option>
-<option value="ultraestabilidad">ultraestabilidad</option>
 <option value="recursividad">recursividad</option>
 <option value="atenuacion">atenuación de variedad</option>
+<option value="ultraestabilidad">ultraestabilidad</option>
 </select>.</p>
 
 <p>5. La cultura de NubeFácil se sostiene sola: cada nueva persona aprende los mismos rituales (dailies, code reviews, postmortems sin culpa) de otras personas del equipo, sin que nadie desde afuera los imponga. Esto ilustra
@@ -431,10 +434,11 @@
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">La recursividad del VSM significa que...</p>
 <div class="quiz-opts">
-<button class="quiz-opt">Solo la empresa completa necesita los cinco subsistemas; sus partes internas no.</button>
 <button class="quiz-opt" data-correct>Cada Sistema 1 de un sistema viable es, a su vez, un sistema viable completo con sus propios cinco subsistemas.</button>
+<button class="quiz-opt">Solo la empresa completa necesita los cinco subsistemas; sus partes internas no.</button>
 <button class="quiz-opt">Los cinco subsistemas se repiten literalmente idénticos en cada nivel, sin adaptarse al contexto.</button>
 <button class="quiz-opt">La recursividad reemplaza a la Ley de Requisito de Variedad.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: esa es la idea central de la recursividad — cada parte operativa es, en sí misma, un sistema viable completo." data-ko="Es al revés: cada Sistema 1 (parte operativa) es, en sí mismo, un sistema viable con sus propios cinco subsistemas. La recursividad no reemplaza la Ley de Variedad; son conceptos complementarios." hidden></p>
 </div>
@@ -443,8 +447,9 @@
 <span class="quiz-badge">Verdadero o falso</span>
 <p class="quiz-q">La ultraestabilidad ocurre cuando un sistema corrige una perturbación usando siempre el mismo mecanismo de control, sin cambiar nada de su propia estructura.</p>
 <div class="quiz-opts inline">
-<button class="quiz-opt">Verdadero</button>
 <button class="quiz-opt" data-correct>Falso</button>
+<button class="quiz-opt">Verdadero</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: eso describe homeostasis, no ultraestabilidad. La ultraestabilidad implica que el sistema cambia su propia estructura o parámetros de control cuando el mecanismo habitual ya no alcanza." data-ko="Eso es la definición de homeostasis (corregir con el mecanismo de siempre). La ultraestabilidad es distinta: el sistema cambia su propia estructura o parámetros de control cuando el mecanismo habitual deja de ser suficiente." hidden></p>
 </div>
@@ -454,9 +459,10 @@
 <p class="quiz-q">Un sistema tiene clausura operacional cuando...</p>
 <div class="quiz-opts">
 <button class="quiz-opt">El entorno determina directamente cómo responde el sistema en cada situación.</button>
-<button class="quiz-opt" data-correct>El entorno solo puede perturbar al sistema, pero es la propia organización interna del sistema la que determina cómo responde.</button>
+<button class="quiz-opt" data-correct>El entorno perturba, pero la organización interna decide la respuesta.</button>
 <button class="quiz-opt">El sistema deja de tener cualquier relación con su entorno.</button>
 <button class="quiz-opt">El sistema solo puede tener un único subsistema activo a la vez.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: clausura operacional no significa aislamiento del entorno, sino que la respuesta a una perturbación la define la organización interna del sistema, no el entorno directamente." data-ko="Clausura operacional no significa que el entorno determine la respuesta, ni que el sistema quede aislado de él. Significa que el entorno perturba, pero la propia estructura interna del sistema decide cómo responder." hidden></p>
 </div>
@@ -488,9 +494,10 @@
 <p class="quiz-q">En términos de variedad, "defensa en profundidad" (varias capas de seguridad distintas) es un ejemplo de...</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Variedad insuficiente, porque agrega complejidad innecesaria.</button>
-<button class="quiz-opt" data-correct>Amplificación de variedad: cada capa cubre un tipo de amenaza distinto, sumando variedad de respuesta hasta acercarse a la variedad de ataques posibles.</button>
 <button class="quiz-opt">Autopoiesis, porque el sistema se protege a sí mismo.</button>
+<button class="quiz-opt" data-correct>Amplificación de variedad: cada capa cubre un tipo de amenaza distinto.</button>
 <button class="quiz-opt">Cibernética de segundo orden, porque involucra observación.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: cada capa de seguridad distinta amplifica la variedad total de respuesta del sistema de defensa frente a la variedad de ataques posibles." data-ko="No es variedad insuficiente (es justo lo contrario: busca cubrir más variedad), ni autopoiesis ni cibernética de segundo orden. Es amplificación de variedad: sumar capas distintas amplía la variedad de respuesta disponible." hidden></p>
 </div>

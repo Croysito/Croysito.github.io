@@ -124,10 +124,11 @@
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">Un sistema de e-commerce tiene un único mensaje de error genérico: "Ocurrió un problema, intenta de nuevo", que aparece igual sea que la tarjeta fue rechazada, el producto se agotó, hubo un error de red o el usuario escribió mal un dato. Según la Ley de Requisito de Variedad, ¿por qué este sistema falla como mecanismo de control?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>Falla porque la variedad de causas es mayor que la variedad de respuestas del sistema.</button>
 <button class="quiz-opt">No falla: un solo mensaje es más simple y siempre es mejor simplificar.</button>
-<button class="quiz-opt" data-correct>Falla porque la variedad de causas posibles del error es mucho mayor que la variedad de respuestas del sistema (una sola), así que no puede guiar al usuario a resolver la causa real de cada caso.</button>
 <button class="quiz-opt">Falla porque el sistema tiene demasiada entropía.</button>
 <button class="quiz-opt">Falla porque no existe un bucle de refuerzo en el mensaje.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: hay muchas causas distintas posibles (alta variedad de perturbación) y una sola respuesta posible (variedad mínima del regulador). Como la variedad del sistema es menor a la del problema, no puede absorberla: el usuario queda sin saber qué hacer en la mayoría de los casos." data-ko="No es un problema de entropía ni de bucles de refuerzo. Es exactamente Requisito de Variedad: existen muchas causas distintas de error (alta variedad) y el sistema solo tiene una respuesta (variedad mínima), así que no puede cubrir ni distinguir la mayoría de los casos reales." hidden></p>
 </div>
@@ -242,9 +243,10 @@
 <p class="quiz-q">La empresa de 200 ingenieros nunca definió estándares comunes de arquitectura ni un calendario compartido de despliegues: cada equipo decide todo por su cuenta. Cada vez es más frecuente que un equipo rompa sin querer el trabajo de otro al desplegar. ¿Qué subsistema de viabilidad falta con más claridad?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Sistema 1: falta gente escribiendo código.</button>
-<button class="quiz-opt" data-correct>Sistema 2: falta coordinación entre las unidades operativas, que es justamente lo que evita que los equipos choquen entre sí.</button>
+<button class="quiz-opt" data-correct>Sistema 2: falta coordinación entre las unidades operativas.</button>
 <button class="quiz-opt">Sistema 5: falta que la empresa defina su identidad.</button>
 <button class="quiz-opt">Ninguno: esto es normal y no tiene relación con la viabilidad de la organización.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: hay de sobra Sistema 1 (los 200 ingenieros trabajando). El síntoma descrito —equipos que se pisan entre sí al desplegar— es exactamente lo que el Sistema 2 (Coordinación) existe para prevenir." data-ko="Sobra Sistema 1 (hay 200 ingenieros trabajando), y el problema no es de identidad (Sistema 5). El síntoma —equipos que chocan entre sí sin estándares ni calendario compartido— es la falta de Sistema 2: Coordinación." hidden></p>
 </div>
@@ -258,9 +260,10 @@
 <p class="quiz-q">Aquí el Sistema 4 (Inteligencia) sí funcionó y emitió la alerta a tiempo. ¿Qué falló entonces, según el modelo?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Nada falló: perder clientes frente a un competidor no tiene relación con la viabilidad.</button>
-<button class="quiz-opt" data-correct>Falló el equilibrio entre Sistema 3 y Sistema 4 que debería resolver el Sistema 5: la dirección priorizó por completo el corto plazo (cerrar el trimestre) e ignoró la señal de futuro que el Sistema 4 ya había detectado.</button>
 <button class="quiz-opt">Falló el Sistema 1, porque los ingenieros no programaron lo suficiente.</button>
+<button class="quiz-opt" data-correct>Falló el equilibrio entre Sistema 3 y 4 que debía resolver el Sistema 5.</button>
 <button class="quiz-opt">Falló el Sistema 2, porque los equipos no coordinaron su código.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: Sistema 4 hizo su trabajo (detectó el cambio del entorno a tiempo). Lo que falló es la función de Sistema 5: balancear el presente (Sistema 3, cerrar el trimestre) con el futuro (Sistema 4, la alerta), sin dejar que uno aplaste por completo al otro." data-ko="El problema no es de código ni de coordinación entre equipos (Sistema 1 y 2). La señal de futuro sí llegó a tiempo (Sistema 4 funcionó); lo que falló es que Sistema 5 no supo balancear esa señal contra la presión del corto plazo (Sistema 3)." hidden></p>
 </div>
@@ -281,9 +284,10 @@
 <p class="quiz-q">Según la Ley de Requisito de Variedad, ¿cuál es la causa raíz de que el personal "improvise" ante huelgas o fallas mecánicas?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">El personal no se esfuerza lo suficiente.</button>
-<button class="quiz-opt" data-correct>La variedad de protocolos de la aerolínea (solo cubre clima) es menor que la variedad real de incidentes posibles, así que frente a cualquier caso no cubierto, no hay una respuesta preparada.</button>
 <button class="quiz-opt">Los aviones tienen demasiada entropía.</button>
 <button class="quiz-opt">La aerolínea tiene un exceso de variedad en sus protocolos.</button>
+<button class="quiz-opt" data-correct>La variedad de protocolos es menor que la variedad real de incidentes.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: el problema no es de esfuerzo individual, es estructural. Solo se preparó variedad de respuesta para un tipo de incidente (clima); frente a cualquier otro tipo, la variedad del sistema es cero, y ahí es donde aparece la improvisación." data-ko="No es un problema de esfuerzo del personal ni de entropía en los aviones. Es que la aerolínea preparó variedad de respuesta solo para un tipo de incidente (clima); ante huelgas o fallas mecánicas, esa variedad no alcanza, y por eso el personal improvisa." hidden></p>
 </div>
@@ -296,10 +300,11 @@
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">Según el Modelo de Sistema Viable, ¿por qué esto funciona bien en una ONG de 3 personas, a diferencia de la startup de 200 ingenieros que viste antes?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>Porque a esa escala una sola persona puede cumplir las cinco funciones sin estorbarse.</button>
 <button class="quiz-opt">Porque a esa escala las cinco funciones (1 a 5) dejan de ser necesarias.</button>
-<button class="quiz-opt" data-correct>Porque a esa escala una sola persona puede cumplir las cinco funciones sin que se estorben entre sí; el problema de la startup no era tener pocas personas, sino que su tamaño hacía imposible que una sola persona siguiera cumpliendo las cinco funciones a la vez.</button>
 <button class="quiz-opt">Porque las ONG no necesitan ser sistemas viables.</button>
 <button class="quiz-opt">Porque en la ONG no existe el Sistema 1.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: las cinco funciones siguen siendo necesarias en cualquier tamaño, solo que a pequeña escala una sola persona puede cumplirlas todas sin conflicto. Lo que cambia con el crecimiento no es la necesidad de las funciones, sino la posibilidad de que una sola persona las siga cumpliendo todas bien." data-ko="Las cinco funciones no dejan de ser necesarias, y sí existe Sistema 1 (el trabajo de la ONG). Lo que sucede es que a pequeña escala una sola persona puede cumplirlas todas sin fricción; al crecer, eso deja de ser posible, y ahí aparecen los síntomas que viste en la startup." hidden></p>
 </div>
@@ -353,9 +358,10 @@
 <p class="quiz-q">La Ley de Requisito de Variedad dice, en esencia, que...</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Todo sistema debe minimizar su número de respuestas posibles para ser eficiente.</button>
-<button class="quiz-opt" data-correct>Solo la variedad puede absorber variedad: el controlador necesita al menos tantas respuestas distintas como perturbaciones posibles enfrenta.</button>
+<button class="quiz-opt" data-correct>Solo la variedad puede absorber variedad.</button>
 <button class="quiz-opt">La variedad no tiene relación con la capacidad de control de un sistema.</button>
 <button class="quiz-opt">Todo sistema debe tener exactamente cinco subsistemas de variedad.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: esa es la formulación clásica de Ashby. Un controlador con menos variedad que las perturbaciones que enfrenta, tarde o temprano pierde el control." data-ko="No se trata de minimizar respuestas ni de un número fijo de subsistemas (eso es el Modelo de Sistema Viable, otro concepto). La ley dice que el controlador necesita al menos tanta variedad como la perturbación que enfrenta." hidden></p>
 </div>
@@ -366,6 +372,7 @@
 <div class="quiz-opts inline">
 <button class="quiz-opt">Verdadero</button>
 <button class="quiz-opt" data-correct>Falso</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: las cinco funciones son necesarias en conjunto. Sin Sistema 2, las unidades operativas tienden a entrar en conflicto entre sí, sin importar cuánta gente trabaje." data-ko="Tener mucho Sistema 1 no basta. Sin Sistema 2 (coordinación), las unidades operativas chocan entre sí: se necesitan las cinco funciones juntas para que el sistema sea plenamente viable." hidden></p>
 </div>
@@ -378,6 +385,7 @@
 <button class="quiz-opt">Sistema 2.</button>
 <button class="quiz-opt" data-correct>Sistema 4.</button>
 <button class="quiz-opt">Sistema 5.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: el Sistema 4 (Inteligencia) es el que mira hacia afuera y hacia el futuro." data-ko="Sistema 1 es el trabajo operativo, Sistema 2 la coordinación interna y Sistema 5 la identidad y el propósito. El que mira hacia afuera y hacia el futuro es el Sistema 4 (Inteligencia)." hidden></p>
 </div>
@@ -409,9 +417,10 @@
 <p class="quiz-q">Aumentar la variedad de un sistema de monitoreo de software (alertas específicas en vez de una sola alerta genérica) sirve principalmente para...</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Reducir la cantidad de servidores necesarios.</button>
-<button class="quiz-opt" data-correct>Que la capacidad de respuesta del equipo iguale la variedad real de fallas posibles, permitiendo un control efectivo.</button>
 <button class="quiz-opt">Eliminar por completo la necesidad de retroalimentación.</button>
 <button class="quiz-opt">Aumentar la entropía del sistema.</button>
+<button class="quiz-opt" data-correct>Que la respuesta del equipo iguale la variedad real de fallas.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: alertas específicas aumentan la variedad de respuesta del equipo, acercándola a la variedad real de fallas posibles, que es justamente lo que permite un control efectivo." data-ko="No tiene relación directa con el número de servidores ni con la entropía, y la retroalimentación sigue siendo necesaria. El objetivo es que la variedad de respuesta del equipo alcance a la variedad real de fallas posibles." hidden></p>
 </div>

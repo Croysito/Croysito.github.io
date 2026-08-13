@@ -473,10 +473,11 @@ DELETE FROM tabla WHERE condición;</code></pre>
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">Al insertar un producto con precio -5.00, PostgreSQL respondió con un error que menciona "violates check constraint". ¿Qué restricción provocó ese error?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>CHECK (precio &gt; 0)</button>
 <button class="quiz-opt">NOT NULL</button>
 <button class="quiz-opt">UNIQUE</button>
-<button class="quiz-opt" data-correct>CHECK (precio &gt; 0)</button>
 <button class="quiz-opt">FOREIGN KEY</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: el mensaje 'violates check constraint' identifica exactamente una restricción CHECK, en este caso la que exige precio positivo." data-ko="El mensaje 'violates check constraint' es específico de las restricciones CHECK, no de NOT NULL, UNIQUE ni FOREIGN KEY, que tienen su propio texto de error distinto." hidden></p>
 </div>
@@ -485,8 +486,9 @@ DELETE FROM tabla WHERE condición;</code></pre>
 <span class="quiz-badge">Verdadero o falso</span>
 <p class="quiz-q">En el ejercicio 4, borrar el producto referenciado por detalle_pedido funcionó sin problema porque PostgreSQL siempre permite borrar cualquier fila.</p>
 <div class="quiz-opts inline">
-<button class="quiz-opt">Verdadero</button>
 <button class="quiz-opt" data-correct>Falso</button>
+<button class="quiz-opt">Verdadero</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: el borrado falló porque la clave foránea de detalle_pedido hacia producto está declarada con ON DELETE RESTRICT, que bloquea el borrado mientras existan filas hijas." data-ko="Es falso: el borrado de producto falló porque su clave foránea desde detalle_pedido usa ON DELETE RESTRICT, que impide borrar la fila padre mientras tenga filas hijas asociadas." hidden></p>
 </div>
@@ -496,9 +498,10 @@ DELETE FROM tabla WHERE condición;</code></pre>
 <p class="quiz-q">Después de DROP TABLE producto CASCADE, ¿qué pasó con la tabla detalle_pedido?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Se borró por completo, junto con producto.</button>
+<button class="quiz-opt" data-correct>Siguió existiendo con sus filas intactas.</button>
 <button class="quiz-opt">Se vació de filas, pero la tabla siguió existiendo.</button>
-<button class="quiz-opt" data-correct>Siguió existiendo con sus filas intactas; solo se eliminó la restricción de clave foránea que dependía de producto.</button>
 <button class="quiz-opt">No cambió nada, incluida la clave foránea.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: DROP TABLE ... CASCADE elimina los objetos que dependen de la tabla eliminada (en este caso, la restricción de clave foránea), pero no borra la tabla que la contiene ni sus filas." data-ko="DROP TABLE ... CASCADE no borra la tabla dependiente ni sus filas: solo elimina los objetos que dependían directamente de la tabla borrada, como la restricción de clave foránea de detalle_pedido." hidden></p>
 </div>

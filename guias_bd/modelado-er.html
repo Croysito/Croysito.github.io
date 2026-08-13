@@ -116,6 +116,7 @@
 <button class="quiz-opt">Lógica.</button>
 <button class="quiz-opt">Física.</button>
 <button class="quiz-opt">Ninguna: el MER se usa después de crear las tablas.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: el MER pertenece a la fase conceptual, independiente de cualquier motor de base de datos concreto." data-ko="El MER se usa en la fase conceptual, antes de pensar en tablas (fase lógica) o en un motor de base de datos específico (fase física)." hidden></p>
 </div>
@@ -237,23 +238,23 @@
 <p>1. El carnet de identidad y el código de estudiante son ambos, antes de decidir cuál usar, ejemplos de
 <select class="quiz-blank" data-correct="candidata">
 <option value="">— elige —</option>
-<option value="candidata">clave candidata</option>
 <option value="primaria">clave primaria</option>
+<option value="candidata">clave candidata</option>
 <option value="foranea">clave foránea</option>
 </select>.</p>
 <p>2. Una vez que la universidad decide usar el código de estudiante para identificar cada fila de la tabla "Estudiante", ese código pasa a ser la
 <select class="quiz-blank" data-correct="primaria">
 <option value="">— elige —</option>
 <option value="candidata">clave candidata</option>
-<option value="primaria">clave primaria</option>
 <option value="foranea">clave foránea</option>
+<option value="primaria">clave primaria</option>
 </select>.</p>
 <p>3. Cuando la tabla "Matrícula" guarda ese mismo código para saber a qué estudiante pertenece cada registro, ese código funciona ahí como
 <select class="quiz-blank" data-correct="foranea">
 <option value="">— elige —</option>
+<option value="foranea">clave foránea</option>
 <option value="candidata">clave candidata</option>
 <option value="primaria">clave primaria</option>
-<option value="foranea">clave foránea</option>
 </select>.</p>
 <p class="quiz-progress"></p>
 </div>
@@ -278,9 +279,10 @@
 <p class="quiz-q">En la frase "Un Alumno SE_INSCRIBE en un Curso", ¿cuál es la relación?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Alumno.</button>
-<button class="quiz-opt">Curso.</button>
 <button class="quiz-opt" data-correct>SE_INSCRIBE.</button>
+<button class="quiz-opt">Curso.</button>
 <button class="quiz-opt">Alumno y Curso juntos.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: SE_INSCRIBE es el verbo que conecta a las dos entidades (Alumno y Curso); Alumno y Curso son las entidades, no la relación." data-ko="Las entidades son los sustantivos (Alumno, Curso). La relación es el verbo que las conecta con sentido de negocio: SE_INSCRIBE." hidden></p>
 </div>
@@ -359,8 +361,9 @@
 <span class="quiz-badge">Verdadero o falso</span>
 <p class="quiz-q">Una entidad débil puede identificarse de forma única usando solamente sus propios atributos.</p>
 <div class="quiz-opts inline">
-<button class="quiz-opt">Verdadero</button>
 <button class="quiz-opt" data-correct>Falso</button>
+<button class="quiz-opt">Verdadero</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: por definición, una entidad débil necesita combinar su clave parcial con la clave de la entidad fuerte de la que depende para identificarse de forma única." data-ko="Justo al revés: una entidad débil NO puede identificarse solo con sus propios atributos. Necesita apoyarse en la clave de su entidad fuerte." hidden></p>
 </div>
@@ -516,9 +519,10 @@
 <p class="quiz-q">La tabla EMPLEADOS de arriba tiene una columna jefe_id que hace referencia al id de otra fila de esa misma tabla. ¿Qué tipo de relación representa esto en el modelo Entidad-Relación?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Una relación N:M entre dos entidades distintas.</button>
-<button class="quiz-opt" data-correct>Una relación reflexiva (recursiva) dentro de la misma entidad.</button>
 <button class="quiz-opt">Una entidad débil.</button>
+<button class="quiz-opt" data-correct>Una relación reflexiva (recursiva).</button>
 <button class="quiz-opt">Un atributo multivaluado.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: EMPLEADO se relaciona consigo mismo (ES_JEFE_DE / REPORTA_A), exactamente el caso de relación reflexiva que viste en la sección de Relaciones." data-ko="jefe_id apunta a otra fila de la misma tabla EMPLEADOS: eso es una relación reflexiva (recursiva), no una relación entre dos entidades distintas ni una entidad débil." hidden></p>
 </div>
@@ -532,9 +536,10 @@
 <p class="quiz-q">¿Qué error de modelado se está cometiendo con las columnas telefono1, telefono2 y telefono3, y cómo se corrige?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Ningún error: así se modela correctamente un atributo multivaluado.</button>
-<button class="quiz-opt" data-correct>Se está tratando un atributo multivaluado como si fueran varios atributos simples repetidos; la solución es crear una tabla aparte para los teléfonos.</button>
 <button class="quiz-opt">Falta agregar una clave foránea a la tabla CLIENTES.</button>
 <button class="quiz-opt">telefono1 debería ser la clave primaria de la tabla.</button>
+<button class="quiz-opt" data-correct>Se está tratando un atributo multivaluado como varios atributos simples repetidos.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: repetir columnas para un mismo tipo de dato es la señal clásica de un atributo multivaluado mal modelado. La solución correcta es una tabla TELEFONOS relacionada por clave foránea al cliente." data-ko="Repetir columnas (telefono1, telefono2, telefono3) para el mismo tipo de dato es exactamente el síntoma de un atributo multivaluado tratado como si fuera simple. Se corrige con una tabla aparte." hidden></p>
 </div>
@@ -547,10 +552,11 @@
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">¿Cuál es la cardinalidad correcta de la relación entre Vuelo y Avión?</p>
 <div class="quiz-opts">
-<button class="quiz-opt">1:1</button>
 <button class="quiz-opt" data-correct>1:N (un Avión, muchos Vuelos)</button>
+<button class="quiz-opt">1:1</button>
 <button class="quiz-opt">N:M</button>
 <button class="quiz-opt">No se puede modelar como relación.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: cada Vuelo tiene un único Avión, pero cada Avión puede operar muchos Vuelos. Eso es exactamente una relación 1:N desde Avión hacia Vuelo." data-ko="Fíjate en la dirección: un Avión se repite en muchos Vuelos, pero cada Vuelo tiene solo un Avión. Eso es 1:N, no 1:1 ni N:M." hidden></p>
 </div>
@@ -574,10 +580,11 @@
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">¿Quién propuso el modelo Entidad-Relación?</p>
 <div class="quiz-opts">
-<button class="quiz-opt" data-correct>Peter Chen, en 1976.</button>
 <button class="quiz-opt">Edgar Codd, en 1970.</button>
+<button class="quiz-opt" data-correct>Peter Chen, en 1976.</button>
 <button class="quiz-opt">Ludwig von Bertalanffy, en 1968.</button>
 <button class="quiz-opt">Norbert Wiener, en 1948.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: Peter Chen propuso el modelo Entidad-Relación en 1976, como herramienta conceptual independiente del motor de base de datos." data-ko="El modelo Entidad-Relación fue propuesto por Peter Chen en 1976. Edgar Codd es el creador del modelo relacional (1970), un aporte relacionado pero distinto." hidden></p>
 </div>
@@ -588,6 +595,7 @@
 <div class="quiz-opts inline">
 <button class="quiz-opt">Verdadero</button>
 <button class="quiz-opt" data-correct>Falso</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: una relación N:M necesita una tabla intermedia con dos claves foráneas; una sola clave foránea no alcanza para representar esa cardinalidad." data-ko="Una relación N:M no cabe en una sola clave foránea: necesita una tabla intermedia con una clave foránea hacia cada una de las dos entidades." hidden></p>
 </div>
@@ -597,9 +605,10 @@
 <p class="quiz-q">Un Departamento tiene muchos Empleados, pero cada Empleado pertenece a un único Departamento. ¿Cuál es la cardinalidad?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">1:1</button>
-<button class="quiz-opt" data-correct>1:N</button>
 <button class="quiz-opt">N:M</button>
+<button class="quiz-opt" data-correct>1:N</button>
 <button class="quiz-opt">0:0</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: un Departamento se relaciona con varios Empleados, pero cada Empleado con un único Departamento: exactamente 1:N." data-ko="Un lado (Departamento) tiene muchas instancias relacionadas, el otro (Empleado) solo una. Eso es 1:N, no 1:1 ni N:M." hidden></p>
 </div>
@@ -608,10 +617,11 @@
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">¿Cuál de estas situaciones describe mejor a una entidad débil?</p>
 <div class="quiz-opts">
-<button class="quiz-opt" data-correct>"Dependiente", que solo puede identificarse combinando su nombre con el id del Empleado del que depende.</button>
 <button class="quiz-opt">"Producto", identificado por su propio código de barras.</button>
 <button class="quiz-opt">"Cliente", identificado por su número de identidad.</button>
 <button class="quiz-opt">"País", identificado por su nombre oficial.</button>
+<button class="quiz-opt" data-correct>"Dependiente", identificado combinando su nombre con el id del Empleado.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: Dependiente no puede identificarse solo con sus propios atributos, necesita apoyarse en la clave de su entidad fuerte (Empleado). Esa es la definición de entidad débil." data-ko="Las otras opciones se identifican perfectamente con sus propios atributos. Una entidad débil, como Dependiente, necesita apoyarse en la clave de otra entidad para identificarse." hidden></p>
 </div>
@@ -620,10 +630,11 @@
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">Al pasar un modelo ER a tablas relacionales, ¿qué le ocurre a una relación N:M?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>Se convierte en una tabla intermedia nueva.</button>
 <button class="quiz-opt">Se ignora, no se representa en las tablas.</button>
-<button class="quiz-opt" data-correct>Se convierte en una tabla intermedia con una clave foránea hacia cada entidad relacionada.</button>
 <button class="quiz-opt">Se convierte en un solo atributo multivaluado.</button>
 <button class="quiz-opt">Se convierte en una entidad débil.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: la única forma de representar correctamente una relación N:M en tablas relacionales es con una tabla intermedia y dos claves foráneas." data-ko="Una relación N:M requiere una tabla intermedia con dos claves foráneas, una hacia cada entidad. Ninguna de las otras opciones representa correctamente esa cardinalidad." hidden></p>
 </div>

@@ -625,9 +625,10 @@ SELECT * FROM cliente;</textarea>
 <p class="quiz-q">En el ejercicio 1.5 intentaste insertar dos productos en una sola instrucción: uno válido y otro con precio negativo. ¿Qué pasó de verdad?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Se insertó 'Cargador USB-C' y falló solo 'Cable roto'.</button>
-<button class="quiz-opt" data-correct>No se insertó ninguno de los dos: el INSERT completo falló.</button>
 <button class="quiz-opt">Se insertaron ambos, y 'Cable roto' quedó con precio en NULL.</button>
+<button class="quiz-opt" data-correct>No se insertó ninguno de los dos: el INSERT completo falló.</button>
 <button class="quiz-opt">PostgreSQL corrigió automáticamente el precio negativo a positivo.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: comprobaste con el SELECT posterior que 'Cargador USB-C' tampoco quedó guardado. Un INSERT con varias filas es una sola instrucción: si cualquier fila viola una restricción, ninguna se guarda." data-ko="El SELECT posterior mostró que 'Cargador USB-C' no quedó guardado, aunque su fila era válida. Un INSERT con varias filas es una sola unidad: si una fila viola el CHECK, toda la instrucción falla y no se guarda nada." hidden></p>
 </div>
@@ -638,6 +639,7 @@ SELECT * FROM cliente;</textarea>
 <div class="quiz-opts inline">
 <button class="quiz-opt">Verdadero</button>
 <button class="quiz-opt" data-correct>Falso</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: el borrado falló porque la clave foránea de detalle_pedido hacia producto usa ON DELETE RESTRICT, que bloquea el borrado del padre mientras tenga filas hijas asociadas." data-ko="Es falso: el DELETE fue rechazado. La clave foránea de detalle_pedido hacia producto está declarada con ON DELETE RESTRICT, que impide borrar la fila padre mientras existan filas hijas que la referencien." hidden></p>
 </div>
@@ -647,9 +649,10 @@ SELECT * FROM cliente;</textarea>
 <p class="quiz-q">En el ejercicio 3.2 borraste el pedido de Lucía Paredes y sus filas de detalle_pedido desaparecieron solas, sin que las borraras a mano. ¿Por qué?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Porque todo DELETE en PostgreSQL borra automáticamente las tablas relacionadas.</button>
-<button class="quiz-opt" data-correct>Porque la clave foránea de detalle_pedido hacia pedido está declarada con ON DELETE CASCADE.</button>
 <button class="quiz-opt">Porque detalle_pedido no tenía ninguna fila para ese pedido.</button>
 <button class="quiz-opt">Porque usaste TRUNCATE en vez de DELETE.</button>
+<button class="quiz-opt" data-correct>Porque la clave foránea de detalle_pedido hacia pedido está declarada con ON DELETE CASCADE.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: ON DELETE CASCADE es la regla, definida en la clave foránea de detalle_pedido hacia pedido, que borra automáticamente las filas hijas cuando se borra la fila padre." data-ko="No es un comportamiento general de DELETE, sino específico de esa clave foránea: detalle_pedido.pedido_id está declarada con ON DELETE CASCADE, que arrastra el borrado a las filas hijas." hidden></p>
 </div>
@@ -690,10 +693,11 @@ SELECT * FROM cliente;</textarea>
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">En el ejercicio 5.5 filtraste con fecha_entrega IS NULL. ¿Por qué WHERE fecha_entrega = NULL nunca hubiera funcionado, ni siquiera para las filas que sí tienen NULL ahí?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>Porque comparar contra NULL nunca da verdadero.</button>
 <button class="quiz-opt">Porque = NULL es un error de sintaxis y PostgreSQL lo rechaza.</button>
-<button class="quiz-opt" data-correct>Porque NULL representa "desconocido", y comparar cualquier cosa contra un desconocido nunca da verdadero.</button>
 <button class="quiz-opt">Porque = NULL solo funciona con columnas numéricas.</button>
 <button class="quiz-opt">Porque hay que usar NULL entre comillas: = 'NULL'.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: en SQL, NULL no es un valor comparable, es la ausencia de uno. Cualquier comparación (=, <>, etc.) contra NULL da un resultado desconocido, que WHERE trata como si fuera falso — por eso existen IS NULL e IS NOT NULL." data-ko="No es un error de sintaxis ni un tema de tipos de dato: NULL representa 'desconocido', y comparar algo contra un desconocido con = da otro desconocido, nunca verdadero. IS NULL existe justamente para resolver este caso." hidden></p>
 </div>
@@ -704,14 +708,14 @@ SELECT * FROM cliente;</textarea>
 <p>1. Antes de aplicar LIMIT y OFFSET, el resultado queda ordenado de
 <select class="quiz-blank" data-correct="mayor">
 <option value="">— elige —</option>
-<option value="mayor">precio más alto a más bajo</option>
 <option value="menor">precio más bajo a más alto</option>
+<option value="mayor">precio más alto a más bajo</option>
 </select>.</p>
 <p>2. OFFSET 3 hace que la consulta
 <select class="quiz-blank" data-correct="salta">
 <option value="">— elige —</option>
-<option value="salta">salte los 3 productos más caros antes de empezar a contar</option>
 <option value="repite">devuelva los mismos 3 productos más caros dos veces</option>
+<option value="salta">salte los 3 productos más caros antes de empezar a contar</option>
 <option value="filtra">filtre los productos con precio menor a 3</option>
 </select>.</p>
 <p class="quiz-progress"></p>

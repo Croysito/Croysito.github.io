@@ -113,10 +113,11 @@
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">Necesitas guardar el precio de un producto, con exactitud hasta el centavo. ¿Qué tipo eliges en PostgreSQL?</p>
 <div class="quiz-opts">
-<button class="quiz-opt">FLOAT</button>
 <button class="quiz-opt" data-correct>NUMERIC(10,2)</button>
+<button class="quiz-opt">FLOAT</button>
 <button class="quiz-opt">VARCHAR(10)</button>
 <button class="quiz-opt">BOOLEAN</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: NUMERIC garantiza precisión exacta en cálculos monetarios. FLOAT es aritmética de punto flotante y puede acumular errores de redondeo." data-ko="FLOAT puede perder precisión en cálculos monetarios por ser aritmética de punto flotante. Para dinero, el tipo correcto es NUMERIC(precision, escala)." hidden></p>
 </div>
@@ -185,8 +186,8 @@ CREATE TABLE producto (
 <p>2. Si no especificas el valor de "activo" al insertar, PostgreSQL usará
 <select class="quiz-blank" data-correct="true">
 <option value="">— elige —</option>
-<option value="true">true, por el DEFAULT</option>
 <option value="null">NULL</option>
+<option value="true">true, por el DEFAULT</option>
 <option value="error">un error, porque falta el valor</option>
 </select>.</p>
 <p class="quiz-progress"></p>
@@ -282,8 +283,9 @@ CREATE TABLE producto (
 <span class="quiz-badge">Verdadero o falso</span>
 <p class="quiz-q">Si ejecutas el CREATE TABLE de detalle_pedido antes que el de producto, PostgreSQL lo crea sin problema y simplemente valida la referencia después.</p>
 <div class="quiz-opts inline">
-<button class="quiz-opt">Verdadero</button>
 <button class="quiz-opt" data-correct>Falso</button>
+<button class="quiz-opt">Verdadero</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: PostgreSQL lanza un error inmediato del tipo 'relation producto does not exist' porque REFERENCES necesita que la tabla referenciada ya exista en ese momento." data-ko="Es falso: PostgreSQL valida la existencia de la tabla referenciada en el momento de crear la clave foránea, no después. Si producto no existe todavía, el CREATE TABLE falla de inmediato." hidden></p>
 </div>
@@ -321,9 +323,10 @@ ALTER TABLE cliente DROP COLUMN correo;</code></pre>
 <p class="quiz-q">La tabla cliente ya tiene 500 filas. Ejecutas: ALTER TABLE cliente ADD COLUMN puntos INTEGER NOT NULL; ¿Qué ocurre?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Se agrega la columna y queda en NULL en las 500 filas existentes.</button>
-<button class="quiz-opt" data-correct>Falla, porque NOT NULL exige un valor y no hay un DEFAULT para llenar las filas existentes.</button>
+<button class="quiz-opt" data-correct>La instrucción falla y no se agrega la columna.</button>
 <button class="quiz-opt">Se agrega la columna con valor 0 automáticamente.</button>
 <button class="quiz-opt">No es posible agregar columnas a una tabla con datos.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: sin DEFAULT, PostgreSQL no tiene con qué llenar 'puntos' en las filas ya existentes, y NOT NULL no permite dejarlas vacías. La solución es agregar DEFAULT 0 (u otro valor) a la instrucción." data-ko="Sí es posible agregar columnas a una tabla con datos, pero NOT NULL sin DEFAULT falla porque PostgreSQL no sabe qué valor poner en las 500 filas ya existentes." hidden></p>
 </div>
@@ -380,9 +383,10 @@ DROP TABLE IF EXISTS producto, cliente;</code></pre>
 <p class="quiz-q">¿Cuál CREATE TABLE es el correcto?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">CREATE TABLE pago (pago_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY, pedido_id INTEGER, monto NUMERIC(10,2), fecha_pago DATE);</button>
-<button class="quiz-opt" data-correct>CREATE TABLE pago (pago_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY, pedido_id INTEGER NOT NULL REFERENCES pedido(pedido_id), monto NUMERIC(10,2) NOT NULL CHECK (monto > 0), fecha_pago DATE NOT NULL DEFAULT CURRENT_DATE);</button>
 <button class="quiz-opt">CREATE TABLE pago (pedido_id INTEGER PRIMARY KEY REFERENCES pedido(pedido_id), monto NUMERIC(10,2), fecha_pago DATE);</button>
+<button class="quiz-opt" data-correct>CREATE TABLE pago (pago_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY, pedido_id INTEGER NOT NULL REFERENCES pedido(pedido_id), monto NUMERIC(10,2) NOT NULL CHECK (monto > 0), fecha_pago DATE);</button>
 <button class="quiz-opt">CREATE TABLE pago (pago_id INTEGER, pedido_id INTEGER REFERENCES pedido(pedido_id), monto VARCHAR(10) CHECK (monto > 0));</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: pedido_id debe ser NOT NULL y REFERENCES pedido(pedido_id) para vincular cada pago a un pedido; monto necesita CHECK (monto > 0) para excluir negativos y cero." data-ko="La opción sin REFERENCES ni NOT NULL en pedido_id no vincula el pago a ningún pedido de forma obligatoria; usar pedido_id como PRIMARY KEY del pago impediría varios pagos por pedido; y monto como VARCHAR no puede compararse con > 0 de forma numérica." hidden></p>
 </div>
@@ -397,8 +401,9 @@ DROP TABLE IF EXISTS producto, cliente;</code></pre>
 <div class="quiz-opts">
 <button class="quiz-opt">ON DELETE CASCADE, para borrar también a los subordinados.</button>
 <button class="quiz-opt">ON DELETE RESTRICT, para impedir despedir a un supervisor.</button>
-<button class="quiz-opt" data-correct>ON DELETE SET NULL, para que supervisor_id quede en NULL en los subordinados.</button>
 <button class="quiz-opt">No se puede hacer una clave foránea de una tabla hacia sí misma.</button>
+<button class="quiz-opt" data-correct>ON DELETE SET NULL, para que supervisor_id quede en NULL en los subordinados.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: CASCADE borraría por error a personas reales (los subordinados), y RESTRICT impediría despedir a nadie con gente a cargo. SET NULL es exactamente lo que describe el escenario: dejarlos sin supervisor, no eliminarlos ni bloquear la acción." data-ko="CASCADE borraría a los empleados subordinados (dato real, no debería desaparecer); RESTRICT bloquearía el despido. Una clave foránea autorreferenciada sí es válida en PostgreSQL. La respuesta que calza con 'quedar sin supervisor' es SET NULL." hidden></p>
 </div>
@@ -413,9 +418,9 @@ DROP TABLE IF EXISTS producto, cliente;</code></pre>
 <p>CREATE TABLE
 <select class="quiz-blank" data-correct="ifnotexists">
 <option value="">— elige —</option>
-<option value="ifnotexists">IF NOT EXISTS</option>
 <option value="orreplace">OR REPLACE</option>
 <option value="nada">(sin ninguna cláusula adicional)</option>
+<option value="ifnotexists">IF NOT EXISTS</option>
 </select>
 nombre_tabla (...);</p>
 <p class="quiz-progress"></p>
@@ -440,10 +445,11 @@ nombre_tabla (...);</p>
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">¿Cuál es la diferencia práctica entre VARCHAR(n) y TEXT en PostgreSQL?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>Ninguna diferencia de rendimiento.</button>
 <button class="quiz-opt">TEXT es mucho más rápido para almacenar.</button>
-<button class="quiz-opt" data-correct>Ninguna de rendimiento; VARCHAR(n) solo agrega un límite de longitud que PostgreSQL valida.</button>
 <button class="quiz-opt">VARCHAR no admite acentos ni caracteres especiales.</button>
 <button class="quiz-opt">TEXT no puede usarse como clave primaria ni en índices.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: en PostgreSQL ambos se almacenan igual internamente. La única diferencia real es que VARCHAR(n) impone un límite de longitud que la base de datos valida al insertar." data-ko="No hay diferencia de rendimiento entre TEXT y VARCHAR en PostgreSQL, ambos manejan cualquier codificación de texto, y TEXT sí puede indexarse y usarse en claves. La única diferencia real es el límite de longitud que VARCHAR(n) impone." hidden></p>
 </div>
@@ -452,8 +458,9 @@ nombre_tabla (...);</p>
 <span class="quiz-badge">Verdadero o falso</span>
 <p class="quiz-q">GENERATED ALWAYS AS IDENTITY y SERIAL logran, en la práctica, el mismo objetivo: un valor autoincremental para la clave primaria.</p>
 <div class="quiz-opts inline">
-<button class="quiz-opt" data-correct>Verdadero</button>
 <button class="quiz-opt">Falso</button>
+<button class="quiz-opt" data-correct>Verdadero</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: ambos generan valores autoincrementales mediante una secuencia interna. GENERATED ALWAYS AS IDENTITY es la forma moderna y estándar, pero el resultado práctico es el mismo." data-ko="Es verdadero: los dos mecanismos usan una secuencia interna para generar valores autoincrementales. IDENTITY es la forma más moderna y alineada al estándar SQL, pero cumple el mismo propósito que SERIAL." hidden></p>
 </div>
@@ -466,6 +473,7 @@ nombre_tabla (...);</p>
 <button class="quiz-opt" data-correct>Primero las tablas sin dependencias, luego las que las referencian.</button>
 <button class="quiz-opt">Primero las tablas con más columnas.</button>
 <button class="quiz-opt">Siempre en orden alfabético.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: una tabla con REFERENCES hacia otra exige que esa otra ya exista en el momento de crearla." data-ko="PostgreSQL no reordena nada por ti: si una tabla referencia a otra que aún no existe, el CREATE TABLE falla de inmediato. El orden correcto es de las tablas independientes hacia las dependientes." hidden></p>
 </div>
@@ -476,8 +484,9 @@ nombre_tabla (...);</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Borra en cascada las filas dependientes.</button>
 <button class="quiz-opt">Pone en NULL la clave foránea de las filas dependientes.</button>
-<button class="quiz-opt" data-correct>Impide el borrado de la fila padre mientras existan filas hijas que la referencien.</button>
+<button class="quiz-opt" data-correct>Impide el borrado de la fila padre.</button>
 <button class="quiz-opt">Convierte el borrado en una actualización.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: RESTRICT bloquea el DELETE del padre mientras haya hijos dependientes; hay que borrar (o reasignar) los hijos primero." data-ko="Borrar en cascada es CASCADE; poner en NULL es SET NULL. RESTRICT específicamente bloquea el borrado del padre mientras tenga hijos dependientes." hidden></p>
 </div>
@@ -487,9 +496,10 @@ nombre_tabla (...);</p>
 <p class="quiz-q">Quieres agregar una columna NOT NULL a una tabla que ya tiene 10.000 filas, sin que la instrucción falle. ¿Qué debes incluir?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Nada especial, PostgreSQL rellena con NULL automáticamente.</button>
-<button class="quiz-opt" data-correct>Un DEFAULT, para que PostgreSQL sepa con qué valor llenar las filas existentes.</button>
 <button class="quiz-opt">La cláusula CASCADE.</button>
 <button class="quiz-opt">Debe hacerse en una tabla vacía siempre; no hay forma de evitarlo.</button>
+<button class="quiz-opt" data-correct>Un DEFAULT, para que PostgreSQL sepa con qué valor llenar las filas existentes.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: con un DEFAULT, PostgreSQL usa ese valor para llenar la columna nueva en todas las filas existentes, cumpliendo NOT NULL sin fallar." data-ko="NOT NULL no permite dejar la columna en NULL, así que rellenar automáticamente con NULL no es una opción. CASCADE no aplica aquí. La solución real es agregar un DEFAULT a la instrucción." hidden></p>
 </div>

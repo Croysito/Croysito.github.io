@@ -130,10 +130,11 @@ RETURNING cliente_id;</code></pre>
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">La tabla producto tiene: producto_id (IDENTITY), producto_nombre (NOT NULL), precio (NOT NULL, CHECK &gt; 0), activo (DEFAULT true). ¿Cuál INSERT funciona sin error?</p>
 <div class="quiz-opts">
-<button class="quiz-opt">INSERT INTO producto (producto_id, producto_nombre, precio) VALUES (1, 'Cable USB', 15.00);</button>
 <button class="quiz-opt" data-correct>INSERT INTO producto (producto_nombre, precio) VALUES ('Cable USB', 15.00);</button>
+<button class="quiz-opt">INSERT INTO producto (producto_id, producto_nombre, precio) VALUES (1, 'Cable USB', 15.00);</button>
 <button class="quiz-opt">INSERT INTO producto (producto_nombre) VALUES ('Cable USB');</button>
 <button class="quiz-opt">INSERT INTO producto (producto_nombre, precio) VALUES ('Cable USB', -15.00);</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: no se especifica producto_id (lo genera IDENTITY), producto_nombre y precio se dan explícitamente y precio es mayor a 0, y activo queda en su DEFAULT true. Todas las restricciones se cumplen." data-ko="Insertar un valor manual en una columna IDENTITY suele fallar o requiere OVERRIDING SYSTEM VALUE; omitir precio (NOT NULL sin DEFAULT) falla; y un precio negativo viola el CHECK (precio > 0). La única que respeta todas las restricciones es la que omite producto_id y da un precio positivo." hidden></p>
 </div>
@@ -151,8 +152,8 @@ RETURNING cliente_id;</code></pre>
 <p>2. La cláusula que hace que PostgreSQL devuelva el cliente_id recién generado es
 <select class="quiz-blank" data-correct="returning">
 <option value="">— elige —</option>
-<option value="returning">RETURNING</option>
 <option value="output">OUTPUT</option>
+<option value="returning">RETURNING</option>
 <option value="select">un SELECT aparte, no existe forma de hacerlo en el mismo INSERT</option>
 </select>.</p>
 <p class="quiz-progress"></p>
@@ -187,8 +188,9 @@ WHERE producto_nombre = 'Silla ergonómica';</code></pre>
 <span class="quiz-badge">Verdadero o falso</span>
 <p class="quiz-q">Ejecutas: UPDATE cliente SET cliente_nombre = 'Sin nombre'; (sin cláusula WHERE). El resultado es que ninguna fila cambia, porque PostgreSQL exige un WHERE para identificar a qué fila aplica.</p>
 <div class="quiz-opts inline">
-<button class="quiz-opt">Verdadero</button>
 <button class="quiz-opt" data-correct>Falso</button>
+<button class="quiz-opt">Verdadero</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: PostgreSQL no exige WHERE. Sin él, el UPDATE se aplica a absolutamente todas las filas de la tabla — en este caso, todos los clientes quedarían con el mismo nombre." data-ko="Es falso: WHERE es opcional en la sintaxis de UPDATE. Si lo omites, la modificación se aplica a todas las filas de la tabla sin excepción, no a ninguna." hidden></p>
 </div>
@@ -280,6 +282,7 @@ SELECT * FROM producto;</code></pre>
 <button class="quiz-opt" data-correct>3, una por cada valor distinto de fecha.</button>
 <button class="quiz-opt">0, DISTINCT solo funciona con varias columnas.</button>
 <button class="quiz-opt">1, DISTINCT siempre agrupa todo en una sola fila.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: DISTINCT elimina duplicados del resultado. Si solo hay 3 valores distintos de fecha entre las 200 filas, el resultado tiene exactamente 3 filas." data-ko="DISTINCT elimina las filas de resultado repetidas, quedándose con una por cada valor distinto. Con 3 valores distintos de fecha, el resultado tiene 3 filas — sin importar que la tabla tenga 200." hidden></p>
 </div>
@@ -387,9 +390,9 @@ LIMIT 3 OFFSET 3;</code></pre>
 <p>2. Para quedarte solo con los primeros 2 resultados, agregas
 <select class="quiz-blank" data-correct="limit">
 <option value="">— elige —</option>
-<option value="limit">LIMIT 2</option>
 <option value="where">WHERE 2</option>
 <option value="top">TOP 2</option>
+<option value="limit">LIMIT 2</option>
 </select>.</p>
 <p class="quiz-progress"></p>
 </div>
@@ -413,6 +416,7 @@ LIMIT 3 OFFSET 3;</code></pre>
 <button class="quiz-opt">INSERT INTO pedido (fecha, cliente_id) VALUES (CURRENT_DATE, 3);</button>
 <button class="quiz-opt" data-correct>INSERT INTO pedido (cliente_id) VALUES (3) RETURNING pedido_id;</button>
 <button class="quiz-opt">INSERT INTO pedido VALUES (3);</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: no se especifica pedido_id (lo genera IDENTITY) ni fecha (usa su DEFAULT), solo cliente_id que es obligatorio; y RETURNING pedido_id devuelve el id generado para usarlo de inmediato." data-ko="Insertar pedido_id manualmente contradice IDENTITY; forzar fecha con CURRENT_DATE es redundante (ya es el DEFAULT) pero además no resuelve el problema de no conocer el pedido_id generado; y VALUES (3) sin lista de columnas asume el orden físico de la tabla, empezando por pedido_id, lo cual es incorrecto y frágil. La única que además captura el id generado es la que usa RETURNING." hidden></p>
 </div>
@@ -427,8 +431,9 @@ LIMIT 3 OFFSET 3;</code></pre>
 <div class="quiz-opts">
 <button class="quiz-opt">DELETE FROM producto WHERE producto_id = 8;</button>
 <button class="quiz-opt">DROP TABLE producto;</button>
-<button class="quiz-opt" data-correct>UPDATE producto SET activo = false WHERE producto_id = 8;</button>
 <button class="quiz-opt">DELETE FROM detalle_pedido; DELETE FROM producto WHERE producto_id = 8;</button>
+<button class="quiz-opt" data-correct>UPDATE producto SET activo = false WHERE producto_id = 8;</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: borrar el producto fallaría por el ON DELETE RESTRICT mientras existan ventas. La solución no es eliminar el dato histórico, sino marcarlo como inactivo con UPDATE — el historial de ventas queda intacto y el producto puede excluirse del catálogo filtrando por activo = true." data-ko="DELETE FROM producto fallaría por la restricción RESTRICT; DROP TABLE destruiría toda la tabla, no solo ese producto; y borrar todo detalle_pedido para poder eliminar un producto destruye el historial de ventas de todos los productos, no solo del 8. La forma correcta de 'dejar de vender' sin perder historial es un UPDATE que lo marque como inactivo." hidden></p>
 </div>
@@ -469,10 +474,11 @@ LIMIT 3 OFFSET 3;</code></pre>
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">Ejecutas un INSERT con varias filas en un solo VALUES, y la tercera fila viola un CHECK. ¿Qué ocurre?</p>
 <div class="quiz-opts">
-<button class="quiz-opt">Se insertan las dos primeras filas y la tercera se ignora.</button>
 <button class="quiz-opt" data-correct>No se inserta ninguna de las tres filas: el INSERT completo falla.</button>
+<button class="quiz-opt">Se insertan las dos primeras filas y la tercera se ignora.</button>
 <button class="quiz-opt">Se insertan las tres, la tercera queda con NULL en la columna que violó el CHECK.</button>
 <button class="quiz-opt">PostgreSQL corrige automáticamente el valor para que cumpla el CHECK.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: un INSERT con múltiples filas es una sola instrucción. Si cualquiera de las filas viola una restricción, toda la instrucción falla y no se inserta nada." data-ko="Un INSERT con múltiples filas se ejecuta como una sola unidad: si una fila viola una restricción, ninguna de las filas del INSERT se guarda, no solo la que falló." hidden></p>
 </div>
@@ -483,6 +489,7 @@ LIMIT 3 OFFSET 3;</code></pre>
 <div class="quiz-opts inline">
 <button class="quiz-opt">Verdadero</button>
 <button class="quiz-opt" data-correct>Falso</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: DELETE FROM cliente; borra todas las filas, pero la tabla cliente sigue existiendo, vacía, con su estructura y restricciones intactas. DROP TABLE elimina la tabla en sí." data-ko="Es falso: DELETE FROM cliente; sin WHERE borra todas las filas, pero la tabla sigue existiendo (vacía). Eliminar la tabla completa es trabajo de DROP TABLE, no de DELETE." hidden></p>
 </div>
@@ -495,6 +502,7 @@ LIMIT 3 OFFSET 3;</code></pre>
 <button class="quiz-opt" data-correct>WHERE fecha_entrega IS NULL</button>
 <button class="quiz-opt">WHERE fecha_entrega = ''</button>
 <button class="quiz-opt">WHERE NOT fecha_entrega</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: IS NULL es la única forma correcta de preguntar por ausencia de valor. Comparar con = NULL nunca es verdadero, sea cual sea el contenido de la fila." data-ko="= NULL nunca funciona: comparar contra NULL da un resultado desconocido, no verdadero. La forma correcta de preguntar 'no tiene valor' es IS NULL." hidden></p>
 </div>
@@ -504,9 +512,10 @@ LIMIT 3 OFFSET 3;</code></pre>
 <p class="quiz-q">¿Qué hace exactamente ORDER BY precio DESC LIMIT 1;?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Devuelve todas las filas ordenadas, pero muestra solo la columna precio.</button>
-<button class="quiz-opt" data-correct>Devuelve una sola fila: la de mayor precio.</button>
 <button class="quiz-opt">Devuelve la fila con el precio más bajo.</button>
+<button class="quiz-opt" data-correct>Devuelve una sola fila: la de mayor precio.</button>
 <button class="quiz-opt">Elimina todas las filas excepto una.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: ORDER BY precio DESC ordena de mayor a menor precio, y LIMIT 1 se queda solo con la primera fila de ese orden — la de precio más alto." data-ko="DESC ordena de mayor a menor, así que LIMIT 1 después de ese orden trae la fila con el precio MÁS ALTO, no el más bajo. Y SELECT/ORDER BY/LIMIT solo leen datos, nunca borran filas." hidden></p>
 </div>
@@ -516,9 +525,10 @@ LIMIT 3 OFFSET 3;</code></pre>
 <p class="quiz-q">¿Por qué conviene probar la condición de un UPDATE o DELETE con un SELECT antes de ejecutarlo?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Porque SELECT es obligatorio antes de cualquier UPDATE en PostgreSQL.</button>
-<button class="quiz-opt" data-correct>Porque permite confirmar qué filas exactas selecciona el WHERE antes de modificarlas o borrarlas de verdad.</button>
 <button class="quiz-opt">Porque el UPDATE no funciona si no se ejecutó un SELECT antes en la misma sesión.</button>
 <button class="quiz-opt">No hay ninguna razón práctica, es solo una costumbre sin efecto real.</button>
+<button class="quiz-opt" data-correct>Porque muestra qué filas afectaría el WHERE antes de modificarlas.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: como WHERE no es obligatorio y PostgreSQL no pide confirmación, correr primero SELECT * FROM tabla WHERE ...; con la misma condición te deja ver exactamente qué filas serían afectadas, antes de modificarlas o borrarlas de forma irreversible." data-ko="No es un requisito técnico de PostgreSQL, es una práctica de seguridad: como UPDATE y DELETE no piden confirmación, revisar primero con SELECT qué filas selecciona el WHERE evita modificar o borrar más filas de las que querías." hidden></p>
 </div>

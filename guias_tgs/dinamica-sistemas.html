@@ -162,9 +162,10 @@
 <p class="quiz-q">Ajustá el sandbox: poné reposición en 150 y despacho en 300, y dejalo correr los 30 días. ¿Qué le pasa al inventario y por qué?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Sube constantemente, porque la reposición siempre suma al stock.</button>
-<button class="quiz-opt" data-correct>Se agota y llega a 0 (quiebre de stock) antes del día 30, porque la salida (300) supera a la entrada (150) todos los días, y el stock no puede bajar de cero.</button>
 <button class="quiz-opt">Se mantiene estable, porque el sistema todavía no tiene retraso.</button>
 <button class="quiz-opt">Oscila, porque hay dos flujos compitiendo.</button>
+<button class="quiz-opt" data-correct>Se agota y llega a 0 (quiebre de stock) antes del día 30.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: sin ningún control automático, si la salida supera a la entrada todos los días, el stock baja de forma constante hasta chocar con el piso de 0 — un quiebre de stock real, no una oscilación." data-ko="No hay oscilación posible todavía (eso necesita retraso y realimentación, que llegan en las próximas secciones) ni estabilidad automática. Con salida &gt; entrada de forma constante, el inventario baja sin parar hasta agotarse en 0." hidden></p>
 </div>
@@ -175,8 +176,8 @@
 <select class="quiz-blank" data-correct="360">
 <option value="">— elige —</option>
 <option value="800">800</option>
-<option value="360">360</option>
 <option value="440">440</option>
+<option value="360">360</option>
 <option value="180">180</option>
 </select>.</p>
 <p class="quiz-progress"></p>
@@ -236,10 +237,11 @@
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">Subí el retraso del sandbox de 2 a 10 días y compará. ¿Qué cambió, exactamente?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>La fórmula del pedido es la misma; solo cambió cuánto tarda en llegar la reposición.</button>
 <button class="quiz-opt">La fórmula del pedido cambió — con más retraso, el almacén deja de reaccionar al stock.</button>
-<button class="quiz-opt" data-correct>La fórmula del pedido es la misma; lo único distinto es cuánto tarda cada pedido en convertirse en reposición real. Ese solo cambio hace que el stock pase de corregirse suave a sobrepasar el objetivo y oscilar.</button>
 <button class="quiz-opt">El objetivo de inventario bajó, por eso el stock se comporta distinto.</button>
 <button class="quiz-opt">La demanda empezó a variar con el tiempo.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: el único slider de esta sección es el retraso. La política de pedido (pedido = demanda + agresividad × (objetivo−stock)) no cambió en absoluto — y aun así, el comportamiento del stock cambia radicalmente. El retraso, por sí solo, es capaz de convertir una corrección suave en oscilación." data-ko="Nada de eso cambió: la fórmula del pedido, el objetivo y la demanda quedaron fijos. El único parámetro que moviste fue el retraso — y ese cambio solo ya alcanza para pasar de una corrección suave a una oscilación." hidden></p>
 </div>
@@ -248,8 +250,9 @@
 <span class="quiz-badge">Verdadero o falso</span>
 <p class="quiz-q">Un sistema con una política de control razonable (que reacciona en la dirección correcta) puede oscilar solo por tener un retraso alto entre la acción y su efecto, sin que la política en sí esté mal diseñada.</p>
 <div class="quiz-opts inline">
-<button class="quiz-opt" data-correct>Verdadero</button>
 <button class="quiz-opt">Falso</button>
+<button class="quiz-opt" data-correct>Verdadero</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: la política de pedido del sandbox reacciona en la dirección correcta (pide más cuando el stock está bajo). El problema no es la lógica de la política — es que, con retraso alto, actúa sobre información desactualizada. Eso alcanza para producir oscilación." data-ko="Es verdadero — y es exactamente lo que acabás de ver en el sandbox. La política de pedido nunca cambió y sigue siendo razonable; el retraso por sí solo es suficiente para producir oscilación." hidden></p>
 </div>
@@ -345,9 +348,10 @@
 <p class="quiz-q">En la guía anterior viste el efecto látigo descrito como "una oscilación cada vez más grande mientras más lejos está el eslabón del consumidor final". ¿Qué combinación de parámetros del sandbox produce justamente ese resultado?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Retraso alto por sí solo, sin importar la agresividad.</button>
+<button class="quiz-opt" data-correct>La combinación de retraso alto y agresividad alta.</button>
 <button class="quiz-opt">Agresividad alta por sí solo, sin importar el retraso.</button>
-<button class="quiz-opt" data-correct>La combinación de retraso alto y agresividad alta: el retraso hace que el almacén reaccione sobre información vieja, y la agresividad alta amplifica esa reacción cada vez que corrige — juntos hacen que cada vuelta del bucle sea más grande que la anterior en vez de amortiguarse.</button>
 <button class="quiz-opt">Un objetivo de inventario muy alto, sin relación con retraso ni agresividad.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: ni el retraso ni la agresividad por separado alcanzan siempre para producir una oscilación creciente — es la combinación de ambos la que hace que la corrección llegue tarde (retraso) y además sea desproporcionada (agresividad), amplificando la desviación en cada vuelta." data-ko="El objetivo de inventario desplaza el nivel promedio, pero no es la causa de la oscilación creciente. Lo que produce el crecimiento es la combinación de retraso alto (información vieja) y agresividad alta (corrección desproporcionada) actuando juntos." hidden></p>
 </div>
@@ -414,9 +418,10 @@
 <p class="quiz-q">Sin cambiar la política de reposición ni la demanda, ¿qué solo parámetro alcanza para convertir una corrección suave en oscilación?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">El nombre de la empresa del caso.</button>
-<button class="quiz-opt" data-correct>El retraso entre colocar el pedido y que llegue como reposición real.</button>
 <button class="quiz-opt">El color de la línea en el gráfico.</button>
+<button class="quiz-opt" data-correct>El retraso entre pedir y recibir la reposición.</button>
 <button class="quiz-opt">La cantidad de días que dura la simulación.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: lo viste en la sección de retraso — moviendo solo ese slider, con la misma fórmula de pedido, el comportamiento pasa de estable a oscilante." data-ko="La duración de la simulación y el color del gráfico no cambian el comportamiento del sistema. El parámetro que alcanza por sí solo para producir oscilación, con la política de pedido sin cambios, es el retraso." hidden></p>
 </div>
@@ -427,6 +432,7 @@
 <div class="quiz-opts inline">
 <button class="quiz-opt" data-correct>Verdadero</button>
 <button class="quiz-opt">Falso</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: 'pedir más cuando falta stock' es una regla razonable, y 'reaccionar rápido' también lo parece en aislamiento. El problema aparece cuando ambas se combinan con un retraso alto — la inestabilidad es una propiedad del bucle completo, no de una regla individual mal diseñada." data-ko="Es verdadero: cada regla por separado (reponer cuando falta stock, reaccionar con fuerza) puede sonar razonable. La inestabilidad surge de la combinación —retraso alto más agresividad alta— no de que una sola regla esté mal pensada." hidden></p>
 </div>

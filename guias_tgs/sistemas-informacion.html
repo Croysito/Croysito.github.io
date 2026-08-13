@@ -138,10 +138,11 @@
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">Un sistema de matrícula que solo permite inscribir un curso a la vez, sin validar choques de horario ni prerrequisitos, ¿en qué falla como "sistema" según la definición de TGS?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>Le faltan las relaciones entre los elementos.</button>
 <button class="quiz-opt">No falla en nada: sigue siendo un sistema perfectamente válido.</button>
-<button class="quiz-opt" data-correct>Le faltan las relaciones entre elementos: un sistema no es solo una lista de elementos sueltos, sino elementos que interactúan entre sí con un propósito común.</button>
 <button class="quiz-opt">Falla porque no tiene entorno.</button>
 <button class="quiz-opt">Falla porque tiene demasiados elementos.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: un sistema que registra inscripciones sin relacionar cursos entre sí (choques de horario, prerrequisitos) es solo una lista de datos, no un sistema completo: le falta la parte más importante, las relaciones entre los elementos." data-ko="El número de elementos y la existencia de un entorno no son el problema. Lo que falta es que los elementos SE RELACIONEN entre sí (horarios que chocan, prerrequisitos que se validan): sin eso, no hay verdaderamente un sistema, solo datos sueltos." hidden></p>
 </div>
@@ -211,23 +212,23 @@
 <p>1. El historial de compras del usuario es la
 <select class="quiz-blank" data-correct="entrada">
 <option value="">— elige —</option>
-<option value="entrada">entrada</option>
 <option value="proceso">proceso</option>
 <option value="salida">salida</option>
+<option value="entrada">entrada</option>
 </select>.</p>
 <p>2. Comparar el historial con patrones de usuarios similares es el
 <select class="quiz-blank" data-correct="proceso">
 <option value="">— elige —</option>
-<option value="entrada">entrada</option>
 <option value="proceso">proceso</option>
+<option value="entrada">entrada</option>
 <option value="salida">salida</option>
 </select>.</p>
 <p>3. La lista de productos sugeridos que se muestra al usuario es la
 <select class="quiz-blank" data-correct="salida">
 <option value="">— elige —</option>
 <option value="entrada">entrada</option>
-<option value="proceso">proceso</option>
 <option value="salida">salida</option>
+<option value="proceso">proceso</option>
 </select>.</p>
 <p class="quiz-progress"></p>
 </div>
@@ -257,9 +258,10 @@
 <p class="quiz-q">Un equipo decide que el "Módulo de pagos" acceda directamente a las tablas internas de la base de datos del "Módulo de usuarios", en vez de comunicarse a través de una API. ¿Qué principio de la jerarquía de sistemas se está rompiendo?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Ninguno: los subsistemas siempre deben compartir toda su información interna.</button>
-<button class="quiz-opt" data-correct>Se rompe el límite del subsistema: un subsistema bien definido expone una interfaz hacia los demás, sin que estos necesiten conocer ni acceder a sus detalles internos.</button>
+<button class="quiz-opt" data-correct>Se rompe el límite del subsistema, que no debería exponer sus detalles internos.</button>
 <button class="quiz-opt">Se rompe la propiedad de entropía.</button>
 <button class="quiz-opt">Se rompe la definición de suprasistema.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: cuando un subsistema accede directamente a las entrañas de otro, deja de respetarse el límite de cada uno, y el sistema completo se vuelve frágil: un cambio interno en Usuarios puede romper Pagos sin ningún aviso." data-ko="El problema no es de entropía ni de la definición de suprasistema: es que un subsistema bien definido protege sus detalles internos y solo expone una interfaz hacia afuera. Acceder directamente a tablas internas rompe justamente ese límite." hidden></p>
 </div>
@@ -323,9 +325,10 @@
 <p class="quiz-q">Un equipo que hace despliegues cada 6 meses tarda mucho más en enterarse de un problema en producción que uno que despliega varias veces por semana. Según lo que viste sobre retardos, ¿qué consecuencia es más probable para el equipo de despliegues cada 6 meses?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Ninguna: el retardo entre despliegues no afecta la estabilidad del sistema.</button>
-<button class="quiz-opt" data-correct>Mayor probabilidad de "sobrecorrecciones" grandes y estabilidad más irregular, porque el bucle de retroalimentación (detectar y corregir problemas) tarda mucho más en cerrarse.</button>
 <button class="quiz-opt">El sistema se volverá automáticamente un bucle de refuerzo.</button>
+<button class="quiz-opt" data-correct>Mayor probabilidad de "sobrecorrecciones" grandes y estabilidad irregular.</button>
 <button class="quiz-opt">El retardo mejora la calidad del software.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: es el mismo principio de la ducha con tubería larga. Cuanto más tarda el bucle de balance en detectar y corregir una desviación, más grande es la corrección necesaria y más inestable se vuelve el sistema mientras tanto." data-ko="El retardo sí importa, y no cambia el tipo de bucle (sigue siendo de balance, buscando estabilidad). Lo que sí provoca es corrección tardía y más brusca, igual que en el ejemplo de la ducha: más retardo, más inestabilidad mientras el bucle se cierra." hidden></p>
 </div>
@@ -342,9 +345,10 @@
 <p class="quiz-q">La app de delivery coordina restaurantes, repartidores y clientes, pero no controla el tráfico de la ciudad ni el clima, que afectan los tiempos de entrega igual. ¿Cómo clasificarías el tráfico y el clima respecto al sistema?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Son parte del límite del sistema, porque afectan directamente el resultado.</button>
-<button class="quiz-opt" data-correct>Son parte del entorno: el sistema los sufre y debe adaptarse a ellos (por ejemplo, ajustando el tiempo estimado de entrega), pero no puede controlarlos.</button>
 <button class="quiz-opt">Son subsistemas de la app.</button>
 <button class="quiz-opt">No tienen ninguna relación con el sistema.</button>
+<button class="quiz-opt" data-correct>Son parte del entorno: el sistema los sufre, pero no puede controlarlos.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: que algo afecte al sistema no significa que esté dentro de su límite. El tráfico y el clima son entorno: el sistema no los controla, solo puede reaccionar y adaptarse a ellos." data-ko="Afectar el resultado no es lo mismo que estar dentro del límite. El sistema no puede controlar el tráfico ni el clima, solo reaccionar a ellos: eso es exactamente la definición de entorno." hidden></p>
 </div>
@@ -357,10 +361,11 @@
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">¿Qué tipo de bucle de retroalimentación es este, y qué función cumple para el sistema completo?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>Bucle de balance: reduce pedidos para corregir la mala calificación.</button>
 <button class="quiz-opt">Bucle de refuerzo: amplifica la mala calificación hasta sacar al repartidor de la plataforma sin remedio.</button>
-<button class="quiz-opt" data-correct>Bucle de balance: corrige la desviación (mala calidad de servicio) reduciendo pedidos, dando al repartidor la oportunidad de recuperar su calificación y mantener estable la calidad del servicio en la plataforma.</button>
 <button class="quiz-opt">No es un bucle de retroalimentación, es solo una regla de negocio sin relación con TGS.</button>
 <button class="quiz-opt">Es un ejemplo de entropía, no de retroalimentación.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: es un bucle de balance clásico. La 'salida' (calificación baja) retroalimenta al sistema, que ajusta su comportamiento (menos pedidos asignados) para corregir la desviación y mantener estable la calidad general del servicio." data-ko="No amplifica sin límite (no es refuerzo) ni es solo una regla de negocio aislada: es exactamente un bucle de balance, donde la salida (calificación) retroalimenta al sistema para corregir el comportamiento y mantener la calidad estable." hidden></p>
 </div>
@@ -381,9 +386,10 @@
 <p class="quiz-q">¿Cómo se clasifican el servicio de verificación biométrica y la red de pagos nacional respecto al sistema del banco?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Ambos son subsistemas del sistema del banco.</button>
-<button class="quiz-opt" data-correct>Ambos son parte del entorno: el banco los usa e integra, pero no los controla ni son parte de lo que el banco construye.</button>
+<button class="quiz-opt" data-correct>Ambos son parte del entorno: el banco los usa, pero no los controla.</button>
 <button class="quiz-opt">Ambos están dentro del límite del sistema, porque el banco depende de ellos para funcionar.</button>
 <button class="quiz-opt">No se pueden clasificar sin más información.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: depender de algo no es lo mismo que controlarlo o construirlo. Ambos servicios son externos al banco, así que son entorno, no subsistemas internos ni parte del límite." data-ko="El banco depende de estos servicios, pero dependencia no es lo mismo que control. Al ser construidos y operados por terceros, están en el entorno del sistema del banco, no dentro de su límite." hidden></p>
 </div>
@@ -397,9 +403,10 @@
 <p class="quiz-q">¿Qué propiedad sistémica describe mejor este fenómeno (conocido en la industria como "efecto de red")?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Entropía.</button>
-<button class="quiz-opt" data-correct>Sinergia: el valor del conjunto (todos los usuarios juntos) es mayor que la suma de sus partes, y crece con cada usuario nuevo que se añade.</button>
 <button class="quiz-opt">Homeostasis.</button>
+<button class="quiz-opt" data-correct>Sinergia.</button>
 <button class="quiz-opt">Equifinalidad.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: el efecto de red es un caso muy claro de sinergia: el valor que cada usuario obtiene depende de que exista el conjunto completo, no de su cuenta individual aislada." data-ko="No es degradación con el tiempo (entropía), ni autorregulación hacia un equilibrio (homeostasis), ni llegar al mismo resultado por caminos distintos (equifinalidad). Es sinergia: el conjunto vale más que la suma de sus partes." hidden></p>
 </div>
@@ -413,9 +420,10 @@
 <p class="quiz-q">Si el sistema de laboratorio deja de funcionar por unas horas, el sistema de historias clínicas sigue funcionando pero sin poder mostrar resultados nuevos de exámenes. ¿Qué característica de la jerarquía de sistemas explica que uno pueda fallar sin tumbar a los demás?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Que los tres sistemas son en realidad el mismo sistema.</button>
-<button class="quiz-opt" data-correct>Que cada sistema tiene su propio límite bien definido y se comunica con los demás mediante interfaces, en vez de compartir sus internals directamente: por eso la falla de uno no colapsa automáticamente a los otros.</button>
 <button class="quiz-opt">Que no existe ninguna relación entre los tres sistemas.</button>
 <button class="quiz-opt">Que el sistema de laboratorio no es realmente un sistema.</button>
+<button class="quiz-opt" data-correct>Que cada sistema tiene su propio límite y se comunica por interfaces.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: cada sistema mantiene su propio límite y se conecta a los demás por interfaces estándar, no compartiendo sus entrañas. Eso es justamente lo que permite que la falla de un subsistema (o sistema externo integrado) no derrumbe a todo el conjunto." data-ko="Sí existe relación entre los tres sistemas (se integran), y cada uno es un sistema legítimo por separado. Lo que explica la resiliencia es que cada uno mantiene su propio límite y se comunica por interfaces, en vez de depender de los detalles internos del otro." hidden></p>
 </div>
@@ -439,10 +447,11 @@
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">¿Qué metodología de análisis de software está directamente basada en el esquema entrada-proceso-salida de la TGS?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>El Análisis Estructurado (DFD).</button>
 <button class="quiz-opt">Scrum.</button>
-<button class="quiz-opt" data-correct>El Análisis Estructurado, con sus Diagramas de Flujo de Datos.</button>
 <button class="quiz-opt">La programación orientada a objetos.</button>
 <button class="quiz-opt">El modelo entidad-relación.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: los Diagramas de Flujo de Datos del Análisis Estructurado (DeMarco, Gane-Sarson) son entrada-proceso-salida aplicado directamente al software." data-ko="Scrum es una metodología ágil de gestión, no de análisis basado en E-P-S; POO y el modelo E-R son otras técnicas de diseño. El Análisis Estructurado y sus Diagramas de Flujo de Datos son el vínculo directo con entrada-proceso-salida." hidden></p>
 </div>
@@ -451,8 +460,9 @@
 <span class="quiz-badge">Verdadero o falso</span>
 <p class="quiz-q">El "límite" de un sistema de software es lo mismo que su "entorno".</p>
 <div class="quiz-opts inline">
-<button class="quiz-opt">Verdadero</button>
 <button class="quiz-opt" data-correct>Falso</button>
+<button class="quiz-opt">Verdadero</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: son conceptos opuestos. El límite marca qué está DENTRO del sistema; el entorno es todo lo que está FUERA pero interactúa con él." data-ko="Son conceptos distintos y complementarios: el límite define qué está dentro del sistema (lo que se construye), y el entorno es todo lo externo que interactúa con él pero no se controla." hidden></p>
 </div>
@@ -462,9 +472,10 @@
 <p class="quiz-q">Un módulo de "Reportes" que necesita leer directamente las tablas internas de otros cinco módulos para funcionar, en vez de usar sus APIs, es un síntoma de que se rompió...</p>
 <div class="quiz-opts">
 <button class="quiz-opt">La propiedad de homeostasis.</button>
-<button class="quiz-opt" data-correct>El límite de cada subsistema: cada uno debería exponer una interfaz hacia afuera, no compartir sus detalles internos.</button>
+<button class="quiz-opt" data-correct>El límite de cada subsistema, que no debería exponer sus detalles internos.</button>
 <button class="quiz-opt">El principio de equifinalidad.</button>
 <button class="quiz-opt">Nada: es la forma correcta de construir un módulo de reportes.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: acceder directamente a los internals de otros módulos rompe el límite de cada subsistema, generando acoplamiento frágil entre partes que deberían ser independientes." data-ko="No tiene que ver con homeostasis ni equifinalidad. Un módulo que necesita leer directamente las tablas internas de otros cinco está rompiendo el límite de cada uno: la forma correcta es comunicarse por interfaces." hidden></p>
 </div>
@@ -474,9 +485,10 @@
 <p class="quiz-q">¿Qué propiedad sistémica describe mejor el "auto-escalado" de servidores ante picos de tráfico?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Sinergia.</button>
-<button class="quiz-opt" data-correct>Homeostasis.</button>
 <button class="quiz-opt">Entropía.</button>
+<button class="quiz-opt" data-correct>Homeostasis.</button>
 <button class="quiz-opt">Equifinalidad.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: el auto-escalado es autorregulación para mantener el rendimiento estable ante cambios del entorno (más tráfico): la definición exacta de homeostasis." data-ko="No es el valor del conjunto (sinergia), ni degradación (entropía), ni llegar al mismo resultado por caminos distintos (equifinalidad). Es autorregulación para mantener el equilibrio: homeostasis." hidden></p>
 </div>
@@ -486,9 +498,10 @@
 <p class="quiz-q">¿Por qué un equipo que despliega software con más frecuencia suele tener sistemas más estables que uno que despliega cada 6 meses?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Porque desplegar seguido convierte los bucles de balance en bucles de refuerzo.</button>
-<button class="quiz-opt" data-correct>Porque el bucle de retroalimentación (detectar y corregir problemas) se cierra más rápido, evitando el mismo tipo de sobrecorrección que causa un retardo largo.</button>
 <button class="quiz-opt">No hay ninguna relación entre la frecuencia de despliegue y la estabilidad.</button>
 <button class="quiz-opt">Porque desplegar seguido elimina por completo la necesidad de retroalimentación.</button>
+<button class="quiz-opt" data-correct>Porque el bucle de retroalimentación se cierra más rápido.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: desplegar seguido acorta el retardo del bucle de balance que detecta y corrige problemas, exactamente el mismo principio que viste con la ducha de tubería larga: menos retardo, menos oscilación." data-ko="El bucle sigue siendo de balance, no se convierte en refuerzo, y la retroalimentación nunca deja de ser necesaria. Lo que cambia es que el retardo del bucle es más corto, evitando la sobrecorrección que un retardo largo produce." hidden></p>
 </div>

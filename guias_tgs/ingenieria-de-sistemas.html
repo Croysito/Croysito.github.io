@@ -159,9 +159,10 @@
 <p class="quiz-q">Un hospital digitaliza su historia clínica. El proyecto incluye escribir el software, comprar tablets para el personal médico, rediseñar el proceso de admisión de pacientes, y capacitar al personal para usar el nuevo flujo. ¿Qué disciplina describe mejor la coordinación de <strong>todo</strong> ese proyecto, y no solo del código?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Ingeniería de Software, porque el software es el componente más importante.</button>
-<button class="quiz-opt" data-correct>Ingeniería de Sistemas: coordina el software, el hardware (tablets), los procesos (admisión) y a las personas (capacitación) como un solo sistema con un propósito compartido, no solo el código.</button>
+<button class="quiz-opt" data-correct>Ingeniería de Sistemas: coordina software, hardware, procesos y personas como un solo sistema.</button>
 <button class="quiz-opt">Ninguna disciplina formal cubre este tipo de proyectos.</button>
 <button class="quiz-opt">Administración de Empresas, porque involucra personas y procesos.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: el software es apenas un subsistema del sistema completo. Coordinar hardware, procesos y personas junto con el software, hacia un propósito común, es exactamente el objeto de estudio de la Ingeniería de Sistemas." data-ko="El software es solo una parte del proyecto. Lo que coordina hardware, procesos, personas y software juntos, como un sistema completo con un propósito compartido, es la Ingeniería de Sistemas — la disciplina que sí tiene un cuerpo de conocimiento formal para esto (INCOSE)." hidden></p>
 </div>
@@ -276,9 +277,10 @@
 <p class="quiz-q">Un equipo termina de construir un sistema y recién en ese momento se sienta a decidir contra qué documento va a comparar los resultados de las pruebas finales. ¿Qué principio del ciclo de vida en V no está respetando?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Ninguno: la V no exige decidir eso de antemano.</button>
-<button class="quiz-opt" data-correct>Que cada etapa de verificación debe compararse contra su etapa de definición pareja, decidida desde el principio del proyecto — no contra un criterio inventado recién al final.</button>
 <button class="quiz-opt">El principio de homeostasis del sistema.</button>
+<button class="quiz-opt" data-correct>Que cada verificación debe compararse contra su etapa pareja.</button>
 <button class="quiz-opt">El principio de equifinalidad.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: la V exige que cada verificación tenga su criterio de comparación fijado desde la etapa de definición correspondiente, no improvisado al final." data-ko="No es un problema de homeostasis ni de equifinalidad. El problema es específico de la V: cada verificación debe compararse contra un criterio fijado en su etapa de definición correspondiente, no inventado al final." hidden></p>
 </div>
@@ -336,9 +338,10 @@
 <p class="quiz-q">Un cliente pide: "quiero que el botón de guardar sea de color verde". ¿Cómo evaluarías esta petición usando CATWOE?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Es un requisito válido tal cual, sin necesidad de más análisis: el cliente lo pidió.</button>
-<button class="quiz-opt" data-correct>Hace falta preguntar la W detrás del pedido: si la razón es "para que los usuarios daltónicos distingan guardar de cancelar", el requisito real es de accesibilidad y el verde es solo una posible implementación.</button>
 <button class="quiz-opt">Nunca se debe preguntar el porqué de un pedido del cliente.</button>
 <button class="quiz-opt">Es imposible convertir preferencias de color en un requisito de ingeniería.</button>
+<button class="quiz-opt" data-correct>Hace falta preguntar la W detrás del pedido antes de aceptarlo tal cual.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: sin la W, 'botón verde' podría ser cualquier cosa, desde un capricho estético hasta un requisito serio de accesibilidad. Preguntar el porqué (la W) es lo que separa un requisito real de una preferencia de implementación." data-ko="Aceptar el pedido tal cual, sin preguntar el porqué, es exactamente el error que CATWOE ayuda a evitar. La W detrás del pedido es lo que revela si 'verde' es el requisito real o solo una implementación posible entre varias." hidden></p>
 </div>
@@ -425,10 +428,11 @@
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">Un equipo elige arquitectura de microservicios para el sistema de la biblioteca "porque es lo que usan las grandes empresas de tecnología", sin comparar contra los criterios reales del proyecto. ¿Qué principio está ignorando?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>El estudio de trade-offs: comparar alternativas contra los criterios reales del proyecto.</button>
 <button class="quiz-opt">Ninguno: microservicios es siempre la mejor opción técnica disponible.</button>
-<button class="quiz-opt" data-correct>El estudio de trade-offs: elegir una arquitectura debe basarse en comparar alternativas contra los criterios reales de este proyecto específico, no en copiar lo que usa otra organización con un contexto distinto.</button>
 <button class="quiz-opt">El principio de entropía.</button>
 <button class="quiz-opt">La Ley de Requisito de Variedad.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: no existe una arquitectura universalmente 'mejor' (equifinalidad). El estudio de trade-offs exige comparar alternativas contra los criterios reales del proyecto en cuestión." data-ko="No es un problema de entropía ni de variedad requerida. El problema es específico: elegir sin comparar contra los criterios reales del proyecto es ignorar el estudio de trade-offs." hidden></p>
 </div>
@@ -524,9 +528,9 @@
 <p>1. Entrevistar a bibliotecarios y estudiantes para entender por qué se pierden libros hoy es
 <select class="quiz-blank" data-correct="requisitos">
 <option value="">— elige —</option>
-<option value="requisitos">Requisitos</option>
 <option value="arquitectura">Arquitectura</option>
 <option value="implementacion">Implementación</option>
+<option value="requisitos">Requisitos</option>
 <option value="validacion">Validación</option>
 </select>.</p>
 
@@ -534,9 +538,9 @@
 <select class="quiz-blank" data-correct="arquitectura">
 <option value="">— elige —</option>
 <option value="requisitos">Requisitos</option>
-<option value="arquitectura">Arquitectura</option>
 <option value="pruebas-componente">Pruebas de componente</option>
 <option value="validacion">Validación</option>
+<option value="arquitectura">Arquitectura</option>
 </select>.</p>
 
 <p>3. Escribir el código que registra un préstamo en la base de datos es
@@ -560,19 +564,19 @@
 <p>5. Comprobar que el módulo de préstamos y el de notificaciones funcionan juntos como se diseñó es
 <select class="quiz-blank" data-correct="verificacion-integracion">
 <option value="">— elige —</option>
-<option value="verificacion-integracion">Verificación de integración</option>
 <option value="requisitos">Requisitos</option>
 <option value="implementacion">Implementación</option>
+<option value="verificacion-integracion">Verificación de integración</option>
 <option value="validacion">Validación</option>
 </select>.</p>
 
 <p>6. Los estudiantes usan el sistema un mes, y la biblioteca mide si de verdad bajaron los libros perdidos, es
 <select class="quiz-blank" data-correct="validacion">
 <option value="">— elige —</option>
-<option value="validacion">Validación</option>
 <option value="pruebas-componente">Pruebas de componente</option>
 <option value="arquitectura">Arquitectura</option>
 <option value="requisitos">Requisitos</option>
+<option value="validacion">Validación</option>
 </select>.</p>
 
 <p class="quiz-progress"></p>
@@ -625,9 +629,10 @@
 <p class="quiz-q">El término "systems engineering" se usó formalmente por primera vez en...</p>
 <div class="quiz-opts">
 <button class="quiz-opt">La NASA, durante el programa Apolo.</button>
-<button class="quiz-opt" data-correct>Bell Telephone Laboratories, en la década de 1940, para gestionar sistemas de telecomunicaciones demasiado grandes para diseñarlos sin una visión de conjunto.</button>
+<button class="quiz-opt" data-correct>Bell Telephone Laboratories, en la década de 1940.</button>
 <button class="quiz-opt">El INCOSE, al fundarse en 1990.</button>
 <button class="quiz-opt">El MIT, junto con la Dinámica de Sistemas de Forrester.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: Bell Labs acuñó el término en los años 40. El programa Apolo la popularizó a gran escala décadas después, y el INCOSE (1990) formalizó su cuerpo de conocimiento — pero el origen del término es anterior a ambos." data-ko="El programa Apolo popularizó la disciplina a gran escala, y el INCOSE formalizó su cuerpo de conocimiento en 1990 — pero el término se usó formalmente por primera vez antes, en Bell Telephone Laboratories, en la década de 1940." hidden></p>
 </div>
@@ -644,6 +649,7 @@
 <div class="quiz-opts inline">
 <button class="quiz-opt">Verdadero</button>
 <button class="quiz-opt" data-correct>Falso</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: la validación se compara contra los requisitos originales (la necesidad real), no contra el diseño detallado. Son las pruebas de componente las que se comparan contra el diseño." data-ko="Es falso: la validación es la pareja de los requisitos, no del diseño detallado. Compara el sistema terminado contra la necesidad original; el diseño detallado tiene su propia pareja: las pruebas de componente." hidden></p>
 </div>
@@ -659,9 +665,10 @@
 <p class="quiz-q">En una definición raíz usada como requisito, ¿qué elemento de CATWOE explica <strong>por qué</strong> ese requisito importa, y no solo qué hace?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">La T (Transformación).</button>
-<button class="quiz-opt" data-correct>La W (Weltanschauung): la visión del mundo que justifica por qué esa transformación en particular —y ese requisito derivado de ella— tiene sentido.</button>
 <button class="quiz-opt">La O (Propietarios).</button>
+<button class="quiz-opt" data-correct>La W (Weltanschauung).</button>
 <button class="quiz-opt">La E (Restricciones del entorno).</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: la T describe QUÉ hace el sistema; la W explica POR QUÉ ese requisito importa. Sin la W, es imposible distinguir un requisito real de una preferencia de implementación." data-ko="La T (transformación) describe qué hace el sistema, no por qué importa. Los Propietarios y las Restricciones del entorno son otros elementos de CATWOE. La W es específicamente la que justifica el porqué detrás del requisito." hidden></p>
 </div>
@@ -705,9 +712,10 @@
 <p class="quiz-q">Un estudio de trade-offs (análisis de alternativas) sirve principalmente para...</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Demostrar que siempre existe una única arquitectura correcta.</button>
-<button class="quiz-opt" data-correct>Comparar alternativas de arquitectura contra criterios explícitos del proyecto real, en vez de elegir por moda o preferencia personal.</button>
 <button class="quiz-opt">Reemplazar la etapa de requisitos del ciclo de vida en V.</button>
 <button class="quiz-opt">Verificar que el código cumple su especificación.</button>
+<button class="quiz-opt" data-correct>Comparar alternativas de arquitectura contra criterios reales del proyecto.</button>
+
 </div>
 <p class="quiz-fb" data-ok="Correcto: como distintas arquitecturas pueden lograr el mismo objetivo igual de bien (equifinalidad), el estudio de trade-offs compara alternativas contra los criterios reales del proyecto." data-ko="No demuestra que exista una única arquitectura correcta, no reemplaza la etapa de requisitos, y no es lo mismo que verificar código. Sirve para comparar alternativas de arquitectura contra criterios explícitos del proyecto." hidden></p>
 </div>
