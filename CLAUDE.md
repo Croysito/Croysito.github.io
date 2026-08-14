@@ -34,9 +34,13 @@ No migrar guías ya publicadas a un formato nuevo salvo pedido explícito. La id
 
 Fusión con ATENZA: el docente puede asociar una guía a una `Clase` para que el sistema sepa qué estudiantes hicieron la pre-clase (formativo, sin nota). Esto **no cambia en nada la autoría de la guía** — sigue siendo el mismo HTML autocontenido de siempre, y sigue siendo accesible en público sin ATENZA. Solo aplica a las guías que Roy decida vincular desde el panel de una `Clase` en ATENZA, no a todas.
 
-Para habilitarlo en una guía puntual: copiar el bloque `<!-- ATENZA · guía completada -->` (ver `guias_bd/dml.html` como ejemplo) al final de la guía, justo después del `</script>` del motor de quizzes y antes del Cloudflare Web Analytics. El bloque no toca el motor de quizzes existente — se engancha a `actualizarProgreso()` (ya definida arriba) para detectar cuándo el estudiante completó el 100% del quiz, y hace un `POST` silencioso al backend de ATENZA solo si la guía se abrió con `?atenza_token=...&guia=...` en la URL (eso lo agrega ATENZA al armar el link; accedida directo, como siempre, el bloque no hace nada).
+Para habilitarlo en una guía puntual: copiar el bloque `<!-- ATENZA · guía completada -->` (ver `guias_bd/dml.html` o `guias_tgs/ingenieria-de-sistemas.html` como ejemplo) al final de la guía, justo después del `</script>` del motor de quizzes y antes del Cloudflare Web Analytics. El bloque no toca el motor de quizzes existente — se engancha a `actualizarProgreso()` (ya definida arriba, sea el esqueleto lineal o el formato deck) para detectar cuándo el estudiante completó el 100% del quiz, y hace un `POST` silencioso al backend de ATENZA solo si la guía se abrió con `?atenza_token=...&guia=...` en la URL (eso lo agrega ATENZA al armar el link; accedida directo, como siempre, el bloque no hace nada).
 
-**Actualizar `ATENZA_API`** dentro del bloque con la URL pública real del backend antes de depender de esto en producción (hoy tiene un placeholder).
+`ATENZA_API` ya apunta a la URL real del backend: `https://api-atenza.atenzabo.com`. El flag de "ya reportado" se guarda en `localStorage` recién después de confirmar `res.ok` (no antes de intentar el `POST`), así que un fallo de red no deja al estudiante atascado: el próximo `actualizarProgreso()` reintenta solo.
+
+**Guías vinculadas hoy:** `guias_bd/dml.html`, `guias_tgs/ingenieria-de-sistemas.html`.
+
+**Bug corregido (2026-08-13):** hasta esta fecha `ATENZA_API` era un placeholder (`https://api.atenza.com`) y el flag de "reportado" se guardaba *antes* de confirmar éxito, así que cualquier estudiante que completara una guía vinculada en ese período quedó marcado como reportado en su navegador sin que el backend se enterara nunca. Se resolvió cambiando la clave del flag a `completado-atenza-v2` (des-atasca automáticamente a esos estudiantes la próxima vez que abran la guía) y moviendo el `localStorage.setItem` a después de `res.ok`.
 
 ## Talleres con SQL en vivo (BD II)
 

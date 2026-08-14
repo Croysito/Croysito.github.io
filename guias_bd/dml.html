@@ -816,15 +816,19 @@ actualizarProgreso();
      engancha a `actualizarProgreso()`, que ya existe. -->
 <script>
 (function () {
-  var ATENZA_API = 'https://api.atenza.com'; // TODO Roy: actualizar con la URL pública real del backend
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
 
   var params = new URLSearchParams(location.search);
   var token = params.get('atenza_token');
   var guiaId = params.get('guia');
   if (!token || !guiaId) return; // acceso público normal, sin ATENZA
 
-  var flagCompletado = QUIZ_PREFIX + 'completado-atenza';
-  if (localStorage.getItem(flagCompletado)) return; // ya se reportó, no reintentar
+  // v2: si cambia la lógica de reporte, subir el sufijo de esta clave
+  // "des-atasca" a cualquier estudiante que haya quedado marcado como
+  // reportado por una versión anterior con un bug (ver commit que agregó
+  // este comentario: el POST fallaba en silencio contra un placeholder
+  // de URL, pero igual marcaba el flag como si hubiera tenido éxito).
+  var flagCompletado = QUIZ_PREFIX + 'completado-atenza-v2';
 
   function progresoActual() {
     var ids = new Set();
@@ -837,12 +841,15 @@ actualizarProgreso();
   }
 
   function reportarSiCompleto() {
+    if (localStorage.getItem(flagCompletado)) return; // ya se confirmó con éxito
     var p = progresoActual();
     if (p.total === 0 || p.correctas < p.total) return;
-    localStorage.setItem(flagCompletado, '1');
     fetch(ATENZA_API + '/api/guias/' + encodeURIComponent(guiaId) + '/completar', {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + token },
+    }).then(function (res) {
+      if (res.ok) localStorage.setItem(flagCompletado, '1');
+      // si no fue ok, no marcamos nada: el próximo actualizarProgreso() reintenta
     }).catch(function () {});
   }
 

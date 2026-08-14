@@ -1038,6 +1038,55 @@ actualizarProgreso();
 
 </script>
 
+<!-- ATENZA · guía completada (fusión con ATENZA, 05/08). Solo actúa si la
+     guía se abrió desde ATENZA (con ?atenza_token=...&guia=... en la URL,
+     agregado por VerGuias del backend); accedida directo, como siempre,
+     no dispara nada nuevo. No toca el motor de quizzes de arriba: se
+     engancha a `actualizarProgreso()`, que ya existe. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  var params = new URLSearchParams(location.search);
+  var token = params.get('atenza_token');
+  var guiaId = params.get('guia');
+  if (!token || !guiaId) return; // acceso público normal, sin ATENZA
+
+  var flagCompletado = QUIZ_PREFIX + 'completado-atenza-v2';
+
+  function progresoActual() {
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var correctas = 0;
+    ids.forEach(function (id) {
+      if (localStorage.getItem(QUIZ_PREFIX + id) === 'ok') correctas++;
+    });
+    return { correctas: correctas, total: ids.size };
+  }
+
+  function reportarSiCompleto() {
+    if (localStorage.getItem(flagCompletado)) return; // ya se confirmó con éxito
+    var p = progresoActual();
+    if (p.total === 0 || p.correctas < p.total) return;
+    fetch(ATENZA_API + '/api/guias/' + encodeURIComponent(guiaId) + '/completar', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token },
+    }).then(function (res) {
+      if (res.ok) localStorage.setItem(flagCompletado, '1');
+      // si no fue ok, no marcamos nada: el próximo actualizarProgreso() reintenta
+    }).catch(function () {});
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    reportarSiCompleto();
+  };
+
+  reportarSiCompleto(); // por si se reabre una guía que ya estaba 100% completa
+})();
+</script>
+
 <!-- Cloudflare Web Analytics -->
 <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
 <!-- End Cloudflare Web Analytics -->
