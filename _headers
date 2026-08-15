@@ -1,0 +1,12 @@
+# Cloudflare Pages headers.
+# Aislamiento cross-origin SOLO para las guías de POO con Pyodide en Web Worker
+# (necesario para SharedArrayBuffer + Atomics, que habilitan input() síncrono
+# real dentro del worker sin bloquear el hilo principal). Ver CLAUDE.md,
+# sección "Ejecución de Python en vivo (Pyodide) — Web Worker + input() real".
+#
+# Acotado a /guias/* a propósito: guias_bd/ (PGlite) y guias_tgs/ no lo necesitan,
+# y ampliar el aislamiento sin necesidad solo suma riesgo de romper recursos
+# cross-origin (jsDelivr, Cloudflare Web Analytics) sin ningún beneficio ahí.
+/guias/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp

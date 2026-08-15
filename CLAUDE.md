@@ -14,21 +14,58 @@ Al crear una guía nueva, usar como plantilla la guía más reciente de esa carp
 
 ## Formatos alternativos de guía (evaluar antes de crear una guía nueva)
 
-El esqueleto lineal de arriba (sidebar + scroll por secciones) **no es la única forma posible** — es el mejor default para contenido procedimental/secuencial (sintaxis, pasos), pero no siempre es el mejor formato para contenido más conceptual/relacional (típicamente TGS, y ocasionalmente Ingeniería de Software). El motor de quizzes (`quiz-mc`, `quiz-match`, `quiz-classify`, `quiz-fill`) y la infraestructura (progreso en `localStorage`, tema oscuro) son independientes del contenedor/navegación y se reutilizan igual en cualquier formato.
+El esqueleto lineal (sidebar + scroll por secciones) **no es la única forma posible**, pero para evaluar alternativas hay que separar **tres niveles independientes**, porque se confunden fácil (fue un error real en el roadmap de TGS #3, corregido más abajo):
 
-**Antes de crear una guía nueva, evaluar el tipo de contenido y sugerirle a Roy la(s) mejor(es) opción(es) de formato de esta lista, con el patrón lineal como default si ninguna aplica claramente mejor:**
+1. **Estilo de página completa** — cómo se navega la guía *entera*: sidebar+scroll, slides, nodos, ramas, etc. Cambia la estructura/navegación de punta a punta.
+2. **Estilo de sección** — cómo se narra *un tramo* de contenido dentro del formato de página ya elegido, sin cambiar la navegación general de la guía.
+3. **Tipo de actividad** — un widget interactivo autocontenido que se inserta dentro de una sección (calificado o exploratorio). Es ortogonal a los dos niveles de arriba: la misma actividad funciona dentro de una página Lineal, un slide de PPT, o cualquier otro formato.
+
+Elegir el nivel 3 (por ejemplo, agregar un sandbox interactivo a una sección) **no cambia** el nivel 1 — la guía sigue siendo Lineal si su navegación general sigue siendo sidebar+scroll. El motor de quizzes (`quiz-mc`, `quiz-match`, `quiz-classify`, `quiz-fill`) y la infraestructura (progreso en `localStorage`, tema oscuro) viven en el nivel 3 y son independientes del contenedor/navegación — se reutilizan igual en cualquier formato de página.
+
+**Antes de crear una guía nueva, evaluar el tipo de contenido en los tres niveles y sugerirle a Roy la(s) mejor(es) opción(es), con Lineal + prosa normal + quiz-mc/match/classify/fill como default si ninguna alternativa aplica claramente mejor:**
+
+### Nivel 1 — Estilo de página completa
 
 | Formato | Cuándo conviene | Encaje típico |
 |---|---|---|
 | **Lineal (default actual)** | Contenido con orden natural, procedimental | POO, BD2 (la mayoría) |
 | **Mapa conceptual navegable** (nodos = conceptos, clic expande tarjeta + quiz, líneas = relaciones) | Conceptos muy interrelacionados, sin orden fijo | TGS: `sistema.html`-style (elemento/límite/entorno) |
 | **Narrativa ramificada / caso con decisiones** (el estudiante elige, ve consecuencias, distintas ramas llevan a distintos quizzes) | Diagnóstico, toma de decisiones, casos aplicados | TGS: estilo `diagnostico-vsm.html`, capstones |
-| **Simulación/sandbox interactivo** (sliders que alimentan un diagrama en vivo) | Contenido con retroalimentación/dinámica que se entiende mejor manipulando que leyendo | TGS: diagramas causales, bucles de refuerzo/balance |
-| **Línea de tiempo interactiva** | Contenido con eje histórico/evolutivo real | TGS: origen y evolución de la teoría |
-| **Presentación por diapositivas (PPT-style)** (deck slide-a-slide con flechas/teclado/swipe, admite imágenes/SVG, y diapositivas de actividad que embeben el motor de quizzes existente — motor de navegación y CSS en `assets/guia.css`, ver `ingenieria-de-sistemas.html` como plantilla) | Contenido expositivo con fuerte componente visual, pensado para proyectarse en clase; también sirve como resumen/repaso navegable fuera de clase | TGS #4: Ingeniería de Sistemas (piloto, publicado 2026-08-13) |
+| **Línea de tiempo interactiva** (la guía entera se recorre a lo largo de un eje temporal, en vez de sidebar+scroll) | Contenido con eje histórico/evolutivo real | TGS: origen y evolución de la teoría |
+| **Presentación por diapositivas (PPT-style)** (deck slide-a-slide con flechas/teclado/swipe, admite imágenes/SVG, y diapositivas de actividad que embeben el motor de quizzes existente — motor de navegación y CSS en `assets/guia.css`, ver `ingenieria-de-sistemas.html` como plantilla) | Contenido expositivo con fuerte componente visual, pensado para proyectarse en clase; también sirve como resumen/repaso navegable fuera de clase | TGS #4: Ingeniería de Sistemas (piloto, publicado 2026-08-13) — cambia el formato de página de verdad, porque cambia toda la navegación/estilo visual |
 | **Canvas zoom/pan estilo Prezi** | Narrativa "panorama → detalle → panorama" | Solo para un capstone puntual — alto costo de implementación (sin librería, en vanilla JS), riesgo de mobile/accesibilidad; no usar como default |
+| **Scrollytelling con panel fijo** (`position: sticky` + `IntersectionObserver`: dos columnas, prosa que scrollea a la izquierda y un único artefacto visual a la derecha que se construye/resalta según la sección visible — técnica de periodismo de datos tipo Pudding.cool) — uso normal es página completa, pero también puede acotarse a una sola sección (ver Nivel 2) | Un mismo artefacto que crece o cambia de estado a medida que se explica toda la guía | Aún sin pilotar — candidato: BD2 (una guía entera armando un mismo ER o consulta SQL cláusula por cláusula) |
 
-No migrar guías ya publicadas a un formato nuevo salvo pedido explícito. La idea es pilotar formatos alternativos en guías nuevas (empezando por la guía TGS #2 "por definir" del roadmap), no reescribir lo existente.
+### Nivel 2 — Estilo de sección
+
+Cambia solo cómo se presenta un tramo de contenido; el resto de la guía sigue con su formato de página normal.
+
+| Estilo de sección | Cuándo conviene | Encaje típico |
+|---|---|---|
+| **Explicación reactiva** (patrón "explorable explanations" de Bret Victor / Nicky Case: valores editables/arrastrables incrustados dentro de la propia oración, `<span class="reactivo">`, que recalculan el párrafo en vivo) | Conceptos donde mover un número y ver la consecuencia en la misma frase enseña más que un panel aparte (fórmulas, coeficientes, probabilidades) | Aún sin pilotar — candidatos: BD2 (cardinalidad/normalización con valores editables in situ), TGS (Ley de Variedad de Ashby) |
+| **Scrollytelling acotado a una sección** (mismo mecanismo del Nivel 1, pero solo para el tramo de la guía donde un artefacto necesita construirse en vivo, sin tocar la navegación del resto) | Una sección puntual con un artefacto que crece paso a paso, dentro de una guía por lo demás Lineal | Aún sin pilotar — candidato: ISW (una sección donde la arquitectura evoluciona con cada decisión de diseño) |
+
+### Nivel 3 — Tipo de actividad
+
+Widget autocontenido dentro de una sección, no cambia nada de los dos niveles de arriba.
+
+**Autocorregibles (calificadas, alimentan la barra de progreso en `localStorage`):**
+
+| Actividad | Qué hace |
+|---|---|
+| `quiz-mc` | Opción múltiple |
+| `quiz-match` | Emparejar pares |
+| `quiz-classify` | Clasificar en categorías |
+| `quiz-fill` | Completar espacios |
+| `quiz-parsons` *(propuesto, sin implementar)* | Reordenar bloques de código desordenados en vez de escribirlos de cero — evidencia de investigación en educación de programación: aprendizaje equivalente a escribir desde cero pero en menos tiempo y con menor carga cognitiva. Encaje obvio en POO, como escalón entre "leer código" y "escribirlo de cero" |
+
+**Exploratorias (sin calificar, no alimentan la barra de progreso — son para manipular y entender):**
+
+| Actividad | Qué hace |
+|---|---|
+| **Simulación/sandbox interactivo** (sliders que alimentan un diagrama en vivo) | TGS #3, `dinamica-sistemas.html`: la página sigue siendo Lineal (sidebar+scroll) de punta a punta — lo que introdujo esa guía es este *tipo de actividad* dentro de sus secciones, no un formato de página nuevo. El roadmap de abajo ya está corregido para reflejar esto |
+
+No migrar guías ya publicadas a un formato/estilo/actividad nuevo salvo pedido explícito. La idea es pilotar cosas nuevas en guías nuevas, no reescribir lo existente.
 
 ## Vincular una guía a ATENZA (opcional, 05/08)
 
@@ -54,13 +91,24 @@ Detalles del patrón (ver `taller-ddl.html`): una única instancia de `PGlite` c
 
 **Decisión (2026-08-05):** en los `.editor` de los talleres, copiar/cortar/pegar/soltar (drag&drop) está deshabilitado — el código se escribe a mano, no se trae de otro lado. Se bloquean los eventos `copy`/`cut`/`paste`/`drop` y, como capa extra, los atajos Ctrl/Cmd+C/V/X por `keydown`, con un aviso breve en un toast global (`#clipboardToast`) y un flash rojo (`.editor.bloqueado`) en el propio editor. Ver `conectarSqlLab()` y `mostrarAvisoPortapapeles()` en `taller-ddl.html` como referencia a copiar tal cual en los próximos talleres.
 
-## Ejecución de Python en vivo (Pyodide) — control de bucles infinitos (POO)
+## Ejecución de Python en vivo (Pyodide) — Web Worker + input() real (POO)
 
-Las guías de POO con editor ejecutable (`variables.html`, `print.html`, `string.html`, `input.html`, `tipos-datos.html`, `condicionales.html`, `bucles.html`, `taller-repaso.html`) corren el código del estudiante con `exec()` de forma síncrona en el hilo principal, dentro de la función Python `__run_capture` embebida en `cargarPyodide()`. Sin protección, un bucle que no termina (`while True: pass`, condición de salida mal escrita) cuelga la pestaña indefinidamente y el estudiante pierde el avance guardado en `localStorage`, porque el hilo nunca vuelve a JS para persistirlo.
+Las 8 guías de POO con editor ejecutable (`variables.html`, `print.html`, `string.html`, `input.html`, `tipos-datos.html`, `condicionales.html`, `bucles.html`, `taller-repaso.html`) corren Pyodide en un **Web Worker**, no en el hilo principal. Esto es la 2ª iteración de la protección contra bucles infinitos:
 
-**Decisión (2026-08-13):** `__run_capture` instala un watchdog con `sys.settrace` antes del `exec()`: una función de traza que en cada línea/llamada revisa cuánto tiempo pasó desde el inicio y, si supera `__LIMITE_SEGUNDOS` (8s), lanza `TimeoutError` con un mensaje en español — que cae en el mismo `except Exception` que ya mostraba errores de sintaxis/ejecución, sin tocar el resto del flujo. En las guías con `input()` (`input.html`, `condicionales.html`, `bucles.html`, `taller-repaso.html`), `__custom_input` resetea el reloj (`inicio = time.time()`, con `nonlocal`) después de cada respuesta, para no contar el tiempo que el estudiante tarda en responder el `prompt()` como si fuera un bucle colgado.
+- **1ª iteración (2026-08-13, ya superada):** `exec()` corría síncrono en el hilo principal con un watchdog `sys.settrace` que cortaba a los 8s. Acotaba el cuelgue pero no lo eliminaba — la pestaña seguía congelándose hasta 8s de verdad, y eso seguía siendo molesto para el estudiante.
+- **2ª iteración (2026-08-14, actual):** Pyodide corre en un Worker aparte (`crearWorkerPyodide()` / `__codigoWorkerPyodide()`, cargado vía `Blob` + `importScripts`, no un archivo `.js` separado — la guía sigue siendo un HTML autocontenido). El hilo principal **nunca se bloquea**, pase lo que pase en el código del estudiante:
+  - Botón **"⏹ Detener"** (inyectado por JS dentro de `conectarEditor()`, no hay que tocar el HTML estático de cada ejercicio) hace `worker.terminate()` al instante — corte real, no un timeout.
+  - Si el estudiante no lo hace, `ejecutarPython()` tiene su propio timeout de 20s en el hilo principal que termina y recrea el worker solo.
+  - El watchdog `sys.settrace` (8s) se mantiene *dentro* del worker como segunda capa — ya no es la única defensa, es redundancia barata.
+  - Terminar el worker no pierde nada de estado porque cada ejecución ya corría con un dict de globals nuevo (`exec(..., {})`) — no hay contexto compartido entre ejecuciones que se pueda perder.
 
-No es una solución que evite el freeze por completo (`exec()` sigue siendo síncrono en el hilo principal, así que la pestaña se congela hasta 8s como máximo), pero acota el cuelgue a unos segundos en vez de indefinido, y el hilo se libera solo — así el progreso en `localStorage` deja de perderse. Ver `guias/bucles.html` como plantilla a copiar tal cual (bloque `__run_capture` dentro de `cargarPyodide()`) en guías nuevas con Pyodide (`funciones.html`, `clases-objetos.html`). Una alternativa más robusta pero de mayor costo (mover Pyodide a un Web Worker, con un botón real de "Detener") queda pendiente como mejora futura si hace falta un corte instantáneo o ejecutar código legítimamente largo.
+**`input()` real dentro del Worker — el problema y la solución:** un Worker no tiene `window.prompt`, y no se puede "esperar" una respuesta async en medio de un `exec()` síncrono sin bloquear el hilo de verdad. Se resolvió con el patrón estándar (el mismo que usa JupyterLite): **`SharedArrayBuffer` + `Atomics.wait`/`Atomics.notify`**. Cuando el código del estudiante llama `input()`, el worker escribe en un buffer compartido, hace `Atomics.wait` (bloqueo real del hilo del *worker*, no de la página), el hilo principal muestra el `prompt()` nativo, escribe la respuesta en el buffer y hace `Atomics.notify` — el worker se despierta con la respuesta. El timeout de 20s del hilo principal se cancela y se reprograma alrededor de cada `input-request`, para no confundir "el estudiante está pensando qué escribir" con "el código está colgado".
+
+**Esto requiere aislamiento cross-origin** (`SharedArrayBuffer` no existe sin él): el archivo `_headers` en la raíz del repo aplica `Cross-Origin-Opener-Policy: same-origin` + `Cross-Origin-Embedder-Policy: require-corp`, **acotado a `/guias/*`** a propósito — `guias_bd/` (PGlite) y `guias_tgs/` no lo necesitan, y ampliarlo sin necesidad solo suma riesgo. Ese riesgo real: con `COEP: require-corp` activo, todo recurso cross-origin que cargue esa página necesita cooperar (CORP/CORS) o el navegador lo bloquea en silencio — esto incluye los ~decenas de archivos que `loadPyodide()` trae de jsDelivr y el beacon de Cloudflare Web Analytics al final de cada guía. **Todavía no se probó en un navegador real desplegado** que ninguno de esos recursos se rompa bajo aislamiento cross-origin — es la primera verificación a hacer después de deployar este cambio.
+
+**Fallback si `SharedArrayBuffer` no está disponible** (headers no propagados aún, navegador viejo, o algo se rompió): `__crearSabInput()` detecta la ausencia y pasa `sab: null` al worker; `inputSincrono()` ahí lanza un `Error` claro ("input() no está disponible…") en vez de colgarse — el resto de la guía (todo lo que no usa `input()`) sigue funcionando igual, con Worker y botón Detener funcionando sin ningún cambio.
+
+Ver `guias/variables.html` como plantilla a copiar tal cual (todo el bloque desde `/* ===== Pyodide en un Web Worker ===== */` hasta el cierre de `ejecutarPython()`, más el botón Detener dentro de `conectarEditor()`) en guías nuevas con Pyodide (`funciones.html`, `clases-objetos.html`). El estilo `.code-btn.stop` vive en `assets/guia.css`, no hace falta repetirlo por guía.
 
 ## Roadmap curricular: Base de Datos II (2026)
 
@@ -98,9 +146,9 @@ No es una solución que evite el freeze por completo (`exec()` sigue siendo sín
 | — | Cibernética Avanzada: Variedad y Viabilidad (`viabilidad-sistemas.html`) | ✅ Publicada |
 | 1 | Diagnóstico y Rediseño Organizacional con el VSM — recursividad, atenuación/amplificación de variedad, homeostasis/ultraestabilidad, autopoiesis, cibernética de 1er/2do orden, variedad en ciberseguridad, caso práctico integrador (`diagnostico-vsm.html`) | ✅ Publicada (2026-08-04) |
 | 2 | Metodologías de Sistemas: Duros y Blandos — distinción de Checkland, origen del SSM, rich pictures, definiciones raíz y CATWOE, modelos conceptuales, cambios factibles/deseables, caso práctico aplicado (`sistemas-duros-blandos.html`) | ✅ Publicada (2026-08-10) |
-| 3 | Dinámica de Sistemas: Simulación de Stocks y Flujos — piloto de formato alternativo (sandbox interactivo progresivo, no lineal): stock y flujo cuantificados, retraso y oscilación, bucle cerrado y efecto látigo reproducible con sliders (`dinamica-sistemas.html`) | ✅ Publicada (2026-08-11) |
+| 3 | Dinámica de Sistemas: Simulación de Stocks y Flujos — página sigue siendo Lineal (sidebar+scroll); piloto del **tipo de actividad** "Simulación/sandbox interactivo" (ver tabla de formatos arriba, Nivel 3): stock y flujo cuantificados, retraso y oscilación, bucle cerrado y efecto látigo reproducible con sliders (`dinamica-sistemas.html`) | ✅ Publicada (2026-08-11) |
 | 4 | Ingeniería de Sistemas: de la Teoría a la Práctica — piloto del formato **Presentación por diapositivas (PPT-style)**: origen de la disciplina (Bell Labs, Apolo, INCOSE), el ciclo de vida en V, ingeniería de requisitos reutilizando CATWOE del SSM, arquitectura y estudio de trade-offs, verificación vs. validación, caso práctico (Biblioteca UAB) (`ingenieria-de-sistemas.html`) | ✅ Publicada (2026-08-13) |
-| 5 | *(tema por definir según avance de la materia)* | Pendiente |
+| 5 | Arquetipos Sistémicos — Límites del crecimiento, Desplazar la carga, Escalada, Tragedia de los comunes, Éxito para quien tiene éxito, entre otros; se construye directo sobre los diagramas causales y stocks/flujos de la guía #3. Formato: **Presentación por diapositivas (PPT-style)**, reutilizando el motor de `ingenieria-de-sistemas.html` (no un formato nuevo — TGS #4 ya lo estrenó) | Pendiente (tema y formato acordados 2026-08-14) |
 
 **Al completar una guía:** marcar su fila como "✅ Publicada" con la fecha, actualizar la tarjeta correspondiente en `index.html` (agregarla como "disponible"), y agregar la siguiente fila cuando se defina el próximo tema según el avance real de la materia.
 

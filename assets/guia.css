@@ -134,6 +134,8 @@ img{ max-width:100%; }
 .code-btn.run{ background:var(--verde); border-color:var(--verde); color:white; }
 .code-btn.run:hover{ background:var(--verde2); }
 .code-btn:disabled{ opacity:.5; cursor:wait; }
+.code-btn.stop{ background:rgba(255,255,255,.08); border-color:#e5484d; color:#ff8a8a; }
+.code-btn.stop:hover{ background:#e5484d; border-color:#e5484d; color:white; }
 
 /* BLOQUE DE CÓDIGO — editor en blanco del estudiante, separado del ejemplo */
 .editor-panel{

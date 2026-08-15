@@ -544,24 +544,82 @@ function highlightPython(code){
   return out;
 }
 
-/* ===== Pyodide (Python real en el navegador), carga perezosa ===== */
+/* ===== Pyodide en un Web Worker (así un bucle infinito nunca cuelga la pestaña) ===== */
+const __CONTROL_SLOTS = 3;      // [0]=listo, [1]=largo de la respuesta, [2]=cancelado
+const __CONTROL_BYTES = __CONTROL_SLOTS * 4;
+const __TAM_BUFFER_INPUT = 8192; // bytes UTF-8 para la respuesta de input()
+
+function __crearSabInput(){
+  if (typeof SharedArrayBuffer === "undefined") return null;
+  try {
+    return new SharedArrayBuffer(__CONTROL_BYTES + __TAM_BUFFER_INPUT);
+  } catch (e) {
+    return null;
+  }
+}
+
+function __responderInput(sab, mensaje){
+  const control = new Int32Array(sab, 0, __CONTROL_SLOTS);
+  const textBuf = new Uint8Array(sab, __CONTROL_BYTES);
+  const respuesta = prompt(mensaje);
+  if (respuesta === null) {
+    Atomics.store(control, 2, 1);
+    Atomics.store(control, 1, 0);
+  } else {
+    Atomics.store(control, 2, 0);
+    const bytes = new TextEncoder().encode(respuesta);
+    const len = Math.min(bytes.length, textBuf.length);
+    textBuf.set(bytes.subarray(0, len));
+    Atomics.store(control, 1, len);
+  }
+  Atomics.store(control, 0, 1);
+  Atomics.notify(control, 0);
+}
+
+function __codigoWorkerPyodide(){
+  return `
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js");
+
+let __sabInput = null;
 let pyodideReadyPromise = null;
-function cargarPyodide(){
+
+function inputSincrono(mensaje){
+  if (!__sabInput) {
+    throw new Error("input() no está disponible: este navegador no soporta el modo protegido contra bucles infinitos (SharedArrayBuffer). Probá con una versión reciente de Chrome, Edge o Firefox.");
+  }
+  const control = new Int32Array(__sabInput, 0, ${__CONTROL_SLOTS});
+  const textBuf = new Uint8Array(__sabInput, ${__CONTROL_BYTES});
+  Atomics.store(control, 0, 0);
+  self.postMessage({ tipo: "input-request", mensaje: String(mensaje) });
+  Atomics.wait(control, 0, 0);
+  if (Atomics.load(control, 2)) return null;
+  const len = Atomics.load(control, 1);
+  return new TextDecoder().decode(textBuf.slice(0, len));
+}
+
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.tipo === "init") {
+    __sabInput = e.data.sab;
+  }
+});
+
+async function cargarPyodide(){
   if (!pyodideReadyPromise) {
     pyodideReadyPromise = (async () => {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-      const pyodide = await window.loadPyodide();
-      await pyodide.runPythonAsync(`
+      const pyodide = await loadPyodide();
+      await pyodide.runPythonAsync(\`
 import sys, io, builtins, time
-from js import prompt as __js_prompt
+from js import inputSincrono as __input_sincrono
 
 __LIMITE_SEGUNDOS = 8
+
+def __custom_input(mensaje=""):
+    respuesta = __input_sincrono(str(mensaje))
+    if respuesta is None:
+        raise EOFError("Entrada cancelada por el usuario")
+    print(mensaje, end="")
+    print(respuesta)
+    return respuesta
 
 def __run_capture(src):
     buf = io.StringIO()
@@ -569,16 +627,6 @@ def __run_capture(src):
     old_input = builtins.input
     sys.stdout = buf
     inicio = time.time()
-
-    def __custom_input(mensaje=""):
-        nonlocal inicio
-        respuesta = __js_prompt(str(mensaje))
-        if respuesta is None:
-            raise EOFError("Entrada cancelada por el usuario")
-        print(mensaje, end="")
-        print(respuesta)
-        inicio = time.time()
-        return respuesta
 
     def __watchdog(frame, event, arg):
         if time.time() - inicio > __LIMITE_SEGUNDOS:
@@ -597,20 +645,104 @@ def __run_capture(src):
         sys.stdout = old_stdout
         builtins.input = old_input
     return buf.getvalue(), err
-`);
+\`);
       return pyodide;
     })();
   }
   return pyodideReadyPromise;
 }
 
+self.onmessage = async (e) => {
+  if (e.data && e.data.tipo === "init") return;
+  const { id, codigo } = e.data;
+  try {
+    const pyodide = await cargarPyodide();
+    const funcion = pyodide.globals.get("__run_capture");
+    const resultado = funcion(codigo);
+    const [salida, error] = resultado.toJs();
+    resultado.destroy();
+    self.postMessage({ id, salida, error });
+  } catch (err) {
+    self.postMessage({ id, salida: "", error: "No se pudo ejecutar el código: " + err });
+  }
+};
+`;
+}
+
+let workerPy = null;
+let sabInputActual = null;
+let pedidoIdPy = 0;
+let pedidoActualPy = null;
+
+function __programarTimeoutPy(pedido){
+  pedido.timer = setTimeout(() => {
+    if (pedidoActualPy && pedidoActualPy.id === pedido.id) {
+      reiniciarWorkerPyodide();
+      pedidoActualPy.reject(new Error("El código tardó demasiado y fue detenido automáticamente."));
+      pedidoActualPy = null;
+    }
+  }, 20000);
+}
+
+function crearWorkerPyodide(){
+  const blob = new Blob([__codigoWorkerPyodide()], { type: "application/javascript" });
+  const worker = new Worker(URL.createObjectURL(blob));
+  sabInputActual = __crearSabInput();
+  worker.postMessage({ tipo: "init", sab: sabInputActual });
+  worker.onmessage = (e) => {
+    const msg = e.data;
+    if (msg && msg.tipo === "input-request") {
+      if (pedidoActualPy) clearTimeout(pedidoActualPy.timer);
+      __responderInput(sabInputActual, msg.mensaje);
+      if (pedidoActualPy) __programarTimeoutPy(pedidoActualPy);
+      return;
+    }
+    const { id, salida, error } = msg;
+    if (pedidoActualPy && pedidoActualPy.id === id) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.resolve({ salida, error });
+      pedidoActualPy = null;
+    }
+  };
+  worker.onerror = () => {
+    if (pedidoActualPy) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.reject(new Error("El intérprete de Python se cerró inesperadamente."));
+      pedidoActualPy = null;
+    }
+    reiniciarWorkerPyodide();
+  };
+  return worker;
+}
+
+function obtenerWorkerPyodide(){
+  if (!workerPy) workerPy = crearWorkerPyodide();
+  return workerPy;
+}
+
+function reiniciarWorkerPyodide(){
+  if (workerPy) workerPy.terminate();
+  workerPy = null;
+  sabInputActual = null;
+}
+
+function detenerEjecucion(){
+  reiniciarWorkerPyodide();
+  if (pedidoActualPy) {
+    clearTimeout(pedidoActualPy.timer);
+    pedidoActualPy.reject(new Error("Ejecución detenida."));
+    pedidoActualPy = null;
+  }
+}
+
 async function ejecutarPython(codigo){
-  const pyodide = await cargarPyodide();
-  const funcion = pyodide.globals.get("__run_capture");
-  const resultado = funcion(codigo);
-  const [salida, error] = resultado.toJs();
-  resultado.destroy();
-  return { salida, error };
+  const worker = obtenerWorkerPyodide();
+  const id = ++pedidoIdPy;
+  return new Promise((resolve, reject) => {
+    pedidoActualPy = { id, resolve, reject, timer: null };
+    __programarTimeoutPy(pedidoActualPy);
+    worker.postMessage({ id, codigo });
+  });
 }
 
 /* ===== Resaltar cada ejemplo de solo lectura ===== */
@@ -627,6 +759,15 @@ function conectarEditor(panel){
   const output = panel.querySelector(".output");
   const outputBody = panel.querySelector(".output-body");
 
+  const stopBtn = document.createElement("button");
+  stopBtn.type = "button";
+  stopBtn.className = "code-btn stop";
+  stopBtn.textContent = "⏹ Detener";
+  stopBtn.setAttribute("aria-label", "Detener la ejecución");
+  stopBtn.hidden = true;
+  runBtn.after(stopBtn);
+  stopBtn.onclick = () => detenerEjecucion();
+
   textarea.addEventListener("paste", e => e.preventDefault());
 
   runBtn.onclick = async () => {
@@ -640,6 +781,7 @@ function conectarEditor(panel){
     }
     outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
     runBtn.disabled = true;
+    stopBtn.hidden = false;
     try {
       const { salida, error } = await ejecutarPython(textarea.value);
       if (error) {
@@ -649,10 +791,11 @@ function conectarEditor(panel){
         outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
       }
     } catch (e) {
-      outputBody.textContent = "No se pudo cargar el intérprete de Python: " + e;
+      outputBody.textContent = e && e.message ? e.message : String(e);
       output.classList.add("error");
     } finally {
       runBtn.disabled = false;
+      stopBtn.hidden = true;
     }
   };
 }
