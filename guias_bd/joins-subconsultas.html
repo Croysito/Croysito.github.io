@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOINs y Subconsultas en PostgreSQL | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">BD II · <span>JOINs</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="joins-basicos">JOINs — los 4 tipos</button>
+<button data-target="subconsultas">Subconsultas</button>
+<button data-target="razonamiento">Ejercicios de razonamiento</button>
+<button data-target="ejercicios">Actividades de repaso</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🗄️ Guía de Aula Invertida</span>
+<h1 class="flow-h1">JOINs y <span>Subconsultas</span> en PostgreSQL</h1>
+<p class="flow-lead">Hasta ahora cada SELECT leía una sola tabla. Pero los datos reales viven repartidos: los clientes en una tabla, sus pedidos en otra. JOIN es cómo le pedís a PostgreSQL que las combine — y las subconsultas son cómo usás el resultado de una consulta dentro de otra.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Scrollea para empezar — la consulta y su resultado se arman solos, a la derecha, mientras leés.</p>
+</section>
+
+<section class="flow-section" id="joins-basicos">
+<div class="flow-grid">
+<div class="flow-beats">
+
+<div class="flow-beat" data-step="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>Dos tablas que no se hablan</h3>
+<p>La tienda guarda a sus clientes en una tabla y sus pedidos en otra. Cada pedido solo anota el <strong>cliente_id</strong> de quien compró — ni el nombre, ni la ciudad. Si alguien pide un reporte con el nombre del cliente junto a lo que compró, ninguna de las dos tablas alcanza por sí sola.</p>
+<p>Así viven hoy, separadas →</p>
+</div>
+
+<div class="flow-beat" data-step="1">
+<span class="flow-beat-eyebrow">Paso 02 · Arrancamos simple</span>
+<h3>Una sola tabla, sin JOIN todavía</h3>
+<p>Toda consulta empieza de a poco. Elegimos las columnas que nos importan y arrancamos desde <strong>clientes</strong>. Sin ningún JOIN, solo vemos lo que esa tabla sabe: nombre y ciudad. Nada de productos ni montos — ese dato vive del otro lado.</p>
+</div>
+
+<div class="flow-beat" data-step="2">
+<span class="flow-beat-eyebrow">Paso 03 · INNER JOIN</span>
+<h3>Solo lo que coincide en los dos lados</h3>
+<p>Un <strong>INNER JOIN</strong> conecta ambas tablas por la columna que comparten — <code>cliente_id</code> con <code>id</code> — y se queda únicamente con las filas donde hay coincidencia en ambos lados.</p>
+<p>Mirá el resultado: Renata Flores desaparece. No tiene ningún pedido registrado, así que no hay nada que combinar con su fila.</p>
+</div>
+
+<div class="flow-beat" data-step="3">
+<span class="flow-beat-eyebrow">Paso 04 · LEFT JOIN</span>
+<h3>No perder a nadie de la izquierda</h3>
+<p>¿Y si el reporte necesita mostrar a <em>todos</em> los clientes, incluso a los que todavía no compraron nada? Cambiamos INNER por <strong>LEFT JOIN</strong>.</p>
+<p>Renata vuelve a aparecer, con producto y total en <strong>NULL</strong> — Postgres rellena con NULL lo que no encontró del lado derecho.</p>
+</div>
+
+<div class="flow-beat" data-step="4">
+<span class="flow-beat-eyebrow">Paso 05 · WHERE</span>
+<h3>El filtro llega después del JOIN</h3>
+<p>El JOIN ya armó la tabla combinada; <strong>WHERE</strong> decide qué filas de esa combinación se quedan. Filtramos solo clientes de La Paz.</p>
+<p>Iván (Cochabamba) y Esteban (Santa Cruz) salen del resultado. Renata se mantiene — su ciudad sí es La Paz, aunque no tenga pedidos.</p>
+</div>
+
+<div class="flow-beat" data-step="5">
+<span class="flow-beat-eyebrow">Paso 06 · ORDER BY + LIMIT</span>
+<h3>Quedarnos con lo mejor</h3>
+<p>Ordenamos por el total del pedido de mayor a menor y nos quedamos con los tres primeros con <strong>LIMIT</strong>. Cinco cláusulas armadas una encima de la otra — y en ningún momento tuviste que releer la consulta entera.</p>
+<p>Guardate esta idea: <strong>INNER</strong> es "solo lo que coincide en ambos lados"; <strong>LEFT</strong> es "todo lo de la izquierda, coincida o no". Faltan dos variantes.</p>
+</div>
+
+<div class="flow-beat" data-step="6">
+<span class="flow-beat-eyebrow">Paso 07 · RIGHT JOIN</span>
+<h3>Visto desde el otro lado</h3>
+<p><strong>RIGHT JOIN</strong> es LEFT JOIN mirando la tabla de la derecha: conserva todo lo de <code>pedidos</code>, coincida o no. Mirá el pedido <strong>107</strong> — quedó con un <code>cliente_id</code> que ya no existe (un cliente borrado). Con RIGHT, esa fila igual aparece, con el nombre en NULL.</p>
+<p>En la práctica casi nadie usa RIGHT: es más fácil reordenar las tablas y usar siempre LEFT.</p>
+</div>
+
+<div class="flow-beat" data-step="7">
+<span class="flow-beat-eyebrow">Paso 08 · FULL OUTER JOIN</span>
+<h3>No perder nada de ningún lado</h3>
+<p><strong>FULL OUTER JOIN</strong> combina LEFT y RIGHT a la vez: Renata (sin pedidos) y el pedido 107 (sin cliente válido) aparecen los dos, cada uno con NULL en el lado que le falta.</p>
+<p>PostgreSQL lo soporta de forma nativa — no todos los motores lo hacen.</p>
+</div>
+
+</div>
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="jnPanel">
+<div class="flow-panel-head"><span>Resultado en vivo</span><span class="flow-panel-step" id="jnPanelStep">Paso 1 / 8</span></div>
+
+<div class="scrolly-dg-wrap">
+<svg viewBox="0 0 264 216" aria-hidden="true">
+<line class="scrolly-edge" data-pid="101" x1="26" y1="16" x2="228" y2="10"/>
+<line class="scrolly-edge" data-pid="103" x1="26" y1="16" x2="228" y2="37"/>
+<line class="scrolly-edge" data-pid="104" x1="26" y1="48" x2="228" y2="64"/>
+<line class="scrolly-edge" data-pid="102" x1="26" y1="80" x2="228" y2="91"/>
+<line class="scrolly-edge" data-pid="106" x1="26" y1="80" x2="228" y2="118"/>
+<line class="scrolly-edge" data-pid="105" x1="26" y1="112" x2="228" y2="145"/>
+<line class="scrolly-ghost" data-ghost="renata" x1="26" y1="144" x2="228" y2="199"/>
+<line class="scrolly-ghost" data-ghost="huerfano" x1="26" y1="176" x2="228" y2="172"/>
+
+<g class="scrolly-node-c" data-cid="1"><circle cx="26" cy="16" r="8"/><text x="12" y="19">M</text></g>
+<g class="scrolly-node-c" data-cid="2"><circle cx="26" cy="48" r="8"/><text x="12" y="51">I</text></g>
+<g class="scrolly-node-c" data-cid="3"><circle cx="26" cy="80" r="8"/><text x="12" y="83">D</text></g>
+<g class="scrolly-node-c" data-cid="4"><circle cx="26" cy="112" r="8"/><text x="12" y="115">E</text></g>
+<g class="scrolly-node-c" data-cid="5"><circle cx="26" cy="144" r="8"/><text x="12" y="147">R</text></g>
+<circle class="scrolly-ghost" data-ghost="huerfano" cx="26" cy="176" r="8"/>
+<text class="scrolly-ghost" data-ghost="huerfano" x="12" y="179">&#8709;</text>
+
+<g class="scrolly-node-p" data-pid="101"><circle cx="228" cy="10" r="6"/><text x="239" y="13">101</text></g>
+<g class="scrolly-node-p" data-pid="103"><circle cx="228" cy="37" r="6"/><text x="239" y="40">103</text></g>
+<g class="scrolly-node-p" data-pid="104"><circle cx="228" cy="64" r="6"/><text x="239" y="67">104</text></g>
+<g class="scrolly-node-p" data-pid="102"><circle cx="228" cy="91" r="6"/><text x="239" y="94">102</text></g>
+<g class="scrolly-node-p" data-pid="106"><circle cx="228" cy="118" r="6"/><text x="239" y="121">106</text></g>
+<g class="scrolly-node-p" data-pid="105"><circle cx="228" cy="145" r="6"/><text x="239" y="148">105</text></g>
+<g class="scrolly-node-p" data-pid="107"><circle cx="228" cy="172" r="6"/><text x="239" y="175">107</text></g>
+<circle class="scrolly-ghost" data-ghost="renata" cx="228" cy="199" r="6"/>
+<text class="scrolly-ghost" data-ghost="renata" x="228" y="202">&#8709;</text>
+</svg>
+<div class="scrolly-dg-caption">clientes (M I D E R) &nbsp;·&nbsp; pedidos (101–107) &nbsp;·&nbsp; línea = <code>cliente_id</code> compartido</div>
+</div>
+
+<div class="scrolly-query">
+<div class="scrolly-query-head">consulta.sql</div>
+<pre class="scrolly-query-pre" id="jnQueryPre"><span class="scrolly-query-placeholder">-- todavía no escribimos nada</span></pre>
+</div>
+
+<div id="jnResultBox"></div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat">
+<h2>Practicá lo que viste</h2>
+<p class="lead">Antes de seguir a subconsultas, confirmá que los 4 tipos de JOIN quedaron claros.</p>
+
+<div class="quiz quiz-mc" data-quiz-id="innerleft-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Una tabla autor tiene 5 filas y libro tiene 8, pero 2 autores todavía no cargaron ningún libro. ¿Cuántas filas devuelve un INNER JOIN entre autor y libro por autor_id?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">13, la suma de las filas de ambas tablas.</button>
+<button class="quiz-opt">5, una fila por cada autor de la tabla.</button>
+<button class="quiz-opt" data-correct>8, una fila por cada libro que sí tiene autor coincidente.</button>
+<button class="quiz-opt">3, una fila por cada autor sin libros cargados.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: INNER JOIN solo conserva filas con coincidencia en ambos lados. Como los 8 libros sí tienen un autor_id válido, aparecen las 8 — los 2 autores sin libros simplemente no generan ninguna fila." data-ko="INNER JOIN no suma ni promedia las tablas: genera una fila por cada coincidencia real entre ambos lados. Como cada uno de los 8 libros tiene un autor_id que sí existe en autor, el resultado tiene 8 filas; los 2 autores sin libros no aportan ninguna." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="innerleft-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre la consulta que armaste arriba, en su versión final con LEFT JOIN.</p>
+<p>1. La cláusula que decide qué columnas trae el resultado es
+<select class="quiz-blank" data-correct="select">
+<option value="">— elige —</option>
+<option value="from">FROM</option>
+<option value="select">SELECT</option>
+<option value="on">ON</option>
+</select>.</p>
+<p>2. Si usaras INNER en vez de LEFT en esa misma consulta, la fila de Renata Flores
+<select class="quiz-blank" data-correct="desaparece">
+<option value="">— elige —</option>
+<option value="null">seguiría apareciendo, con NULL en producto y total</option>
+<option value="error">causaría un error de sintaxis</option>
+<option value="desaparece">desaparecería del resultado</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="rightfull-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada tipo de JOIN según qué filas conserva.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">INNER JOIN</span>
+<div class="quiz-classify-btns">
+<button data-correct>Solo las filas con coincidencia en ambos lados</button>
+<button>Todas las de la izquierda, coincidan o no</button>
+<button>Todas las de ambos lados, coincidan o no</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">LEFT JOIN</span>
+<div class="quiz-classify-btns">
+<button>Solo las filas con coincidencia en ambos lados</button>
+<button data-correct>Todas las de la izquierda, coincidan o no</button>
+<button>Todas las de ambos lados, coincidan o no</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">FULL OUTER JOIN</span>
+<div class="quiz-classify-btns">
+<button>Solo las filas con coincidencia en ambos lados</button>
+<button>Todas las de la izquierda, coincidan o no</button>
+<button data-correct>Todas las de ambos lados, coincidan o no</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-section" id="subconsultas">
+<div class="flow-grid">
+<div class="flow-beats">
+
+<div class="flow-beat" data-sub="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>Cuando no necesitás combinar, solo filtrar</h3>
+<p>A veces la pregunta no pide columnas de las dos tablas — solo pide filtrar una tabla según una condición que depende de la otra. Ahí un JOIN es más trabajo del necesario: entra la <strong>subconsulta</strong>, un SELECT completo viviendo dentro de otro SELECT.</p>
+</div>
+
+<div class="flow-beat" data-sub="1">
+<span class="flow-beat-eyebrow">Paso 02 · Subconsulta escalar</span>
+<h3>Un solo valor, donde iría cualquier valor suelto</h3>
+<p>Una subconsulta <strong>escalar</strong> devuelve exactamente un valor, y se usa donde iría cualquier número o texto. "El pedido con el total más alto" es directo: <code>MAX(total)</code> garantiza un único resultado.</p>
+<p>Si la subconsulta devolviera más de una fila, PostgreSQL no sabría con cuál comparar — y lanza un error.</p>
+</div>
+
+<div class="flow-beat" data-sub="2">
+<span class="flow-beat-eyebrow">Paso 03 · Subconsulta con IN</span>
+<h3>Filtrar contra una lista que sale de otra consulta</h3>
+<p><code>cliente_id IN (una lista de ids)</code> — esa lista puede salir de otro SELECT. "Clientes con algún pedido mayor a Bs 300" no necesita traer ninguna columna de <code>pedidos</code>, solo filtrar <code>clientes</code>.</p>
+</div>
+
+<div class="flow-beat" data-sub="3">
+<span class="flow-beat-eyebrow">Paso 04 · Subconsulta con EXISTS</span>
+<h3>"¿Existe al menos una fila que cumpla esto?"</h3>
+<p><code>EXISTS</code> es una subconsulta <strong>correlacionada</strong>: la de adentro hace referencia a la fila de afuera (<code>c.id</code>). No le importa cuántas coincidencias hay, ni sus valores — solo si existe alguna. Postgres se detiene apenas encuentra la primera.</p>
+</div>
+
+<div class="flow-beat" data-sub="4">
+<span class="flow-beat-eyebrow">Paso 05 · NOT EXISTS</span>
+<h3>La misma pregunta que ya resolviste con LEFT JOIN</h3>
+<p><code>NOT EXISTS</code> invierte la condición: "clientes sin ningún pedido". Es otra forma de llegar a la fila de Renata que viste en el LEFT JOIN — sin necesidad de combinar columnas de las dos tablas.</p>
+</div>
+
+</div>
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="subPanel">
+<div class="flow-panel-head"><span>Resultado en vivo</span><span class="flow-panel-step" id="subPanelStep">Paso 1 / 5</span></div>
+<div class="scrolly-query">
+<div class="scrolly-query-head">consulta.sql</div>
+<pre class="scrolly-query-pre" id="subQueryPre"><span class="scrolly-query-placeholder">-- todavía no escribimos nada</span></pre>
+</div>
+<div id="subResultBox"></div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat">
+<h2>Practicá lo que viste</h2>
+<p class="lead">Emparejá cada forma de subconsulta con su uso, y detectá el error clásico de las escalares.</p>
+
+<div class="quiz quiz-match" data-quiz-id="sub-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada forma de subconsulta con la pregunta que mejor responde.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="escalar">WHERE precio = (SELECT MAX(precio) ...)</button>
+<button class="quiz-match-item" data-pair="in">WHERE cliente_id IN (SELECT ...)</button>
+<button class="quiz-match-item" data-pair="exists">WHERE EXISTS (SELECT 1 ...)</button>
+<button class="quiz-match-item" data-pair="notexists">WHERE NOT EXISTS (SELECT 1 ...)</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="notexists">Clientes que no hicieron ningún pedido.</button>
+<button class="quiz-match-item" data-pair="exists">Clientes que hicieron al menos un pedido.</button>
+<button class="quiz-match-item" data-pair="escalar">El producto (o productos) con el precio más alto de todos.</button>
+<button class="quiz-match-item" data-pair="in">Clientes cuyo id aparece en una lista que sale de otra consulta.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="sub-mc">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Ejecutás <code>WHERE precio = (SELECT precio FROM producto WHERE activo = true);</code> y la subconsulta devuelve 4 filas (4 productos activos). ¿Qué pasa?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>PostgreSQL lanza un error, porque una subconsulta escalar no admite más de una fila.</button>
+<button class="quiz-opt">Compara solamente contra la primera fila que devolvió la subconsulta.</button>
+<button class="quiz-opt">Calcula el promedio de las 4 filas y compara contra ese valor.</button>
+<button class="quiz-opt">Ignora la condición WHERE y devuelve todos los productos de la tabla.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: = espera un único valor a cada lado. Si la subconsulta devuelve varias filas, PostgreSQL no tiene forma de elegir con cuál comparar y lanza un error en tiempo de ejecución." data-ko="Una subconsulta escalar (la que va después de =) debe devolver exactamente un valor. Si devuelve varias filas, PostgreSQL no elige ninguna por su cuenta — lanza un error. Para 'varios valores posibles' se usa IN, no =." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="razonamiento">
+<h2>Ejercicios de razonamiento</h2>
+<p class="lead">En estas preguntas no se te pide recordar sintaxis: se te da un escenario, y debés <strong>razonar</strong> cuál sería la respuesta correcta antes de comprobarla.</p>
+
+<div class="highlight">
+<strong>Escenario</strong>
+<p>Querés un reporte con el nombre de cada cliente y, si tiene, la fecha de su pedido más reciente. Los clientes que nunca compraron deben aparecer igual, con la fecha en blanco.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué tipo de combinación necesitás, con clientes como tabla izquierda?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">INNER JOIN entre clientes y pedidos.</button>
+<button class="quiz-opt">RIGHT JOIN entre clientes y pedidos.</button>
+<button class="quiz-opt">Una subconsulta con EXISTS, sin usar JOIN.</button>
+<button class="quiz-opt" data-correct>LEFT JOIN entre clientes y pedidos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: necesitás que todos los clientes aparezcan (compraron o no) y además traer una columna de la tabla de pedidos (la fecha) — eso exige LEFT JOIN con clientes como tabla izquierda, no una subconsulta." data-ko="INNER JOIN eliminaría a los clientes sin pedidos, que es justo lo que no querés. Una subconsulta con EXISTS solo te diría si compró o no, pero no te daría la fecha. Necesitás LEFT JOIN con clientes a la izquierda, para conservar a todos y traer la fecha cuando exista." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Otro escenario</strong>
+<p>Necesitás la lista de nombres de los productos que <strong>nunca</strong> se vendieron — no te interesa ninguna columna de la tabla de ventas, solo el nombre del producto.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Cuál enfoque es el más directo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">INNER JOIN entre producto y detalle_pedido.</button>
+<button class="quiz-opt" data-correct>NOT EXISTS: producto sin ninguna fila coincidente en detalle_pedido.</button>
+<button class="quiz-opt">FULL OUTER JOIN entre producto y detalle_pedido.</button>
+<button class="quiz-opt">RIGHT JOIN entre detalle_pedido y producto.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: NOT EXISTS filtra productos sin ninguna fila coincidente en detalle_pedido, y como solo pedís producto_nombre, no necesitás combinar columnas de la otra tabla con un JOIN." data-ko="INNER JOIN eliminaría justo a los productos sin ventas, que es lo que buscás. FULL OUTER y RIGHT traerían columnas de ambas tablas que no necesitás, además de complicar el filtro. Como solo te interesa una columna de producto según una condición sobre detalle_pedido, NOT EXISTS es la herramienta correcta." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Un último escenario</strong>
+<p>Querés saber el nombre del cliente que hizo el pedido con el monto total más alto de toda la tabla.</p>
+</div>
+<div class="quiz quiz-fill" data-quiz-id="razonamiento-3">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Completa: SELECT c.cliente_nombre FROM cliente c JOIN pedido p ON p.cliente_id = c.cliente_id WHERE p.total =</p>
+<p>
+<select class="quiz-blank" data-correct="max">
+<option value="">— elige —</option>
+<option value="max">(SELECT MAX(total) FROM pedido)</option>
+<option value="all">(SELECT total FROM pedido)</option>
+<option value="in">IN (SELECT total FROM pedido)</option>
+</select>;</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="ejercicios">
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál es la diferencia central entre INNER JOIN y LEFT JOIN?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">LEFT JOIN es más lento que INNER JOIN en todos los casos, pero ambos terminan devolviendo exactamente las mismas filas.</button>
+<button class="quiz-opt">LEFT JOIN solo puede usarse con columnas numéricas, mientras que INNER JOIN acepta cualquier tipo de dato en la comparación.</button>
+<button class="quiz-opt" data-correct>INNER JOIN descarta las filas sin coincidencia en ambos lados; LEFT JOIN conserva todas las de la izquierda, completando con NULL donde no hay coincidencia.</button>
+<button class="quiz-opt">Son sinónimos exactos en PostgreSQL: da igual cuál de los dos escribas, el resultado siempre es idéntico.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: esa es exactamente la diferencia. INNER JOIN exige coincidencia en ambos lados; LEFT JOIN garantiza que ninguna fila de la tabla izquierda se pierda, aunque no tenga con qué combinarse del otro lado." data-ko="La diferencia no es de velocidad ni de tipo de dato: INNER JOIN solo conserva filas con coincidencia en ambas tablas, mientras que LEFT JOIN conserva todas las filas de la tabla izquierda sin importar si encontraron pareja, rellenando con NULL cuando no la hay." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">FULL OUTER JOIN produce el mismo resultado que combinar LEFT JOIN y RIGHT JOIN, sin dejar ninguna fila de ningún lado fuera.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: FULL OUTER JOIN conserva todas las filas de la izquierda sin coincidencia (como LEFT) y todas las de la derecha sin coincidencia (como RIGHT) al mismo tiempo, además de las coincidencias." data-ko="Es verdadero: FULL OUTER JOIN es, conceptualmente, la unión de lo que aportan LEFT JOIN y RIGHT JOIN — no se pierde ninguna fila de ninguna de las dos tablas." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué WHERE cliente_id = NULL nunca sirve para filtrar clientes sin correo, mientras que WHERE correo IS NULL sí?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque NULL solo puede aparecer dentro de una subconsulta, nunca en una comparación directa contra una columna.</button>
+<button class="quiz-opt">No hay diferencia real entre las dos formas: ambas preguntan exactamente lo mismo sobre la columna correo.</button>
+<button class="quiz-opt">Porque el operador = NULL solo funciona con columnas de tipo texto, no con columnas numéricas o de fecha.</button>
+<button class="quiz-opt" data-correct>Porque comparar cualquier valor contra NULL con = da un resultado desconocido, nunca verdadero; IS NULL es el operador diseñado para preguntar por ausencia de valor.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: en SQL, NULL representa un valor desconocido. Comparar cualquier cosa contra un desconocido con = da otro desconocido, nunca verdadero — por eso existen IS NULL / IS NOT NULL como la única forma correcta de preguntar por ausencia de valor." data-ko="No es un tema de tipo de dato ni de subconsultas: NULL representa 'desconocido', y = NULL siempre evalúa a un resultado que no es verdadero, sin importar el contenido real de la fila. IS NULL es el operador específico para esa pregunta." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Necesitás los nombres de productos y, para cada uno, el nombre de su categoría (sin dejar afuera productos sin categoría asignada). ¿Qué usás?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Una subconsulta con IN sobre la tabla categoría.</button>
+<button class="quiz-opt" data-correct>LEFT JOIN de producto hacia categoría.</button>
+<button class="quiz-opt">INNER JOIN entre producto y categoría.</button>
+<button class="quiz-opt">Una subconsulta con EXISTS sobre categoría.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: necesitás columnas de las dos tablas (nombre de producto y nombre de categoría) sin perder productos que no tengan categoría — eso es exactamente un LEFT JOIN con producto como tabla izquierda." data-ko="IN y EXISTS solo filtran, no traen columnas de la otra tabla — no sirven para mostrar el nombre de la categoría. INNER JOIN descartaría los productos sin categoría, que es justo lo que no querés perder. LEFT JOIN de producto hacia categoría es la única opción que cumple ambos requisitos." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué significa que EXISTS "se detiene en la primera coincidencia"?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Que no necesita contar ni traer todas las filas que cumplen la condición: alcanza con confirmar que existe al menos una.</button>
+<button class="quiz-opt">Que solo se puede usar una vez dentro de toda la consulta, sin repetirse en distintos WHERE.</button>
+<button class="quiz-opt">Que el resultado final de la consulta siempre tiene exactamente una sola fila.</button>
+<button class="quiz-opt">Que ignora el resto de las filas de la tabla externa apenas encuentra la primera coincidencia.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: EXISTS solo pregunta sí/no. Apenas encuentra una fila que cumpla la condición de la subconsulta, no necesita seguir buscando más — a diferencia de IN, que sí evalúa la lista completa que devuelve la subconsulta." data-ko="EXISTS puede aparecer varias veces en una consulta y evalúa la subconsulta una vez por cada fila de la tabla externa, no una sola vez en total. 'Se detiene en la primera coincidencia' se refiere a que, dentro de esa evaluación por fila, no necesita seguir revisando más filas de la subconsulta una vez que encontró una que cumple." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet">
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Forma</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>FROM a JOIN b ON a.x = b.y</code></td><td>INNER JOIN — solo filas con coincidencia en ambos lados.</td></tr>
+<tr><td><code>FROM a LEFT JOIN b ON ...</code></td><td>Conserva todo lo de <code>a</code>, con NULL donde no hay coincidencia.</td></tr>
+<tr><td><code>FROM a RIGHT JOIN b ON ...</code></td><td>Conserva todo lo de <code>b</code> (poco usado; se prefiere reordenar y usar LEFT).</td></tr>
+<tr><td><code>FROM a FULL OUTER JOIN b ON ...</code></td><td>Conserva todo de ambos lados.</td></tr>
+<tr><td><code>WHERE col = (SELECT ...)</code></td><td>Subconsulta escalar — debe devolver un único valor.</td></tr>
+<tr><td><code>WHERE col IN (SELECT ...)</code></td><td>Filtra contra una lista de valores que sale de otra consulta.</td></tr>
+<tr><td><code>WHERE EXISTS (SELECT 1 ... )</code></td><td>Filtra según "existe al menos una fila que cumple esto".</td></tr>
+<tr><td><code>WHERE NOT EXISTS (SELECT 1 ...)</code></td><td>Filtra según "no existe ninguna fila que cumpla esto".</td></tr>
+</tbody>
+</table>
+
+<div class="venn-grid">
+<div class="venn-item">
+<svg viewBox="0 0 150 100" aria-hidden="true">
+<defs><clipPath id="vBInner"><circle cx="100" cy="50" r="36"/></clipPath></defs>
+<circle class="venn-fill" cx="50" cy="50" r="36" clip-path="url(#vBInner)"/>
+<circle class="venn-outline" cx="50" cy="50" r="36"/>
+<circle class="venn-outline" cx="100" cy="50" r="36"/>
+</svg>
+<span>INNER JOIN</span>
+</div>
+<div class="venn-item">
+<svg viewBox="0 0 150 100" aria-hidden="true">
+<circle class="venn-fill" cx="50" cy="50" r="36"/>
+<circle class="venn-outline" cx="50" cy="50" r="36"/>
+<circle class="venn-outline" cx="100" cy="50" r="36"/>
+</svg>
+<span>LEFT JOIN</span>
+</div>
+<div class="venn-item">
+<svg viewBox="0 0 150 100" aria-hidden="true">
+<circle class="venn-fill" cx="100" cy="50" r="36"/>
+<circle class="venn-outline" cx="50" cy="50" r="36"/>
+<circle class="venn-outline" cx="100" cy="50" r="36"/>
+</svg>
+<span>RIGHT JOIN</span>
+</div>
+<div class="venn-item">
+<svg viewBox="0 0 150 100" aria-hidden="true">
+<circle class="venn-fill" cx="50" cy="50" r="36"/>
+<circle class="venn-fill" cx="100" cy="50" r="36"/>
+<circle class="venn-outline" cx="50" cy="50" r="36"/>
+<circle class="venn-outline" cx="100" cy="50" r="36"/>
+</svg>
+<span>FULL OUTER JOIN</span>
+</div>
+</div>
+</section>
+
+<section class="flow-flat">
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📐 JOIN viene del álgebra relacional</h3><p>Edgar F. Codd definió el modelo relacional en 1970 con operadores matemáticos como la unión, la diferencia y el producto cartesiano restringido — el JOIN de SQL es, en esencia, ese producto cartesiano filtrado por una condición de igualdad entre columnas.</p></div>
+<div class="info"><h3>⚙️ El motor no ejecuta el JOIN "fila por fila" como lo leés</h3><p>Aunque escribas INNER JOIN pensando en comparar cada fila contra cada fila, PostgreSQL casi nunca lo hace así: elige entre varios algoritmos (nested loop, hash join, merge join) según el tamaño de las tablas y los índices disponibles — tema que vas a ver en la guía de índices y EXPLAIN.</p></div>
+<div class="info"><h3>🔄 EXISTS y JOIN pueden dar el mismo resultado, pero no siempre el mismo plan</h3><p>Dos consultas escritas distinto (un JOIN con DISTINCT vs. un WHERE EXISTS) pueden devolver exactamente las mismas filas, pero PostgreSQL las ejecuta con estrategias distintas — por eso "cuál es más rápida" depende de los datos, no es una regla fija.</p></div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Reforzamiento: JOINs y Subconsultas en PostgreSQL</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Nivel 1: flujo con panel fijo — tramo 1, los 4 tipos de JOIN =====
+   Prosa a la izquierda (.flow-beat) + panel fijo a la derecha (#jnPanel)
+   que se redibuja según qué paso cruza el centro del viewport. No es una
+   actividad calificada: no llama a marcarResuelto. */
+(function(){
+  var jnSteps = document.querySelectorAll('#joins-basicos .flow-beat');
+  if (!jnSteps.length) return;
+
+  var clientes = [
+    {id:1,nombre:'Marisol Quispe',ciudad:'La Paz'},
+    {id:2,nombre:'Iván Terrazas',ciudad:'Cochabamba'},
+    {id:3,nombre:'Daniela Rojas',ciudad:'La Paz'},
+    {id:4,nombre:'Esteban Vaca',ciudad:'Santa Cruz'},
+    {id:5,nombre:'Renata Flores',ciudad:'La Paz'}
+  ];
+  var pedidos = [
+    {id:101,cliente_id:1,producto:'Teclado mecánico',total:320},
+    {id:102,cliente_id:3,producto:'Monitor 27"',total:890},
+    {id:103,cliente_id:1,producto:'Mouse inalámbrico',total:95},
+    {id:104,cliente_id:2,producto:'Silla ergonómica',total:640},
+    {id:105,cliente_id:4,producto:'Auriculares',total:150},
+    {id:106,cliente_id:3,producto:'Webcam',total:60},
+    {id:107,cliente_id:9,producto:'Cable HDMI',total:45}
+  ];
+
+  var LINE = {
+    select:'<span class="keyword">SELECT</span> c.nombre, c.ciudad, p.producto, p.total',
+    from:'<span class="keyword">FROM</span> clientes <span class="keyword">AS</span> c',
+    join_inner:'<span class="keyword">INNER JOIN</span> pedidos <span class="keyword">AS</span> p',
+    join_left:'<span class="keyword">LEFT JOIN</span> pedidos <span class="keyword">AS</span> p',
+    join_right:'<span class="keyword">RIGHT JOIN</span> pedidos <span class="keyword">AS</span> p',
+    join_full:'<span class="keyword">FULL OUTER JOIN</span> pedidos <span class="keyword">AS</span> p',
+    on:'&nbsp;&nbsp;<span class="keyword">ON</span> p.cliente_id = c.id',
+    where:'<span class="keyword">WHERE</span> c.ciudad = <span class="string">\'La Paz\'</span>',
+    order:'<span class="keyword">ORDER BY</span> p.total <span class="keyword">DESC</span> <span class="keyword">NULLS LAST</span>',
+    limit:'<span class="keyword">LIMIT</span> <span class="number">3</span>'
+  };
+
+  function joinVariant(step){
+    if(step===2) return 'inner';
+    if(step===3||step===4||step===5) return 'left';
+    if(step===6) return 'right';
+    if(step===7) return 'full';
+    return null;
+  }
+
+  function queryLines(step){
+    var L = [];
+    if(step>=1){ L.push({id:'select',html:LINE.select}); L.push({id:'from',html:LINE.from}); }
+    var jv = joinVariant(step);
+    if(jv){ L.push({id:'join',html:LINE['join_'+jv]}); L.push({id:'on',html:LINE.on}); }
+    if(step===4||step===5){ L.push({id:'where',html:LINE.where}); }
+    if(step===5){ L.push({id:'order',html:LINE.order}); L.push({id:'limit',html:LINE.limit}); }
+    if(L.length){ L[L.length-1].html += ';'; }
+    return L;
+  }
+
+  function clientesDrivenJoin(tipo){
+    var rows = [];
+    clientes.forEach(function(c){
+      var ps = pedidos.filter(function(p){ return p.cliente_id===c.id; });
+      if(ps.length){
+        ps.forEach(function(p){ rows.push({nombre:c.nombre,ciudad:c.ciudad,producto:p.producto,total:p.total,cid:c.id,pid:p.id}); });
+      } else if(tipo==='left'){
+        rows.push({nombre:c.nombre,ciudad:c.ciudad,producto:null,total:null,cid:c.id,pid:null});
+      }
+    });
+    return rows;
+  }
+
+  function computeRows(step){
+    if(step===0) return null;
+    if(step===1) return clientes.map(function(c){ return {nombre:c.nombre,ciudad:c.ciudad,producto:null,total:null,cid:c.id,pid:null}; });
+    if(step===2) return clientesDrivenJoin('inner');
+    if(step===3) return clientesDrivenJoin('left');
+    if(step===4) return clientesDrivenJoin('left').filter(function(r){ return r.ciudad==='La Paz'; });
+    if(step===5){
+      var rows = clientesDrivenJoin('left').filter(function(r){ return r.ciudad==='La Paz'; });
+      return rows.slice().sort(function(a,b){ return (b.total==null?-1:b.total)-(a.total==null?-1:a.total); }).slice(0,3);
+    }
+    if(step===6){
+      return pedidos.map(function(p){
+        var c = clientes.filter(function(x){ return x.id===p.cliente_id; })[0];
+        return {nombre:c?c.nombre:null,ciudad:c?c.ciudad:null,producto:p.producto,total:p.total,cid:c?c.id:null,pid:p.id};
+      });
+    }
+    if(step===7){
+      var left = clientesDrivenJoin('left');
+      var huerfanos = pedidos.filter(function(p){ return !clientes.some(function(c){ return c.id===p.cliente_id; }); })
+        .map(function(p){ return {nombre:null,ciudad:null,producto:p.producto,total:p.total,cid:null,pid:p.id}; });
+      return left.concat(huerfanos);
+    }
+    return [];
+  }
+
+  var jnCurrentStep = -1;
+
+  function jnRender(step){
+    if(step===jnCurrentStep) return;
+    var prevLines = jnCurrentStep>=0 ? queryLines(jnCurrentStep) : [];
+    var prevMap = {};
+    prevLines.forEach(function(l){ prevMap[l.id]=l.html; });
+    var lines = queryLines(step);
+    lines.forEach(function(l){ l.isNew = prevMap[l.id] !== l.html; });
+    jnCurrentStep = step;
+
+    var pre = document.getElementById('jnQueryPre');
+    if(!lines.length){
+      pre.innerHTML = '<span class="scrolly-query-placeholder">-- todavía no escribimos nada</span>';
+    } else {
+      pre.innerHTML = lines.map(function(l){ return '<div class="scrolly-qline'+(l.isNew?' is-new':'')+'">'+l.html+'</div>'; }).join('');
+    }
+
+    var rows = computeRows(step);
+    var box = document.getElementById('jnResultBox');
+    if(!rows){
+      box.innerHTML = '<div class="scrolly-result-empty">Sin consulta todavía — el resultado aparece en el próximo paso.</div>';
+    } else {
+      var head = '<tr><th>cliente</th><th>ciudad</th><th>producto</th><th>total</th></tr>';
+      var body = rows.map(function(r){
+        return '<tr><td>'+(r.nombre || '<span class="scrolly-null">NULL</span>')+'</td><td>'+(r.ciudad || '<span class="scrolly-null">NULL</span>')+'</td><td>'+(r.producto || '<span class="scrolly-null">NULL</span>')+'</td><td>'+(r.total!=null ? ('Bs '+r.total) : '<span class="scrolly-null">NULL</span>')+'</td></tr>';
+      }).join('');
+      box.innerHTML = '<table class="scrolly-result-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table><div class="scrolly-result-count">'+rows.length+' fila'+(rows.length===1?'':'s')+'</div>';
+    }
+
+    var activeCid = {}, activePid = {}, ghostRenata = false, ghostHuerfano = false;
+    if(step>=1){
+      (rows||[]).forEach(function(r){
+        if(r.cid) activeCid[r.cid]=true;
+        if(r.pid) activePid[r.pid]=true;
+        if(r.cid===5 && !r.pid) ghostRenata = true;
+        if(r.pid===107 && !r.cid) ghostHuerfano = true;
+      });
+    }
+    document.querySelectorAll('#joins-basicos .scrolly-node-c').forEach(function(n){
+      n.classList.toggle('active', step>=2 && !!activeCid[n.dataset.cid]);
+      n.classList.toggle('dim', step>=2 && !activeCid[n.dataset.cid]);
+    });
+    document.querySelectorAll('#joins-basicos .scrolly-node-p').forEach(function(n){
+      n.classList.toggle('active', step>=2 && !!activePid[n.dataset.pid]);
+      n.classList.toggle('dim', step>=2 && !activePid[n.dataset.pid]);
+    });
+    document.querySelectorAll('#joins-basicos .scrolly-edge').forEach(function(n){
+      n.classList.toggle('active', step>=2 && !!activePid[n.dataset.pid]);
+      n.classList.toggle('dim', step>=2 && !activePid[n.dataset.pid]);
+    });
+    document.querySelectorAll('#joins-basicos .scrolly-ghost[data-ghost="renata"]').forEach(function(n){ n.classList.toggle('show', ghostRenata); });
+    document.querySelectorAll('#joins-basicos .scrolly-ghost[data-ghost="huerfano"]').forEach(function(n){ n.classList.toggle('show', ghostHuerfano); });
+
+    document.getElementById('jnPanelStep').textContent = 'Paso '+(step+1)+' / 8';
+    jnSteps.forEach(function(el){
+      el.classList.toggle('is-active', Number(el.dataset.step)===step);
+    });
+  }
+
+  var jnObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ jnRender(Number(e.target.dataset.step)); }
+    });
+  }, { rootMargin:'-35% 0px -55% 0px', threshold:0 });
+  jnSteps.forEach(function(s){ jnObserver.observe(s); });
+  jnRender(0);
+})();
+
+/* ===== Nivel 1: flujo con panel fijo — tramo 2, subconsultas =====
+   Mismo mecanismo, dataset reutilizado, panel más simple (consulta +
+   resultado, sin diagrama de conexión). */
+(function(){
+  var subSteps = document.querySelectorAll('#subconsultas .flow-beat');
+  if (!subSteps.length) return;
+
+  var clientes = [
+    {id:1,nombre:'Marisol Quispe'},
+    {id:2,nombre:'Iván Terrazas'},
+    {id:3,nombre:'Daniela Rojas'},
+    {id:4,nombre:'Esteban Vaca'},
+    {id:5,nombre:'Renata Flores'}
+  ];
+  var pedidos = [
+    {id:101,cliente_id:1,producto:'Teclado mecánico',total:320},
+    {id:102,cliente_id:3,producto:'Monitor 27"',total:890},
+    {id:103,cliente_id:1,producto:'Mouse inalámbrico',total:95},
+    {id:104,cliente_id:2,producto:'Silla ergonómica',total:640},
+    {id:105,cliente_id:4,producto:'Auriculares',total:150},
+    {id:106,cliente_id:3,producto:'Webcam',total:60},
+    {id:107,cliente_id:9,producto:'Cable HDMI',total:45}
+  ];
+
+  var SUB_LINES = {
+    0: [],
+    1: [
+      '<span class="keyword">SELECT</span> producto, total',
+      '<span class="keyword">FROM</span> pedidos',
+      '<span class="keyword">WHERE</span> total = (<span class="keyword">SELECT</span> <span class="keyword">MAX</span>(total) <span class="keyword">FROM</span> pedidos)'
+    ],
+    2: [
+      '<span class="keyword">SELECT</span> nombre',
+      '<span class="keyword">FROM</span> clientes',
+      '<span class="keyword">WHERE</span> cliente_id <span class="keyword">IN</span> (<span class="keyword">SELECT</span> cliente_id <span class="keyword">FROM</span> pedidos <span class="keyword">WHERE</span> total &gt; <span class="number">300</span>)'
+    ],
+    3: [
+      '<span class="keyword">SELECT</span> nombre',
+      '<span class="keyword">FROM</span> clientes <span class="keyword">AS</span> c',
+      '<span class="keyword">WHERE</span> <span class="keyword">EXISTS</span> (<span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">FROM</span> pedidos <span class="keyword">AS</span> p <span class="keyword">WHERE</span> p.cliente_id = c.id)'
+    ],
+    4: [
+      '<span class="keyword">SELECT</span> nombre',
+      '<span class="keyword">FROM</span> clientes <span class="keyword">AS</span> c',
+      '<span class="keyword">WHERE</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> (<span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">FROM</span> pedidos <span class="keyword">AS</span> p <span class="keyword">WHERE</span> p.cliente_id = c.id)'
+    ]
+  };
+
+  function subCompute(step){
+    if(step===0) return null;
+    if(step===1){
+      var max = Math.max.apply(null, pedidos.map(function(p){ return p.total; }));
+      return { cols:['producto','total'], rows: pedidos.filter(function(p){ return p.total===max; }).map(function(p){ return [p.producto, 'Bs '+p.total]; }) };
+    }
+    if(step===2){
+      var ids = {};
+      pedidos.forEach(function(p){ if(p.total>300) ids[p.cliente_id]=true; });
+      return { cols:['cliente'], rows: clientes.filter(function(c){ return ids[c.id]; }).map(function(c){ return [c.nombre]; }) };
+    }
+    if(step===3){
+      var ids2 = {};
+      pedidos.forEach(function(p){ ids2[p.cliente_id]=true; });
+      return { cols:['cliente'], rows: clientes.filter(function(c){ return ids2[c.id]; }).map(function(c){ return [c.nombre]; }) };
+    }
+    if(step===4){
+      var ids3 = {};
+      pedidos.forEach(function(p){ ids3[p.cliente_id]=true; });
+      return { cols:['cliente'], rows: clientes.filter(function(c){ return !ids3[c.id]; }).map(function(c){ return [c.nombre]; }) };
+    }
+    return null;
+  }
+
+  var subCurrentStep = -1;
+
+  function subRender(step){
+    if(step===subCurrentStep) return;
+    subCurrentStep = step;
+
+    var pre = document.getElementById('subQueryPre');
+    var lines = SUB_LINES[step] || [];
+    if(!lines.length){
+      pre.innerHTML = '<span class="scrolly-query-placeholder">-- todavía no escribimos nada</span>';
+    } else {
+      pre.innerHTML = lines.map(function(l,i){ return '<div class="scrolly-qline'+(i===lines.length-1?' is-new':'')+'">'+l+(i===lines.length-1?';':'')+'</div>'; }).join('');
+    }
+
+    var data = subCompute(step);
+    var box = document.getElementById('subResultBox');
+    if(!data){
+      box.innerHTML = '<div class="scrolly-result-empty">Sin consulta todavía — el resultado aparece en el próximo paso.</div>';
+    } else {
+      var head = '<tr>'+data.cols.map(function(c){ return '<th>'+c+'</th>'; }).join('')+'</tr>';
+      var body = data.rows.map(function(r){ return '<tr>'+r.map(function(v){ return '<td>'+v+'</td>'; }).join('')+'</tr>'; }).join('');
+      box.innerHTML = '<table class="scrolly-result-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table><div class="scrolly-result-count">'+data.rows.length+' fila'+(data.rows.length===1?'':'s')+'</div>';
+    }
+
+    document.getElementById('subPanelStep').textContent = 'Paso '+(step+1)+' / 5';
+    subSteps.forEach(function(el){
+      el.classList.toggle('is-active', Number(el.dataset.sub)===step);
+    });
+  }
+
+  var subObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ subRender(Number(e.target.dataset.sub)); }
+    });
+  }, { rootMargin:'-35% 0px -55% 0px', threshold:0 });
+  subSteps.forEach(function(s){ subObserver.observe(s); });
+  subRender(0);
+})();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
