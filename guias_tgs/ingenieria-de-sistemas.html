@@ -1063,6 +1063,27 @@ actualizarProgreso();
   var guiaIntentoId = params.get('guia_intento');
   if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
 
+  // ── Progreso limpio por intento (17/08): QUIZ_PREFIX guarda el progreso
+  // por PÁGINA (pensado para "completaste esto alguna vez en tu vida"), sin
+  // saber nada de "intentos" de ATENZA. Sin esto, cualquier resto de una
+  // práctica libre o de un lanzamiento anterior (oficial o repaso) ya deja
+  // casi todo marcado "ok"/"ko" de entrada — contestar la primera pregunta
+  // NUEVA alcanza para que actualizarProgreso() crea que ya se terminó
+  // todo (bug real, 17/08: primera respuesta = completado, el resto ya no
+  // se guardaba porque el backend cierra el intento apenas llega el
+  // /finalizar). Se guarda a qué guia_intento pertenece el progreso actual
+  // de esta página; si cambió, se limpia todo antes de que el estudiante
+  // toque nada. Si es el mismo (recargó la pestaña a mitad de camino), no
+  // se toca — sigue donde quedó.
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
   function post(path, body) {
     return fetch(ATENZA_API + path, {
       method: 'POST',
