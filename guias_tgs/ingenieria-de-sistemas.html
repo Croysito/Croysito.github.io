@@ -1038,52 +1038,107 @@ actualizarProgreso();
 
 </script>
 
-<!-- ATENZA · guía completada (fusión con ATENZA, 05/08). Solo actúa si la
-     guía se abrió desde ATENZA (con ?atenza_token=...&guia=... en la URL,
-     agregado por VerGuias del backend); accedida directo, como siempre,
-     no dispara nada nuevo. No toca el motor de quizzes de arriba: se
-     engancha a `actualizarProgreso()`, que ya existe. -->
+<!-- ATENZA · guía nativa en vivo (17/08, reemplaza el bloque "guía
+     completada" de 05/08 que solo llamaba a /completar). Solo actúa si la
+     guía se abrió desde un lanzamiento de ATENZA (con ?atenza_token=...
+     &guia_intento=... en la URL, agregado por IniciarOReanudarGuiaIntento
+     del backend); accedida directo, como siempre, no dispara nada nuevo.
+     No toca el motor de quizzes de arriba: se engancha a marcarResuelto()
+     y actualizarProgreso(), que ya existen (ver DEPLOY-GUIAS-SNIPPET.md
+     en el repo de atenza para el detalle de cada endpoint). -->
 <script>
 (function () {
   var ATENZA_API = 'https://api-atenza.atenzabo.com';
 
   var params = new URLSearchParams(location.search);
   var token = params.get('atenza_token');
-  var guiaId = params.get('guia');
-  if (!token || !guiaId) return; // acceso público normal, sin ATENZA
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
 
-  var flagCompletado = QUIZ_PREFIX + 'completado-atenza-v2';
-
-  function progresoActual() {
-    var ids = new Set();
-    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
-    var correctas = 0;
-    ids.forEach(function (id) {
-      if (localStorage.getItem(QUIZ_PREFIX + id) === 'ok') correctas++;
-    });
-    return { correctas: correctas, total: ids.size };
-  }
-
-  function reportarSiCompleto() {
-    if (localStorage.getItem(flagCompletado)) return; // ya se confirmó con éxito
-    var p = progresoActual();
-    if (p.total === 0 || p.correctas < p.total) return;
-    fetch(ATENZA_API + '/api/guias/' + encodeURIComponent(guiaId) + '/completar', {
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
       method: 'POST',
-      headers: { Authorization: 'Bearer ' + token },
-    }).then(function (res) {
-      if (res.ok) localStorage.setItem(flagCompletado, '1');
-      // si no fue ok, no marcamos nada: el próximo actualizarProgreso() reintenta
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
     }).catch(function () {});
   }
 
+  // ── Pantalla completa: se pide en un click real del usuario, no solo.
+  // Estilos en línea porque esta página (deck) todavía no tiene una clase
+  // para esto — fixed y con z-index por encima de .deck-topbar (800) y
+  // .deck-menu-panel (891) para que no quede tapado por ninguno.
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  // ── Reportar cada pregunta resuelta — engancha marcarResuelto(), que
+  // ya usan los 5 tipos de actividad (mc/match/classify/fill/open) sin
+  // tocar ninguno de sus call-sites. quiz-open (textarea + ver modelo) se
+  // distingue por su propia clase y reporta el texto, no correcta/incorrecta.
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      });
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      });
+    }
+  };
+
+  // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder foco.
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle });
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ── Finalizar al completar el 100% — mismo cálculo que ya usaba el
+  // bloque viejo para decidir cuándo avisar (todas las preguntas en "ok").
+  var finalizado = false;
   var actualizarProgresoOriginal = actualizarProgreso;
   actualizarProgreso = function () {
     actualizarProgresoOriginal();
-    reportarSiCompleto();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var correctas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id) === 'ok') correctas++; });
+    if (ids.size > 0 && correctas === ids.size) {
+      finalizado = true;
+      post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {});
+    }
   };
-
-  reportarSiCompleto(); // por si se reabre una guía que ya estaba 100% completa
 })();
 </script>
 
