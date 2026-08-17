@@ -1060,7 +1060,25 @@ actualizarProgreso();
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
       body: JSON.stringify(body || {}),
-    }).catch(function () {});
+    });
+  }
+
+  // ── Aviso flotante — clave para "cuándo termina la guía": antes de esto
+  // el estudiante llegaba al 100% local y no había ninguna señal de que ya
+  // había terminado, y una falla de red al reportar quedaba invisible
+  // (nota mal calculada sin que nadie se entere). onClick, si se pasa,
+  // permite reintentar tocando el aviso.
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
   }
 
   // ── Pantalla completa: se pide en un click real del usuario, no solo.
@@ -1097,18 +1115,18 @@ actualizarProgreso();
       post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
         referencia: id,
         texto_libre: textarea ? textarea.value : '',
-      });
+      }).catch(function () {});
     } else {
       post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
         referencia: id,
         correcta: estado === 'ok',
-      });
+      }).catch(function () {});
     }
   };
 
   // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder foco.
   function reportarIncidente(detalle) {
-    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle });
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
   }
   document.addEventListener('visibilitychange', function () {
     if (comenzado && document.hidden) reportarIncidente('visibilitychange');
@@ -1125,7 +1143,27 @@ actualizarProgreso();
 
   // ── Finalizar al completar el 100% — mismo cálculo que ya usaba el
   // bloque viejo para decidir cuándo avisar (todas las preguntas en "ok").
+  // Si falla, NO se queda marcado como finalizado — el aviso rojo deja
+  // reintentar con un toque, y el próximo actualizarProgreso() también
+  // reintenta solo si en el medio se resolvió alguna pregunta más.
   var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
   var actualizarProgresoOriginal = actualizarProgreso;
   actualizarProgreso = function () {
     actualizarProgresoOriginal();
@@ -1134,10 +1172,7 @@ actualizarProgreso();
     document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
     var correctas = 0;
     ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id) === 'ok') correctas++; });
-    if (ids.size > 0 && correctas === ids.size) {
-      finalizado = true;
-      post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {});
-    }
+    if (ids.size > 0 && correctas === ids.size) intentarFinalizar();
   };
 })();
 </script>
