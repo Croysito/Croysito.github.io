@@ -674,10 +674,17 @@ document.querySelectorAll(".quiz-classify").forEach(quiz => {
   const progreso = quiz.querySelector(".quiz-progress");
   const id = quiz.dataset.quizId;
   let correctas = 0;
+  // 17/08: cada fila es de un solo click (se bloquea al toque, acierto o
+  // error) — antes solo se contaban las correctas, así que una fila mal
+  // clasificada dejaba la pregunta entera sin marcar nunca (ni "ok" ni
+  // "ko"), invisible tanto para esta barra de progreso como para ATENZA.
+  // respondidas cuenta CUALQUIER fila ya jugada, para saber cuándo ya no
+  // hay más que hacer acá, sea el resultado el que sea.
+  let respondidas = 0;
 
   function refrescar() {
     if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
-    if (correctas === filas.length) marcarResuelto(id, "ok");
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
   }
   refrescar();
 
@@ -687,6 +694,7 @@ document.querySelectorAll(".quiz-classify").forEach(quiz => {
       btn.addEventListener("click", () => {
         if (botones.some(b => b.disabled)) return;
         botones.forEach(b => b.disabled = true);
+        respondidas++;
         if (btn.hasAttribute("data-correct")) {
           btn.classList.add("correct");
           correctas++;
@@ -1126,15 +1134,23 @@ actualizarProgreso();
       });
   }
 
+  // 17/08: antes exigía TODAS "ok" (100% correcto) para finalizar — mismo
+  // criterio que el bloque viejo de "guía completada" de cuando esto era
+  // solo práctica sin nota. Con nota real en juego eso está mal: un
+  // estudiante que contesta todo pero se equivoca en una quiz-mc (de un
+  // solo intento) nunca llegaba a "ok" en esa pregunta, así que el
+  // /finalizar nunca se disparaba — la guía se quedaba "en curso" para
+  // siempre aunque ya no le quedara nada más por hacer. Ahora cuenta
+  // CONTESTADAS (ok o ko, cualquier valor guardado), no solo correctas.
   var actualizarProgresoOriginal = actualizarProgreso;
   actualizarProgreso = function () {
     actualizarProgresoOriginal();
     if (finalizado) return;
     var ids = new Set();
     document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
-    var correctas = 0;
-    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id) === 'ok') correctas++; });
-    if (ids.size > 0 && correctas === ids.size) intentarFinalizar();
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
   };
 })();
 </script>
