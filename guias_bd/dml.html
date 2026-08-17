@@ -130,8 +130,8 @@ RETURNING cliente_id;</code></pre>
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">La tabla producto tiene: producto_id (IDENTITY), producto_nombre (NOT NULL), precio (NOT NULL, CHECK &gt; 0), activo (DEFAULT true). ¿Cuál INSERT funciona sin error?</p>
 <div class="quiz-opts">
-<button class="quiz-opt" data-correct>INSERT INTO producto (producto_nombre, precio) VALUES ('Cable USB', 15.00);</button>
 <button class="quiz-opt">INSERT INTO producto (producto_id, producto_nombre, precio) VALUES (1, 'Cable USB', 15.00);</button>
+<button class="quiz-opt" data-correct>INSERT INTO producto (producto_nombre, precio) VALUES ('Cable USB', 15.00);</button>
 <button class="quiz-opt">INSERT INTO producto (producto_nombre) VALUES ('Cable USB');</button>
 <button class="quiz-opt">INSERT INTO producto (producto_nombre, precio) VALUES ('Cable USB', -15.00);</button>
 
@@ -222,25 +222,25 @@ WHERE activo = false;</code></pre>
 <div class="quiz-classify-row">
 <span class="quiz-classify-text">DELETE FROM producto WHERE producto_id = 4;</span>
 <div class="quiz-classify-btns">
-<button data-correct>Borra solo esa fila</button>
-<button>Borra todas las filas</button>
-<button>Elimina la tabla completa</button>
+<button>Borra todas las filas, tabla vacía</button>
+<button data-correct>Borra solo la fila indicada</button>
+<button>Elimina la tabla por completo</button>
 </div>
 </div>
 <div class="quiz-classify-row">
 <span class="quiz-classify-text">DELETE FROM producto;</span>
 <div class="quiz-classify-btns">
-<button>Borra solo una fila</button>
-<button data-correct>Borra todas las filas, la tabla sigue existiendo vacía</button>
-<button>Elimina la tabla completa</button>
+<button>Elimina la tabla por completo</button>
+<button>Borra solo la fila indicada</button>
+<button data-correct>Borra todas las filas, tabla vacía</button>
 </div>
 </div>
 <div class="quiz-classify-row">
 <span class="quiz-classify-text">DROP TABLE producto;</span>
 <div class="quiz-classify-btns">
-<button>Borra solo una fila</button>
-<button>Borra todas las filas, la tabla sigue existiendo vacía</button>
-<button data-correct>Elimina la tabla completa (estructura incluida)</button>
+<button data-correct>Elimina la tabla por completo</button>
+<button>Borra solo la fila indicada</button>
+<button>Borra todas las filas, tabla vacía</button>
 </div>
 </div>
 </div>
@@ -279,9 +279,9 @@ SELECT * FROM producto;</code></pre>
 <p class="quiz-q">La tabla pedido tiene 200 filas, con solo 3 valores distintos de fecha. ¿Cuántas filas devuelve SELECT DISTINCT fecha FROM pedido;?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">200, una por cada fila de la tabla.</button>
-<button class="quiz-opt" data-correct>3, una por cada valor distinto de fecha.</button>
 <button class="quiz-opt">0, DISTINCT solo funciona con varias columnas.</button>
 <button class="quiz-opt">1, DISTINCT siempre agrupa todo en una sola fila.</button>
+<button class="quiz-opt" data-correct>3, una por cada valor distinto de fecha.</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: DISTINCT elimina duplicados del resultado. Si solo hay 3 valores distintos de fecha entre las 200 filas, el resultado tiene exactamente 3 filas." data-ko="DISTINCT elimina las filas de resultado repetidas, quedándose con una por cada valor distinto. Con 3 valores distintos de fecha, el resultado tiene 3 filas — sin importar que la tabla tenga 200." hidden></p>
@@ -384,7 +384,7 @@ LIMIT 3 OFFSET 3;</code></pre>
 <p>1. Para ordenar de menor a mayor precio, usas ORDER BY precio
 <select class="quiz-blank" data-correct="asc">
 <option value="">— elige —</option>
-<option value="asc">ASC (o sin especificar, es el default)</option>
+<option value="asc">ASC</option>
 <option value="desc">DESC</option>
 </select>.</p>
 <p>2. Para quedarte solo con los primeros 2 resultados, agregas
@@ -412,10 +412,10 @@ LIMIT 3 OFFSET 3;</code></pre>
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">¿Cuál INSERT es el correcto?</p>
 <div class="quiz-opts">
-<button class="quiz-opt">INSERT INTO pedido (pedido_id, cliente_id) VALUES (1, 3);</button>
-<button class="quiz-opt">INSERT INTO pedido (fecha, cliente_id) VALUES (CURRENT_DATE, 3);</button>
 <button class="quiz-opt" data-correct>INSERT INTO pedido (cliente_id) VALUES (3) RETURNING pedido_id;</button>
+<button class="quiz-opt">INSERT INTO pedido (pedido_id, cliente_id) VALUES (1, 3);</button>
 <button class="quiz-opt">INSERT INTO pedido VALUES (3);</button>
+<button class="quiz-opt">INSERT INTO pedido (fecha, cliente_id) VALUES (CURRENT_DATE, 3);</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: no se especifica pedido_id (lo genera IDENTITY) ni fecha (usa su DEFAULT), solo cliente_id que es obligatorio; y RETURNING pedido_id devuelve el id generado para usarlo de inmediato." data-ko="Insertar pedido_id manualmente contradice IDENTITY; forzar fecha con CURRENT_DATE es redundante (ya es el DEFAULT) pero además no resuelve el problema de no conocer el pedido_id generado; y VALUES (3) sin lista de columnas asume el orden físico de la tabla, empezando por pedido_id, lo cual es incorrecto y frágil. La única que además captura el id generado es la que usa RETURNING." hidden></p>
@@ -431,8 +431,8 @@ LIMIT 3 OFFSET 3;</code></pre>
 <div class="quiz-opts">
 <button class="quiz-opt">DELETE FROM producto WHERE producto_id = 8;</button>
 <button class="quiz-opt">DROP TABLE producto;</button>
-<button class="quiz-opt">DELETE FROM detalle_pedido; DELETE FROM producto WHERE producto_id = 8;</button>
 <button class="quiz-opt" data-correct>UPDATE producto SET activo = false WHERE producto_id = 8;</button>
+<button class="quiz-opt">DELETE FROM detalle_pedido; DELETE FROM producto WHERE producto_id = 8;</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: borrar el producto fallaría por el ON DELETE RESTRICT mientras existan ventas. La solución no es eliminar el dato histórico, sino marcarlo como inactivo con UPDATE — el historial de ventas queda intacto y el producto puede excluirse del catálogo filtrando por activo = true." data-ko="DELETE FROM producto fallaría por la restricción RESTRICT; DROP TABLE destruiría toda la tabla, no solo ese producto; y borrar todo detalle_pedido para poder eliminar un producto destruye el historial de ventas de todos los productos, no solo del 8. La forma correcta de 'dejar de vender' sin perder historial es un UPDATE que lo marque como inactivo." hidden></p>
@@ -474,10 +474,10 @@ LIMIT 3 OFFSET 3;</code></pre>
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">Ejecutas un INSERT con varias filas en un solo VALUES, y la tercera fila viola un CHECK. ¿Qué ocurre?</p>
 <div class="quiz-opts">
-<button class="quiz-opt" data-correct>No se inserta ninguna de las tres filas: el INSERT completo falla.</button>
 <button class="quiz-opt">Se insertan las dos primeras filas y la tercera se ignora.</button>
 <button class="quiz-opt">Se insertan las tres, la tercera queda con NULL en la columna que violó el CHECK.</button>
 <button class="quiz-opt">PostgreSQL corrige automáticamente el valor para que cumpla el CHECK.</button>
+<button class="quiz-opt" data-correct>No se inserta ninguna de las tres filas: el INSERT completo falla.</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: un INSERT con múltiples filas es una sola instrucción. Si cualquiera de las filas viola una restricción, toda la instrucción falla y no se inserta nada." data-ko="Un INSERT con múltiples filas se ejecuta como una sola unidad: si una fila viola una restricción, ninguna de las filas del INSERT se guarda, no solo la que falló." hidden></p>
@@ -498,8 +498,8 @@ LIMIT 3 OFFSET 3;</code></pre>
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">¿Cuál condición selecciona correctamente los pedidos que todavía no tienen fecha_entrega registrada?</p>
 <div class="quiz-opts">
-<button class="quiz-opt">WHERE fecha_entrega = NULL</button>
 <button class="quiz-opt" data-correct>WHERE fecha_entrega IS NULL</button>
+<button class="quiz-opt">WHERE fecha_entrega = NULL</button>
 <button class="quiz-opt">WHERE fecha_entrega = ''</button>
 <button class="quiz-opt">WHERE NOT fecha_entrega</button>
 
@@ -511,10 +511,10 @@ LIMIT 3 OFFSET 3;</code></pre>
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">¿Qué hace exactamente ORDER BY precio DESC LIMIT 1;?</p>
 <div class="quiz-opts">
-<button class="quiz-opt">Devuelve todas las filas ordenadas, pero muestra solo la columna precio.</button>
 <button class="quiz-opt">Devuelve la fila con el precio más bajo.</button>
 <button class="quiz-opt" data-correct>Devuelve una sola fila: la de mayor precio.</button>
 <button class="quiz-opt">Elimina todas las filas excepto una.</button>
+<button class="quiz-opt">Devuelve todas las filas ordenadas, pero muestra solo la columna precio.</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: ORDER BY precio DESC ordena de mayor a menor precio, y LIMIT 1 se queda solo con la primera fila de ese orden — la de precio más alto." data-ko="DESC ordena de mayor a menor, así que LIMIT 1 después de ese orden trae la fila con el precio MÁS ALTO, no el más bajo. Y SELECT/ORDER BY/LIMIT solo leen datos, nunca borran filas." hidden></p>
@@ -526,8 +526,8 @@ LIMIT 3 OFFSET 3;</code></pre>
 <div class="quiz-opts">
 <button class="quiz-opt">Porque SELECT es obligatorio antes de cualquier UPDATE en PostgreSQL.</button>
 <button class="quiz-opt">Porque el UPDATE no funciona si no se ejecutó un SELECT antes en la misma sesión.</button>
-<button class="quiz-opt">No hay ninguna razón práctica, es solo una costumbre sin efecto real.</button>
 <button class="quiz-opt" data-correct>Porque muestra qué filas afectaría el WHERE antes de modificarlas.</button>
+<button class="quiz-opt">No hay ninguna razón práctica, es solo una costumbre sin efecto real.</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: como WHERE no es obligatorio y PostgreSQL no pide confirmación, correr primero SELECT * FROM tabla WHERE ...; con la misma condición te deja ver exactamente qué filas serían afectadas, antes de modificarlas o borrarlas de forma irreversible." data-ko="No es un requisito técnico de PostgreSQL, es una práctica de seguridad: como UPDATE y DELETE no piden confirmación, revisar primero con SELECT qué filas selecciona el WHERE evita modificar o borrar más filas de las que querías." hidden></p>
@@ -809,57 +809,172 @@ actualizarProgreso();
 
 </script>
 
-<!-- ATENZA · guía completada (fusión con ATENZA, 05/08). Solo actúa si la
-     guía se abrió desde ATENZA (con ?atenza_token=...&guia=... en la URL,
-     agregado por VerGuias del backend); accedida directo, como siempre,
-     no dispara nada nuevo. No toca el motor de quizzes de arriba: se
-     engancha a `actualizarProgreso()`, que ya existe. -->
+<!-- ATENZA · guía nativa en vivo (17/08, reemplaza el bloque "guía
+     completada" de 05/08 que solo llamaba a /completar). Solo actúa si la
+     guía se abrió desde un lanzamiento de ATENZA (con ?atenza_token=...
+     &guia_intento=... en la URL, agregado por IniciarOReanudarGuiaIntento
+     del backend); accedida directo, como siempre, no dispara nada nuevo.
+     No toca el motor de quizzes de arriba: se engancha a marcarResuelto()
+     y actualizarProgreso(), que ya existen (ver DEPLOY-GUIAS-SNIPPET.md
+     en el repo de atenza para el detalle de cada endpoint). -->
 <script>
 (function () {
   var ATENZA_API = 'https://api-atenza.atenzabo.com';
 
   var params = new URLSearchParams(location.search);
   var token = params.get('atenza_token');
-  var guiaId = params.get('guia');
-  if (!token || !guiaId) return; // acceso público normal, sin ATENZA
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
 
-  // v2: si cambia la lógica de reporte, subir el sufijo de esta clave
-  // "des-atasca" a cualquier estudiante que haya quedado marcado como
-  // reportado por una versión anterior con un bug (ver commit que agregó
-  // este comentario: el POST fallaba en silencio contra un placeholder
-  // de URL, pero igual marcaba el flag como si hubiera tenido éxito).
-  var flagCompletado = QUIZ_PREFIX + 'completado-atenza-v2';
-
-  function progresoActual() {
-    var ids = new Set();
-    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
-    var correctas = 0;
-    ids.forEach(function (id) {
-      if (localStorage.getItem(QUIZ_PREFIX + id) === 'ok') correctas++;
+  // ── Progreso limpio por intento (17/08): QUIZ_PREFIX guarda el progreso
+  // por PÁGINA (pensado para "completaste esto alguna vez en tu vida"), sin
+  // saber nada de "intentos" de ATENZA. Sin esto, cualquier resto de una
+  // práctica libre o de un lanzamiento anterior (oficial o repaso) ya deja
+  // casi todo marcado "ok"/"ko" de entrada — contestar la primera pregunta
+  // NUEVA alcanza para que actualizarProgreso() crea que ya se terminó
+  // todo (bug real, 17/08: primera respuesta = completado, el resto ya no
+  // se guardaba porque el backend cierra el intento apenas llega el
+  // /finalizar). Se guarda a qué guia_intento pertenece el progreso actual
+  // de esta página; si cambió, se limpia todo antes de que el estudiante
+  // toque nada. Si es el mismo (recargó la pestaña a mitad de camino), no
+  // se toca — sigue donde quedó.
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
     });
-    return { correctas: correctas, total: ids.size };
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
   }
 
-  function reportarSiCompleto() {
-    if (localStorage.getItem(flagCompletado)) return; // ya se confirmó con éxito
-    var p = progresoActual();
-    if (p.total === 0 || p.correctas < p.total) return;
-    fetch(ATENZA_API + '/api/guias/' + encodeURIComponent(guiaId) + '/completar', {
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
       method: 'POST',
-      headers: { Authorization: 'Bearer ' + token },
-    }).then(function (res) {
-      if (res.ok) localStorage.setItem(flagCompletado, '1');
-      // si no fue ok, no marcamos nada: el próximo actualizarProgreso() reintenta
-    }).catch(function () {});
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
   }
 
+  // ── Aviso flotante — clave para "cuándo termina la guía": antes de esto
+  // el estudiante llegaba al 100% local y no había ninguna señal de que ya
+  // había terminado, y una falla de red al reportar quedaba invisible
+  // (nota mal calculada sin que nadie se entere). onClick, si se pasa,
+  // permite reintentar tocando el aviso.
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  // ── Pantalla completa: se pide en un click real del usuario, no solo.
+  // Estilos en línea porque esta página todavía no tiene una clase para
+  // esto — fixed y con z-index por encima de .menu-btn (900, solo visible
+  // en mobile) para que no quede tapado.
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  // ── Reportar cada pregunta resuelta — engancha marcarResuelto(), que ya
+  // usan los tipos de actividad de esta guía (mc/match/classify/fill) sin
+  // tocar ninguno de sus call-sites. Si en el futuro se agrega un
+  // quiz-open acá, se reporta como abierta (texto libre) en vez de
+  // correcta/incorrecta — mismo criterio que las demás guías.
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder foco.
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ── Finalizar al completar el 100% — mismo cálculo que ya usaba el
+  // bloque viejo para decidir cuándo avisar (todas las preguntas en "ok").
+  // Si falla, NO se queda marcado como finalizado — el aviso rojo deja
+  // reintentar con un toque, y el próximo actualizarProgreso() también
+  // reintenta solo si en el medio se resolvió alguna pregunta más.
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  // 17/08: antes exigía TODAS "ok" (100% correcto) para finalizar — mismo
+  // criterio que el bloque viejo de "guía completada" de cuando esto era
+  // solo práctica sin nota. Con nota real en juego eso está mal: un
+  // estudiante que contesta todo pero se equivoca en una quiz-mc (de un
+  // solo intento) nunca llegaba a "ok" en esa pregunta, así que el
+  // /finalizar nunca se disparaba — la guía se quedaba "en curso" para
+  // siempre aunque ya no le quedara nada más por hacer. Ahora cuenta
+  // CONTESTADAS (ok o ko, cualquier valor guardado), no solo correctas.
   var actualizarProgresoOriginal = actualizarProgreso;
   actualizarProgreso = function () {
     actualizarProgresoOriginal();
-    reportarSiCompleto();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
   };
-
-  reportarSiCompleto(); // por si se reabre una guía que ya estaba 100% completa
 })();
 </script>
 
