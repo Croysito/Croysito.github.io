@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquetipos Sistémicos: Patrones que se Repiten | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="deck-mode">
+
+<div class="deck-topbar">
+<button class="deck-icon-btn" id="deckMenuBtn" aria-label="Abrir índice de la presentación">☰</button>
+<div class="deck-progress-track"><div class="deck-progress-fill" id="deckFill"></div></div>
+<span class="deck-counter" id="deckCounter">1 / 1</span>
+<button class="deck-icon-btn" id="deckThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="deck-menu-overlay" id="deckMenuOverlay"></div>
+<nav class="deck-menu-panel" id="deckMenuPanel" aria-label="Índice de la presentación">
+<h3>Índice</h3>
+<div class="deck-menu-list">
+<button data-slide="0">🏠 Portada</button>
+<button data-slide="4">1 · Dos arquetipos, revisitados</button>
+<button data-slide="8">2 · Desplazar la carga</button>
+<button data-slide="15">3 · Tragedia de los comunes</button>
+<button data-slide="21">4 · Éxito para quien tiene éxito</button>
+<button data-slide="26">5 · Caso integrador</button>
+<button data-slide="30">Repaso final</button>
+<button data-slide="36">Cheat Sheet</button>
+<button data-slide="38">Cierre</button>
+</div>
+</nav>
+
+<div class="deck-viewport" id="deckViewport">
+
+<!-- 0 · PORTADA -->
+<section class="slide slide-title-slide active">
+<div class="slide-inner">
+<span class="slide-eyebrow">🔁 Guía de Aula Invertida · Presentación</span>
+<h1 class="slide-title">Arquetipos <span>Sistémicos</span>: Patrones que se Repiten</h1>
+<p class="slide-lead">Los mismos patrones de comportamiento aparecen una y otra vez en sistemas completamente distintos entre sí. Aprender a reconocerlos es aprender a anticiparlos.</p>
+<div class="author" style="justify-content:center;">
+<div class="avatar">RC</div>
+<div style="text-align:left;"><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+<p class="slide-hint">👁 <span id="viewCount">—</span> vistas · Usa las flechas ← → , el teclado o desliza para navegar</p>
+</div>
+</section>
+
+<!-- 1 · BIENVENIDA -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Introducción</p>
+<h2 class="slide-title">Bienvenido</h2>
+<div class="slide-body">
+<p>En <strong>Modelado de Sistemas: Diagramas Causales</strong> ya conociste tres arquetipos sistémicos: <strong>Límites del crecimiento</strong>, <strong>Solución que falla</strong> y <strong>Escalada</strong> — patrones de bucles que se repiten en sistemas muy distintos entre sí.</p>
+<p>Esta presentación retoma dos de ellos con más profundidad, y agrega tres arquetipos nuevos: <strong>Desplazar la carga</strong>, <strong>Tragedia de los comunes</strong> y <strong>Éxito para quien tiene éxito</strong>.</p>
+</div>
+</div>
+</section>
+
+<!-- 2 · PRERREQUISITO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Introducción</p>
+<h2 class="slide-title">Antes de empezar</h2>
+<div class="slide-body highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Esta presentación da por sabido lo visto en <a href="modelado-sistemas.html">Modelado de Sistemas: Diagramas Causales</a> (bucles de refuerzo y de balance, y los tres primeros arquetipos) y en <a href="dinamica-sistemas.html">Dinámica de Sistemas: Simulación de Stocks y Flujos</a> (stock, flujo y retraso). No los vuelve a explicar desde cero: los usa directamente como herramientas de trabajo.</p>
+</div>
+</div>
+</section>
+
+<!-- 3 · OBJETIVO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Introducción</p>
+<h2 class="slide-title">Objetivo del módulo</h2>
+<div class="slide-body">
+<ul>
+<li>Distinguir Desplazar la carga de Solución que falla, dos arquetipos fáciles de confundir.</li>
+<li>Reconocer la Tragedia de los comunes en un recurso compartido y finito.</li>
+<li>Explicar cómo Éxito para quien tiene éxito reparte una ventaja inicial de forma desigual.</li>
+<li>Diagnosticar qué arquetipo describe mejor un caso real, entre los cinco vistos.</li>
+<li>Diferenciar los cinco arquetipos entre sí, no solo reconocer cada uno por separado.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<!-- 4 · DIVISOR 1 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 1</p>
+<h2 class="slide-title">Dos arquetipos, revisitados</h2>
+</div>
+</section>
+
+<!-- 5 · LÍMITES DEL CRECIMIENTO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">1 · Dos arquetipos, revisitados</p>
+<h2 class="slide-title">Límites del crecimiento, con stock y flujo</h2>
+<div class="slide-visual diagrama-caja">
+<svg viewBox="0 0 760 210" role="img" aria-label="Diagrama: un bucle de refuerzo impulsa el crecimiento de un stock, hasta que una restricción activa un bucle de balance que lo frena">
+<defs>
+<marker id="a5g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--verde)"></path></marker>
+<marker id="a5y" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--amarillo)"></path></marker>
+</defs>
+<rect x="20" y="60" width="170" height="64" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="105" y="88" text-anchor="middle" class="dg-texto" font-size="12">CRECIMIENTO</text>
+<text x="105" y="104" text-anchor="middle" class="dg-texto small">(bucle de refuerzo)</text>
+<rect x="295" y="60" width="170" height="64" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="380" y="88" text-anchor="middle" class="dg-texto" font-size="12">STOCK</text>
+<text x="380" y="104" text-anchor="middle" class="dg-texto small">(ej. usuarios activos)</text>
+<rect x="570" y="60" width="170" height="64" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="655" y="88" text-anchor="middle" class="dg-texto" font-size="12">RESTRICCIÓN</text>
+<text x="655" y="104" text-anchor="middle" class="dg-texto small">(capacidad del sistema)</text>
+<line x1="190" y1="92" x2="293" y2="92" stroke="var(--verde)" stroke-width="2.5" marker-end="url(#a5g)"></line>
+<text x="241" y="82" text-anchor="middle" class="dg-texto small">(+)</text>
+<line x1="465" y1="92" x2="568" y2="92" stroke="var(--verde)" stroke-width="2.5" marker-end="url(#a5g)"></line>
+<text x="516" y="82" text-anchor="middle" class="dg-texto small">(+)</text>
+<polyline points="655,124 655,168 105,168 105,124" fill="none" stroke="var(--amarillo)" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a5y)"></polyline>
+<text x="380" y="186" text-anchor="middle" class="dg-texto small">(−) la restricción frena el crecimiento</text>
+</svg>
+</div>
+<div class="slide-body">
+<p>Ya lo viste como dos bucles: uno de refuerzo que impulsa el crecimiento, y uno de balance que lo frena a medida que se acerca a una restricción. Con el vocabulario de Dinámica de Sistemas, ese crecimiento es un <strong>stock</strong>, y ambos bucles actúan sobre sus flujos.</p>
+<p><strong>Ejemplo:</strong> una comunidad en redes sociales crece por invitaciones de miembros existentes (bucle de refuerzo), hasta que la calidad de las conversaciones baja por el exceso de gente — y eso empieza a frenar las invitaciones nuevas (bucle de balance).</p>
+</div>
+</div>
+</section>
+
+<!-- 6 · ESCALADA -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">1 · Dos arquetipos, revisitados</p>
+<h2 class="slide-title">Escalada, dos actores en carrera</h2>
+<div class="slide-visual diagrama-caja">
+<svg viewBox="0 0 500 190" role="img" aria-label="Diagrama: la acción de A refuerza la acción de B y viceversa, formando un bucle de refuerzo mutuo entre dos actores">
+<defs>
+<marker id="a6g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--verde)"></path></marker>
+</defs>
+<rect x="30" y="65" width="180" height="64" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="120" y="92" text-anchor="middle" class="dg-texto" font-size="12">ACCIÓN DE A</text>
+<text x="120" y="108" text-anchor="middle" class="dg-texto small">(precio, ataque, gasto…)</text>
+<rect x="290" y="65" width="180" height="64" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="380" y="92" text-anchor="middle" class="dg-texto" font-size="12">ACCIÓN DE B</text>
+<text x="380" y="108" text-anchor="middle" class="dg-texto small">(precio, ataque, gasto…)</text>
+<line x1="210" y1="82" x2="288" y2="82" stroke="var(--verde)" stroke-width="2.5" marker-end="url(#a6g)"></line>
+<text x="249" y="72" text-anchor="middle" class="dg-texto small">(+) reacciona</text>
+<line x1="290" y1="112" x2="212" y2="112" stroke="var(--verde)" stroke-width="2.5" marker-end="url(#a6g)"></line>
+<text x="249" y="130" text-anchor="middle" class="dg-texto small">(+) reacciona</text>
+<text x="250" y="30" text-anchor="middle" class="dg-texto small">bucle de refuerzo mutuo</text>
+</svg>
+</div>
+<div class="slide-body">
+<p>Dos actores compiten en un solo bucle de refuerzo compartido: cada uno reacciona a la última movida del otro, y esa reacción se convierte en el estímulo del siguiente movimiento. No hace falta ninguna restricción externa para que esto crezca — el propio bucle se alimenta a sí mismo.</p>
+<p><strong>Ejemplo:</strong> dos cadenas de comida rápida vecinas lanzan promociones cada vez más agresivas, cada una reaccionando a la última movida de la otra.</p>
+</div>
+</div>
+</section>
+
+<!-- 7 · ACTIVIDAD recap-classify -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">1 · Dos arquetipos, revisitados</p>
+<p style="margin-bottom:10px;">Clasifica cada caso según el arquetipo que describe mejor.</p>
+<div class="quiz quiz-classify" data-quiz-id="recap-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Límites del crecimiento, o Escalada?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Dos gimnasios en la misma cuadra bajan sus precios de membresía cada vez que el otro lo hace.</span>
+<div class="quiz-classify-btns">
+<button>Límites del crecimiento</button>
+<button data-correct>Escalada</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una plataforma de streaming gana usuarios por recomendación boca a boca, hasta que el catálogo compartido se satura y la app se vuelve lenta, frenando las altas nuevas.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Límites del crecimiento</button>
+<button>Escalada</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Dos países aumentan su gasto militar, cada uno respondiendo al último aumento del otro.</span>
+<div class="quiz-classify-btns">
+<button>Límites del crecimiento</button>
+<button data-correct>Escalada</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una app de delivery crece rápido en una ciudad, hasta que la flota de repartidores no alcanza para cubrir la demanda y los tiempos de entrega empeoran, frenando los pedidos nuevos.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Límites del crecimiento</button>
+<button>Escalada</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 8 · DIVISOR 2 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 2</p>
+<h2 class="slide-title">Desplazar la carga</h2>
+</div>
+</section>
+
+<!-- 9 · CONCEPTO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · Desplazar la carga</p>
+<h2 class="slide-title">El problema y sus dos soluciones posibles</h2>
+<div class="slide-body">
+<p>Frente a un problema, casi siempre hay dos caminos: una <strong>solución sintomática</strong> (rápida, alivia el síntoma ya) y una <strong>solución fundamental</strong> (más lenta, ataca la causa de fondo).</p>
+<p><strong>Desplazar la carga</strong> aparece cuando se elige la sintomática una y otra vez, y esa elección repetida termina erosionando la propia capacidad de aplicar la fundamental — al punto de depender cada vez más de la solución rápida.</p>
+</div>
+</div>
+</section>
+
+<!-- 10 · DIAGRAMA ESTRUCTURA -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · Desplazar la carga</p>
+<h2 class="slide-title">La estructura completa</h2>
+<div class="slide-visual diagrama-caja">
+<svg viewBox="0 0 760 300" role="img" aria-label="Diagrama: tanto la solución sintomática como la fundamental reducen el síntoma, pero la sintomática también genera un efecto secundario que reduce la capacidad de aplicar la fundamental">
+<defs>
+<marker id="a10g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--verde)"></path></marker>
+<marker id="a10y" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--amarillo)"></path></marker>
+</defs>
+<rect x="290" y="15" width="180" height="55" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="380" y="47" text-anchor="middle" class="dg-texto" font-size="12">SÍNTOMA</text>
+<rect x="30" y="140" width="230" height="60" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="145" y="166" text-anchor="middle" class="dg-texto" font-size="11.5">SOLUCIÓN SINTOMÁTICA</text>
+<text x="145" y="182" text-anchor="middle" class="dg-texto small">(rápida)</text>
+<rect x="500" y="140" width="230" height="60" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="615" y="166" text-anchor="middle" class="dg-texto" font-size="11.5">SOLUCIÓN FUNDAMENTAL</text>
+<text x="615" y="182" text-anchor="middle" class="dg-texto small">(lenta)</text>
+<rect x="30" y="245" width="230" height="50" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="145" y="275" text-anchor="middle" class="dg-texto" font-size="11.5">EFECTO SECUNDARIO</text>
+<polyline points="160,140 320,72" fill="none" stroke="var(--amarillo)" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a10y)"></polyline>
+<text x="200" y="118" text-anchor="middle" class="dg-texto small">(−) alivia rápido</text>
+<polyline points="615,140 445,72" fill="none" stroke="var(--amarillo)" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a10y)"></polyline>
+<text x="565" y="118" text-anchor="middle" class="dg-texto small">(−) resuelve de fondo, lento</text>
+<line x1="145" y1="200" x2="145" y2="243" stroke="var(--verde)" stroke-width="2.5" marker-end="url(#a10g)"></line>
+<text x="185" y="225" text-anchor="middle" class="dg-texto small">(+) genera</text>
+<polyline points="260,270 615,270 615,202" fill="none" stroke="var(--amarillo)" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a10y)"></polyline>
+<text x="440" y="290" text-anchor="middle" class="dg-texto small">(−) reduce la capacidad de aplicar la solución fundamental</text>
+</svg>
+</div>
+</div>
+</section>
+
+<!-- 11 · CONTRASTE -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · Desplazar la carga</p>
+<h2 class="slide-title">"Desplazar la carga" vs. "Solución que falla"</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Arquetipo</th><th scope="col">Estructura</th></tr></thead>
+<tbody>
+<tr><td><strong>Solución que falla</strong></td><td>Una sola solución. Su propia consecuencia no intencionada empeora el mismo problema que quería resolver.</td></tr>
+<tr><td><strong>Desplazar la carga</strong></td><td>Dos soluciones posibles compitiendo. La sintomática le va quitando lugar a la fundamental con el tiempo, hasta volverla casi imposible de aplicar.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- 12 · EJEMPLO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · Desplazar la carga</p>
+<h2 class="slide-title">Ejemplo: deuda técnica</h2>
+<div class="slide-body highlight">
+<p>Un equipo de desarrollo, bajo presión de entregar, aplica parches directos sobre el código en vez de refactorizar el módulo problemático. Los parches alivian la urgencia de cada sprint (solución sintomática), pero el código se vuelve cada vez más frágil — y con el tiempo el equipo ya no tiene el tiempo ni el conocimiento acumulado para encarar el refactor completo (solución fundamental). Así que sigue parchando, cada vez con más frecuencia.</p>
+</div>
+</div>
+</section>
+
+<!-- 13 · ACTIVIDAD carga-mc -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · Desplazar la carga</p>
+<div class="quiz quiz-mc" data-quiz-id="carga-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un gerente, ante bajas ventas, contrata cada trimestre más vendedores temporales para cubrir la meta, en vez de invertir en capacitar y retener a un equipo estable. Con el tiempo, la rotación constante hace que nadie llegue a dominar el producto, y las ventas por vendedor bajan cada vez más — así que hace falta contratar aún más temporales. ¿Qué arquetipo describe mejor esta situación?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Límites del crecimiento: la meta de ventas es la restricción que frena la contratación.</button>
+<button class="quiz-opt">Solución que falla: contratar temporales agrava directamente el mismo problema que resolvía.</button>
+<button class="quiz-opt" data-correct>Desplazar la carga: los temporales desplazan a la solución fundamental con el tiempo.</button>
+<button class="quiz-opt">Tragedia de los comunes: los vendedores compiten por un mismo bono limitado cada mes.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: contratar temporales (sintomática) alivia la meta del trimestre, pero la rotación erosiona la capacidad del equipo de construir la solución fundamental (retener y capacitar), profundizando la dependencia de la solución rápida." data-ko="No hay una restricción clásica frenando el crecimiento, ni un único problema empeorándose a sí mismo, ni un recurso compartido entre pares. Hay dos soluciones compitiendo, y la sintomática (temporales) erosiona la capacidad de aplicar la fundamental: eso es Desplazar la carga." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 14 · ACTIVIDAD carga-match -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · Desplazar la carga</p>
+<div class="quiz quiz-match" data-quiz-id="carga-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada pieza de la estructura de "Desplazar la carga" con su definición.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="sintoma">Síntoma</button>
+<button class="quiz-match-item" data-pair="sintomatica">Solución sintomática</button>
+<button class="quiz-match-item" data-pair="fundamental">Solución fundamental</button>
+<button class="quiz-match-item" data-pair="secundario">Efecto secundario</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="fundamental">Ataca la causa de fondo, pero tarda más en dar resultado.</button>
+<button class="quiz-match-item" data-pair="secundario">Consecuencia de usar la sintomática que reduce la capacidad de aplicar la fundamental.</button>
+<button class="quiz-match-item" data-pair="sintoma">La señal visible del problema, la que se siente primero.</button>
+<button class="quiz-match-item" data-pair="sintomatica">Alivia el problema rápido, sin atacar su causa de fondo.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 15 · DIVISOR 3 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 3</p>
+<h2 class="slide-title">Tragedia de los comunes</h2>
+</div>
+</section>
+
+<!-- 16 · CONCEPTO + DIAGRAMA -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Tragedia de los comunes</p>
+<h2 class="slide-title">Un recurso compartido, muchos usuarios</h2>
+<div class="slide-visual diagrama-caja">
+<svg viewBox="0 0 700 220" role="img" aria-label="Diagrama: tres usuarios distintos usan cada vez más un mismo recurso compartido y finito">
+<defs>
+<marker id="a16g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--verde)"></path></marker>
+</defs>
+<rect x="30" y="20" width="150" height="55" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="105" y="53" text-anchor="middle" class="dg-texto" font-size="12">USUARIO A</text>
+<rect x="275" y="20" width="150" height="55" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="350" y="53" text-anchor="middle" class="dg-texto" font-size="12">USUARIO B</text>
+<rect x="520" y="20" width="150" height="55" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="595" y="53" text-anchor="middle" class="dg-texto" font-size="12">USUARIO C</text>
+<rect x="250" y="150" width="200" height="60" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="350" y="176" text-anchor="middle" class="dg-texto" font-size="11.5">RECURSO COMPARTIDO</text>
+<text x="350" y="192" text-anchor="middle" class="dg-texto small">(finito)</text>
+<line x1="115" y1="75" x2="290" y2="148" stroke="var(--verde)" stroke-width="2.5" marker-end="url(#a16g)"></line>
+<line x1="350" y1="75" x2="350" y2="148" stroke="var(--verde)" stroke-width="2.5" marker-end="url(#a16g)"></line>
+<line x1="585" y1="75" x2="410" y2="148" stroke="var(--verde)" stroke-width="2.5" marker-end="url(#a16g)"></line>
+<text x="350" y="115" text-anchor="middle" class="dg-texto small">(+) cada uno usa más, por su cuenta</text>
+</svg>
+</div>
+<div class="slide-body">
+<p>Varias personas comparten un mismo recurso finito. Cada una tiene, por su cuenta, un bucle de refuerzo perfectamente racional: usar más el recurso le conviene individualmente. Pero todos esos bucles individuales alimentan el mismo recurso compartido, cuya capacidad limitada termina, con retraso, perjudicando a todos por igual.</p>
+</div>
+</div>
+</section>
+
+<!-- 17 · EJEMPLO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Tragedia de los comunes</p>
+<h2 class="slide-title">Ejemplo: el servidor de pruebas</h2>
+<div class="slide-body highlight">
+<p>Un equipo de estudiantes comparte un único servidor de pruebas. A cada uno, individualmente, le conviene dejar sus procesos corriendo toda la noche para no perder avance. Pero cuando todos hacen lo mismo, el servidor se satura, las pruebas de todos tardan más, y el beneficio que cada uno buscaba termina perdiéndose para el grupo entero.</p>
+</div>
+</div>
+</section>
+
+<!-- 18 · RETRASO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Tragedia de los comunes</p>
+<h2 class="slide-title">Por qué el retraso importa</h2>
+<div class="slide-body highlight">
+<p>El daño al recurso compartido casi nunca es inmediato — hay un retraso entre el uso individual y la caída visible del recurso. Ese retraso es lo que hace que cada persona, mirando solo su propia experiencia, siga viendo su comportamiento como razonable mucho después de que ya empezó a perjudicar a todos.</p>
+</div>
+</div>
+</section>
+
+<!-- 19 · ACTIVIDAD comunes-mc -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Tragedia de los comunes</p>
+<div class="quiz quiz-mc" data-quiz-id="comunes-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">En una oficina, cada empleado imprime todo lo que puede en la única impresora compartida, sin pensarlo dos veces — a cada uno, individualmente, le conviene. Con el tiempo, la impresora se traba con más frecuencia por el uso excesivo, y todos, incluido cada uno que la usó de más, terminan esperando más para imprimir cualquier cosa. ¿Qué arquetipo es este?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Tragedia de los comunes: cada uno actúa racional, pero el uso conjunto agota el recurso compartido.</button>
+<button class="quiz-opt">Desplazar la carga: imprimir de más es una solución sintomática a otro problema.</button>
+<button class="quiz-opt">Escalada: cada empleado compite directamente contra los demás por imprimir primero.</button>
+<button class="quiz-opt">Éxito para quien tiene éxito: quien imprime más recibe más prioridad en la cola.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: no hay dos soluciones compitiendo, ni dos actores reaccionando entre sí, ni una ventaja que se retroalimenta. Hay un recurso compartido y finito (la impresora) que el uso individual racional de cada uno termina agotando para todos: Tragedia de los comunes." data-ko="No hay dos soluciones compitiendo (no es Desplazar la carga), ni dos actores reaccionando en tiempo real entre sí (no es Escalada), ni una ventaja inicial que crece (no es Éxito para quien tiene éxito). Es un recurso compartido y finito que el uso individual racional agota para todos: Tragedia de los comunes." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 20 · ACTIVIDAD comunes-fill -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Tragedia de los comunes</p>
+<div class="quiz quiz-fill" data-quiz-id="comunes-fill">
+<span class="quiz-badge">Completar</span>
+
+<p>1. El recurso compartido en la Tragedia de los comunes es siempre
+<select class="quiz-blank" data-correct="finito">
+<option value="">— elige —</option>
+<option value="infinito">Infinito</option>
+<option value="finito">Finito</option>
+<option value="privado">De uso privado</option>
+<option value="renovable-instantaneo">Renovable al instante</option>
+</select>.</p>
+
+<p>2. El comportamiento de cada individuo, tomado en aislamiento, es
+<select class="quiz-blank" data-correct="racional">
+<option value="">— elige —</option>
+<option value="ilegal">Ilegal</option>
+<option value="aleatorio">Aleatorio</option>
+<option value="racional">Racional</option>
+<option value="irrelevante">Irrelevante</option>
+</select> desde su propio punto de vista.</p>
+
+<p>3. El daño al recurso compartido se hace visible
+<select class="quiz-blank" data-correct="retraso">
+<option value="">— elige —</option>
+<option value="instante">En el instante exacto del sobreuso</option>
+<option value="retraso">Con un retraso respecto del sobreuso</option>
+<option value="antes">Antes de que empiece el sobreuso</option>
+<option value="nunca">Nunca</option>
+</select>.</p>
+
+<p>4. Cuando todos maximizan su propio uso del recurso, el resultado colectivo es
+<select class="quiz-blank" data-correct="perjudicial">
+<option value="">— elige —</option>
+<option value="beneficioso">Beneficioso para el grupo</option>
+<option value="neutro">Neutro para el grupo</option>
+<option value="perjudicial">Perjudicial para el grupo</option>
+<option value="impredecible">Imposible de anticipar</option>
+</select> entero.</p>
+
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 21 · DIVISOR 4 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 4</p>
+<h2 class="slide-title">Éxito para quien tiene éxito</h2>
+</div>
+</section>
+
+<!-- 22 · CONCEPTO + DIAGRAMA -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">4 · Éxito para quien tiene éxito</p>
+<h2 class="slide-title">Una ventaja inicial que se retroalimenta</h2>
+<div class="slide-visual diagrama-caja">
+<svg viewBox="0 0 700 220" role="img" aria-label="Diagrama: dos actividades compiten por un mismo recurso limitado; la que rinde mejor recibe más recurso y rinde todavía mejor, mientras la otra recibe menos y rinde peor">
+<defs>
+<marker id="a22g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--verde)"></path></marker>
+<marker id="a22r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c0392b"></path></marker>
+</defs>
+<rect x="260" y="15" width="180" height="55" rx="8" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="350" y="47" text-anchor="middle" class="dg-texto" font-size="11.5">RECURSO LIMITADO</text>
+<rect x="30" y="150" width="220" height="60" rx="8" fill="none" stroke="var(--verde)" stroke-width="2"></rect>
+<text x="140" y="176" text-anchor="middle" class="dg-texto" font-size="11.5">ACTIVIDAD A</text>
+<text x="140" y="192" text-anchor="middle" class="dg-texto small">(rinde mejor)</text>
+<rect x="450" y="150" width="220" height="60" rx="8" fill="none" stroke="#c0392b" stroke-width="2"></rect>
+<text x="560" y="176" text-anchor="middle" class="dg-texto" font-size="11.5">ACTIVIDAD B</text>
+<text x="560" y="192" text-anchor="middle" class="dg-texto small">(rinde peor)</text>
+<line x1="290" y1="70" x2="160" y2="148" stroke="var(--verde)" stroke-width="3" marker-end="url(#a22g)"></line>
+<text x="175" y="105" text-anchor="middle" class="dg-texto small">(+) más recurso</text>
+<line x1="150" y1="150" x2="280" y2="72" stroke="var(--verde)" stroke-width="3" marker-end="url(#a22g)"></line>
+<text x="305" y="130" text-anchor="middle" class="dg-texto small">(+) mejor desempeño</text>
+<line x1="410" y1="70" x2="545" y2="148" stroke="#c0392b" stroke-width="1.5" marker-end="url(#a22r)"></line>
+<text x="530" y="105" text-anchor="middle" class="dg-texto small">(−) menos recurso</text>
+<line x1="555" y1="150" x2="420" y2="72" stroke="#c0392b" stroke-width="1.5" marker-end="url(#a22r)"></line>
+<text x="400" y="130" text-anchor="middle" class="dg-texto small">(−) peor desempeño</text>
+</svg>
+</div>
+<div class="slide-body">
+<p>Dos actividades compiten por un mismo recurso limitado (presupuesto, atención, tiempo). Quien rinde mejor al principio —a veces por una diferencia mínima, o hasta por azar— recibe más de ese recurso, lo que le permite rendir todavía mejor y recibir aún más. El otro lado, con menos recurso, rinde peor y recibe todavía menos: dos bucles de refuerzo enganchados por un recurso compartido, uno creciendo y el otro cayendo.</p>
+</div>
+</div>
+</section>
+
+<!-- 23 · EJEMPLO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">4 · Éxito para quien tiene éxito</p>
+<h2 class="slide-title">Ejemplo: dos productos, un mismo presupuesto</h2>
+<div class="slide-body highlight">
+<p>Una empresa lanza dos productos el mismo trimestre. El que arranca vendiendo apenas un poco más recibe más presupuesto de marketing para el trimestre siguiente, lo que lo hace vender todavía más y ganar más presupuesto. El otro producto, con menos presupuesto, vende cada vez menos — hasta que se descontinúa, sin que nadie haya evaluado si de verdad era el peor producto de los dos.</p>
+</div>
+</div>
+</section>
+
+<!-- 24 · RIESGO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">4 · Éxito para quien tiene éxito</p>
+<h2 class="slide-title">El riesgo de este arquetipo</h2>
+<div class="slide-body highlight">
+<p>La ventaja inicial —a veces producto del azar, no del mérito— se vuelve permanente sin que nadie la vuelva a cuestionar. Repartir el recurso según el desempeño ya alcanzado, en vez de evaluar el potencial de cada lado de forma independiente, es exactamente lo que perpetúa la desigualdad.</p>
+</div>
+</div>
+</section>
+
+<!-- 25 · ACTIVIDAD exito-mc -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">4 · Éxito para quien tiene éxito</p>
+<div class="quiz quiz-mc" data-quiz-id="exito-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">En un equipo de dos analistas, el que resuelve más rápido los primeros dos casos del mes recibe los casos más interesantes y visibles del resto del mes. El otro analista, relegado a tareas rutinarias, deja de tener oportunidades de destacar — y con el tiempo su desempeño también baja. ¿Qué arquetipo describe esta dinámica?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Tragedia de los comunes: ambos analistas comparten la misma carga de trabajo total.</button>
+<button class="quiz-opt" data-correct>Éxito para quien tiene éxito: la ventaja inicial atrae más recursos y profundiza la diferencia.</button>
+<button class="quiz-opt">Desplazar la carga: asignar los casos fáciles es una solución sintomática.</button>
+<button class="quiz-opt">Límites del crecimiento: el desempeño del mejor analista choca con una restricción.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: la diferencia inicial (resolver dos casos más rápido) le trae al primer analista más oportunidades visibles, que a su vez mejoran aún más su desempeño — mientras el segundo, con menos oportunidades, rinde cada vez peor. Dos bucles de refuerzo enganchados por un recurso compartido (los casos interesantes): Éxito para quien tiene éxito." data-ko="No comparten una carga total que se agote para ambos (no es Tragedia de los comunes), no hay dos soluciones compitiendo (no es Desplazar la carga), y no hay una restricción externa frenando el crecimiento (no es Límites del crecimiento). La ventaja inicial atrae más recursos y profundiza la diferencia: Éxito para quien tiene éxito." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 26 · DIVISOR 5 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 5</p>
+<h2 class="slide-title">Caso integrador</h2>
+</div>
+</section>
+
+<!-- 27 · CASO 1 -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">5 · Caso integrador</p>
+<h2 class="slide-title">Caso 1: reclamos en un banco</h2>
+<div class="highlight" style="margin-bottom:16px;">
+<p>Un banco atiende reclamos de clientes. Para cerrar tickets rápido, los agentes ofrecen reintegros express sin investigar la causa del reclamo. El número de reclamos no baja — al contrario, sube: los clientes con problemas repetidos aprenden que reclamar siempre da un reintegro fácil, y el equipo nunca desarrolla el proceso de causa raíz que hubiera reducido los reclamos de fondo.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="caso1-mc">
+<span class="quiz-badge">Diagnóstico</span>
+<p class="quiz-q">¿Qué arquetipo describe mejor esta situación?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Escalada: dos actores compiten y se responden mutuamente.</button>
+<button class="quiz-opt">Tragedia de los comunes: todos sobreusan un recurso compartido.</button>
+<button class="quiz-opt" data-correct>Desplazar la carga: la solución rápida reemplaza a la de fondo.</button>
+<button class="quiz-opt">Éxito para quien tiene éxito: la ventaja inicial se retroalimenta.</button>
+<button class="quiz-opt">Límites del crecimiento: una restricción frena el crecimiento.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: el reintegro express es la solución sintomática; investigar la causa raíz de los reclamos repetidos sería la fundamental. Usar siempre la primera erosiona la capacidad del equipo de encarar la segunda, y encima refuerza el comportamiento que genera más reclamos: Desplazar la carga." data-ko="No hay dos actores reaccionando entre sí (no es Escalada), ni un recurso finito que todos agotan (no es Tragedia de los comunes), ni una ventaja que crece con el tiempo (no es Éxito para quien tiene éxito), ni una restricción frenando algo (no es Límites del crecimiento). El reintegro rápido reemplaza a la investigación de fondo, y erosiona la capacidad de hacerla: Desplazar la carga." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 28 · CASO 2 -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">5 · Caso integrador</p>
+<h2 class="slide-title">Caso 2: dos proyectos de código abierto</h2>
+<div class="highlight" style="margin-bottom:16px;">
+<p>Dos proyectos de código abierto compiten por la atención de la misma comunidad de desarrolladores voluntarios. El proyecto que consigue atención temprana en redes sociales atrae más colaboradores, lo que le permite lanzar más funciones y atraer todavía más gente. El otro proyecto, con menos colaboradores, avanza cada vez más lento y pierde a los pocos que tenía.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="caso2-mc">
+<span class="quiz-badge">Diagnóstico</span>
+<p class="quiz-q">¿Qué arquetipo describe mejor esta situación?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Límites del crecimiento: el segundo proyecto choca con una restricción técnica real.</button>
+<button class="quiz-opt">Desplazar la carga: sumar colaboradores nuevos es apenas una solución sintomática.</button>
+<button class="quiz-opt">Tragedia de los comunes: ambos proyectos agotan sin darse cuenta un repositorio compartido.</button>
+<button class="quiz-opt" data-correct>Éxito para quien tiene éxito: la ventaja temprana en redes atrae aún más colaboradores.</button>
+<button class="quiz-opt">Escalada: cada proyecto responde en tiempo real a cada lanzamiento del otro.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: no hay una restricción externa frenando (no es Límites del crecimiento), ni dos soluciones compitiendo (no es Desplazar la carga), ni un recurso técnico agotado por el uso conjunto (no es Tragedia de los comunes), ni dos proyectos reaccionando en vivo el uno al otro (no es Escalada). La atención inicial atrae más colaboradores, que a su vez atraen todavía más: Éxito para quien tiene éxito." data-ko="No hay una restricción externa (no es Límites del crecimiento), ni dos soluciones en competencia (no es Desplazar la carga), ni un recurso técnico compartido que se agote (no es Tragedia de los comunes), ni una reacción directa entre los dos proyectos (no es Escalada). La ventaja temprana atrae más colaboradores, y eso profundiza la diferencia: Éxito para quien tiene éxito." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 29 · ACTIVIDAD caso-abierto -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">5 · Caso integrador</p>
+<div class="highlight" style="margin-bottom:16px;">
+<strong>Un caso para pensar en tu propio equipo</strong>
+<p>En un equipo de práctica de programación, dos compañeros compiten por ser elegidos líder del próximo proyecto grupal. Quien fue elegido la primera vez sigue siendo elegido en los proyectos siguientes, y va acumulando una experiencia de liderazgo que el resto del grupo nunca llega a tener.</p>
+</div>
+<div class="quiz quiz-open" data-quiz-id="caso-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">¿Qué arquetipo describe esta situación, y qué cambiarías en la forma de elegir al líder para evitarlo?</p>
+<textarea class="quiz-open-input" placeholder="Escribe aquí tu análisis antes de ver la respuesta modelo…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver respuesta modelo</button>
+<div class="quiz-open-model" hidden>
+<strong>Respuesta modelo</strong>
+<p>Es Éxito para quien tiene éxito: la ventaja inicial (haber sido elegido una vez) se retroalimenta y concentra cada vez más oportunidades de liderazgo en la misma persona, sin que el resto del grupo tenga una chance real de desarrollar esa experiencia. Una forma de evitarlo es rotar el rol de líder de forma explícita entre proyectos, en vez de elegir siempre según quién ya tiene más experiencia acumulada — así se rompe el enganche entre "tuvo éxito antes" y "recibe más oportunidad ahora".</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 30 · DIVISOR REPASO + TRACKER -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Repaso final</p>
+<h2 class="slide-title">Repaso final</h2>
+<div class="quiz-tracker" style="max-width:520px;margin:20px auto 0;text-align:left;">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la presentación</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+</div>
+</section>
+
+<!-- 31 · repaso-1 -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">La diferencia clave entre "Solución que falla" y "Desplazar la carga" es que...</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Desplazar la carga hace competir una solución sintomática contra una fundamental; Solución que falla no tiene esa alternativa.</button>
+<button class="quiz-opt">Solución que falla necesita, por definición, dos actores que compitan entre sí, igual que en la escalada.</button>
+<button class="quiz-opt">Desplazar la carga jamás produce ninguna consecuencia secundaria no buscada por nadie.</button>
+<button class="quiz-opt">Ambos arquetipos representan exactamente la misma estructura de bucles de refuerzo y balance.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: en Solución que falla hay una sola solución, cuya consecuencia no intencionada empeora el mismo problema. En Desplazar la carga hay dos soluciones posibles, y la sintomática le va quitando lugar a la fundamental con el tiempo." data-ko="Solución que falla no requiere dos actores compitiendo (eso es Escalada), y Desplazar la carga sí produce una consecuencia secundaria — es justamente esa consecuencia la que erosiona la solución fundamental. La diferencia real es que Desplazar la carga tiene dos soluciones en competencia; Solución que falla, solo una." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 32 · repaso-2 -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">En la Tragedia de los comunes, el daño al recurso compartido se percibe de inmediato, sin ningún retraso.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: casi siempre hay un retraso entre el sobreuso y la caída visible del recurso. Ese retraso es justamente lo que permite que el comportamiento individual siga pareciendo razonable mucho después de que ya empezó a perjudicar a todos." data-ko="Es falso: el daño casi nunca es inmediato. Hay un retraso entre el uso excesivo y la caída visible del recurso compartido, y ese retraso es una parte central de por qué el arquetipo es difícil de frenar a tiempo." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 33 · repaso-3 -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En Éxito para quien tiene éxito, ¿qué es lo que engancha entre sí a los dos bucles de refuerzo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un bucle de balance compartido que frena a ambos lados por igual.</button>
+<button class="quiz-opt" data-correct>Un recurso limitado que se reparte según el desempeño ya alcanzado.</button>
+<button class="quiz-opt">Un retraso entre la causa y el efecto, igual en ambos lados.</button>
+<button class="quiz-opt">La intervención directa de un tercer actor externo al sistema.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: no hay ningún bucle de balance frenando (por eso la diferencia crece sin límite claro), ni un retraso especialmente relevante, ni un tercero interviniendo. Lo que engancha ambos bucles es el recurso limitado, repartido según quién ya rindió mejor." data-ko="No es un bucle de balance (no hay nada que frene la diferencia), ni un retraso (el mecanismo es directo), ni un tercero externo. Los dos bucles de refuerzo están enganchados por un recurso limitado, que se reparte según el desempeño ya alcanzado — eso es lo que profundiza la diferencia." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 34 · repaso-classify -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Solución que falla, o Desplazar la carga?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un gobierno reprime una protesta con más fuerza para que se disperse rápido, pero eso genera más indignación y la próxima protesta es todavía más grande.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Solución que falla</button>
+<button>Desplazar la carga</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una persona toma un analgésico cada vez que le duele la espalda en vez de ir al fisioterapeuta; cada vez necesita el analgésico con más frecuencia y nunca encuentra tiempo para la terapia.</span>
+<div class="quiz-classify-btns">
+<button>Solución que falla</button>
+<button data-correct>Desplazar la carga</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una empresa da bonos por ventas del mes para motivar al equipo, pero eso hace que los vendedores adelanten ventas del mes siguiente, y el próximo mes rinde todavía peor.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Solución que falla</button>
+<button>Desplazar la carga</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 35 · repaso-4 -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de las siguientes NO es una condición necesaria de la Tragedia de los comunes?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Que el recurso compartido sobre el que todos actúan sea finito, no infinito.</button>
+<button class="quiz-opt" data-correct>Que dos actores compitan directamente, reaccionando cada uno a las acciones del otro.</button>
+<button class="quiz-opt">Que el comportamiento individual sea racional desde el punto de vista de quien lo hace.</button>
+<button class="quiz-opt">Que el daño se perciba con cierto retraso respecto del sobreuso.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: reaccionar directamente a las acciones de otro es la condición que define a Escalada, no a la Tragedia de los comunes. Acá los usuarios ni siquiera necesitan conocerse entre sí — cada uno actúa según su propio interés, sin reaccionar a nadie en particular." data-ko="El recurso finito, el comportamiento individual racional y el retraso en percibir el daño sí son condiciones necesarias de la Tragedia de los comunes. Lo que NO hace falta es que dos actores reaccionen directamente entre sí — eso es lo que define a Escalada, un arquetipo distinto." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 36 · CHEAT SHEET -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Referencia</p>
+<h2 class="slide-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Arquetipo</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Límites del crecimiento</td><td>Un bucle R impulsa el crecimiento; un bucle B lo frena al chocar con una restricción.</td></tr>
+<tr><td>Escalada</td><td>Dos actores reaccionan mutuamente, amplificando la tendencia en ambos lados.</td></tr>
+<tr><td>Solución que falla</td><td>Una solución rápida genera una consecuencia no intencionada que empeora el mismo problema.</td></tr>
+<tr><td>Desplazar la carga</td><td>La solución sintomática desplaza a la fundamental y erosiona la capacidad de aplicarla.</td></tr>
+<tr><td>Tragedia de los comunes</td><td>El uso individual racional agota, con retraso, un recurso compartido y finito.</td></tr>
+<tr><td>Éxito para quien tiene éxito</td><td>Una ventaja inicial atrae más recursos y profundiza la diferencia con el tiempo.</td></tr>
+<tr><td>Cómo diagnosticar</td><td>Identificar los bucles en juego, el recurso en disputa (si lo hay), y si compiten uno o varios actores.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- 37 · SABÍAS QUE -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Referencia</p>
+<h2 class="slide-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📘 El catálogo de Peter Senge</h3><p>En "La Quinta Disciplina" (1990), Peter Senge popularizó un catálogo de arquetipos sistémicos que hoy se usa en organizaciones de todo tipo, no solo en ingeniería.</p></div>
+<div class="info"><h3>🌾 Un ensayo de 1968</h3><p>El término "Tragedia de los comunes" lo acuñó el ecólogo Garrett Hardin en un ensayo sobre el pastoreo compartido, mucho antes de aplicarse a servidores o presupuestos.</p></div>
+<div class="info"><h3>🔁 No son leyes, son patrones</h3><p>Ningún arquetipo predice el futuro con certeza: son estructuras que, una vez reconocidas, ayudan a anticipar el comportamiento más probable de un sistema.</p></div>
+</div>
+</div>
+</section>
+
+<!-- 38 · CIERRE -->
+<section class="slide slide-title-slide">
+<div class="slide-inner">
+<h2 class="slide-title">Arquetipos <span>Sistémicos</span></h2>
+<p class="slide-lead">Patrones que se Repiten</p>
+<div class="slide-body" style="text-align:center;">
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<p><strong>Ing. Roy Carrasco</strong><br>Universidad Adventista de Bolivia · 2026</p>
+</div>
+</div>
+</section>
+
+</div>
+
+<button class="deck-nav-btn deck-nav-prev" id="deckPrev" aria-label="Diapositiva anterior">←</button>
+<button class="deck-nav-btn deck-nav-next" id="deckNext" aria-label="Diapositiva siguiente">→</button>
+
+<script>
+
+/* =========================================================
+   Motor de presentación (deck slide-a-slide). Reutilizable
+   tal cual en futuras guías con formato PPT-style.
+   ========================================================= */
+const slides = [...document.querySelectorAll(".slide")];
+const deckFill = document.getElementById("deckFill");
+const deckCounter = document.getElementById("deckCounter");
+const deckPrev = document.getElementById("deckPrev");
+const deckNext = document.getElementById("deckNext");
+const deckViewport = document.getElementById("deckViewport");
+const DECK_KEY = "tgs-deck-pos-" + location.pathname;
+
+let current = 0;
+
+function irA(index, silencioso){
+  index = Math.max(0, Math.min(slides.length - 1, index));
+  slides[current].classList.remove("active");
+  current = index;
+  slides[current].classList.add("active");
+  slides[current].scrollTop = 0;
+  deckFill.style.width = ((current + 1) / slides.length * 100) + "%";
+  deckCounter.textContent = (current + 1) + " / " + slides.length;
+  deckPrev.disabled = current === 0;
+  deckNext.disabled = current === slides.length - 1;
+  document.querySelectorAll(".deck-menu-list button").forEach(b => {
+    b.classList.toggle("current", Number(b.dataset.slide) === current);
+  });
+  if (!silencioso) { try { localStorage.setItem(DECK_KEY, String(current)); } catch(e){} }
+}
+
+function siguiente(){ irA(current + 1); }
+function anterior(){ irA(current - 1); }
+
+deckNext.addEventListener("click", siguiente);
+deckPrev.addEventListener("click", anterior);
+
+/* Restaurar posición guardada */
+(function(){
+  let guardado = 0;
+  try { guardado = parseInt(localStorage.getItem(DECK_KEY), 10) || 0; } catch(e){}
+  irA(guardado, true);
+})();
+
+/* Navegación por teclado (evita interferir con selects/textareas) */
+document.addEventListener("keydown", e => {
+  const tag = document.activeElement ? document.activeElement.tagName : "";
+  if (["SELECT", "TEXTAREA", "INPUT"].includes(tag)) return;
+  if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); siguiente(); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); anterior(); }
+  else if (e.key === "Home") { e.preventDefault(); irA(0); }
+  else if (e.key === "End") { e.preventDefault(); irA(slides.length - 1); }
+});
+
+/* Navegación por swipe (táctil) */
+let touchX = null;
+deckViewport.addEventListener("touchstart", e => { touchX = e.touches[0].clientX; }, {passive:true});
+deckViewport.addEventListener("touchend", e => {
+  if (touchX === null) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) { dx < 0 ? siguiente() : anterior(); }
+  touchX = null;
+}, {passive:true});
+
+/* Menú de índice */
+const deckMenuBtn = document.getElementById("deckMenuBtn");
+const deckMenuPanel = document.getElementById("deckMenuPanel");
+const deckMenuOverlay = document.getElementById("deckMenuOverlay");
+function abrirDeckMenu(){ deckMenuPanel.classList.add("show"); deckMenuOverlay.classList.add("show"); }
+function cerrarDeckMenu(){ deckMenuPanel.classList.remove("show"); deckMenuOverlay.classList.remove("show"); }
+deckMenuBtn.addEventListener("click", abrirDeckMenu);
+deckMenuOverlay.addEventListener("click", cerrarDeckMenu);
+document.querySelectorAll(".deck-menu-list button").forEach(b => {
+  b.addEventListener("click", () => { irA(Number(b.dataset.slide)); cerrarDeckMenu(); });
+});
+
+/* Tema claro / oscuro */
+const deckThemeBtn = document.getElementById("deckThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  deckThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+deckThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) — igual al de las demás guías TGS ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (respuesta modelo) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo (17/08, mismo bloque que ingenieria-de-sistemas.html
+     y joins-subconsultas.html. Solo actúa si la guía se abrió desde un lanzamiento de
+     ATENZA (con ?atenza_token=...&guia_intento=... en la URL, agregado por
+     IniciarOReanudarGuiaIntento del backend); accedida directo, como siempre, no
+     dispara nada nuevo. No toca el motor de quizzes de arriba: se engancha a
+     marcarResuelto() y actualizarProgreso(), que ya existen (ver DEPLOY-GUIAS-SNIPPET.md
+     en el repo de atenza para el detalle de cada endpoint). -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  var params = new URLSearchParams(location.search);
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  // ── Progreso limpio por intento: QUIZ_PREFIX guarda el progreso por PÁGINA
+  // (pensado para "completaste esto alguna vez en tu vida"), sin saber nada de
+  // "intentos" de ATENZA. Se guarda a qué guia_intento pertenece el progreso
+  // actual de esta página; si cambió, se limpia todo antes de que el
+  // estudiante toque nada. Si es el mismo (recargó la pestaña a mitad de
+  // camino), no se toca — sigue donde quedó.
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  // ── Aviso flotante — clave para "cuándo termina la guía": sin esto el
+  // estudiante llega al 100% local y no hay ninguna señal de que ya terminó,
+  // y una falla de red al reportar queda invisible. onClick, si se pasa,
+  // permite reintentar tocando el aviso.
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  // ── Pantalla completa: se pide en un click real del usuario, no solo.
+  // Estilos en línea porque esta página (deck) todavía no tiene una clase
+  // para esto — fixed y con z-index por encima de .deck-topbar (800) y
+  // .deck-menu-panel (891) para que no quede tapado por ninguno.
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  // ── Reportar cada pregunta resuelta — engancha marcarResuelto(), que ya
+  // usan los 5 tipos de actividad (mc/match/classify/fill/open) sin tocar
+  // ninguno de sus call-sites. quiz-open (textarea + ver modelo) se
+  // distingue por su propia clase y reporta el texto, no correcta/incorrecta.
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder foco.
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ── Finalizar al completar el 100% — cuenta CONTESTADAS (ok o ko, cualquier
+  // valor guardado), no solo correctas: un estudiante que contesta todo pero
+  // se equivoca en alguna quiz-mc de un solo intento igual debe poder
+  // terminar la guía. Si /finalizar falla, NO se queda marcado como
+  // finalizado — el aviso rojo deja reintentar con un toque.
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
