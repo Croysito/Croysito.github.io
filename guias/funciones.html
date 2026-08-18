@@ -657,19 +657,40 @@ window.addEventListener("scroll", () => {
 /* ===== Motor de preguntas conceptuales (quiz-mc) ===== */
 const QUIZ_PREFIX = "poo-quiz-" + location.pathname + "-";
 
+// El link real que arma ATENZA para "Tomar la guía" puede llegar como
+// ".../funciones.html#ejercicios?atenza_token=...&guia_intento=..." —
+// el "?" queda DESPUÉS del "#", así que atenza_token y guia_intento caen
+// dentro del fragmento (hash) de la URL, no de la query string. Un
+// navegador nunca manda el fragmento en location.search, así que
+// leerlos de ahí (como hacíamos antes) siempre da vacío con ese formato
+// de link. Esta función junta candidatos — la query real primero, y si
+// no aparece nada ahí, la porción después del "?" que pueda venir
+// enganchada dentro del hash — y devuelve el primero que trae los dos
+// parámetros. El bloque de ATENZA más abajo usa la misma función (no
+// location.search a secas) por este mismo motivo.
+function paramsDeAtenza() {
+  const candidatos = [location.search];
+  const posInterrogante = location.hash.indexOf("?");
+  if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+  for (const c of candidatos) {
+    const p = new URLSearchParams(c);
+    if (p.get("atenza_token") && p.get("guia_intento")) return p;
+  }
+  return new URLSearchParams(candidatos[0]);
+}
+
 // "Enviar para revisión" (editores de código) solo tiene sentido si hay
 // alguien del otro lado para revisar — la guía abierta desde un
-// lanzamiento de ATENZA (?atenza_token=...&guia_intento=...). OJO: esto
-// SOLO gatilla el botón y si el ejercicio cuenta en la barra de
-// progreso local — el data-quiz-id de cada editor está escrito directo
-// en el HTML (no lo agrega este script), pase lo que pase con este flag,
-// porque ATENZA necesita poder detectar esos data-quiz-id en la página
-// incluso antes de que exista ningún token (es lo que arma el manifest).
-// Si el id dependiera de este flag, un editor nunca sería detectable la
-// primera vez, porque para tener el token primero hay que
-// haberlo registrado.
+// lanzamiento de ATENZA. OJO: esto SOLO gatilla el botón y si el
+// ejercicio cuenta en la barra de progreso local — el data-quiz-id de
+// cada editor está escrito directo en el HTML (no lo agrega este
+// script), pase lo que pase con este flag, porque ATENZA necesita poder
+// detectar esos data-quiz-id en la página incluso antes de que exista
+// ningún token (es lo que arma el manifest). Si el id dependiera de
+// este flag, un editor nunca sería detectable la primera vez, porque
+// para tener el token primero hay que haberlo registrado.
 const abiertoDesdeAtenza = (() => {
-  const p = new URLSearchParams(location.search);
+  const p = paramsDeAtenza();
   return Boolean(p.get("atenza_token") && p.get("guia_intento"));
 })();
 
@@ -1106,7 +1127,11 @@ window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincr
 (function () {
   var ATENZA_API = 'https://api-atenza.atenzabo.com';
 
-  var params = new URLSearchParams(location.search);
+  // paramsDeAtenza() (definida arriba, en el motor de quizzes) también
+  // busca dentro de location.hash — el link real que arma ATENZA a veces
+  // llega como "...html#seccion?atenza_token=...", con el "?" después
+  // del "#", y ahí location.search por sí solo siempre da vacío.
+  var params = paramsDeAtenza();
   var token = params.get('atenza_token');
   var guiaIntentoId = params.get('guia_intento');
   if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
