@@ -76,13 +76,13 @@
 </div>
 <div class="highlight">
 <strong>💻 Código en vivo</strong>
-<p>Todos los bloques con el encabezado <strong>Python</strong> son editables: presiona <strong>✏️ Editar</strong> para modificar el código y <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador (usa Pyodide, un Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete.</p>
+<p>Todos los bloques con el encabezado <strong>Python</strong> son editables: presiona <strong>✏️ Editar</strong> para modificar el código y <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador (usa Pyodide, un Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete. Una vez que corra sin errores, aparece el botón <strong>📨 Enviar para revisión</strong> para mandar ese ejercicio como resuelto (no se autocorrige — lo revisa el docente).</p>
 </div>
 <p>Además del código, esta guía tiene 2 preguntas conceptuales cortas para chequear que entendiste bien la diferencia entre parámetro y argumento, y cómo funciona el scope.</p>
 <div class="quiz-tracker">
 <div>
 <div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
-<div class="quiz-tracker-label">preguntas conceptuales correctas</div>
+<div class="quiz-tracker-label">preguntas y ejercicios enviados</div>
 </div>
 <div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
 </div>
@@ -340,10 +340,11 @@ print("Fuera:", saldo)</code></pre>
 <li>Escribe una función <code>dividir(a, b)</code> que devuelva tanto el cociente como el resto (retorno múltiple), y desempaqueta el resultado en dos variables al llamarla.</li>
 <li>Escribe una función <code>contador_local()</code> con una variable local que valga <code>0</code> al empezar y se convierta en <code>1</code> antes de terminar. Llámala dos veces seguidas e imprime el resultado cada vez, para comprobar que no conserva el valor entre llamadas.</li>
 </ol>
-<div class="editor-panel independiente">
+<div class="editor-panel independiente" data-quiz-id="ejercicios-propuestos">
 <div class="editor-header">
 <span>✍️ Resuelve aquí los ejercicios</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu solución a los ejercicios (puedes resolverlos uno por uno)…"></textarea>
 <div class="output" hidden>
@@ -785,8 +786,10 @@ function resaltarEjemplo(bloque){
 function conectarEditor(panel){
   const textarea = panel.querySelector(".editor");
   const runBtn = panel.querySelector(".code-btn.run");
+  const submitBtn = panel.querySelector(".code-btn.submit");
   const output = panel.querySelector(".output");
   const outputBody = panel.querySelector(".output-body");
+  const quizId = panel.dataset.quizId;
 
   const stopBtn = document.createElement("button");
   stopBtn.type = "button";
@@ -812,6 +815,10 @@ function conectarEditor(panel){
     const codigo = textarea.value.trim();
     output.hidden = false;
     output.classList.remove("error");
+    // Cada nueva ejecución invalida un posible envío anterior: hay que
+    // volver a confirmar que el código actual corrió bien antes de poder
+    // reenviarlo para revisión.
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "📨 Enviar para revisión"; }
     if (!codigo) {
       outputBody.textContent = "Escribe algo de código antes de ejecutar.";
       output.classList.add("error");
@@ -827,6 +834,7 @@ function conectarEditor(panel){
         output.classList.add("error");
       } else {
         outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+        if (submitBtn) submitBtn.disabled = false; // solo se puede enviar tras una corrida sin errores
       }
     } catch (e) {
       outputBody.textContent = e && e.message ? e.message : String(e);
@@ -836,15 +844,31 @@ function conectarEditor(panel){
       stopBtn.hidden = true;
     }
   };
+
+  // ── Enviar para revisión: solo existe si el panel tiene data-quiz-id
+  // (ver crearPanelEditor y el panel "independiente" de Ejercicios
+  // Propuestos). Marca el ejercicio como resuelto en la barra de
+  // progreso (siempre "ok" — no se autocorrige, lo revisa el docente) y,
+  // si la guía está vinculada a ATENZA, el bloque de más abajo intercepta
+  // marcarResuelto() y manda código + salida como texto_libre.
+  if (submitBtn && quizId) {
+    submitBtn.onclick = () => {
+      marcarResuelto(quizId, "ok");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "✅ Enviado";
+    };
+  }
 }
 
-function crearPanelEditor(mensaje){
+function crearPanelEditor(mensaje, quizId){
   const panel = document.createElement("div");
   panel.className = "editor-panel";
+  if (quizId) panel.dataset.quizId = quizId;
   panel.innerHTML = `
     <div class="editor-header">
       <span>${mensaje}</span>
       <button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+      ${quizId ? '<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>' : ''}
     </div>
     <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu propio código, inspirándote en el ejemplo de arriba, y presiona Ejecutar."></textarea>
     <div class="output" hidden>
@@ -880,10 +904,10 @@ function sincronizarAltura(bloque, panel){
 }
 
 const parejas = [];
-document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
+document.querySelectorAll(".code:not(.salida)").forEach((bloque, i) => {
   resaltarEjemplo(bloque);
   bloquearCopiado(bloque);
-  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo");
+  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo", "codigo-" + (i + 1));
   bloque.after(panel);
   conectarEditor(panel);
   parejas.push([bloque, panel]);
@@ -977,11 +1001,15 @@ window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincr
     pantallaBtn.remove();
   });
 
-  // ── Reportar cada pregunta resuelta — engancha marcarResuelto(), que
-  // ya usa el motor de quiz-mc de esta guía, sin tocar sus call-sites. Si
-  // en el futuro se agrega un quiz-open acá, se reporta como abierta
-  // (texto libre) en vez de correcta/incorrecta — mismo criterio que las
-  // demás guías.
+  // ── Reportar cada pregunta o ejercicio resuelto — engancha
+  // marcarResuelto(), que ya usan tanto el motor de quiz-mc como el botón
+  // "📨 Enviar para revisión" de los editores de código de esta guía, sin
+  // tocar ninguno de sus call-sites. Tres casos:
+  //   - quiz-open (textarea + "ver respuesta modelo"): texto libre tal cual.
+  //   - .editor-panel (ejercicios de código): texto libre con el código
+  //     escrito + la salida que produjo, para que el docente los revise
+  //     sin tener que ejecutar nada — no se autocorrige (siempre "ok").
+  //   - el resto (quiz-mc): correcta/incorrecta, como siempre.
   var marcarResueltoOriginal = marcarResuelto;
   marcarResuelto = function (id, estado) {
     marcarResueltoOriginal(id, estado);
@@ -991,6 +1019,16 @@ window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincr
       post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
         referencia: id,
         texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else if (quiz && quiz.classList.contains('editor-panel')) {
+      var codigo = quiz.querySelector('.editor');
+      var salida = quiz.querySelector('.output-body');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre:
+          (codigo ? codigo.value : '') +
+          '\n\n--- Salida ---\n' +
+          (salida ? salida.textContent : ''),
       }).catch(function () {});
     } else {
       post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
