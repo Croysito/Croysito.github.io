@@ -76,7 +76,7 @@
 </div>
 <div class="highlight">
 <strong>💻 Código en vivo</strong>
-<p>Todos los bloques con el encabezado <strong>Python</strong> son editables: presiona <strong>✏️ Editar</strong> para modificar el código y <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador (usa Pyodide, un Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete. Una vez que corra sin errores, aparece el botón <strong>📨 Enviar para revisión</strong> para mandar ese ejercicio como resuelto (no se autocorrige — lo revisa el docente).</p>
+<p>Todos los bloques con el encabezado <strong>Python</strong> son editables: presiona <strong>✏️ Editar</strong> para modificar el código y <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador (usa Pyodide, un Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete. Si estás resolviendo la guía desde un lanzamiento de ATENZA, además aparece el botón <strong>📨 Enviar para revisión</strong> una vez que el código corra sin errores, para mandar ese ejercicio al docente (no se autocorrige).</p>
 </div>
 <p>Además del código, esta guía tiene 2 preguntas conceptuales cortas para chequear que entendiste bien la diferencia entre parámetro y argumento, y cómo funciona el scope.</p>
 <div class="quiz-tracker">
@@ -903,11 +903,32 @@ function sincronizarAltura(bloque, panel){
   if (pre && textarea) textarea.style.minHeight = pre.offsetHeight + "px";
 }
 
+// "Enviar para revisión" solo tiene sentido si hay alguien del otro lado
+// para revisar — es decir, si la guía se abrió desde un lanzamiento de
+// ATENZA (?atenza_token=...&guia_intento=...). Accedida en público, el
+// botón no aparece: sin esto quedaría un botón que "envía" sin que nada
+// lo reciba, y además inflaría el denominador de la barra de progreso
+// con ejercicios que nunca se pueden marcar. Chequeo propio (no depende
+// del bloque de ATENZA de más abajo, que corre después) para que el
+// botón nazca ya oculto en el primer render.
+const abiertoDesdeAtenza = (() => {
+  const p = new URLSearchParams(location.search);
+  return Boolean(p.get("atenza_token") && p.get("guia_intento"));
+})();
+if (!abiertoDesdeAtenza) {
+  document.querySelectorAll(".editor-panel[data-quiz-id]").forEach(p => {
+    delete p.dataset.quizId;
+    const btn = p.querySelector(".code-btn.submit");
+    if (btn) btn.remove();
+  });
+}
+
 const parejas = [];
 document.querySelectorAll(".code:not(.salida)").forEach((bloque, i) => {
   resaltarEjemplo(bloque);
   bloquearCopiado(bloque);
-  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo", "codigo-" + (i + 1));
+  const id = abiertoDesdeAtenza ? "codigo-" + (i + 1) : null;
+  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo", id);
   bloque.after(panel);
   conectarEditor(panel);
   parejas.push([bloque, panel]);
