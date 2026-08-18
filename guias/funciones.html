@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía Completa de Funciones en Python | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>Funciones</span></div>
+<p>Guía completa de funciones: def, parámetros, return y scope en Python</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#que-es-funcion">¿Qué es una función?</a>
+<a href="#parametros">Parámetros</a>
+<a href="#valor-por-defecto">Valores por defecto</a>
+<a href="#return">return y funciones sin retorno</a>
+<a href="#scope">Ámbito de las variables (scope)</a>
+<a href="#errores">Errores comunes</a>
+<a href="#ejercicios">Ejercicios</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🐍 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Funciones <span>en Python</span></h1>
+<p>Ya sabes repetir instrucciones con bucles y tomar decisiones con condicionales. El siguiente paso es organizar tu código: en vez de copiar y pegar el mismo bloque de instrucciones cada vez que lo necesitas, lo empaquetas una sola vez dentro de una <strong>función</strong> y la llamas todas las veces que haga falta.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Ya usaste funciones durante todo este curso sin definir ninguna propia: <code>print()</code>, <code>input()</code>, <code>len()</code>, <code>int()</code> son funciones que Python ya trae incorporadas. Ahora vas a aprender a escribir las tuyas con <code>def</code>, para dejar de repetir código y empezar a organizar tus programas en bloques reutilizables.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás definir funciones con <code>def</code>, pasarles parámetros (con y sin valor por defecto), devolver resultados con <code>return</code>, y entender qué variables existen solo dentro de una función y cuáles siguen existiendo afuera (el <strong>scope</strong> o ámbito).</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Todos los bloques con el encabezado <strong>Python</strong> son editables: presiona <strong>✏️ Editar</strong> para modificar el código y <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador (usa Pyodide, un Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete.</p>
+</div>
+<p>Además del código, esta guía tiene 2 preguntas conceptuales cortas para chequear que entendiste bien la diferencia entre parámetro y argumento, y cómo funciona el scope.</p>
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">preguntas conceptuales correctas</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📖 Aprende</h3><p>Cómo empaquetar instrucciones dentro de una función con <code>def</code> y ejecutarlas llamándola por su nombre.</p></div>
+<div class="info"><h3>💻 Practica</h3><p>Ejemplos editables y ejecutables en cada sección.</p></div>
+<div class="info"><h3>🎯 Domina</h3><p>Parámetros, valores por defecto, <code>return</code> y el ámbito (scope) de las variables.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="que-es-funcion">
+<div class="card">
+<h2 class="section-title">¿Qué es una función?</h2>
+<p class="lead">Una función es un bloque de código con nombre propio que puedes ejecutar tantas veces como quieras, sin volver a escribirlo. Se define con <code>def</code>, seguido del nombre, paréntesis y dos puntos —igual que <code>if</code> o <code>while</code>, el bloque va indentado debajo.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">def saludar():
+    print("¡Hola! Bienvenido al curso de POO.")
+
+saludar()
+saludar()</code></pre>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>¡Hola! Bienvenido al curso de POO.
+¡Hola! Bienvenido al curso de POO.</pre>
+</div>
+<div class="highlight">
+<strong>Definir vs. llamar</strong>
+<p>La línea <code>def saludar():</code> no imprime nada por sí sola: solo le enseña a Python la "receta". El código de adentro recién se ejecuta cuando <strong>llamas</strong> a la función escribiendo su nombre seguido de paréntesis, <code>saludar()</code> —y se ejecuta una vez por cada llamada, como se ve arriba con dos llamadas seguidas.</p>
+</div>
+<p>Los nombres de función siguen la misma convención que los de variable: <code>snake_case</code>, en minúsculas y con guiones bajos entre palabras (<code>calcular_promedio</code>, no <code>CalcularPromedio</code>).</p>
+</div>
+</section>
+
+<section class="container" id="parametros">
+<div class="card">
+<h2 class="section-title">Parámetros</h2>
+<p class="lead">Una función se vuelve mucho más útil cuando puede recibir datos desde afuera. Esos datos se declaran entre los paréntesis de <code>def</code> como <strong>parámetros</strong>, y se usan como variables normales dentro del bloque.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">def saludar(nombre):
+    print("Hola,", nombre)
+
+saludar("Ana")
+saludar("Luis")</code></pre>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>Hola, Ana
+Hola, Luis</pre>
+</div>
+<div class="highlight">
+<strong>Parámetro vs. argumento</strong>
+<p><code>nombre</code>, en la definición de la función, es el <strong>parámetro</strong>: el nombre que usa la función para referirse al dato que va a recibir. <code>"Ana"</code>, en la llamada, es el <strong>argumento</strong>: el valor real que le estás pasando en ese momento. Es una distinción de vocabulario, pero se usa todo el tiempo al leer documentación y mensajes de error.</p>
+</div>
+<p>Una función puede recibir varios parámetros, separados por comas:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">def presentar(nombre, edad):
+    print(nombre, "tiene", edad, "años")
+
+presentar("Marta", 20)</code></pre>
+</div>
+<div class="highlight">
+<strong>El orden importa</strong>
+<p>Con varios parámetros posicionales, Python los asigna en el mismo orden en que los escribiste al llamar la función. <code>presentar("Marta", 20)</code> y <code>presentar(20, "Marta")</code> no son lo mismo: en el segundo caso, <code>nombre</code> valdría <code>20</code> y <code>edad</code> valdría <code>"Marta"</code>.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="parametros-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el código de arriba, cuando ejecutas <code>saludar("Ana")</code>, ¿cómo se le llama a <code>"Ana"</code> en ese momento?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un parámetro</button>
+<button class="quiz-opt" data-correct>Un argumento</button>
+<button class="quiz-opt">Variable global</button>
+<button class="quiz-opt">Valor de retorno</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: &quot;nombre&quot; en la definición es el parámetro; el valor real que le pasás al llamar la función (&quot;Ana&quot;) es el argumento." data-ko="&quot;Ana&quot; es el argumento: el valor real que le pasás a la función al llamarla. El parámetro es &quot;nombre&quot;, el nombre que usa la definición para referirse a ese valor." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="valor-por-defecto">
+<div class="card">
+<h2 class="section-title">Valores por defecto</h2>
+<p class="lead">Un parámetro puede tener un <strong>valor por defecto</strong>, que se usa automáticamente si no le pasas un argumento para ese lugar. Así el argumento se vuelve opcional.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">def potencia(base, exponente=2):
+    print(base, "elevado a", exponente, "es", base ** exponente)
+
+potencia(5)
+potencia(5, 3)</code></pre>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>5 elevado a 2 es 25
+5 elevado a 3 es 125</pre>
+</div>
+<p>La primera llamada no le pasa un segundo argumento, así que Python usa el valor por defecto (<code>2</code>). La segunda sí le pasa uno (<code>3</code>), y ese reemplaza al valor por defecto.</p>
+<div class="highlight">
+<strong>Los valores por defecto van al final</strong>
+<p>Un parámetro sin valor por defecto no puede ir después de uno que sí lo tiene: <code>def potencia(exponente=2, base):</code> es <strong>SyntaxError</strong>. La regla es simple: primero todos los parámetros obligatorios, y recién después los que tienen valor por defecto.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="return">
+<div class="card">
+<h2 class="section-title">return y funciones sin retorno</h2>
+<p class="lead"><code>return</code> hace que la función <strong>devuelva</strong> un valor a quien la llamó, para que puedas guardarlo en una variable o usarlo en una expresión. Es distinto de <code>print()</code>, que solo muestra algo en pantalla pero no te da nada para reutilizar.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">def es_par(numero):
+    return numero % 2 == 0
+
+resultado = es_par(8)
+print(resultado)</code></pre>
+</div>
+<p><code>return</code> también corta la función en el momento en que se ejecuta, sin llegar a las líneas que vengan después:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">def clasificar(nota):
+    if nota >= 51:
+        return "Aprobado"
+    return "Reprobado"
+
+print(clasificar(70))
+print(clasificar(30))</code></pre>
+</div>
+<div class="highlight">
+<strong>Sin return, la función devuelve None</strong>
+<p>Si una función no tiene <code>return</code> (o tiene <code>return</code> sin ningún valor), Python le asigna el valor especial <code>None</code> como resultado. Es un error común guardar en una variable lo que "devuelve" un <code>print()</code>, esperando el texto impreso:</p>
+</div>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">def imprimir_doble(x):
+    print(x * 2)
+
+resultado = imprimir_doble(5)
+print(resultado)</code></pre>
+</div>
+<p>Salida: <code>imprimir_doble(5)</code> imprime <code>10</code> en pantalla, pero como la función no tiene <code>return</code>, <code>resultado</code> termina valiendo <code>None</code>, no <code>10</code>.</p>
+<p>Una función también puede devolver <strong>varios valores a la vez</strong>, separados por comas —Python los empaqueta en una tupla que puedes desempaquetar directamente en variables separadas:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">def dividir(a, b):
+    cociente = a // b
+    resto = a % b
+    return cociente, resto
+
+c, r = dividir(17, 5)
+print("Cociente:", c, "Resto:", r)</code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="scope">
+<div class="card">
+<h2 class="section-title">Ámbito de las variables (scope)</h2>
+<p class="lead">Una variable creada <strong>dentro</strong> de una función es <strong>local</strong>: solo existe mientras esa función se está ejecutando, y desaparece apenas termina. Intentar usarla desde afuera produce <strong>NameError</strong>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">def cuadrado(numero):
+    resultado = numero ** 2
+    return resultado
+
+print(cuadrado(4))
+print(resultado)</code></pre>
+</div>
+<p>La primera línea funciona bien: <code>cuadrado(4)</code> devuelve <code>16</code>. La segunda falla, porque <code>resultado</code> es una variable local de <code>cuadrado</code> y ya no existe una vez que la función terminó.</p>
+<p>En cambio, una variable creada <strong>afuera</strong> de cualquier función (una variable <strong>global</strong>) sí se puede leer desde adentro, sin nada especial:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">mensaje = "Hola desde afuera"
+
+def mostrar():
+    print(mensaje)
+
+mostrar()</code></pre>
+</div>
+<p>Ahora bien: <strong>leer</strong> una variable global es distinto de <strong>asignarle</strong> un valor. Si dentro de una función escribes <code>edad = 30</code>, aunque exista una variable global con el mismo nombre, Python crea una variable <strong>local</strong> nueva y separada —no toca la global.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">edad = 25
+
+def cambiar_edad():
+    edad = 30
+    print("Dentro de la función:", edad)
+
+cambiar_edad()
+print("Fuera de la función:", edad)</code></pre>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>Dentro de la función: 30
+Fuera de la función: 25</pre>
+</div>
+<div class="highlight">
+<strong>global (para más adelante)</strong>
+<p>Si de verdad necesitas que una función modifique una variable global, existe la palabra clave <code>global</code>: escribiendo <code>global edad</code> como primera línea de la función, la asignación <code>edad = 30</code> pasa a modificar la variable de afuera en vez de crear una local. Es poco frecuente usarla al empezar a programar (suele ser señal de que conviene usar <code>return</code> en su lugar), pero vas a encontrarla leyendo código de otros.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="scope-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué imprime este programa?</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">saldo = 500
+
+def actualizar_saldo():
+    saldo = 1000
+    print("Dentro:", saldo)
+
+actualizar_saldo()
+print("Fuera:", saldo)</code></pre>
+</div>
+<div class="quiz-opts">
+<button class="quiz-opt">Dentro: 500 — Fuera: 500</button>
+<button class="quiz-opt">Dentro: 1000 — Fuera: 1000</button>
+<button class="quiz-opt">Error: saldo no está definida</button>
+<button class="quiz-opt" data-correct>Dentro: 1000 — Fuera: 500</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: dentro de la función, &quot;saldo = 1000&quot; crea una variable local nueva, distinta de la global. Por eso adentro vale 1000, pero afuera la variable global sigue en 500 — la asignación local nunca la tocó." data-ko="Dentro de la función, &quot;saldo = 1000&quot; crea una variable local nueva y distinta de la global — por eso adentro vale 1000. Pero esa asignación no modifica la variable de afuera: fuera de la función, saldo sigue en 500." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="errores">
+<div class="card">
+<h2 class="section-title">Errores comunes</h2>
+<div class="info-grid">
+<div class="info"><h3>❌ Confundir parámetro con argumento</h3><p>El parámetro es el nombre en la definición (<code>def f(x):</code>); el argumento es el valor real que le pasas al llamar (<code>f(5)</code>).</p></div>
+<div class="info"><h3>❌ Olvidar el return</h3><p>Sin <code>return</code> explícito, la función devuelve <code>None</code>. Guardar ese resultado en una variable esperando otra cosa es un error frecuente, sobre todo confundiendo <code>return</code> con <code>print()</code>.</p></div>
+<div class="info"><h3>❌ Parámetro obligatorio después de uno con valor por defecto</h3><p><code>def f(a=1, b):</code> es <strong>SyntaxError</strong>. Los parámetros con valor por defecto siempre van al final de la lista.</p></div>
+<div class="info"><h3>❌ Esperar que una asignación modifique la variable global</h3><p>Asignarle un valor a un nombre dentro de una función crea una variable local nueva, aunque exista una global con el mismo nombre —no la modifica, salvo que uses <code>global</code> explícitamente.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Ejercicios Propuestos</h2>
+<p class="lead">Pon en práctica lo aprendido resolviendo los siguientes ejercicios directamente en el bloque editable.</p>
+<ol style="margin-left:25px;line-height:2">
+<li>Escribe una función <code>es_mayor_de_edad(edad)</code> que devuelva <code>True</code> si <code>edad</code> es mayor o igual a 18, y <code>False</code> en caso contrario.</li>
+<li>Escribe una función <code>saludo(nombre, mensaje="Hola")</code> con un valor por defecto, y pruébala llamándola una vez sin el segundo argumento y otra vez pasándoselo.</li>
+<li>Escribe una función <code>promedio(a, b, c)</code> que devuelva el promedio de los tres números.</li>
+<li>Escribe una función <code>dividir(a, b)</code> que devuelva tanto el cociente como el resto (retorno múltiple), y desempaqueta el resultado en dos variables al llamarla.</li>
+<li>Escribe una función <code>contador_local()</code> con una variable local que valga <code>0</code> al empezar y se convierta en <code>1</code> antes de terminar. Llámala dos veces seguidas e imprime el resultado cada vez, para comprobar que no conserva el valor entre llamadas.</li>
+</ol>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>✍️ Resuelve aquí los ejercicios</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu solución a los ejercicios (puedes resolverlos uno por uno)…"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Reto Final</h2>
+<p>Escribe una función <code>calcular_total(precio, cantidad, descuento=0)</code> para una caja registradora:</p>
+<ul style="margin-left:25px;line-height:2">
+<li>Multiplica <code>precio</code> por <code>cantidad</code>.</li>
+<li><code>descuento</code> es un porcentaje (0 a 100) y es <strong>opcional</strong>, con <code>0</code> como valor por defecto.</li>
+<li>Si hay descuento, réstalo del total antes de devolverlo.</li>
+<li>La función debe devolver el total final con <code>return</code>, redondeado a 2 decimales con <code>round()</code>.</li>
+</ul>
+<p>Pruébala con estas dos llamadas:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print(calcular_total(50, 3))
+print(calcular_total(50, 3, 20))</code></pre>
+</div>
+<div class="code salida">
+<div class="code-header"><span>Salida esperada</span></div>
+<pre>150.0
+120.0</pre>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Uso</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Definir una función</td><td><code>def nombre(parámetros): ...</code></td></tr>
+<tr><td>Llamar una función</td><td><code>nombre(argumentos)</code></td></tr>
+<tr><td>Parámetro con valor por defecto</td><td><code>def nombre(param=valor): ...</code></td></tr>
+<tr><td>Devolver un valor</td><td><code>return valor</code></td></tr>
+<tr><td>Devolver sin valor (None)</td><td><code>return</code> o sin <code>return</code></td></tr>
+<tr><td>Devolver varios valores</td><td><code>return valor1, valor2</code></td></tr>
+<tr><td>Desempaquetar retorno múltiple</td><td><code>a, b = funcion()</code></td></tr>
+<tr><td>Variable local</td><td>Existe solo dentro de la función donde se creó</td></tr>
+<tr><td>Leer una variable global</td><td>Funciona sin nada especial</td></tr>
+<tr><td>Modificar una variable global</td><td><code>global nombre</code> (dentro de la función)</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📝 Docstrings</h3><p>Justo debajo de <code>def</code>, entre triples comillas (<code>"""así"""</code>), puedes escribir una descripción de lo que hace la función. Se llama <strong>docstring</strong> y muchos editores la muestran automáticamente al usar la función.</p></div>
+<div class="info"><h3>🧩 Las funciones son valores</h3><p>En Python, una función se puede guardar en una variable o pasar como argumento a otra función, igual que un número o un texto. Es la base de patrones más avanzados que vas a ver más adelante en el curso.</p></div>
+<div class="info"><h3>📦 *args y **kwargs</h3><p>Cuando no sabes de antemano cuántos argumentos va a recibir una función, Python permite parámetros "variables" con <code>*args</code> y <code>**kwargs</code>. Todavía no los necesitas, pero los vas a encontrar leyendo código ajeno.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Funciones en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de preguntas conceptuales (quiz-mc) ===== */
+const QUIZ_PREFIX = "poo-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Resaltado de sintaxis (sin librerías externas) ===== */
+const PY_KEYWORDS = ["False","None","True","and","as","assert","async","await","break","class",
+  "continue","def","del","elif","else","except","finally","for","from","global","if","import",
+  "in","is","lambda","nonlocal","not","or","pass","raise","return","try","while","with","yield",
+  "print","len","int","str","float","bool","input","type","isinstance","round"];
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function highlightPython(code){
+  const escaped = escapeHtml(code);
+  const tokens = [];
+  const mask = (html) => {
+    const marker = String.fromCharCode(0xE000 + tokens.length);
+    tokens.push(html);
+    return marker;
+  };
+  let out = escaped.replace(
+    /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:[^"\\]|\\.)*"|f?'(?:[^'\\]|\\.)*')/gm,
+    (m, comment, str) => comment !== undefined
+      ? mask(`<span class="comment">${comment}</span>`)
+      : mask(`<span class="string">${str}</span>`)
+  );
+  out = out.replace(/\b\d+\.?\d*\b/g, m => mask(`<span class="number">${m}</span>`));
+  out = out.replace(new RegExp(`\\b(${PY_KEYWORDS.join("|")})\\b`, "g"), m => mask(`<span class="keyword">${m}</span>`));
+  out = out.replace(/\b([A-Za-z_]\w*)(?=\()/g, m => mask(`<span class="func">${m}</span>`));
+  out = out.replace(/[\uE000-\uF8FF]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
+  return out;
+}
+
+/* ===== Pyodide en un Web Worker (así un bucle infinito nunca cuelga la pestaña) ===== */
+const __CONTROL_SLOTS = 3;      // [0]=listo, [1]=largo de la respuesta, [2]=cancelado
+const __CONTROL_BYTES = __CONTROL_SLOTS * 4;
+const __TAM_BUFFER_INPUT = 8192; // bytes UTF-8 para la respuesta de input()
+
+function __crearSabInput(){
+  if (typeof SharedArrayBuffer === "undefined") return null;
+  try {
+    return new SharedArrayBuffer(__CONTROL_BYTES + __TAM_BUFFER_INPUT);
+  } catch (e) {
+    return null;
+  }
+}
+
+function __responderInput(sab, mensaje){
+  const control = new Int32Array(sab, 0, __CONTROL_SLOTS);
+  const textBuf = new Uint8Array(sab, __CONTROL_BYTES);
+  const respuesta = prompt(mensaje);
+  if (respuesta === null) {
+    Atomics.store(control, 2, 1);
+    Atomics.store(control, 1, 0);
+  } else {
+    Atomics.store(control, 2, 0);
+    const bytes = new TextEncoder().encode(respuesta);
+    const len = Math.min(bytes.length, textBuf.length);
+    textBuf.set(bytes.subarray(0, len));
+    Atomics.store(control, 1, len);
+  }
+  Atomics.store(control, 0, 1);
+  Atomics.notify(control, 0);
+}
+
+function __codigoWorkerPyodide(){
+  return `
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js");
+
+let __sabInput = null;
+let pyodideReadyPromise = null;
+
+function inputSincrono(mensaje){
+  if (!__sabInput) {
+    throw new Error("input() no está disponible: este navegador no soporta el modo protegido contra bucles infinitos (SharedArrayBuffer). Probá con una versión reciente de Chrome, Edge o Firefox.");
+  }
+  const control = new Int32Array(__sabInput, 0, ${__CONTROL_SLOTS});
+  const textBuf = new Uint8Array(__sabInput, ${__CONTROL_BYTES});
+  Atomics.store(control, 0, 0);
+  self.postMessage({ tipo: "input-request", mensaje: String(mensaje) });
+  Atomics.wait(control, 0, 0);
+  if (Atomics.load(control, 2)) return null;
+  const len = Atomics.load(control, 1);
+  return new TextDecoder().decode(textBuf.slice(0, len));
+}
+
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.tipo === "init") {
+    __sabInput = e.data.sab;
+  }
+});
+
+async function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      const pyodide = await loadPyodide();
+      await pyodide.runPythonAsync(\`
+import sys, io, builtins, time
+from js import inputSincrono as __input_sincrono
+
+__LIMITE_SEGUNDOS = 8
+
+def __custom_input(mensaje=""):
+    respuesta = __input_sincrono(str(mensaje))
+    if respuesta is None:
+        raise EOFError("Entrada cancelada por el usuario")
+    print(mensaje, end="")
+    print(respuesta)
+    return respuesta
+
+def __run_capture(src):
+    buf = io.StringIO()
+    old_stdout = sys.stdout
+    old_input = builtins.input
+    sys.stdout = buf
+    inicio = time.time()
+
+    def __watchdog(frame, event, arg):
+        if time.time() - inicio > __LIMITE_SEGUNDOS:
+            raise TimeoutError(f"El código tardó más de {__LIMITE_SEGUNDOS} segundos en ejecutarse (¿bucle infinito?) y fue detenido.")
+        return __watchdog
+
+    builtins.input = __custom_input
+    err = None
+    sys.settrace(__watchdog)
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.settrace(None)
+        sys.stdout = old_stdout
+        builtins.input = old_input
+    return buf.getvalue(), err
+\`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+self.onmessage = async (e) => {
+  if (e.data && e.data.tipo === "init") return;
+  const { id, codigo } = e.data;
+  try {
+    const pyodide = await cargarPyodide();
+    const funcion = pyodide.globals.get("__run_capture");
+    const resultado = funcion(codigo);
+    const [salida, error] = resultado.toJs();
+    resultado.destroy();
+    self.postMessage({ id, salida, error });
+  } catch (err) {
+    self.postMessage({ id, salida: "", error: "No se pudo ejecutar el código: " + err });
+  }
+};
+`;
+}
+
+let workerPy = null;
+let sabInputActual = null;
+let pedidoIdPy = 0;
+let pedidoActualPy = null;
+
+function __programarTimeoutPy(pedido){
+  pedido.timer = setTimeout(() => {
+    if (pedidoActualPy && pedidoActualPy.id === pedido.id) {
+      reiniciarWorkerPyodide();
+      pedidoActualPy.reject(new Error("El código tardó demasiado y fue detenido automáticamente."));
+      pedidoActualPy = null;
+    }
+  }, 20000);
+}
+
+function crearWorkerPyodide(){
+  const blob = new Blob([__codigoWorkerPyodide()], { type: "application/javascript" });
+  const worker = new Worker(URL.createObjectURL(blob));
+  sabInputActual = __crearSabInput();
+  worker.postMessage({ tipo: "init", sab: sabInputActual });
+  worker.onmessage = (e) => {
+    const msg = e.data;
+    if (msg && msg.tipo === "input-request") {
+      if (pedidoActualPy) clearTimeout(pedidoActualPy.timer);
+      __responderInput(sabInputActual, msg.mensaje);
+      if (pedidoActualPy) __programarTimeoutPy(pedidoActualPy);
+      return;
+    }
+    const { id, salida, error } = msg;
+    if (pedidoActualPy && pedidoActualPy.id === id) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.resolve({ salida, error });
+      pedidoActualPy = null;
+    }
+  };
+  worker.onerror = () => {
+    if (pedidoActualPy) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.reject(new Error("El intérprete de Python se cerró inesperadamente."));
+      pedidoActualPy = null;
+    }
+    reiniciarWorkerPyodide();
+  };
+  return worker;
+}
+
+function obtenerWorkerPyodide(){
+  if (!workerPy) workerPy = crearWorkerPyodide();
+  return workerPy;
+}
+
+function reiniciarWorkerPyodide(){
+  if (workerPy) workerPy.terminate();
+  workerPy = null;
+  sabInputActual = null;
+}
+
+function detenerEjecucion(){
+  reiniciarWorkerPyodide();
+  if (pedidoActualPy) {
+    clearTimeout(pedidoActualPy.timer);
+    pedidoActualPy.reject(new Error("Ejecución detenida."));
+    pedidoActualPy = null;
+  }
+}
+
+async function ejecutarPython(codigo){
+  const worker = obtenerWorkerPyodide();
+  const id = ++pedidoIdPy;
+  return new Promise((resolve, reject) => {
+    pedidoActualPy = { id, resolve, reject, timer: null };
+    __programarTimeoutPy(pedidoActualPy);
+    worker.postMessage({ id, codigo });
+  });
+}
+
+/* ===== Resaltar cada ejemplo de solo lectura ===== */
+function resaltarEjemplo(bloque){
+  const codeEl = bloque.querySelector("pre code.src");
+  if (!codeEl) return;
+  codeEl.innerHTML = highlightPython(codeEl.textContent.trim());
+}
+
+/* ===== Conectar un panel de editor en blanco (ejecutar código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  const stopBtn = document.createElement("button");
+  stopBtn.type = "button";
+  stopBtn.className = "code-btn stop";
+  stopBtn.textContent = "⏹ Detener";
+  stopBtn.setAttribute("aria-label", "Detener la ejecución");
+  stopBtn.hidden = true;
+  runBtn.after(stopBtn);
+  stopBtn.onclick = () => detenerEjecucion();
+
+  textarea.addEventListener("paste", e => e.preventDefault());
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key !== "Tab") return;
+    e.preventDefault();
+    const inicio = textarea.selectionStart;
+    const fin = textarea.selectionEnd;
+    textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+    textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    stopBtn.hidden = false;
+    try {
+      const { salida, error } = await ejecutarPython(textarea.value);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+      }
+    } catch (e) {
+      outputBody.textContent = e && e.message ? e.message : String(e);
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+      stopBtn.hidden = true;
+    }
+  };
+}
+
+function crearPanelEditor(mensaje){
+  const panel = document.createElement("div");
+  panel.className = "editor-panel";
+  panel.innerHTML = `
+    <div class="editor-header">
+      <span>${mensaje}</span>
+      <button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+    </div>
+    <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu propio código, inspirándote en el ejemplo de arriba, y presiona Ejecutar."></textarea>
+    <div class="output" hidden>
+      <div class="output-head">Salida</div>
+      <pre class="output-body"></pre>
+    </div>`;
+  return panel;
+}
+
+/* ===== Bloquear copiado del ejemplo (para que se escriba a mano) ===== */
+function bloquearCopiado(bloque){
+  const pre = bloque.querySelector("pre");
+  if (!pre) return;
+  const header = bloque.querySelector(".code-header span");
+  const avisar = () => {
+    if (!header) return;
+    const original = header.dataset.original || header.textContent;
+    header.dataset.original = original;
+    header.textContent = "🔒 Escríbelo tú mismo";
+    clearTimeout(header._avisoTimeout);
+    header._avisoTimeout = setTimeout(() => { header.textContent = original; }, 1600);
+  };
+  pre.addEventListener("copy", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("contextmenu", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("dragstart", e => e.preventDefault());
+}
+
+/* ===== Igualar la altura del editor a la del ejemplo ===== */
+function sincronizarAltura(bloque, panel){
+  const pre = bloque.querySelector("pre");
+  const textarea = panel.querySelector(".editor");
+  if (pre && textarea) textarea.style.minHeight = pre.offsetHeight + "px";
+}
+
+const parejas = [];
+document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
+  resaltarEjemplo(bloque);
+  bloquearCopiado(bloque);
+  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo");
+  bloque.after(panel);
+  conectarEditor(panel);
+  parejas.push([bloque, panel]);
+});
+
+document.querySelectorAll(".editor-panel.independiente").forEach(conectarEditor);
+document.querySelectorAll(".code.salida").forEach(bloquearCopiado);
+
+parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel));
+window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel)));
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
