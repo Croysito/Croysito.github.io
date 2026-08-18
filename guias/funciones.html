@@ -501,6 +501,22 @@ window.addEventListener("scroll", () => {
 /* ===== Motor de preguntas conceptuales (quiz-mc) ===== */
 const QUIZ_PREFIX = "poo-quiz-" + location.pathname + "-";
 
+// "Enviar para revisión" (editores de código) solo tiene sentido si hay
+// alguien del otro lado para revisar — la guía abierta desde un
+// lanzamiento de ATENZA (?atenza_token=...&guia_intento=...). OJO: esto
+// SOLO gatilla el botón y si el ejercicio cuenta en la barra de
+// progreso local — el atributo data-quiz-id de cada editor se asigna
+// SIEMPRE (ver crearPanelEditor más abajo), pase lo que pase con este
+// flag, porque ATENZA necesita poder detectar esos data-quiz-id en la
+// página incluso antes de que exista ningún token (es lo que arma el
+// manifest). Si el id dependiera de este flag, un editor nunca sería
+// detectable la primera vez, porque para tener el token primero hay que
+// haberlo registrado.
+const abiertoDesdeAtenza = (() => {
+  const p = new URLSearchParams(location.search);
+  return Boolean(p.get("atenza_token") && p.get("guia_intento"));
+})();
+
 function marcarResuelto(id, estado) {
   localStorage.setItem(QUIZ_PREFIX + id, estado);
   actualizarProgreso();
@@ -511,7 +527,13 @@ function actualizarProgreso() {
   const etiqueta = document.getElementById("quizBarLabel");
   if (!barra || !etiqueta) return;
   const ids = new Set();
-  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  document.querySelectorAll("[data-quiz-id]").forEach(q => {
+    // Fuera de ATENZA los ejercicios de código nunca se pueden marcar
+    // (el botón no aparece) — no sumarlos al denominador o la barra
+    // quedaría trabada en algo como "0/16" para cualquier visitante público.
+    if (q.classList.contains("editor-panel") && !abiertoDesdeAtenza) return;
+    ids.add(q.dataset.quizId);
+  });
   let correctas = 0;
   ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
   const total = ids.size;
@@ -863,12 +885,18 @@ function conectarEditor(panel){
 function crearPanelEditor(mensaje, quizId){
   const panel = document.createElement("div");
   panel.className = "editor-panel";
+  // data-quiz-id se asigna SIEMPRE que se pase un id, aunque la guía no
+  // esté abierta desde ATENZA — ver la nota junto a abiertoDesdeAtenza:
+  // es lo que le permite a ATENZA detectar este ejercicio en la página
+  // para poder registrarlo en el manifest la primera vez. El botón, en
+  // cambio, solo tiene sentido con ATENZA activo.
   if (quizId) panel.dataset.quizId = quizId;
+  const mostrarSubmit = quizId && abiertoDesdeAtenza;
   panel.innerHTML = `
     <div class="editor-header">
       <span>${mensaje}</span>
       <button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-      ${quizId ? '<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>' : ''}
+      ${mostrarSubmit ? '<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>' : ''}
     </div>
     <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu propio código, inspirándote en el ejemplo de arriba, y presiona Ejecutar."></textarea>
     <div class="output" hidden>
@@ -903,32 +931,20 @@ function sincronizarAltura(bloque, panel){
   if (pre && textarea) textarea.style.minHeight = pre.offsetHeight + "px";
 }
 
-// "Enviar para revisión" solo tiene sentido si hay alguien del otro lado
-// para revisar — es decir, si la guía se abrió desde un lanzamiento de
-// ATENZA (?atenza_token=...&guia_intento=...). Accedida en público, el
-// botón no aparece: sin esto quedaría un botón que "envía" sin que nada
-// lo reciba, y además inflaría el denominador de la barra de progreso
-// con ejercicios que nunca se pueden marcar. Chequeo propio (no depende
-// del bloque de ATENZA de más abajo, que corre después) para que el
-// botón nazca ya oculto en el primer render.
-const abiertoDesdeAtenza = (() => {
-  const p = new URLSearchParams(location.search);
-  return Boolean(p.get("atenza_token") && p.get("guia_intento"));
-})();
+// El botón "Enviar para revisión" (no el data-quiz-id, ver nota junto a
+// abiertoDesdeAtenza más arriba) se retira fuera de ATENZA. En el panel
+// "independiente" el botón ya viene en el HTML estático porque hace
+// falta que exista SIEMPRE ahí para que ATENZA lo detecte; acá solo lo
+// escondemos en tiempo de ejecución cuando no corresponde mostrarlo.
 if (!abiertoDesdeAtenza) {
-  document.querySelectorAll(".editor-panel[data-quiz-id]").forEach(p => {
-    delete p.dataset.quizId;
-    const btn = p.querySelector(".code-btn.submit");
-    if (btn) btn.remove();
-  });
+  document.querySelectorAll(".editor-panel.independiente .code-btn.submit").forEach(btn => btn.remove());
 }
 
 const parejas = [];
 document.querySelectorAll(".code:not(.salida)").forEach((bloque, i) => {
   resaltarEjemplo(bloque);
   bloquearCopiado(bloque);
-  const id = abiertoDesdeAtenza ? "codigo-" + (i + 1) : null;
-  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo", id);
+  const panel = crearPanelEditor("✍️ Tu turno: escribe el código y ejecútalo", "codigo-" + (i + 1));
   bloque.after(panel);
   conectarEditor(panel);
   parejas.push([bloque, panel]);
