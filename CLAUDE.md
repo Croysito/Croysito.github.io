@@ -82,7 +82,7 @@ Para habilitarlo en una guía puntual: pegar el bloque `<!-- ATENZA · guía nat
 
 **⚠️ Vincular una guía en ATENZA (nota + manifest) NO agrega el script acá solo — son dos pasos independientes.** Si se lanza una guía en clase sin haber pegado antes este bloque en su página, el lanzamiento igual se crea y el estudiante igual puede "Tomar la guía", pero nada de lo que conteste se reporta — termina con nota 0. Antes de lanzar una guía nueva, confirmar que ya tiene el bloque acá.
 
-**Guías vinculadas hoy:** `guias_bd/joins-subconsultas.html`, `guias_tgs/ingenieria-de-sistemas.html`, `guias_tgs/arquetipos-sistemicos.html`. (`guias_bd/dml.html` todavía tiene el bloque viejo de 05/08 — sin nota, sin pantalla completa — hay que reemplazarlo antes de lanzarla como guía nativa.)
+**Guías vinculadas hoy:** `guias_bd/joins-subconsultas.html`, `guias_tgs/ingenieria-de-sistemas.html`, `guias_tgs/arquetipos-sistemicos.html`, `guias/funciones.html` (primera guía de POO vinculada — mismo bloque, enganchado a `marcarResuelto()`/`actualizarProgreso()` del mini motor de quiz-mc propio de esa guía). (`guias_bd/dml.html` todavía tiene el bloque viejo de 05/08 — sin nota, sin pantalla completa — hay que reemplazarlo antes de lanzarla como guía nativa.)
 
 **Bug corregido (2026-08-13):** hasta esta fecha `ATENZA_API` era un placeholder (`https://api.atenza.com`) y el flag de "reportado" se guardaba *antes* de confirmar éxito, así que cualquier estudiante que completara una guía vinculada en ese período quedó marcado como reportado en su navegador sin que el backend se enterara nunca.
 
