@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller: JOINs y Subconsultas en Vivo — PostgreSQL Real en tu Navegador | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* Estilos propios de este taller: tabla de resultados y barra de la base de datos, con la
+   misma estética "consola oscura" que ya usa .output-body en guia.css. No toca el CSS compartido. */
+.sql-result-table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+.sql-result-table th,.sql-result-table td{ padding:8px 10px; text-align:left; border:1px solid rgba(255,255,255,.15); }
+.sql-result-table thead th{ background:rgba(255,255,255,.08); color:#8fd48a; }
+.sql-result-table td em{ color:#7d8899; font-style:italic; }
+.sql-status{ margin:4px 0 10px; color:#8fd48a; }
+.sql-meta{ margin:0 0 10px; color:#7d8899; font-size:12px; }
+.db-toolbar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:18px 0 8px; padding:16px 20px; background:var(--highlightBg); border-left:6px solid var(--verde); border-radius:8px; }
+.db-toolbar button{ background:var(--verde); color:white; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:14px; }
+.db-toolbar button:hover{ background:var(--verde2); }
+.db-toolbar button:disabled{ opacity:.5; cursor:wait; }
+.db-toolbar button.secundario{ background:transparent; color:var(--verde); border:2px solid var(--verde); }
+.db-estado{ font-size:14px; opacity:.85; }
+
+/* Bloqueo de copiar/pegar en los editores: flash de aviso + toast global */
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>Taller JOINs</span></div>
+<p>SQL en vivo con PostgreSQL real</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#zona-pruebas">Zona de pruebas libres</a>
+<a href="#preparar">Prepara tu base de datos</a>
+<a href="#inner-vivo">1. INNER JOIN</a>
+<a href="#left-vivo">2. LEFT JOIN</a>
+<a href="#right-vivo">3. RIGHT JOIN</a>
+<a href="#full-vivo">4. FULL OUTER JOIN</a>
+<a href="#escalar-vivo">5. Subconsulta escalar</a>
+<a href="#in-vivo">6. Subconsulta con IN</a>
+<a href="#exists-vivo">7. EXISTS y NOT EXISTS</a>
+<a href="#reto">Reto final</a>
+<a href="#repaso">Repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Taller de Laboratorio</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>JOINs y Subconsultas en Vivo: Datos Reales, <span>Consultas Reales</span></h1>
+<p>Otra vez PostgreSQL de verdad, compilado a WebAssembly, corriendo enteramente en tu navegador. Esta vez vas a <strong>combinar dos tablas de siete formas distintas</strong> y ver, en cada una, exactamente qué fila aparece, cuál desaparece y cuál se rellena con NULL — antes de confiar en cualquiera de ellas.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Este taller es la práctica de laboratorio de <strong>JOINs y subconsultas en PostgreSQL</strong>. No vuelve a explicar la teoría desde cero —asume que ya viste <a href="joins-subconsultas.html">la guía</a>— y en cambio te da un PostgreSQL real para escribir cada tipo de JOIN y cada forma de subconsulta, viendo exactamente qué filas devuelve el motor.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Si todavía no viste la teoría, repasa primero <a href="joins-subconsultas.html">JOINs y subconsultas</a> antes de continuar. Este taller usa un esquema nuevo y más chico —solo <code>clientes</code> y <code>pedidos</code>— pensado para que cada tipo de combinación se vea clarísima, sin el ruido de un catálogo completo.</p>
+</div>
+<div class="highlight">
+<strong>⚠️ Todo vive en la memoria de esta pestaña</strong>
+<p>Esta página corre su <strong>propia</strong> base de datos, independiente de cualquier otro taller que hayas abierto antes. Existe solo mientras esta pestaña siga abierta: si <strong>recargas la página, la cierras, o navegas a otra guía, se pierde todo</strong> y hay que empezar de nuevo desde "Prepara tu base de datos". Si te equivocás y querés reiniciar sin recargar, usa el botón "Reiniciar base de datos" de abajo.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>✍️ Lo escribís vos</h3><p>Cada bloque parte vacío. El enunciado te dice qué tenés que lograr — el código SQL lo escribís de cero.</p></div>
+<div class="info"><h3>🩻 Errores reales</h3><p>Los mensajes de error que vas a ver son exactamente los que da PostgreSQL en producción.</p></div>
+<div class="info"><h3>👻 Una fila huérfana a propósito</h3><p>Un pedido de este taller apunta a un cliente que no existe. Es intencional: es la única forma de ver de verdad para qué sirven RIGHT y FULL OUTER JOIN.</p></div>
+</div>
+
+<div class="db-toolbar">
+<button type="button" id="resetDbBtn">🔄 Reiniciar base de datos</button>
+<span class="db-estado" id="dbEstado">La base de datos está vacía. Baja a "Prepara tu base de datos" para empezar.</span>
+</div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Este bloque queda disponible durante toda la guía. Usalo en cualquier momento para probar una idea propia, revisar el estado de una tabla con <code>SELECT * FROM tabla;</code>, o experimentar con algo que se te ocurra a mitad de un ejercicio — sin desordenar los bloques guiados.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🧪 Escribe cualquier sentencia SQL</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Zona de pruebas libres" placeholder="Por ejemplo: SELECT * FROM clientes;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="preparar">
+<div class="card">
+<h2 class="section-title">Prepara tu base de datos</h2>
+<p class="lead">Este bloque <strong>no es un ejercicio</strong> — ya viene resuelto. Crea dos tablas chicas, <code>clientes</code> y <code>pedidos</code>, con exactamente los mismos datos que viste en la guía de teoría. Ejecútalo tal cual, una sola vez, antes de seguir.</p>
+<div class="highlight">
+<strong>Qué hace este bloque</strong>
+<p>Crea <code>clientes</code> (5 filas) y <code>pedidos</code> (7 filas). Fijate que <code>pedidos.cliente_id</code> <strong>no tiene una FOREIGN KEY</strong> — es a propósito: el pedido <code>107</code> apunta a <code>cliente_id = 9</code>, que no existe en <code>clientes</code>. Con una clave foránea normal, ese INSERT habría fallado. Esa fila "huérfana" es la que vas a usar más adelante para ver la diferencia real entre INNER, LEFT, RIGHT y FULL OUTER JOIN.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🏗️ Ejecuta esta preparación tal cual</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:340px" aria-label="Script de preparación de la base de datos">CREATE TABLE IF NOT EXISTS clientes (
+    id INTEGER PRIMARY KEY,
+    nombre VARCHAR(80) NOT NULL,
+    ciudad VARCHAR(60) NOT NULL
+);
+
+-- cliente_id sin REFERENCES a propósito: ver el highlight de arriba.
+CREATE TABLE IF NOT EXISTS pedidos (
+    id INTEGER PRIMARY KEY,
+    cliente_id INTEGER,
+    producto VARCHAR(80) NOT NULL,
+    total NUMERIC(10,2) NOT NULL
+);
+
+INSERT INTO clientes (id, nombre, ciudad) VALUES
+    (1, 'Marisol Quispe', 'La Paz'),
+    (2, 'Iván Terrazas', 'Cochabamba'),
+    (3, 'Daniela Rojas', 'La Paz'),
+    (4, 'Esteban Vaca', 'Santa Cruz'),
+    (5, 'Renata Flores', 'La Paz');
+
+INSERT INTO pedidos (id, cliente_id, producto, total) VALUES
+    (101, 1, 'Teclado mecánico', 320.00),
+    (102, 3, 'Monitor 27"', 890.00),
+    (103, 1, 'Mouse inalámbrico', 95.00),
+    (104, 2, 'Silla ergonómica', 640.00),
+    (105, 4, 'Auriculares', 150.00),
+    (106, 3, 'Webcam', 60.00),
+    (107, 9, 'Cable HDMI', 45.00);
+
+SELECT * FROM clientes;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight">
+<strong>Confirma los datos</strong>
+<p>El resultado final debería mostrarte los 5 clientes, con <strong>Renata Flores</strong> entre ellos. Renata nunca aparece en <code>pedidos</code> — no compró nada. El resto de esta guía asume exactamente estos datos: si algo no coincide, usa "🔄 Reiniciar base de datos" y vuelve a ejecutar este bloque.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="inner-vivo">
+<div class="card">
+<h2 class="section-title">1. INNER JOIN</h2>
+<p class="lead">Solo las filas donde las dos tablas coinciden. Empezamos por acá porque es el más simple de los cuatro.</p>
+
+<div class="highlight">
+<strong>Enunciado — 1.1</strong>
+<p>Escribe un <code>SELECT</code> con <code>INNER JOIN</code> entre <code>clientes</code> (alias <code>c</code>) y <code>pedidos</code> (alias <code>p</code>), uniendo por <code>p.cliente_id = c.id</code>. Trae <code>c.nombre</code>, <code>p.producto</code> y <code>p.total</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.1 — INNER JOIN básico</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: INNER JOIN básico" placeholder="-- Escribe el SELECT con INNER JOIN entre clientes y pedidos."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Contá las filas</strong>
+<p>Deberían salir <strong>6</strong> filas, no 5 ni 7. Renata no aparece (no tiene pedidos) y el pedido 107 tampoco (su <code>cliente_id</code> no existe en <code>clientes</code>) — ninguno de los dos tiene con qué combinarse.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.2</strong>
+<p>Sobre la misma unión, agrega <code>WHERE c.ciudad = 'La Paz'</code> y ordena el resultado por <code>p.total</code> de mayor a menor.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.2 — INNER JOIN con WHERE y ORDER BY</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:80px" aria-label="Editor SQL: INNER JOIN con WHERE y ORDER BY" placeholder="-- Escribe el SELECT con INNER JOIN, WHERE c.ciudad = 'La Paz' y ORDER BY p.total DESC."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p style="margin-top:25px;"><strong>1.3 — Antes de ejecutar, predice:</strong> ¿cuántas filas devuelve un INNER JOIN completo entre <code>clientes</code> y <code>pedidos</code>, sin ningún WHERE? Después escribe <code>SELECT COUNT(*)</code> sobre ese mismo INNER JOIN para comprobarlo.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.3 — Predice y comprueba con COUNT(*)</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: COUNT sobre INNER JOIN" placeholder="-- Escribe el SELECT COUNT(*) sobre el INNER JOIN entre clientes y pedidos."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="left-vivo">
+<div class="card">
+<h2 class="section-title">2. LEFT JOIN</h2>
+<p class="lead">Todo lo de la tabla de la izquierda, tenga o no coincidencia del otro lado.</p>
+
+<div class="highlight">
+<strong>Enunciado — 2.1</strong>
+<p>Reescribe el ejercicio 1.1 cambiando <code>INNER JOIN</code> por <code>LEFT JOIN</code>. Confirma que ahora Renata Flores aparece, con <code>producto</code> y <code>total</code> en NULL.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.1 — LEFT JOIN básico</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: LEFT JOIN básico" placeholder="-- Escribe el SELECT con LEFT JOIN entre clientes y pedidos."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.2</strong>
+<p>Sobre ese mismo <code>LEFT JOIN</code>, agrega <code>WHERE p.id IS NULL</code> para quedarte solo con los clientes que <strong>no</strong> tienen ningún pedido.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.2 — Clientes sin pedidos, con LEFT JOIN</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: LEFT JOIN con IS NULL" placeholder="-- Escribe el SELECT con LEFT JOIN y WHERE p.id IS NULL."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Guardá este resultado</strong>
+<p>Debería devolver una sola fila: <strong>Renata Flores</strong>. Más adelante en este taller vas a llegar exactamente al mismo resultado con dos técnicas distintas —una subconsulta con <code>NOT IN</code> y otra con <code>NOT EXISTS</code>— para comparar las tres formas de responder la misma pregunta.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="right-vivo">
+<div class="card">
+<h2 class="section-title">3. RIGHT JOIN</h2>
+<p class="lead">El espejo del LEFT JOIN: todo lo de la tabla de la derecha, tenga o no coincidencia del otro lado.</p>
+
+<div class="highlight">
+<strong>Enunciado — 3.1</strong>
+<p>Escribe <code>clientes AS c RIGHT JOIN pedidos AS p ON p.cliente_id = c.id</code>, trayendo <code>c.nombre</code>, <code>p.id</code> y <code>p.producto</code>. Confirma que el pedido <strong>107</strong> aparece con <code>c.nombre</code> en NULL.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.1 — RIGHT JOIN básico</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: RIGHT JOIN básico" placeholder="-- Escribe el SELECT con RIGHT JOIN entre clientes y pedidos."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.2</strong>
+<p>En la práctica casi nadie usa RIGHT JOIN: es más común reordenar las tablas y usar siempre LEFT. Reescribe la consulta de 3.1 con <code>pedidos AS p LEFT JOIN clientes AS c</code> (las tablas invertidas) para llegar exactamente al mismo resultado.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.2 — El mismo resultado, con LEFT JOIN invertido</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: LEFT JOIN con tablas invertidas" placeholder="-- Escribe el SELECT con pedidos LEFT JOIN clientes."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="full-vivo">
+<div class="card">
+<h2 class="section-title">4. FULL OUTER JOIN</h2>
+<p class="lead">LEFT y RIGHT al mismo tiempo: no se pierde nada de ningún lado.</p>
+
+<div class="highlight">
+<strong>Enunciado — 4.1</strong>
+<p>Escribe un <code>FULL OUTER JOIN</code> entre <code>clientes</code> y <code>pedidos</code>, trayendo <code>c.nombre</code>, <code>p.id</code> y <code>p.producto</code>. Confirma que aparecen <strong>tanto</strong> Renata Flores <strong>como</strong> el pedido 107, cada uno con NULL del lado que le falta.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.1 — FULL OUTER JOIN básico</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: FULL OUTER JOIN básico" placeholder="-- Escribe el SELECT con FULL OUTER JOIN entre clientes y pedidos."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.2</strong>
+<p>Sobre ese mismo <code>FULL OUTER JOIN</code>, agrega <code>WHERE c.id IS NULL OR p.id IS NULL</code> para quedarte <strong>solo</strong> con las "filas problema": las que no calzan del todo de ningún lado.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.2 — Solo las filas sin pareja</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: FULL OUTER JOIN con filtro de filas sin pareja" placeholder="-- Escribe el SELECT con FULL OUTER JOIN y WHERE c.id IS NULL OR p.id IS NULL."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Exactamente dos filas</strong>
+<p>Debería devolver exactamente <strong>2</strong> filas: Renata (sin pedido) y el pedido 107 (sin cliente válido) — las dos "anomalías" de esta base de datos, una por cada lado del JOIN.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="escalar-vivo">
+<div class="card">
+<h2 class="section-title">5. Subconsulta escalar</h2>
+<p class="lead">Un SELECT completo viviendo dentro de otro, donde iría cualquier valor suelto — siempre que devuelva exactamente uno.</p>
+
+<div class="highlight">
+<strong>Enunciado — 5.1</strong>
+<p>Encuentra el producto y el total del pedido <strong>más caro</strong>, usando <code>WHERE total = (SELECT MAX(total) FROM pedidos)</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.1 — Subconsulta escalar con MAX</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: subconsulta escalar con MAX" placeholder="-- Escribe el SELECT con WHERE total = (SELECT MAX(total) FROM pedidos)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p style="margin-top:25px;"><strong>5.2 — Provocá el error a propósito:</strong> escribe <code>WHERE total = (SELECT total FROM pedidos WHERE cliente_id = 1)</code>. Marisol Quispe (<code>cliente_id = 1</code>) tiene <strong>dos</strong> pedidos, así que la subconsulta va a devolver dos filas.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>💥 Ejercicio 5.2 — Subconsulta escalar que devuelve dos filas</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: subconsulta escalar que debería fallar" placeholder="-- Escribe el SELECT que debería fallar por devolver más de una fila."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Leé el mensaje de error</strong>
+<p>PostgreSQL no elige ninguna de las dos filas por su cuenta: rechaza la consulta entera con algo como <code>more than one row returned by a subquery used as an expression</code>. Para "compará contra cualquiera de varios valores posibles" no se usa <code>=</code> — se usa <code>IN</code>, que viene en la próxima sección.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="in-vivo">
+<div class="card">
+<h2 class="section-title">6. Subconsulta con IN</h2>
+<p class="lead">Filtrar contra una lista de valores que sale de otra consulta, en vez de una lista escrita a mano.</p>
+
+<div class="highlight">
+<strong>Enunciado — 6.1</strong>
+<p>Selecciona <code>nombre</code> de los clientes cuyo <code>id</code> esté en la lista de <code>cliente_id</code> de los pedidos con <code>total > 300</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 6.1 — IN con una subconsulta</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: WHERE id IN con subconsulta" placeholder="-- Escribe el SELECT con WHERE id IN (SELECT cliente_id FROM pedidos WHERE total > 300)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 6.2</strong>
+<p>Ahora al revés: selecciona <code>nombre</code> y <code>ciudad</code> de los clientes cuyo <code>id</code> <strong>no</strong> esté en ninguna fila de <code>pedidos.cliente_id</code>, usando <code>NOT IN</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 6.2 — Clientes sin pedidos, con NOT IN</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: WHERE id NOT IN con subconsulta" placeholder="-- Escribe el SELECT con WHERE id NOT IN (SELECT cliente_id FROM pedidos)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>El mismo resultado que en 2.2</strong>
+<p>Debería devolver otra vez solo a <strong>Renata Flores</strong> — la misma pregunta que respondiste con <code>LEFT JOIN + IS NULL</code>, resuelta ahora sin combinar ninguna columna de las dos tablas.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="exists-vivo">
+<div class="card">
+<h2 class="section-title">7. EXISTS y NOT EXISTS</h2>
+<p class="lead">Subconsultas correlacionadas: la de adentro mira la fila de afuera, y a Postgres solo le importa si existe alguna coincidencia — no cuántas ni cuáles.</p>
+
+<div class="highlight">
+<strong>Enunciado — 7.1</strong>
+<p>Selecciona <code>nombre</code> de los clientes que tienen <strong>al menos un</strong> pedido, usando <code>WHERE EXISTS (SELECT 1 FROM pedidos p WHERE p.cliente_id = c.id)</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 7.1 — EXISTS correlacionado</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: WHERE EXISTS correlacionado" placeholder="-- Escribe el SELECT con WHERE EXISTS (SELECT 1 FROM pedidos p WHERE p.cliente_id = c.id)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 7.2</strong>
+<p>Invierte la condición con <code>NOT EXISTS</code> para encontrar a los clientes que <strong>no</strong> tienen ningún pedido — la tercera forma de llegar al mismo resultado que en 2.2 y 6.2.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 7.2 — NOT EXISTS correlacionado</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: WHERE NOT EXISTS correlacionado" placeholder="-- Escribe el SELECT con WHERE NOT EXISTS (SELECT 1 FROM pedidos p WHERE p.cliente_id = c.id)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Tres caminos, un mismo destino</strong>
+<p><code>LEFT JOIN + WHERE p.id IS NULL</code> (2.2), <code>NOT IN</code> (6.2) y <code>NOT EXISTS</code> (7.2) te dieron exactamente la misma respuesta: solo Renata Flores. No hay una única forma "correcta" de resolver esta pregunta — hay tres, y elegir entre ellas depende del caso y, más adelante en el curso, del plan de ejecución que arme Postgres.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="reto">
+<div class="card">
+<h2 class="section-title">Reto final: un reporte completo</h2>
+<p class="lead">Sin reiniciar la base de datos, resuelve estos tres desafíos combinando JOINs y subconsultas.</p>
+<div class="highlight">
+<strong>Requisitos</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><strong>1.</strong> Con <code>LEFT JOIN</code>, trae <code>nombre</code>, <code>ciudad</code>, <code>producto</code> y <code>total</code> de <strong>todos</strong> los clientes de La Paz (con o sin pedidos), ordenados de mayor a menor <code>total</code>. Agrega <code>NULLS LAST</code> al <code>ORDER BY</code> para que las filas sin pedido queden al final en lugar de al principio.</li>
+<li><strong>2.</strong> Con una subconsulta escalar, encuentra los pedidos con <code>total</code> mayor al <strong>promedio</strong> de todos los pedidos (<code>SELECT AVG(total) FROM pedidos</code>).</li>
+<li><strong>3.</strong> Con <code>EXISTS</code>, lista los clientes que tienen al menos un pedido de <strong>más de Bs 500</strong>.</li>
+</ul>
+</div>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>🏆 Resuelve aquí el reto</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu solución al reto final" placeholder="-- 1. LEFT JOIN de clientes de La Paz con sus pedidos, ORDER BY total DESC NULLS LAST.
+-- 2. Pedidos con total mayor al promedio (subconsulta escalar con AVG).
+-- 3. Clientes con EXISTS un pedido de más de 500."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="repaso">
+<div class="card">
+<h2 class="section-title">Repaso</h2>
+<p class="lead">Seis preguntas cortas sobre lo que acabas de observar en vivo. Tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 1.3 comprobaste con COUNT(*) cuántas filas devuelve un INNER JOIN completo entre clientes y pedidos, sin ningún WHERE. ¿Cuántas fueron, y por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>6 — el pedido 107 no calza con ningún cliente, y Renata no tiene pedidos, así que ninguno entra.</button>
+<button class="quiz-opt">7 — hay un pedido por cada fila de la tabla pedidos, sin excepción.</button>
+<button class="quiz-opt">12 — el INNER JOIN suma directamente las filas de las dos tablas.</button>
+<button class="quiz-opt">5 — un INNER JOIN siempre devuelve como máximo una fila por cliente.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: de los 7 pedidos, 6 tienen un cliente_id que sí existe en clientes; el pedido 107 (cliente_id = 9) no tiene con qué combinarse. Y Renata, sin pedidos, tampoco aporta ninguna fila. Un INNER JOIN solo cuenta coincidencias reales." data-ko="Fueron 6, no 7, 5 ni 12: de los 7 pedidos, solo 6 tienen un cliente_id que existe de verdad en clientes (el 107 no). Y Renata, sin pedidos, no aporta ninguna fila. INNER JOIN solo cuenta las coincidencias reales entre ambos lados." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 3.2 reescribiste el RIGHT JOIN de 3.1 como un LEFT JOIN, y llegaste al mismo resultado. ¿Qué tuviste que cambiar?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Nada — un LEFT y un RIGHT JOIN siempre devuelven las mismas filas.</button>
+<button class="quiz-opt">La condición del ON, invirtiendo qué columna va a cada lado del igual.</button>
+<button class="quiz-opt" data-correct>El orden de las tablas: escribiste pedidos primero y clientes después.</button>
+<button class="quiz-opt">Nada del FROM — bastó con agregar DISTINCT al final del SELECT.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: RIGHT JOIN conserva todo lo de la tabla de la derecha. Poniendo pedidos primero y usando LEFT JOIN hacia clientes, pedidos pasa a ser la tabla 'protegida' del lado izquierdo — mismo resultado, sin usar RIGHT." data-ko="No fue la condición del ON ni un DISTINCT: RIGHT JOIN conserva todo lo de la tabla de la derecha. Reescribirlo como pedidos LEFT JOIN clientes pone a pedidos del lado izquierdo, logrando el mismo resultado sin usar RIGHT." hidden></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada forma de subconsulta según cómo se comporta.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Subconsulta escalar (con =)</span>
+<div class="quiz-classify-btns">
+<button>Compara contra una lista de valores, sin límite de filas</button>
+<button data-correct>Debe devolver un único valor, o PostgreSQL lanza error</button>
+<button>Solo importa si devuelve alguna fila, no sus valores</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Subconsulta con IN</span>
+<div class="quiz-classify-btns">
+<button>Solo importa si devuelve alguna fila, no sus valores</button>
+<button>Debe devolver un único valor, o PostgreSQL lanza error</button>
+<button data-correct>Compara contra una lista de valores, sin límite de filas</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">EXISTS</span>
+<div class="quiz-classify-btns">
+<button data-correct>Solo importa si devuelve alguna fila, no sus valores</button>
+<button>Compara contra una lista de valores, sin límite de filas</button>
+<button>Debe devolver un único valor, o PostgreSQL lanza error</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="repaso-3">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre el requisito 1 del reto final: LEFT JOIN de clientes de La Paz con sus pedidos, ORDER BY total DESC NULLS LAST.</p>
+<p>1. Sin agregar NULLS LAST, por defecto PostgreSQL ubica las filas con total en NULL (como la de Renata)
+<select class="quiz-blank" data-correct="principio">
+<option value="">— elige —</option>
+<option value="principio">al principio del resultado</option>
+<option value="final">al final del resultado</option>
+<option value="descarta">se descartan del resultado</option>
+</select>.</p>
+<p>2. Para que esas filas queden al final en lugar del principio, hay que agregar explícitamente
+<select class="quiz-blank" data-correct="nullslast">
+<option value="">— elige —</option>
+<option value="distinct">DISTINCT</option>
+<option value="nullslast">NULLS LAST</option>
+<option value="groupby">GROUP BY</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 5.2 escribiste total = (SELECT total FROM pedidos WHERE cliente_id = 1), y la subconsulta devolvió 2 filas (los pedidos 101 y 103, ambos de Marisol). ¿Qué pasó?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Comparó solamente contra el primer pedido que encontró (320).</button>
+<button class="quiz-opt">Devolvió los pedidos con cualquiera de esos totales, como IN.</button>
+<button class="quiz-opt">Ignoró la condición y devolvió todos los pedidos de la tabla.</button>
+<button class="quiz-opt" data-correct>PostgreSQL lanzó un error: no admite más de una fila en =.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: una subconsulta escalar (la que va después de =) debe devolver exactamente un valor. Con dos filas, PostgreSQL no elige ninguna por su cuenta — rechaza toda la consulta con un error en tiempo de ejecución." data-ko="No comparó contra la primera fila, ni actuó como IN, ni ignoró el WHERE: = espera un único valor. Al recibir dos filas, PostgreSQL no puede decidir con cuál comparar, y lanza un error real en vez de adivinar." hidden></p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="repaso-5">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada consulta con lo que hace, sobre la pregunta "¿qué clientes no tienen pedidos?".</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="leftjoin">LEFT JOIN + WHERE p.id IS NULL</button>
+<button class="quiz-match-item" data-pair="notin">id NOT IN (SELECT cliente_id FROM pedidos)</button>
+<button class="quiz-match-item" data-pair="notexists">NOT EXISTS (SELECT 1 FROM pedidos p WHERE p.cliente_id = c.id)</button>
+<button class="quiz-match-item" data-pair="inner">INNER JOIN sin ningún WHERE adicional</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="leftjoin">Encuentra clientes sin pedidos comparando columnas después de combinar las tablas.</button>
+<button class="quiz-match-item" data-pair="notin">Encuentra clientes sin pedidos filtrando contra una lista de ids de otra consulta.</button>
+<button class="quiz-match-item" data-pair="notexists">Encuentra clientes sin pedidos preguntando si existe algún pedido para ese cliente.</button>
+<button class="quiz-match-item" data-pair="inner">Nunca muestra clientes sin pedidos: los excluye directamente del resultado.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet del taller</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Forma</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>FROM a JOIN b ON a.x = b.y</code></td><td>INNER JOIN — solo filas con coincidencia en ambos lados.</td></tr>
+<tr><td><code>FROM a LEFT JOIN b ON ...</code></td><td>Conserva todo lo de <code>a</code>, con NULL donde no hay coincidencia.</td></tr>
+<tr><td><code>FROM a RIGHT JOIN b ON ...</code></td><td>Conserva todo lo de <code>b</code> (poco usado; se prefiere reordenar y usar LEFT).</td></tr>
+<tr><td><code>FROM a FULL OUTER JOIN b ON ...</code></td><td>Conserva todo de ambos lados.</td></tr>
+<tr><td><code>WHERE col = (SELECT ...)</code></td><td>Subconsulta escalar — debe devolver un único valor.</td></tr>
+<tr><td><code>WHERE col IN (SELECT ...)</code></td><td>Filtra contra una lista de valores que sale de otra consulta.</td></tr>
+<tr><td><code>WHERE EXISTS (SELECT 1 ...)</code></td><td>Filtra según "existe al menos una fila que cumple esto".</td></tr>
+<tr><td><code>WHERE NOT EXISTS (SELECT 1 ...)</code></td><td>Filtra según "no existe ninguna fila que cumpla esto".</td></tr>
+<tr><td><code>... ORDER BY col DESC NULLS LAST</code></td><td>Ordena de mayor a menor, dejando los NULL al final en vez del principio.</td></tr>
+</tbody>
+</table>
+<table class="tabla" style="margin-top:20px;">
+<thead><tr><th scope="col">Situación que viviste en este taller</th><th scope="col">Mensaje real de PostgreSQL</th></tr></thead>
+<tbody>
+<tr><td>Ejercicio 5.2: una subconsulta escalar que devuelve más de una fila</td><td><code>more than one row returned by a subquery used as an expression</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>👻 Esta fila huérfana pasa en producción, no solo en el taller</h3><p>Sin una FOREIGN KEY que lo impida, nada evita que un pedido quede apuntando a un cliente ya borrado. Es exactamente el escenario que <code>ON DELETE RESTRICT</code> o <code>ON DELETE CASCADE</code> (guía de DDL) están pensados para prevenir — el pedido 107 de este taller es lo que pasa cuando esa protección no existe.</p></div>
+<div class="info"><h3>🔄 EXISTS y JOIN pueden dar el mismo resultado, pero no siempre el mismo plan</h3><p>Las tres consultas del ejercicio 7.2 devuelven exactamente las mismas filas, pero PostgreSQL puede ejecutarlas con estrategias distintas por dentro — cuál es "más rápida" depende del tamaño de las tablas y de los índices, no es una regla fija.</p></div>
+<div class="info"><h3>🛑 NOT IN tiene una trampa que NOT EXISTS no tiene</h3><p>Si la subconsulta de un NOT IN devolviera aunque sea un solo NULL, la condición completa deja de encontrar filas — un efecto secundario poco intuitivo de cómo SQL compara contra NULL. En este taller no pasa (cliente_id nunca es NULL en pedidos), pero es una razón real por la que muchos prefieren NOT EXISTS por costumbre.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller: JOINs y Subconsultas en Vivo — PostgreSQL Real en tu Navegador</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* =======================================================================
+   PGlite: PostgreSQL real compilado a WebAssembly, corriendo en el navegador.
+   Mismo patrón de carga perezosa que Pyodide en las guías de POO.
+   ======================================================================= */
+const PGLITE_CDN = "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.5.4/dist/index.js";
+let pgliteReadyPromise = null;
+
+function cargarPGlite(){
+  if (!pgliteReadyPromise) {
+    pgliteReadyPromise = (async () => {
+      const { PGlite } = await import(PGLITE_CDN);
+      return new PGlite();
+    })();
+  }
+  return pgliteReadyPromise;
+}
+
+function reiniciarPGlite(){
+  pgliteReadyPromise = null;
+}
+
+async function ejecutarSQL(codigo){
+  try {
+    const db = await cargarPGlite();
+    const resultados = await db.exec(codigo);
+    return { resultados, error: null };
+  } catch (e) {
+    return { resultados: null, error: (e && e.message) ? e.message : String(e) };
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* ===== Toast de aviso al bloquear copiar/pegar en los editores ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  if (!clipboardToast) return;
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
+function formatearValor(v){
+  if (v === null || v === undefined) return "<em>NULL</em>";
+  return escapeHtml(v);
+}
+
+function renderizarResultados(resultados){
+  if (!resultados || !resultados.length) {
+    return '<p class="sql-status">✅ Ejecutado. No se generó ningún resultado.</p>';
+  }
+  return resultados.map(r => {
+    const columnas = (r.fields || []).map(f => f.name);
+    if (columnas.length) {
+      let html = '<table class="sql-result-table"><thead><tr>' +
+        columnas.map(c => `<th scope="col">${escapeHtml(c)}</th>`).join("") +
+        "</tr></thead><tbody>";
+      if (!r.rows || !r.rows.length) {
+        html += `<tr><td colspan="${columnas.length}"><em>(0 filas)</em></td></tr>`;
+      } else {
+        r.rows.forEach(fila => {
+          html += "<tr>" + columnas.map(c => `<td>${formatearValor(fila[c])}</td>`).join("") + "</tr>";
+        });
+      }
+      html += "</tbody></table>";
+      return html;
+    }
+    const n = typeof r.affectedRows === "number" ? r.affectedRows : null;
+    const msg = n !== null
+      ? `✅ Sentencia ejecutada (${n} fila${n === 1 ? "" : "s"} afectada${n === 1 ? "" : "s"}).`
+      : "✅ Sentencia ejecutada correctamente.";
+    return `<p class="sql-status">${msg}</p>`;
+  }).join("");
+}
+
+function conectarSqlLab(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  /* En este taller el código se escribe, no se copia ni se pega: bloqueamos
+     copiar/cortar/pegar/arrastrar y avisamos brevemente por qué. */
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En este taller el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  ["copy", "cut", "paste", "drop"].forEach(evt => {
+    textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); });
+  });
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart;
+      const fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (teclaCtrl && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      avisarBloqueo();
+    }
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe alguna sentencia SQL antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando PostgreSQL real (WebAssembly)… la primera vez puede tardar varios segundos.";
+    runBtn.disabled = true;
+    try {
+      const { resultados, error } = await ejecutarSQL(codigo);
+      if (error) {
+        outputBody.textContent = "❌ Error de PostgreSQL: " + error;
+        output.classList.add("error");
+      } else {
+        outputBody.innerHTML = renderizarResultados(resultados);
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el motor de PostgreSQL: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+document.querySelectorAll(".editor-panel").forEach(conectarSqlLab);
+
+/* ===== Botón "Reiniciar base de datos" ===== */
+const resetBtn = document.getElementById("resetDbBtn");
+const dbEstado = document.getElementById("dbEstado");
+resetBtn.addEventListener("click", () => {
+  reiniciarPGlite();
+  document.querySelectorAll(".editor-panel .output").forEach(o => { o.hidden = true; });
+  dbEstado.textContent = "🔄 Base de datos reiniciada — todo lo creado antes se perdió. Vuelve a ejecutar 'Prepara tu base de datos'.";
+});
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo (19/08). Solo actúa si la guía se abrió
+     desde un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=...
+     en la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedida directo, como siempre, no dispara nada nuevo. No toca el
+     motor de quizzes de arriba (repaso) ni la parte de PGlite/editores: se
+     engancha a marcarResuelto() y actualizarProgreso(), que ya existen
+     (ver DEPLOY-GUIAS-SNIPPET.md en el repo de atenza para el detalle de
+     cada endpoint). Los ejercicios sueltos con editor SQL no reportan nada
+     acá — solo cuentan las preguntas de la sección "Repaso" (data-quiz-id),
+     igual que en taller-dml.html. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  var params = new URLSearchParams(location.search);
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  // ── Progreso limpio por intento: QUIZ_PREFIX guarda el progreso por
+  // PÁGINA, sin saber nada de "intentos" de ATENZA. Sin esto, cualquier
+  // resto de una práctica libre o de un lanzamiento anterior ya deja casi
+  // todo marcado "ok"/"ko" de entrada. Se guarda a qué guia_intento
+  // pertenece el progreso actual de esta página; si cambió, se limpia todo
+  // antes de que el estudiante toque nada. Si es el mismo (recargó la
+  // pestaña a mitad de camino), no se toca — sigue donde quedó.
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  // ── Aviso flotante — clave para "cuándo termina la guía": antes de esto
+  // el estudiante llegaba al 100% local y no había ninguna señal de que ya
+  // había terminado, y una falla de red al reportar quedaba invisible.
+  // onClick, si se pasa, permite reintentar tocando el aviso.
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  // ── Pantalla completa: se pide en un click real del usuario. Estilos en
+  // línea porque esta página todavía no tiene una clase para esto — fixed
+  // y con z-index por encima de .menu-btn (900, solo visible en mobile)
+  // para que no quede tapado.
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  // ── Reportar cada pregunta resuelta — engancha marcarResuelto(), que ya
+  // usan los tipos de actividad de la sección "Repaso" (mc/classify/fill/
+  // match) sin tocar ninguno de sus call-sites.
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder foco.
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ── Finalizar al completar el 100% — mismo cálculo que ya usa la barra
+  // de progreso de arriba (todas las preguntas de "Repaso" en "ok"/"ko").
+  // Si falla, NO se queda marcado como finalizado — el aviso rojo deja
+  // reintentar con un toque.
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  // Cuenta CONTESTADAS (ok o ko, cualquier valor guardado), no solo
+  // correctas — un estudiante que se equivoca en una quiz-mc de un solo
+  // intento nunca llegaría a "ok" en esa pregunta, y exigir 100% correcto
+  // dejaría la guía "en curso" para siempre aunque ya no le quede nada
+  // más por hacer.
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
