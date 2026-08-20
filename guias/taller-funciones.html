@@ -88,11 +88,18 @@
 </div>
 <div class="highlight">
 <strong>💻 Código en vivo</strong>
-<p>Cada ejercicio trae un editor <strong>vacío</strong>: el enunciado te dice qué función tenés que escribir, y vos escribís el código Python de cero. Presiona <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador con Pyodide (Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete.</p>
+<p>Cada ejercicio trae un editor <strong>vacío</strong>: el enunciado te dice qué función tenés que escribir, y vos escribís el código Python de cero. Presiona <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador con Pyodide (Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete. Si estás resolviendo el taller desde un lanzamiento de ATENZA, además aparece el botón <strong>📨 Enviar para revisión</strong> una vez que el código corra sin errores, para mandar ese ejercicio al docente (no se autocorrige).</p>
 </div>
 <div class="highlight">
 <strong>✋ Se escribe a mano</strong>
 <p>En este taller, copiar y pegar código en los editores está deshabilitado (incluido arrastrar y soltar). La idea es que practiques escribiendo la sintaxis vos mismo, no que la traigas de otro lado.</p>
+</div>
+<div class="quiz-tracker" id="quizTracker" hidden>
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">ejercicios enviados</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
 </div>
 <div class="info-grid">
 <div class="info"><h3>🧩 Integrador</h3><p>Cada bloque mezcla funciones con condicionales, bucles y listas.</p></div>
@@ -129,10 +136,11 @@
 <strong>Enunciado — 1.1: ¿Año bisiesto?</strong>
 <p>Escribe una función <code>es_bisiesto(anio)</code> que devuelva <code>True</code> o <code>False</code>. Un año es bisiesto si es divisible entre 4, salvo que también sea divisible entre 100 — en ese caso, tiene que ser divisible entre 400 para seguir siendo bisiesto (por ejemplo, 2000 fue bisiesto, pero 1900 no). Prueba tu función con <code>print(es_bisiesto(2024))</code> y <code>print(es_bisiesto(1900))</code>.</p>
 </div>
-<div class="editor-panel">
+<div class="editor-panel" data-quiz-id="ej-1-1">
 <div class="editor-header">
 <span>✍️ Ejercicio 1.1 — ¿Año bisiesto?</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Editor: año bisiesto" placeholder="# Escribe es_bisiesto(anio) y pruébala con 2024 y 1900."></textarea>
 <div class="output" hidden>
@@ -143,12 +151,13 @@
 
 <div class="highlight" style="margin-top:20px;">
 <strong>Enunciado — 1.2: Bolivianos a dólares</strong>
-<p>Escribe una función <code>a_dolares(bolivianos, tasa=6.96)</code> con <code>tasa</code> como parámetro con valor por defecto (el tipo de cambio oficial). Debe devolver el monto convertido a dólares, redondeado a 2 decimales con <code>round()</code>. Pruébala una vez sin pasar la tasa, <code>print(a_dolares(500))</code>, y otra vez pasando una tasa distinta, <code>print(a_dolares(500, 7.10))</code>.</p>
+<p>Escribe una función <code>a_dolares(bolivianos, tasa=11.52)</code> con <code>tasa</code> como parámetro con valor por defecto (el tipo de cambio oficial). Debe devolver el monto convertido a dólares, redondeado a 2 decimales con <code>round()</code>. Pruébala una vez sin pasar la tasa, <code>print(a_dolares(500))</code>, y otra vez pasando una tasa distinta, <code>print(a_dolares(500, 12.10))</code>.</p>
 </div>
-<div class="editor-panel">
+<div class="editor-panel" data-quiz-id="ej-1-2">
 <div class="editor-header">
 <span>✍️ Ejercicio 1.2 — Bolivianos a dólares</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Editor: bolivianos a dólares" placeholder="# Escribe a_dolares(bolivianos, tasa=6.96) y pruébala con y sin tasa."></textarea>
 <div class="output" hidden>
@@ -161,10 +170,11 @@
 <strong>Enunciado — 1.3: Área y perímetro de un rectángulo</strong>
 <p>Escribe una función <code>rectangulo(base, altura)</code> que devuelva <strong>dos valores</strong> con un solo <code>return</code>: el área (<code>base * altura</code>) y el perímetro (<code>2 * (base + altura)</code>). Llámala desempaquetando el resultado en dos variables, <code>area, perimetro = rectangulo(4, 6)</code>, e imprime ambas.</p>
 </div>
-<div class="editor-panel">
+<div class="editor-panel" data-quiz-id="ej-1-3">
 <div class="editor-header">
 <span>✍️ Ejercicio 1.3 — Área y perímetro</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Editor: área y perímetro" placeholder="# Escribe rectangulo(base, altura) con retorno múltiple."></textarea>
 <div class="output" hidden>
@@ -177,10 +187,11 @@
 <strong>Enunciado — 1.4: Clasificar el IMC</strong>
 <p>Escribe una función <code>clasificar_imc(peso, altura)</code> que calcule el índice de masa corporal (<code>imc = peso / altura ** 2</code>, con <code>altura</code> en metros) y devuelva un texto según el resultado, usando <code>if</code>/<code>elif</code>/<code>else</code> adentro de la función: <em>"Bajo peso"</em> si <code>imc &lt; 18.5</code>, <em>"Normal"</em> si está entre 18.5 y 25 (sin incluir 25), <em>"Sobrepeso"</em> si está entre 25 y 30 (sin incluir 30), o <em>"Obesidad"</em> si <code>imc &gt;= 30</code>. Prueba con <code>print(clasificar_imc(70, 1.75))</code>.</p>
 </div>
-<div class="editor-panel">
+<div class="editor-panel" data-quiz-id="ej-1-4">
 <div class="editor-header">
 <span>✍️ Ejercicio 1.4 — Clasificar el IMC</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Editor: clasificar IMC" placeholder="# Escribe clasificar_imc(peso, altura) con if/elif/else adentro."></textarea>
 <div class="output" hidden>
@@ -200,10 +211,11 @@
 <strong>Enunciado — 2.1: Contar pares</strong>
 <p>Escribe una función <code>contar_pares(lista)</code> que devuelva cuántos elementos de la lista son pares. Pruébala con <code>print(contar_pares([4, 7, 10, 15, 22, 3, 8]))</code>.</p>
 </div>
-<div class="editor-panel">
+<div class="editor-panel" data-quiz-id="ej-2-1">
 <div class="editor-header">
 <span>✍️ Ejercicio 2.1 — Contar pares</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Editor: contar pares" placeholder="# Escribe contar_pares(lista) y pruébala con [4, 7, 10, 15, 22, 3, 8]."></textarea>
 <div class="output" hidden>
@@ -216,10 +228,11 @@
 <strong>Enunciado — 2.2: Promedio de una lista</strong>
 <p>Escribe una función <code>promedio_lista(lista)</code> que devuelva el promedio de sus elementos (suma dividida entre <code>len(lista)</code>). Vas a reutilizar esta misma idea en el reto final, así que consérvala bien resuelta. Pruébala con <code>print(promedio_lista([15, 8, 20, 3, 12]))</code>.</p>
 </div>
-<div class="editor-panel">
+<div class="editor-panel" data-quiz-id="ej-2-2">
 <div class="editor-header">
 <span>✍️ Ejercicio 2.2 — Promedio de una lista</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Editor: promedio de una lista" placeholder="# Escribe promedio_lista(lista) y pruébala con [15, 8, 20, 3, 12]."></textarea>
 <div class="output" hidden>
@@ -232,10 +245,11 @@
 <strong>Enunciado — 2.3: El mayor de la lista, sin max()</strong>
 <p>Escribe una función <code>buscar_mayor(lista)</code> que devuelva el valor más grande, <strong>sin usar <code>max()</code></strong>. Como no hay indexado, arranca con <code>mayor = None</code> antes del <code>for</code>, y dentro del bucle actualiza <code>mayor</code> cuando <code>mayor is None</code> (todavía no viste ningún elemento) o el elemento actual es mayor que <code>mayor</code>. Pruébala con <code>print(buscar_mayor([19, 23, 18, 31, 22, 27]))</code>.</p>
 </div>
-<div class="editor-panel">
+<div class="editor-panel" data-quiz-id="ej-2-3">
 <div class="editor-header">
 <span>✍️ Ejercicio 2.3 — El mayor, sin max()</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Editor: mayor sin max" placeholder="# Escribe buscar_mayor(lista) con mayor = None y actualízalo en el for."></textarea>
 <div class="output" hidden>
@@ -248,10 +262,11 @@
 <strong>Enunciado — 2.4: ¿Hay algún negativo?</strong>
 <p>Escribe una función <code>contiene_negativos(lista)</code> que devuelva <code>True</code> apenas encuentre un elemento menor a 0 — con un <code>return True</code> dentro del propio <code>for</code>, sin esperar a que termine de recorrer toda la lista. Si el bucle termina sin encontrar ninguno, la función debe devolver <code>False</code> al final. Pruébala con <code>print(contiene_negativos([5, 8, -1, 12]))</code> y <code>print(contiene_negativos([5, 8, 1, 12]))</code>.</p>
 </div>
-<div class="editor-panel">
+<div class="editor-panel" data-quiz-id="ej-2-4">
 <div class="editor-header">
 <span>✍️ Ejercicio 2.4 — ¿Hay algún negativo?</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Editor: contiene negativos" placeholder="# Escribe contiene_negativos(lista) con return True dentro del for."></textarea>
 <div class="output" hidden>
@@ -275,10 +290,11 @@
 <strong>Enunciado — 3.1: Primos en un rango, reutilizando es_primo()</strong>
 <p>Escribe una función <code>es_primo(n)</code> (igual que en el taller anterior, pero ahora como función reutilizable). Luego, con un <code>for</code> que recorra <code>range(2, 30)</code>, llama a <code>es_primo()</code> con cada número e imprime solo los que son primos. La ventaja frente a escribir la lógica de nuevo: si mañana necesitas primos en otro rango, no reescribes nada, solo volvés a llamar la función.</p>
 </div>
-<div class="editor-panel">
+<div class="editor-panel" data-quiz-id="ej-3-1">
 <div class="editor-header">
 <span>✍️ Ejercicio 3.1 — Primos en un rango</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Editor: primos en un rango" placeholder="# Escribe es_primo(n) y úsala dentro de un for sobre range(2, 30)."></textarea>
 <div class="output" hidden>
@@ -291,10 +307,11 @@
 <strong>Enunciado — 3.2: Combinaciones, reutilizando factorial()</strong>
 <p>Escribe una función <code>factorial(n)</code> (igual que en el taller anterior). Luego escribe <code>combinaciones(n, k)</code> que devuelva <code>factorial(n) // (factorial(k) * factorial(n - k))</code> — llamando a <code>factorial()</code> tres veces adentro, sin repetir su lógica. Prueba con <code>print(combinaciones(5, 2))</code> (debería dar 10).</p>
 </div>
-<div class="editor-panel">
+<div class="editor-panel" data-quiz-id="ej-3-2">
 <div class="editor-header">
 <span>✍️ Ejercicio 3.2 — Combinaciones</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Editor: combinaciones" placeholder="# Escribe factorial(n) y luego combinaciones(n, k) usando factorial()."></textarea>
 <div class="output" hidden>
@@ -307,10 +324,11 @@
 <strong>Enunciado — 3.3: Total de una venta con comisión</strong>
 <p>Escribe una función <code>comision(monto, categoria="regular")</code> que devuelva el monto de la comisión según <code>categoria</code>: 5% si es <code>"regular"</code>, 10% si es <code>"premium"</code>, 2% para cualquier otro valor. Luego escribe <code>total_con_comision(monto, categoria="regular")</code>, que llame a <code>comision()</code> y devuelva <code>monto + comision(monto, categoria)</code>. Prueba con <code>print(total_con_comision(1000))</code> y <code>print(total_con_comision(1000, "premium"))</code>.</p>
 </div>
-<div class="editor-panel">
+<div class="editor-panel" data-quiz-id="ej-3-3">
 <div class="editor-header">
 <span>✍️ Ejercicio 3.3 — Total con comisión</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Editor: total con comisión" placeholder="# Escribe comision(monto, categoria='regular') y total_con_comision(monto, categoria='regular')."></textarea>
 <div class="output" hidden>
@@ -342,10 +360,11 @@
 <strong>Al final, imprime</strong>
 <p>Llamando a las cuatro funciones (no repitiendo su lógica suelta): el promedio con 2 decimales, la cantidad de aprobados, la nota más alta, y el mensaje de rendimiento que corresponde según ese promedio.</p>
 </div>
-<div class="editor-panel independiente">
+<div class="editor-panel independiente" data-quiz-id="ej-reto-final">
 <div class="editor-header">
 <span>🏆 Resuelve aquí el reto</span>
 <button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu solución al reto final" placeholder="# notas = [15, 8, 20, 3, 12, 18, 6, 10, 19, 2]
 # 1. def promedio(lista): ...
@@ -479,6 +498,63 @@ window.addEventListener("scroll", () => {
     }
   });
 });
+
+/* ===== Integración con ATENZA (progreso y envío de ejercicios) =====
+   Este taller no tiene motor de quiz-mc — cada "pregunta" es un
+   ejercicio de código, así que marcarResuelto()/actualizarProgreso()
+   solo las disparan los botones "📨 Enviar para revisión" de los
+   editor-panel con data-quiz-id (la zona de pruebas libres no tiene
+   uno a propósito: no es un ejercicio evaluable). Mismo patrón que
+   funciones.html, la primera guía de POO vinculada a ATENZA. */
+const QUIZ_PREFIX = "poo-quiz-" + location.pathname + "-";
+
+// El link real que arma ATENZA para "Tomar la guía" puede llegar con el
+// "?" después del "#" (ej. "...html#reto?atenza_token=..."), lo que deja
+// los parámetros dentro del fragmento en vez de la query string — ahí
+// location.search por sí solo siempre da vacío. Ver la misma nota en
+// funciones.html.
+function paramsDeAtenza() {
+  const candidatos = [location.search];
+  const posInterrogante = location.hash.indexOf("?");
+  if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+  for (const c of candidatos) {
+    const p = new URLSearchParams(c);
+    if (p.get("atenza_token") && p.get("guia_intento")) return p;
+  }
+  return new URLSearchParams(candidatos[0]);
+}
+
+// "Enviar para revisión" solo tiene sentido si hay alguien del otro lado
+// para revisar — la guía abierta desde un lanzamiento de ATENZA. El
+// data-quiz-id de cada editor-panel ya está en el HTML sin importar este
+// flag, para que ATENZA pueda detectarlos al armar el manifest incluso
+// antes de que exista ningún token.
+const abiertoDesdeAtenza = (() => {
+  const p = paramsDeAtenza();
+  return Boolean(p.get("atenza_token") && p.get("guia_intento"));
+})();
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+const quizTracker = document.getElementById("quizTracker");
+if (abiertoDesdeAtenza && quizTracker) quizTracker.hidden = false;
+actualizarProgreso();
 
 /* ===== Pyodide en un Web Worker (así un bucle infinito nunca cuelga la pestaña) ===== */
 const __CONTROL_SLOTS = 3;      // [0]=listo, [1]=largo de la respuesta, [2]=cancelado
@@ -696,8 +772,10 @@ function mostrarAvisoPortapapeles(mensaje){
 function conectarEditor(panel){
   const textarea = panel.querySelector(".editor");
   const runBtn = panel.querySelector(".code-btn.run");
+  const submitBtn = panel.querySelector(".code-btn.submit");
   const output = panel.querySelector(".output");
   const outputBody = panel.querySelector(".output-body");
+  const quizId = panel.dataset.quizId;
 
   const stopBtn = document.createElement("button");
   stopBtn.type = "button";
@@ -737,6 +815,10 @@ function conectarEditor(panel){
     const codigo = textarea.value.trim();
     output.hidden = false;
     output.classList.remove("error");
+    // Cada nueva ejecución invalida un posible envío anterior: hay que
+    // volver a confirmar que el código actual corrió bien antes de poder
+    // reenviarlo para revisión.
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "📨 Enviar para revisión"; }
     if (!codigo) {
       outputBody.textContent = "Escribe algo de código antes de ejecutar.";
       output.classList.add("error");
@@ -752,6 +834,7 @@ function conectarEditor(panel){
         output.classList.add("error");
       } else {
         outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+        if (submitBtn) submitBtn.disabled = false; // solo se puede enviar tras una corrida sin errores
       }
     } catch (e) {
       outputBody.textContent = e && e.message ? e.message : String(e);
@@ -761,10 +844,191 @@ function conectarEditor(panel){
       stopBtn.hidden = true;
     }
   };
+
+  // "Enviar para revisión": solo existe si el panel tiene data-quiz-id
+  // y el botón submit sigue en el DOM (se retira fuera de ATENZA, ver
+  // más abajo). No se autocorrige — siempre marca "ok" y es el docente
+  // quien lo revisa desde el panel de ATENZA.
+  if (submitBtn && quizId) {
+    submitBtn.onclick = () => {
+      marcarResuelto(quizId, "ok");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "✅ Enviado";
+    };
+  }
+}
+
+// Los editor-panel de los 11 ejercicios + el reto final ya traen su
+// data-quiz-id escrito directo en el HTML (a propósito, para que ATENZA
+// pueda detectarlos al armar el manifest incluso antes de que exista
+// ningún token). El botón "Enviar para revisión" no tiene sentido fuera
+// de ATENZA (no hay quién lo reciba), así que acá solo se esconde en
+// tiempo de ejecución cuando no corresponde mostrarlo.
+if (!abiertoDesdeAtenza) {
+  document.querySelectorAll(".editor-panel .code-btn.submit").forEach(btn => btn.remove());
 }
 
 document.querySelectorAll(".editor-panel").forEach(conectarEditor);
 
+</script>
+
+<!-- ATENZA · guía nativa en vivo (20/08). Solo actúa si el taller se abrió
+     desde un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=...
+     en la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedido directo, como siempre, no dispara nada nuevo. No toca el
+     motor de ejercicios de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen (ver DEPLOY-GUIAS-SNIPPET.md en
+     el repo de atenza para el detalle de cada endpoint). Mismo bloque que
+     funciones.html, adaptado porque este taller no tiene quiz-mc/quiz-open
+     — cada data-quiz-id es siempre un editor-panel. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  // paramsDeAtenza() (definida arriba) también busca dentro de
+  // location.hash — el link real que arma ATENZA a veces llega como
+  // "...html#reto?atenza_token=...", con el "?" después del "#", y ahí
+  // location.search por sí solo siempre da vacío.
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  // ── Progreso limpio por intento: QUIZ_PREFIX guarda el progreso por
+  // PÁGINA (pensado para "completaste esto alguna vez en tu vida"), sin
+  // saber nada de "intentos" de ATENZA. Sin esto, cualquier resto de una
+  // práctica libre o de un lanzamiento anterior ya deja casi todo marcado
+  // "ok" de entrada — enviar el primer ejercicio NUEVO alcanza para que
+  // actualizarProgreso() crea que ya se terminó todo. Se guarda a qué
+  // guia_intento pertenece el progreso actual de esta página; si cambió,
+  // se limpia todo antes de que el estudiante toque nada. Si es el mismo
+  // (recargó la pestaña a mitad de camino), no se toca — sigue donde quedó.
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  // ── Aviso flotante — clave para "cuándo termina el taller": antes de
+  // esto el estudiante llegaba al 100% local y no había ninguna señal de
+  // que ya había terminado, y una falla de red al reportar quedaba
+  // invisible (nota mal calculada sin que nadie se entere). onClick, si
+  // se pasa, permite reintentar tocando el aviso.
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  // ── Pantalla completa: se pide en un click real del usuario, no solo.
+  // z-index alto para quedar por encima del sidebar y cualquier menú.
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  // ── Reportar cada ejercicio enviado — engancha marcarResuelto(), que ya
+  // usa el botón "📨 Enviar para revisión" de cada editor-panel, sin tocar
+  // ningún call-site. Manda código + salida como texto_libre, para que el
+  // docente lo revise sin tener que ejecutar nada — no se autocorrige
+  // (siempre "ok").
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var panel = document.querySelector('[data-quiz-id="' + id + '"]');
+    var codigo = panel ? panel.querySelector('.editor') : null;
+    var salida = panel ? panel.querySelector('.output-body') : null;
+    post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+      referencia: id,
+      texto_libre:
+        (codigo ? codigo.value : '') +
+        '\n\n--- Salida ---\n' +
+        (salida ? salida.textContent : ''),
+    }).catch(function () {});
+  };
+
+  // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder foco.
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ── Finalizar al completar el 100% — mismo cálculo que ya usa la barra
+  // de progreso de arriba (todos los ejercicios enviados). Si falla, NO
+  // se queda marcado como finalizado — el aviso rojo deja reintentar con
+  // un toque.
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Taller enviado! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu taller — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu taller — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  // Cuenta ENVIADOS (cualquier valor guardado, siempre "ok" en este
+  // taller porque no se autocorrige).
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var enviados = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) enviados++; });
+    if (ids.size > 0 && enviados === ids.size) intentarFinalizar();
+  };
+})();
 </script>
 
 <!-- Cloudflare Web Analytics -->
