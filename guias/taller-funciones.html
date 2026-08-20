@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller de Funciones: Organiza tu Código en Python | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* Bloqueo de copiar/pegar en los editores: flash de aviso + toast global.
+   Mismo patrón que taller-repaso.html y los talleres de Base de Datos II. */
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>Taller</span></div>
+<p>Repaso integrador: funciones en Python</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#zona-pruebas">Zona de pruebas libres</a>
+<a href="#calculan-deciden">1. Funciones que calculan y deciden</a>
+<a href="#con-listas">2. Funciones con listas</a>
+<a href="#se-llaman">3. Funciones que llaman a otras</a>
+<a href="#reto">Reto final</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Taller de Repaso</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Funciones: <span>Taller Integrador</span></h1>
+<p>Ya viste <code>def</code>, parámetros, valores por defecto, <code>return</code> y scope como tema separado. Este taller no enseña nada nuevo: te da <strong>11 problemas cortos más un reto final</strong> para que combines funciones con todo lo que ya sabías (condicionales, bucles, listas) resolviendo problemas de verdad — la misma idea que el taller de repaso anterior, pero ahora todo pasa <em>adentro</em> de funciones.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Este taller es la práctica integradora de <a href="funciones.html">Funciones</a> junto con todo lo anterior: <a href="variables.html">Variables</a>, <a href="condicionales.html">Condicionales</a>, <a href="bucles.html">Bucles</a> y el resto de guías de POO. No repite la teoría de ninguna — si algo no te suena, es el momento de volver a repasarlo antes de seguir.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito y alcance</strong>
+<p>Este taller asume que ya completaste <a href="funciones.html">Funciones en Python</a> y las guías previas. Ningún ejercicio necesita <strong>recursión</strong>, <code>*args</code>/<code>**kwargs</code>, ni indexado de listas (<code>lista[0]</code>) o métodos como <code>.append()</code> — nada de eso se explicó todavía, y no hace falta: alcanza con <code>for elemento in lista</code>, tal como en el taller anterior.</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Cada ejercicio trae un editor <strong>vacío</strong>: el enunciado te dice qué función tenés que escribir, y vos escribís el código Python de cero. Presiona <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador con Pyodide (Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete.</p>
+</div>
+<div class="highlight">
+<strong>✋ Se escribe a mano</strong>
+<p>En este taller, copiar y pegar código en los editores está deshabilitado (incluido arrastrar y soltar). La idea es que practiques escribiendo la sintaxis vos mismo, no que la traigas de otro lado.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🧩 Integrador</h3><p>Cada bloque mezcla funciones con condicionales, bucles y listas.</p></div>
+<div class="info"><h3>🔁 Funciones que se llaman</h3><p>La sección 3 usa el resultado de una función dentro de otra.</p></div>
+<div class="info"><h3>🎯 Reto final</h3><p>Un problema más largo que se resuelve organizando el código en varias funciones, no en un solo bloque.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Este bloque queda disponible durante todo el taller. Usalo en cualquier momento para probar una idea suelta, revisar cómo se comporta una función, o experimentar algo que se te ocurra a mitad de un ejercicio — sin desordenar los bloques numerados.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🧪 Escribe cualquier código Python</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu código">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Zona de pruebas libres" placeholder="# Por ejemplo: def doble(x): return x * 2"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="calculan-deciden">
+<div class="card">
+<h2 class="section-title">1. Funciones que calculan y deciden</h2>
+<p class="lead">Cuatro funciones que reciben datos, deciden algo con <code>if</code>/<code>elif</code>/<code>else</code> y devuelven un resultado con <code>return</code>.</p>
+
+<div class="highlight">
+<strong>Enunciado — 1.1: ¿Año bisiesto?</strong>
+<p>Escribe una función <code>es_bisiesto(anio)</code> que devuelva <code>True</code> o <code>False</code>. Un año es bisiesto si es divisible entre 4, salvo que también sea divisible entre 100 — en ese caso, tiene que ser divisible entre 400 para seguir siendo bisiesto (por ejemplo, 2000 fue bisiesto, pero 1900 no). Prueba tu función con <code>print(es_bisiesto(2024))</code> y <code>print(es_bisiesto(1900))</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 1.1 — ¿Año bisiesto?</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: año bisiesto" placeholder="# Escribe es_bisiesto(anio) y pruébala con 2024 y 1900."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.2: Bolivianos a dólares</strong>
+<p>Escribe una función <code>a_dolares(bolivianos, tasa=6.96)</code> con <code>tasa</code> como parámetro con valor por defecto (el tipo de cambio oficial). Debe devolver el monto convertido a dólares, redondeado a 2 decimales con <code>round()</code>. Pruébala una vez sin pasar la tasa, <code>print(a_dolares(500))</code>, y otra vez pasando una tasa distinta, <code>print(a_dolares(500, 7.10))</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 1.2 — Bolivianos a dólares</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: bolivianos a dólares" placeholder="# Escribe a_dolares(bolivianos, tasa=6.96) y pruébala con y sin tasa."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.3: Área y perímetro de un rectángulo</strong>
+<p>Escribe una función <code>rectangulo(base, altura)</code> que devuelva <strong>dos valores</strong> con un solo <code>return</code>: el área (<code>base * altura</code>) y el perímetro (<code>2 * (base + altura)</code>). Llámala desempaquetando el resultado en dos variables, <code>area, perimetro = rectangulo(4, 6)</code>, e imprime ambas.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 1.3 — Área y perímetro</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: área y perímetro" placeholder="# Escribe rectangulo(base, altura) con retorno múltiple."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.4: Clasificar el IMC</strong>
+<p>Escribe una función <code>clasificar_imc(peso, altura)</code> que calcule el índice de masa corporal (<code>imc = peso / altura ** 2</code>, con <code>altura</code> en metros) y devuelva un texto según el resultado, usando <code>if</code>/<code>elif</code>/<code>else</code> adentro de la función: <em>"Bajo peso"</em> si <code>imc &lt; 18.5</code>, <em>"Normal"</em> si está entre 18.5 y 25 (sin incluir 25), <em>"Sobrepeso"</em> si está entre 25 y 30 (sin incluir 30), o <em>"Obesidad"</em> si <code>imc &gt;= 30</code>. Prueba con <code>print(clasificar_imc(70, 1.75))</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 1.4 — Clasificar el IMC</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: clasificar IMC" placeholder="# Escribe clasificar_imc(peso, altura) con if/elif/else adentro."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="con-listas">
+<div class="card">
+<h2 class="section-title">2. Funciones con listas</h2>
+<p class="lead">Cuatro funciones que reciben una lista como parámetro y la recorren con <code>for elemento in lista</code> por dentro. Ninguna necesita indexado ni <code>.append()</code>.</p>
+
+<div class="highlight">
+<strong>Enunciado — 2.1: Contar pares</strong>
+<p>Escribe una función <code>contar_pares(lista)</code> que devuelva cuántos elementos de la lista son pares. Pruébala con <code>print(contar_pares([4, 7, 10, 15, 22, 3, 8]))</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.1 — Contar pares</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: contar pares" placeholder="# Escribe contar_pares(lista) y pruébala con [4, 7, 10, 15, 22, 3, 8]."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.2: Promedio de una lista</strong>
+<p>Escribe una función <code>promedio_lista(lista)</code> que devuelva el promedio de sus elementos (suma dividida entre <code>len(lista)</code>). Vas a reutilizar esta misma idea en el reto final, así que consérvala bien resuelta. Pruébala con <code>print(promedio_lista([15, 8, 20, 3, 12]))</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.2 — Promedio de una lista</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: promedio de una lista" placeholder="# Escribe promedio_lista(lista) y pruébala con [15, 8, 20, 3, 12]."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.3: El mayor de la lista, sin max()</strong>
+<p>Escribe una función <code>buscar_mayor(lista)</code> que devuelva el valor más grande, <strong>sin usar <code>max()</code></strong>. Como no hay indexado, arranca con <code>mayor = None</code> antes del <code>for</code>, y dentro del bucle actualiza <code>mayor</code> cuando <code>mayor is None</code> (todavía no viste ningún elemento) o el elemento actual es mayor que <code>mayor</code>. Pruébala con <code>print(buscar_mayor([19, 23, 18, 31, 22, 27]))</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.3 — El mayor, sin max()</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: mayor sin max" placeholder="# Escribe buscar_mayor(lista) con mayor = None y actualízalo en el for."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.4: ¿Hay algún negativo?</strong>
+<p>Escribe una función <code>contiene_negativos(lista)</code> que devuelva <code>True</code> apenas encuentre un elemento menor a 0 — con un <code>return True</code> dentro del propio <code>for</code>, sin esperar a que termine de recorrer toda la lista. Si el bucle termina sin encontrar ninguno, la función debe devolver <code>False</code> al final. Pruébala con <code>print(contiene_negativos([5, 8, -1, 12]))</code> y <code>print(contiene_negativos([5, 8, 1, 12]))</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.4 — ¿Hay algún negativo?</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: contiene negativos" placeholder="# Escribe contiene_negativos(lista) con return True dentro del for."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>💡 return corta la función, no solo el for</strong>
+<p>Un <code>return</code> dentro de un bucle termina la función entera de inmediato, no solo esa vuelta del <code>for</code> — por eso alcanza con un <code>return True</code> apenas se cumple la condición, sin necesitar <code>break</code> ni una variable auxiliar.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="se-llaman">
+<div class="card">
+<h2 class="section-title">3. Funciones que llaman a otras funciones</h2>
+<p class="lead">Tres problemas donde una función usa el resultado de otra, en vez de repetir su lógica — la razón principal por la que conviene empaquetar código en funciones.</p>
+
+<div class="highlight">
+<strong>Enunciado — 3.1: Primos en un rango, reutilizando es_primo()</strong>
+<p>Escribe una función <code>es_primo(n)</code> (igual que en el taller anterior, pero ahora como función reutilizable). Luego, con un <code>for</code> que recorra <code>range(2, 30)</code>, llama a <code>es_primo()</code> con cada número e imprime solo los que son primos. La ventaja frente a escribir la lógica de nuevo: si mañana necesitas primos en otro rango, no reescribes nada, solo volvés a llamar la función.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 3.1 — Primos en un rango</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: primos en un rango" placeholder="# Escribe es_primo(n) y úsala dentro de un for sobre range(2, 30)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.2: Combinaciones, reutilizando factorial()</strong>
+<p>Escribe una función <code>factorial(n)</code> (igual que en el taller anterior). Luego escribe <code>combinaciones(n, k)</code> que devuelva <code>factorial(n) // (factorial(k) * factorial(n - k))</code> — llamando a <code>factorial()</code> tres veces adentro, sin repetir su lógica. Prueba con <code>print(combinaciones(5, 2))</code> (debería dar 10).</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 3.2 — Combinaciones</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: combinaciones" placeholder="# Escribe factorial(n) y luego combinaciones(n, k) usando factorial()."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.3: Total de una venta con comisión</strong>
+<p>Escribe una función <code>comision(monto, categoria="regular")</code> que devuelva el monto de la comisión según <code>categoria</code>: 5% si es <code>"regular"</code>, 10% si es <code>"premium"</code>, 2% para cualquier otro valor. Luego escribe <code>total_con_comision(monto, categoria="regular")</code>, que llame a <code>comision()</code> y devuelva <code>monto + comision(monto, categoria)</code>. Prueba con <code>print(total_con_comision(1000))</code> y <code>print(total_con_comision(1000, "premium"))</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>✍️ Ejercicio 3.3 — Total con comisión</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: total con comisión" placeholder="# Escribe comision(monto, categoria='regular') y total_con_comision(monto, categoria='regular')."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="reto">
+<div class="card">
+<h2 class="section-title">Reto final: Boletín de notas, organizado en funciones</h2>
+<p class="lead">El mismo tipo de problema que el reto del taller anterior — pero esta vez la consigna es que <strong>no</strong> lo resuelvas en un solo bloque de código: tenés que separar la lógica en funciones con nombre, y llamarlas desde abajo.</p>
+<div class="highlight">
+<strong>Datos de partida</strong>
+<p>Escribe en el editor esta lista (notas sobre 20, aprobado desde 11): <code>notas = [15, 8, 20, 3, 12, 18, 6, 10, 19, 2]</code></p>
+</div>
+<div class="highlight">
+<strong>Funciones que tenés que escribir</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><strong>1.</strong> <code>promedio(lista)</code> — devuelve el promedio de la lista (podés reutilizar tu solución del ejercicio 2.2).</li>
+<li><strong>2.</strong> <code>contar_aprobados(lista)</code> — devuelve cuántas notas son mayores o iguales a 11.</li>
+<li><strong>3.</strong> <code>nota_mas_alta(lista)</code> — devuelve la nota más alta, sin usar <code>max()</code> (podés reutilizar la idea del ejercicio 2.3).</li>
+<li><strong>4.</strong> <code>clasificar_rendimiento(promedio)</code> — recibe <strong>un número</strong> (no la lista) y devuelve el texto <em>"Buen rendimiento general"</em> si es mayor o igual a 14, <em>"Rendimiento regular"</em> si está entre 11 y 14, o <em>"Rendimiento bajo"</em> si es menor a 11.</li>
+</ul>
+</div>
+<div class="highlight">
+<strong>Al final, imprime</strong>
+<p>Llamando a las cuatro funciones (no repitiendo su lógica suelta): el promedio con 2 decimales, la cantidad de aprobados, la nota más alta, y el mensaje de rendimiento que corresponde según ese promedio.</p>
+</div>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>🏆 Resuelve aquí el reto</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu solución al reto final" placeholder="# notas = [15, 8, 20, 3, 12, 18, 6, 10, 19, 2]
+# 1. def promedio(lista): ...
+# 2. def contar_aprobados(lista): ...
+# 3. def nota_mas_alta(lista): ...
+# 4. def clasificar_rendimiento(promedio): ...
+# Al final, llama a las cuatro funciones e imprime sus resultados."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet del taller</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Herramienta</th><th scope="col">Para qué la usaste hoy</th></tr></thead>
+<tbody>
+<tr><td><code>def nombre(param=valor): ...</code></td><td>Parámetro con valor por defecto, opcional al llamar.</td></tr>
+<tr><td><code>return a, b</code></td><td>Devolver varios valores a la vez, para desempaquetar en dos variables.</td></tr>
+<tr><td><code>if</code>/<code>elif</code>/<code>else</code> dentro de una función</td><td>Decidir qué devolver según el dato recibido.</td></tr>
+<tr><td><code>for elemento in lista</code> dentro de una función</td><td>Recorrer una lista que llega como parámetro.</td></tr>
+<tr><td><code>mayor = None</code> + actualizar en el <code>for</code></td><td>Encontrar el máximo de una lista sin indexado ni <code>max()</code>.</td></tr>
+<tr><td><code>return</code> dentro de un bucle</td><td>Cortar la función entera apenas se cumple una condición.</td></tr>
+<tr><td>Una función que llama a otra</td><td>Reutilizar lógica ya resuelta (<code>factorial()</code> adentro de <code>combinaciones()</code>).</td></tr>
+<tr><td>Separar un problema en funciones con nombre</td><td>Organizar un programa más grande en piezas que se prueban por separado.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🧱 El primer paso hacia los objetos</h3><p>Separar el reto final en <code>promedio()</code>, <code>contar_aprobados()</code>, etc. es exactamente la misma idea que vas a usar al escribir tus primeras clases: un <strong>método</strong> es, ni más ni menos, una función que vive adentro de una clase.</p></div>
+<div class="info"><h3>🔁 Funciones que se llaman a sí mismas</h3><p><code>factorial()</code> se puede escribir de otra forma, haciendo que la función se llame a sí misma en vez de usar un <code>for</code> — se llama <strong>recursión</strong>. Todavía no la viste en este curso, pero es una técnica muy usada y la vas a encontrar más adelante.</p></div>
+<div class="info"><h3>🏆 Inspirado en el banco de la UAB</h3><p>Varios de estos problemas están pensados en el mismo espíritu que el <a href="https://sites.google.com/uab.edu.bo/ii-competencia-programacionuab/banco-de-preguntas/inicial" target="_blank" rel="noopener">banco de preguntas de la Competencia de Programación UAB</a>, adaptados para practicar funciones específicamente.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller de Funciones en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Pyodide en un Web Worker (así un bucle infinito nunca cuelga la pestaña) ===== */
+const __CONTROL_SLOTS = 3;      // [0]=listo, [1]=largo de la respuesta, [2]=cancelado
+const __CONTROL_BYTES = __CONTROL_SLOTS * 4;
+const __TAM_BUFFER_INPUT = 8192; // bytes UTF-8 para la respuesta de input()
+
+function __crearSabInput(){
+  if (typeof SharedArrayBuffer === "undefined") return null;
+  try {
+    return new SharedArrayBuffer(__CONTROL_BYTES + __TAM_BUFFER_INPUT);
+  } catch (e) {
+    return null;
+  }
+}
+
+function __responderInput(sab, mensaje){
+  const control = new Int32Array(sab, 0, __CONTROL_SLOTS);
+  const textBuf = new Uint8Array(sab, __CONTROL_BYTES);
+  const respuesta = prompt(mensaje);
+  if (respuesta === null) {
+    Atomics.store(control, 2, 1);
+    Atomics.store(control, 1, 0);
+  } else {
+    Atomics.store(control, 2, 0);
+    const bytes = new TextEncoder().encode(respuesta);
+    const len = Math.min(bytes.length, textBuf.length);
+    textBuf.set(bytes.subarray(0, len));
+    Atomics.store(control, 1, len);
+  }
+  Atomics.store(control, 0, 1);
+  Atomics.notify(control, 0);
+}
+
+function __codigoWorkerPyodide(){
+  return `
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js");
+
+let __sabInput = null;
+let pyodideReadyPromise = null;
+
+function inputSincrono(mensaje){
+  if (!__sabInput) {
+    throw new Error("input() no está disponible: este navegador no soporta el modo protegido contra bucles infinitos (SharedArrayBuffer). Probá con una versión reciente de Chrome, Edge o Firefox.");
+  }
+  const control = new Int32Array(__sabInput, 0, ${__CONTROL_SLOTS});
+  const textBuf = new Uint8Array(__sabInput, ${__CONTROL_BYTES});
+  Atomics.store(control, 0, 0);
+  self.postMessage({ tipo: "input-request", mensaje: String(mensaje) });
+  Atomics.wait(control, 0, 0);
+  if (Atomics.load(control, 2)) return null;
+  const len = Atomics.load(control, 1);
+  return new TextDecoder().decode(textBuf.slice(0, len));
+}
+
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.tipo === "init") {
+    __sabInput = e.data.sab;
+  }
+});
+
+async function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      const pyodide = await loadPyodide();
+      await pyodide.runPythonAsync(\`
+import sys, io, builtins, time
+from js import inputSincrono as __input_sincrono
+
+__LIMITE_SEGUNDOS = 8
+
+def __custom_input(mensaje=""):
+    respuesta = __input_sincrono(str(mensaje))
+    if respuesta is None:
+        raise EOFError("Entrada cancelada por el usuario")
+    print(mensaje, end="")
+    print(respuesta)
+    return respuesta
+
+def __run_capture(src):
+    buf = io.StringIO()
+    old_stdout = sys.stdout
+    old_input = builtins.input
+    sys.stdout = buf
+    inicio = time.time()
+
+    def __watchdog(frame, event, arg):
+        if time.time() - inicio > __LIMITE_SEGUNDOS:
+            raise TimeoutError(f"El código tardó más de {__LIMITE_SEGUNDOS} segundos en ejecutarse (¿bucle infinito?) y fue detenido.")
+        return __watchdog
+
+    builtins.input = __custom_input
+    err = None
+    sys.settrace(__watchdog)
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.settrace(None)
+        sys.stdout = old_stdout
+        builtins.input = old_input
+    return buf.getvalue(), err
+\`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+self.onmessage = async (e) => {
+  if (e.data && e.data.tipo === "init") return;
+  const { id, codigo } = e.data;
+  try {
+    const pyodide = await cargarPyodide();
+    const funcion = pyodide.globals.get("__run_capture");
+    const resultado = funcion(codigo);
+    const [salida, error] = resultado.toJs();
+    resultado.destroy();
+    self.postMessage({ id, salida, error });
+  } catch (err) {
+    self.postMessage({ id, salida: "", error: "No se pudo ejecutar el código: " + err });
+  }
+};
+`;
+}
+
+let workerPy = null;
+let sabInputActual = null;
+let pedidoIdPy = 0;
+let pedidoActualPy = null;
+
+function __programarTimeoutPy(pedido){
+  pedido.timer = setTimeout(() => {
+    if (pedidoActualPy && pedidoActualPy.id === pedido.id) {
+      reiniciarWorkerPyodide();
+      pedidoActualPy.reject(new Error("El código tardó demasiado y fue detenido automáticamente."));
+      pedidoActualPy = null;
+    }
+  }, 20000);
+}
+
+function crearWorkerPyodide(){
+  const blob = new Blob([__codigoWorkerPyodide()], { type: "application/javascript" });
+  const worker = new Worker(URL.createObjectURL(blob));
+  sabInputActual = __crearSabInput();
+  worker.postMessage({ tipo: "init", sab: sabInputActual });
+  worker.onmessage = (e) => {
+    const msg = e.data;
+    if (msg && msg.tipo === "input-request") {
+      if (pedidoActualPy) clearTimeout(pedidoActualPy.timer);
+      __responderInput(sabInputActual, msg.mensaje);
+      if (pedidoActualPy) __programarTimeoutPy(pedidoActualPy);
+      return;
+    }
+    const { id, salida, error } = msg;
+    if (pedidoActualPy && pedidoActualPy.id === id) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.resolve({ salida, error });
+      pedidoActualPy = null;
+    }
+  };
+  worker.onerror = () => {
+    if (pedidoActualPy) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.reject(new Error("El intérprete de Python se cerró inesperadamente."));
+      pedidoActualPy = null;
+    }
+    reiniciarWorkerPyodide();
+  };
+  return worker;
+}
+
+function obtenerWorkerPyodide(){
+  if (!workerPy) workerPy = crearWorkerPyodide();
+  return workerPy;
+}
+
+function reiniciarWorkerPyodide(){
+  if (workerPy) workerPy.terminate();
+  workerPy = null;
+  sabInputActual = null;
+}
+
+function detenerEjecucion(){
+  reiniciarWorkerPyodide();
+  if (pedidoActualPy) {
+    clearTimeout(pedidoActualPy.timer);
+    pedidoActualPy.reject(new Error("Ejecución detenida."));
+    pedidoActualPy = null;
+  }
+}
+
+async function ejecutarPython(codigo){
+  const worker = obtenerWorkerPyodide();
+  const id = ++pedidoIdPy;
+  return new Promise((resolve, reject) => {
+    pedidoActualPy = { id, resolve, reject, timer: null };
+    __programarTimeoutPy(pedidoActualPy);
+    worker.postMessage({ id, codigo });
+  });
+}
+
+/* ===== Toast de aviso al bloquear copiar/pegar en los editores ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  if (!clipboardToast) return;
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
+/* ===== Conectar un panel de editor (bloqueado a copiar/pegar, ejecuta código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  const stopBtn = document.createElement("button");
+  stopBtn.type = "button";
+  stopBtn.className = "code-btn stop";
+  stopBtn.textContent = "⏹ Detener";
+  stopBtn.setAttribute("aria-label", "Detener la ejecución");
+  stopBtn.hidden = true;
+  runBtn.after(stopBtn);
+  stopBtn.onclick = () => detenerEjecucion();
+
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En este taller el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  ["copy", "cut", "paste", "drop"].forEach(evt => {
+    textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); });
+  });
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart;
+      const fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (teclaCtrl && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      avisarBloqueo();
+    }
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    stopBtn.hidden = false;
+    try {
+      const { salida, error } = await ejecutarPython(codigo);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+      }
+    } catch (e) {
+      outputBody.textContent = e && e.message ? e.message : String(e);
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+      stopBtn.hidden = true;
+    }
+  };
+}
+
+document.querySelectorAll(".editor-panel").forEach(conectarEditor);
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
