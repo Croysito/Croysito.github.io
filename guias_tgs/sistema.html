@@ -13,6 +13,35 @@
 })();
 </script>
 
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — requisito crítico
+  // documentado en DEPLOY-GUIAS-SNIPPET.md: el progreso de esta guía vive
+  // en localStorage por navegador, no por intento. Si el guia_intento de
+  // la URL cambió respecto al último guardado, se limpia el progreso
+  // previo ANTES de que el motor de quizzes lo lea (por eso corre acá,
+  // en el <head>, antes que el resto de la página).
+  function paramsAtenza() {
+    var p = new URLSearchParams(location.search);
+    if (!p.get('atenza_token') && location.hash.indexOf('?') !== -1) {
+      p = new URLSearchParams(location.hash.slice(location.hash.indexOf('?')));
+    }
+    return p;
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  // Debe coincidir con QUIZ_PREFIX del motor de quizzes, más abajo en la página.
+  var QUIZ_PREFIX = 'tgs-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -48,6 +77,7 @@
 <a href="#pensamiento">Pensamiento sistémico</a>
 <a href="#ejemplos">Ejemplos aplicados</a>
 <a href="#ejercicios">Actividades de repaso</a>
+<a href="#evidencia">Evidencia: diagrama de componentes</a>
 </nav>
 
 <button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
@@ -600,21 +630,23 @@ ENTRADA  ──▶  PROCESO  ──▶  SALIDA  ──▶  ENTORNO
 </div>
 </section>
 
-<section class="container">
+<section class="container" id="evidencia">
 <div class="card">
-<h2 class="section-title">Reto Final: primer artefacto de análisis</h2>
-<p>Elige un sistema real que te interese (tu universidad, un negocio familiar, un club, una institución pública) y elabora un breve reporte que incluya:</p>
-<ul style="margin-left:25px;line-height:2">
-<li>Sus componentes, relaciones, límite, entorno y propósito.</li>
-<li>Un diagrama simple de entrada → proceso → salida.</li>
-<li>Al menos un bucle de retroalimentación (positiva o negativa).</li>
-<li>Su clasificación como sistema abierto o cerrado, justificada.</li>
-<li>Un subsistema y un suprasistema a los que pertenece.</li>
-<li>Al menos una propiedad sistémica identificada (sinergia, entropía, homeostasis o equifinalidad).</li>
+<h2 class="section-title">📤 Evidencia de la sesión: diagrama de componentes</h2>
+<p class="lead">Antes de la próxima clase tienes que entregar un <strong>diagrama de componentes</strong> de un sistema real que conozcas bien: tu universidad, un ERP, una tienda de e-commerce, o cualquier otro sistema con el que trabajes o interactúes seguido.</p>
+<div class="highlight">
+<strong>Herramienta: Draw.io</strong>
+<p>Arma el diagrama en <a href="https://app.diagrams.net" target="_blank" rel="noopener">Draw.io</a> (gratuito, funciona desde el navegador, no necesita instalación).</p>
+</div>
+<p>Como mínimo, tu diagrama debe incluir:</p>
+<ul style="margin:0 0 20px 22px;line-height:1.9;">
+<li>Los <strong>componentes</strong> principales del sistema elegido (mínimo 5).</li>
+<li>Las <strong>relaciones</strong> entre esos componentes, indicadas con líneas o flechas.</li>
+<li>Una marca visual del <strong>límite</strong> del sistema, que separe lo que pertenece al sistema de lo que es su <strong>entorno</strong>.</li>
 </ul>
 <div class="highlight">
-<strong>Por qué este es tu primer artefacto</strong>
-<p>Este análisis será la base sobre la que construirás los siguientes modelos de la materia: cuanto mejor definas el sistema ahora, más fácil será modelarlo, diagramarlo y mejorarlo después.</p>
+<strong>Entrega</strong>
+<p>Exporta el diagrama como imagen (PNG o JPG) desde Draw.io y súbelo a la tarea correspondiente en <strong>Classroom</strong> antes del inicio de la próxima sesión. No se acepta el link editable de Draw.io en lugar de la imagen: sube el archivo directamente.</p>
 </div>
 </div>
 </section>
@@ -744,20 +776,36 @@ const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
 
 function marcarResuelto(id, estado) {
   localStorage.setItem(QUIZ_PREFIX + id, estado);
+  // Engancha con el snippet de ATENZA si la guía se abrió desde un
+  // lanzamiento en vivo (?atenza_token=...&guia_intento=...); si no,
+  // window.atenzaReportarAutomatica no existe y esto no hace nada.
+  window.atenzaReportarAutomatica && window.atenzaReportarAutomatica(id, estado === "ok");
   actualizarProgreso();
 }
 
 function actualizarProgreso() {
-  const barra = document.getElementById("quizBarFill");
-  const etiqueta = document.getElementById("quizBarLabel");
-  if (!barra || !etiqueta) return;
   const ids = new Set();
   document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
-  let correctas = 0;
-  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  let correctas = 0, respondidas = 0;
+  ids.forEach(id => {
+    const v = localStorage.getItem(QUIZ_PREFIX + id);
+    if (v) respondidas++;
+    if (v === "ok") correctas++;
+  });
   const total = ids.size;
-  etiqueta.textContent = correctas + " / " + total;
-  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (barra && etiqueta) {
+    etiqueta.textContent = correctas + " / " + total;
+    barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+  }
+  // ATENZA cuenta preguntas RESPONDIDAS, no solo correctas: con la
+  // política de "sin reintentos" de esta guía, exigir 100% de correctas
+  // dejaría la guía "en curso" para siempre apenas alguien se equivoque
+  // una vez (ver advertencia en DEPLOY-GUIAS-SNIPPET.md).
+  if (total && respondidas === total) {
+    window.atenzaFinalizarGuia && window.atenzaFinalizarGuia();
+  }
 }
 
 /* Selección múltiple y verdadero/falso */
@@ -783,7 +831,8 @@ document.querySelectorAll(".quiz-mc").forEach(quiz => {
   });
 });
 
-/* Emparejamiento */
+/* Emparejamiento — sin reintentos: cada intento de pareja es definitivo,
+   se revela la pareja correcta cuando el intento falla */
 document.querySelectorAll(".quiz-match").forEach(quiz => {
   quiz.querySelectorAll('[data-col="right"]').forEach(col => {
     [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
@@ -794,16 +843,21 @@ document.querySelectorAll(".quiz-match").forEach(quiz => {
   const id = quiz.dataset.quizId;
   let seleccionado = null;
   let pares = 0;
+  let intentos = 0;
+
+  function parejaDe(item) {
+    return items.find(i => i !== item && i.dataset.pair === item.dataset.pair);
+  }
 
   function refrescar() {
     if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
-    if (pares === totalPares) marcarResuelto(id, "ok");
+    if (intentos === totalPares) marcarResuelto(id, pares === totalPares ? "ok" : "ko");
   }
   refrescar();
 
   items.forEach(item => {
     item.addEventListener("click", () => {
-      if (item.classList.contains("matched")) return;
+      if (item.disabled) return;
       if (seleccionado === item) {
         item.classList.remove("selected");
         seleccionado = null;
@@ -814,25 +868,27 @@ document.querySelectorAll(".quiz-match").forEach(quiz => {
         item.classList.add("selected");
         return;
       }
-      if (seleccionado.dataset.pair === item.dataset.pair) {
-        seleccionado.classList.remove("selected");
-        seleccionado.classList.add("matched");
+      const previo = seleccionado;
+      seleccionado = null;
+      previo.classList.remove("selected");
+      previo.disabled = true;
+      item.disabled = true;
+      intentos++;
+      if (previo.dataset.pair === item.dataset.pair) {
+        previo.classList.add("matched");
         item.classList.add("matched");
-        seleccionado.disabled = true;
-        item.disabled = true;
-        seleccionado = null;
         pares++;
-        refrescar();
       } else {
-        const previo = seleccionado;
-        item.classList.add("wrong");
-        previo.classList.add("wrong");
-        setTimeout(() => {
-          item.classList.remove("wrong");
-          previo.classList.remove("wrong", "selected");
-        }, 500);
-        seleccionado = null;
+        [previo, item].forEach(el => {
+          el.classList.add("wrong");
+          const correcta = parejaDe(el);
+          const nota = document.createElement("small");
+          nota.style.cssText = "display:block;font-weight:400;opacity:.75;margin-top:4px;";
+          nota.textContent = "→ correcta: " + (correcta ? correcta.textContent : "");
+          el.appendChild(nota);
+        });
       }
+      refrescar();
     });
   });
 });
@@ -843,10 +899,11 @@ document.querySelectorAll(".quiz-classify").forEach(quiz => {
   const progreso = quiz.querySelector(".quiz-progress");
   const id = quiz.dataset.quizId;
   let correctas = 0;
+  let respondidas = 0;
 
   function refrescar() {
     if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
-    if (correctas === filas.length) marcarResuelto(id, "ok");
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
   }
   refrescar();
 
@@ -856,6 +913,7 @@ document.querySelectorAll(".quiz-classify").forEach(quiz => {
       btn.addEventListener("click", () => {
         if (botones.some(b => b.disabled)) return;
         botones.forEach(b => b.disabled = true);
+        respondidas++;
         if (btn.hasAttribute("data-correct")) {
           btn.classList.add("correct");
           correctas++;
@@ -874,18 +932,28 @@ document.querySelectorAll(".quiz-fill").forEach(quiz => {
   const blancos = [...quiz.querySelectorAll(".quiz-blank")];
   const progreso = quiz.querySelector(".quiz-progress");
   const id = quiz.dataset.quizId;
+  let respondidas = 0;
 
   function refrescar() {
     const correctas = blancos.filter(b => b.classList.contains("correct")).length;
     if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
-    if (correctas === blancos.length) marcarResuelto(id, "ok");
+    if (respondidas === blancos.length) marcarResuelto(id, correctas === blancos.length ? "ok" : "ko");
   }
 
   blancos.forEach(sel => {
     sel.addEventListener("change", () => {
-      sel.classList.remove("correct", "incorrect");
-      if (!sel.value) return;
-      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      if (sel.disabled || !sel.value) return;
+      const esCorrecta = sel.value === sel.dataset.correct;
+      sel.classList.add(esCorrecta ? "correct" : "incorrect");
+      sel.disabled = true;
+      respondidas++;
+      if (!esCorrecta) {
+        const opcionCorrecta = [...sel.options].find(o => o.value === sel.dataset.correct);
+        const nota = document.createElement("span");
+        nota.style.cssText = "font-size:.85em;opacity:.8;margin-left:6px;";
+        nota.textContent = "(correcta: " + (opcionCorrecta ? opcionCorrecta.textContent : sel.dataset.correct) + ")";
+        sel.insertAdjacentElement("afterend", nota);
+      }
       refrescar();
     });
   });
@@ -895,53 +963,31 @@ actualizarProgreso();
 
 </script>
 
-<!-- ATENZA · guía nativa en vivo (25/08). Solo actúa si la guía se abrió
-     desde un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=...
-     en la URL, agregado por IniciarOReanudarGuiaIntento del backend);
-     accedida directo, como siempre, no dispara nada nuevo. No toca el
-     motor de quizzes de arriba: se engancha a marcarResuelto() y
-     actualizarProgreso(), que ya existen (ver DEPLOY-GUIAS-SNIPPET.md en
-     el repo de atenza para el detalle de cada endpoint). paramsDeAtenza()
-     busca los parámetros también dentro de location.hash porque el link
-     real que arma ATENZA a veces llega como "...html#seccion?atenza_token=...",
-     con el "?" después del "#" (bug de backend documentado en CLAUDE.md). -->
+<!-- ATENZA · guía nativa en vivo -->
+<style>
+.atenza-comenzar-btn{
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:970;
+  padding:16px 32px; border:none; border-radius:12px; background:var(--verde); color:#fff;
+  font-family:'DM Sans',sans-serif; font-size:16px; font-weight:600; cursor:pointer;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
+}
+</style>
 <script>
 (function () {
   var ATENZA_API = 'https://api-atenza.atenzabo.com';
 
-  function paramsDeAtenza() {
-    var candidatos = [location.search];
-    var posInterrogante = location.hash.indexOf('?');
-    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
-    for (var i = 0; i < candidatos.length; i++) {
-      var p = new URLSearchParams(candidatos[i]);
-      if (p.get('atenza_token') && p.get('guia_intento')) return p;
-    }
-    return new URLSearchParams(location.search);
-  }
-
-  var params = paramsDeAtenza();
+  var params = new URLSearchParams(location.search);
   var token = params.get('atenza_token');
   var guiaIntentoId = params.get('guia_intento');
-  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin Atenza
 
-  // ── Progreso limpio por intento: QUIZ_PREFIX guarda el progreso por
-  // PÁGINA (pensado para "completaste esto alguna vez en tu vida"), sin
-  // saber nada de "intentos" de ATENZA. Sin esto, cualquier resto de una
-  // práctica libre o de un lanzamiento anterior ya deja casi todo marcado
-  // "ok"/"ko" de entrada, y actualizarProgreso() creería que ya terminó
-  // todo. Se guarda a qué guia_intento pertenece el progreso actual de
-  // esta página; si cambió, se limpia antes de que el estudiante toque
-  // nada. Si es el mismo (recargó a mitad de camino), no se toca.
-  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
-  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
-    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
-      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
-    });
-    localStorage.setItem(claveIntentoActual, guiaIntentoId);
-    if (typeof actualizarProgreso === 'function') actualizarProgreso();
-  }
-
+  // NO swallowees el error acá — el aviso de abajo necesita saber si
+  // /finalizar realmente llegó, si no la nota queda mal calculada sin que
+  // nadie se entere (bug real, visto en producción el 17/08: una guía sin
+  // este script nunca reportó nada, el docente tuvo que cancelar el
+  // lanzamiento a mano y a todos les quedó nota 0). Los call-sites de
+  // respuesta/incidente sí lo swallowean (fire-and-forget), solo
+  // /finalizar necesita reaccionar al resultado.
   function post(path, body) {
     return fetch(ATENZA_API + path, {
       method: 'POST',
@@ -950,9 +996,11 @@ actualizarProgreso();
     });
   }
 
-  // ── Aviso flotante: sin esto el estudiante llega al 100% local y no hay
-  // ninguna señal de que ya terminó, y una falla de red al reportar queda
-  // invisible. onClick, si se pasa, permite reintentar tocando el aviso.
+  // ── Aviso flotante — la única señal visible de "ya terminaste, podés
+  // cerrar la pestaña" o "no se pudo enviar, tocá para reintentar". Sin
+  // esto el estudiante llega al 100% local (su barra de progreso de
+  // siempre) y no tiene ninguna pista de que además hay que esperar a que
+  // se confirme del lado de ATENZA.
   function avisar(texto, ok, onClick) {
     var aviso = document.createElement('div');
     aviso.textContent = texto;
@@ -961,21 +1009,28 @@ actualizarProgreso();
       'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
       'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
       (onClick ? 'pointer' : 'default') + ';' +
-      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+      'background:' + (ok ? '#78b159' : '#c0392b') + ';'; // ajustá los colores a tu paleta
     if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
     document.body.appendChild(aviso);
   }
 
   // ── Pantalla completa: se pide en un click real del usuario, no solo.
   var pantallaBtn = document.createElement('button');
-  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
-  pantallaBtn.style.cssText =
-    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
-    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
-    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
-  document.body.appendChild(pantallaBtn);
+  pantallaBtn.textContent = 'Comenzar en pantalla completa';
+  pantallaBtn.className = 'atenza-comenzar-btn'; // dale tu propio estilo
+  document.body.prepend(pantallaBtn);
 
   var comenzado = false;
+  // terminado se pone en true recién cuando /finalizar responde ok (más
+  // abajo, en atenzaFinalizarGuia). Antes de este fix, comenzado se
+  // quedaba en true para siempre: salir de pantalla completa, cambiar de
+  // pestaña o cerrar la pestaña después de haber enviado la guía seguía
+  // reportando incidencias y disparando el aviso de "¿seguro que salís?"
+  // — contradiciendo el propio mensaje de "ya podés cerrar esta pestaña".
+  // Cancelaciones hechas por el docente desde el panel de ATENZA no se
+  // pueden detectar acá: esta página no sondea el estado del intento, así
+  // que ese caso solo se puede cortar del lado del backend.
+  var terminado = false;
   pantallaBtn.addEventListener('click', function () {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(function () {});
@@ -984,27 +1039,18 @@ actualizarProgreso();
     pantallaBtn.remove();
   });
 
-  // ── Reportar cada pregunta resuelta — engancha marcarResuelto(), que ya
-  // usan los cuatro tipos de actividad de esta guía (mc/match/classify/fill)
-  // sin tocar ninguno de sus call-sites. Esta guía no tiene quiz-open, pero
-  // se deja la rama por si se agrega uno más adelante (mismo criterio que
-  // las demás guías con este bloque).
-  var marcarResueltoOriginal = marcarResuelto;
-  marcarResuelto = function (id, estado) {
-    marcarResueltoOriginal(id, estado);
-    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
-    if (quiz && quiz.classList.contains('quiz-open')) {
-      var textarea = quiz.querySelector('.quiz-open-input');
-      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
-        referencia: id,
-        texto_libre: textarea ? textarea.value : '',
-      }).catch(function () {});
-    } else {
-      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
-        referencia: id,
-        correcta: estado === 'ok',
-      }).catch(function () {});
-    }
+  // ── Reportar cada pregunta contestada — engancha al motor que ya tenés.
+  // Llamá a estas dos funciones desde donde ya marcás una pregunta como
+  // resuelta (junto a marcarResuelto(id, "ok"/"error") en tu código). Si
+  // ya tenés un único choke-point tipo marcarResuelto(id, estado), es más
+  // seguro engancharte ahí una sola vez (ver ejemplo en "Qué tenés que
+  // enganchar vos" más abajo) que acordarte de llamar esto en cada
+  // call-site del motor.
+  window.atenzaReportarAutomatica = function (referencia, correcta) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', { referencia: referencia, correcta: correcta }).catch(function () {});
+  };
+  window.atenzaReportarAbierta = function (referencia, textoLibre) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', { referencia: referencia, texto_libre: textoLibre }).catch(function () {});
   };
 
   // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder foco.
@@ -1012,51 +1058,48 @@ actualizarProgreso();
     post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
   }
   document.addEventListener('visibilitychange', function () {
-    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
   });
   document.addEventListener('fullscreenchange', function () {
-    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
   });
   window.addEventListener('blur', function () {
-    if (comenzado) reportarIncidente('blur');
+    if (comenzado && !terminado) reportarIncidente('blur');
   });
   window.addEventListener('beforeunload', function (e) {
-    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
   });
 
-  // ── Finalizar al completar el 100%. Si falla, NO se queda marcado como
-  // finalizado — el aviso rojo deja reintentar con un toque.
-  var finalizado = false;
-  function intentarFinalizar() {
-    finalizado = true;
+  // ── Finalizar: llamalo cuando el estudiante TERMINÓ DE CONTESTAR el
+  // cuestionario (mismo lugar donde antes llamabas al /completar viejo).
+  // ⚠️ "Terminó de contestar" NO es lo mismo que "contestó todo bien" —
+  // si tu criterio de "100%" cuenta solo las correctas, un estudiante que
+  // se equivoca en una sola pregunta de un solo intento nunca llega al
+  // 100% y esto no se llama nunca (bug real, 17/08: la guía se quedaba
+  // "en curso" para siempre, el docente tenía que cancelar el
+  // lanzamiento a mano). Contá preguntas RESPONDIDAS (acertadas o no),
+  // no preguntas acertadas.
+  // A diferencia de las otras dos, esta SÍ le muestra algo al estudiante
+  // y reintenta si falla — es la única señal de que la guía quedó
+  // registrada de verdad, no la des por sentada.
+  var finalizando = false;
+  window.atenzaFinalizarGuia = function () {
+    if (finalizando) return;
+    finalizando = true;
     post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
       .then(function (res) {
         if (res.ok) {
+          terminado = true;
           avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
         } else {
-          finalizado = false;
-          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+          finalizando = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, window.atenzaFinalizarGuia);
         }
       })
       .catch(function () {
-        finalizado = false;
-        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        finalizando = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, window.atenzaFinalizarGuia);
       });
-  }
-
-  // ATENZA cuenta preguntas RESPONDIDAS (ok o ko, cualquier valor guardado),
-  // no solo correctas: en quiz-mc/quiz-classify cada pregunta es de un solo
-  // intento, así que exigir 100% de correctas dejaría la guía "en curso"
-  // para siempre apenas alguien se equivoque una vez.
-  var actualizarProgresoOriginal = actualizarProgreso;
-  actualizarProgreso = function () {
-    actualizarProgresoOriginal();
-    if (finalizado) return;
-    var ids = new Set();
-    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
-    var contestadas = 0;
-    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
-    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
   };
 })();
 </script>

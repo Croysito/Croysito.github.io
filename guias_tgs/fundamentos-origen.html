@@ -979,6 +979,16 @@ actualizarProgreso();
   document.body.prepend(pantallaBtn);
 
   var comenzado = false;
+  // terminado se pone en true recién cuando /finalizar responde ok (más
+  // abajo, en atenzaFinalizarGuia). Antes de este fix, comenzado se
+  // quedaba en true para siempre: salir de pantalla completa, cambiar de
+  // pestaña o cerrar la pestaña después de haber enviado la guía seguía
+  // reportando incidencias y disparando el aviso de "¿seguro que salís?"
+  // — contradiciendo el propio mensaje de "ya podés cerrar esta pestaña".
+  // Cancelaciones hechas por el docente desde el panel de ATENZA no se
+  // pueden detectar acá: esta página no sondea el estado del intento, así
+  // que ese caso solo se puede cortar del lado del backend.
+  var terminado = false;
   pantallaBtn.addEventListener('click', function () {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(function () {});
@@ -1006,16 +1016,16 @@ actualizarProgreso();
     post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
   }
   document.addEventListener('visibilitychange', function () {
-    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
   });
   document.addEventListener('fullscreenchange', function () {
-    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
   });
   window.addEventListener('blur', function () {
-    if (comenzado) reportarIncidente('blur');
+    if (comenzado && !terminado) reportarIncidente('blur');
   });
   window.addEventListener('beforeunload', function (e) {
-    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
   });
 
   // ── Finalizar: llamalo cuando el estudiante TERMINÓ DE CONTESTAR el
@@ -1037,6 +1047,7 @@ actualizarProgreso();
     post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
       .then(function (res) {
         if (res.ok) {
+          terminado = true;
           avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
         } else {
           finalizando = false;
