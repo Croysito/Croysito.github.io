@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clases y Objetos desde Cero en Python | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="mapa-mode">
+
+<div class="mapa-topbar">
+<button class="mapa-icon-btn" id="mapaMenuBtn" aria-label="Abrir índice de la guía" aria-expanded="false">☰</button>
+<div class="mapa-brand">Clases y <span>Objetos</span></div>
+<div class="mapa-progress-track"><div class="mapa-progress-fill" id="mapaFill"></div></div>
+<span class="mapa-counter" id="mapaCounter">0 / 7 nodos</span>
+<button class="mapa-icon-btn" id="mapaThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="mapa-menu-overlay" id="mapaMenuOverlay"></div>
+<nav class="mapa-menu-panel" id="mapaMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="mapa-menu-list">
+<button data-nodo="clase">1 · Clase</button>
+<button data-nodo="objeto">2 · Objeto</button>
+<button data-nodo="atributos">3 · Atributos</button>
+<button data-nodo="constructor">4 · __init__ y self</button>
+<button data-nodo="metodos">5 · Métodos</button>
+<button data-nodo="instancias">6 · Instancias múltiples</button>
+<button data-nodo="repaso">7 · Repaso rápido</button>
+<button data-scroll="reto">🏆 Reto Final</button>
+<button data-scroll="cheatsheet">📋 Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="mapa-body">
+
+<section class="flow-intro">
+<div class="flow-badge">🐍 Guía de Aula Invertida · Mapa conceptual</div>
+<h1 class="flow-h1">Clases y <span>Objetos</span> desde cero</h1>
+<p class="flow-lead">Hasta ahora organizaste tu código en funciones. El siguiente paso es organizar datos y comportamiento <strong>juntos</strong>, dentro de una misma unidad: eso es una clase. Esta guía es un <strong>mapa</strong>, no una lista de secciones: hacé clic en cualquier nodo, en el orden que prefieras. El recomendado es 1→7, pero no está bloqueado.</p>
+<div class="flow-sub">💻 Los nodos con ✍️ tienen un editor real (Pyodide, Python de verdad en tu navegador). Un nodo se pinta de verde en el mapa cuando ya lo practicaste.</div>
+<div class="quiz-tracker" style="margin-top:22px;">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">preguntas y ejercicios enviados</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+<div class="flow-author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB · 👁 <span id="viewCount">—</span> vistas</div>
+</div>
+</section>
+
+<section class="mapa-section">
+<p class="mapa-section-hint">🗺️ Tocá un nodo para abrirlo. Las líneas punteadas muestran el orden sugerido, pero podés saltar a cualquiera.</p>
+<div class="mapa-canvas">
+<svg class="mapa-edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+<line class="mapa-edge" x1="12" y1="18" x2="37" y2="18"/>
+<line class="mapa-edge" x1="37" y1="18" x2="62" y2="18"/>
+<line class="mapa-edge" x1="62" y1="18" x2="87" y2="18"/>
+<line class="mapa-edge" x1="87" y1="18" x2="87" y2="68"/>
+<line class="mapa-edge" x1="87" y1="68" x2="62" y2="68"/>
+<line class="mapa-edge" x1="62" y1="68" x2="37" y2="68"/>
+</svg>
+<button class="mapa-node" data-nodo="clase" style="left:12%;top:18%;">
+<span class="mapa-node-icon">🏗️</span>
+<span class="mapa-node-num">1</span>
+<span class="mapa-node-titulo">Clase</span>
+</button>
+<button class="mapa-node" data-nodo="objeto" style="left:37%;top:18%;">
+<span class="mapa-node-icon">🐾</span>
+<span class="mapa-node-num">2</span>
+<span class="mapa-node-titulo">Objeto</span>
+</button>
+<button class="mapa-node" data-nodo="atributos" style="left:62%;top:18%;">
+<span class="mapa-node-icon">🏷️</span>
+<span class="mapa-node-num">3</span>
+<span class="mapa-node-titulo">Atributos</span>
+</button>
+<button class="mapa-node" data-nodo="constructor" style="left:87%;top:18%;">
+<span class="mapa-node-icon">🔧</span>
+<span class="mapa-node-num">4</span>
+<span class="mapa-node-titulo">__init__ y self</span>
+</button>
+<button class="mapa-node" data-nodo="metodos" style="left:87%;top:68%;">
+<span class="mapa-node-icon">⚙️</span>
+<span class="mapa-node-num">5</span>
+<span class="mapa-node-titulo">Métodos</span>
+</button>
+<button class="mapa-node" data-nodo="instancias" style="left:62%;top:68%;">
+<span class="mapa-node-icon">🐕</span>
+<span class="mapa-node-num">6</span>
+<span class="mapa-node-titulo">Instancias múltiples</span>
+</button>
+<button class="mapa-node" data-nodo="repaso" style="left:37%;top:68%;">
+<span class="mapa-node-icon">📋</span>
+<span class="mapa-node-num">7</span>
+<span class="mapa-node-titulo">Repaso rápido</span>
+</button>
+</div>
+</section>
+
+<!-- ===================== OVERLAY DE NODOS ===================== -->
+<div class="mapa-overlay" id="mapaOverlay">
+
+<div class="mapa-panel" id="panel-clase">
+<div class="card">
+<div class="mapa-panel-head">
+<h2 class="section-title" style="margin-bottom:0;">1 · Clase</h2>
+<div class="mapa-panel-nav">
+<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+</div>
+</div>
+<p class="lead">Hasta ahora, cada dato de tu programa vivía en una variable suelta y cada acción en una función suelta. Una <strong>clase</strong> es un molde que agrupa datos y comportamiento relacionados bajo un mismo nombre: define, de una vez, cómo va a ser <em>cualquier</em> cosa de ese tipo que crees más adelante.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class Perro:
+    especie = "Canino"
+
+print(Perro)
+print(Perro.especie)</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-1">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Define una clase Gato con un atributo especie = &quot;Felino&quot;, e imprime la clase y el atributo."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<div class="highlight">
+<strong>class, no def</strong>
+<p>Una clase se define con la palabra clave <code>class</code>, seguida del nombre y dos puntos —el bloque de adentro va indentado, igual que en una función. La convención de nombres es distinta: las clases se escriben en <strong>PascalCase</strong> (<code>Perro</code>, <code>CuentaBancaria</code>), con mayúscula inicial y sin guiones bajos, para distinguirlas a simple vista de funciones y variables (<code>snake_case</code>).</p>
+</div>
+<p>Por ahora <code>Perro</code> es solo el molde: todavía no creaste ningún perro concreto. Eso es lo que viene en el siguiente nodo.</p>
+</div>
+</div>
+
+<div class="mapa-panel" id="panel-objeto">
+<div class="card">
+<div class="mapa-panel-head">
+<h2 class="section-title" style="margin-bottom:0;">2 · Objeto</h2>
+<div class="mapa-panel-nav">
+<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+</div>
+</div>
+<p class="lead">Un <strong>objeto</strong> es una instancia concreta de una clase: se crea escribiendo el nombre de la clase seguido de paréntesis, como si la clase fuera una función que "fabrica" objetos. Podés crear tantos objetos como quieras a partir de la misma clase.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class Perro:
+    especie = "Canino"
+
+rex = Perro()
+firulais = Perro()
+
+print(rex.especie)
+print(firulais.especie)
+print(type(rex))</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-2">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Define la clase Gato del nodo anterior, crea dos objetos (michi y tom) e imprime especie y type() de cada uno."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<div class="highlight">
+<strong>rex y firulais son objetos distintos</strong>
+<p>Aunque los dos vienen de la misma clase <code>Perro</code> y comparten el mismo <code>especie</code>, <code>rex</code> y <code>firulais</code> son dos objetos separados en la memoria de la computadora —cambiar uno no afecta al otro. En el nodo "Atributos" vas a ver por qué eso importa de verdad.</p>
+</div>
+</div>
+</div>
+
+<div class="mapa-panel" id="panel-atributos">
+<div class="card">
+<div class="mapa-panel-head">
+<h2 class="section-title" style="margin-bottom:0;">3 · Atributos</h2>
+<div class="mapa-panel-nav">
+<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+</div>
+</div>
+<p class="lead">Un <strong>atributo</strong> es un dato que pertenece a un objeto en particular, no a la clase entera. Se asigna con <code>objeto.atributo = valor</code>, y cada objeto guarda el suyo por separado.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class Perro:
+    pass
+
+rex = Perro()
+rex.edad = 3
+
+firulais = Perro()
+firulais.edad = 7
+
+print(rex.edad)
+print(firulais.edad)</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-3">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Crea una clase Gato vacía (con pass), crea dos objetos y asígnale a cada uno un atributo .nombre distinto. Imprime ambos."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<div class="highlight">
+<strong>🔬 Probalo vos mismo: cada objeto guarda su propio estado</strong>
+<p>Cambiá los números de abajo. Son dos objetos <code>Perro</code> distintos, cada uno con su propio <code>edad</code> —modificar uno nunca toca al otro:</p>
+<p style="margin-top:10px;">Si <code>rex.edad</code> vale <input type="number" class="reactivo-input" id="reactivoEdadRex" value="3" min="0" max="20" aria-label="Edad de rex"> años y <code>firulais.edad</code> vale <input type="number" class="reactivo-input" id="reactivoEdadFirulais" value="7" min="0" max="20" aria-label="Edad de firulais"> años, entonces <code>firulais</code> le lleva <span class="reactivo-resultado" id="reactivoDiferencia">4</span> años a <code>rex</code>, y en total entre los dos suman <span class="reactivo-resultado" id="reactivoSuma">10</span> años de perro.</p>
+</div>
+<p>Esto ya funciona, pero escribir <code>rex.edad = 3</code> a mano después de crear cada objeto es repetitivo y fácil de olvidar. El próximo nodo resuelve exactamente ese problema.</p>
+</div>
+</div>
+
+<div class="mapa-panel" id="panel-constructor">
+<div class="card">
+<div class="mapa-panel-head">
+<h2 class="section-title" style="margin-bottom:0;">4 · __init__ y self</h2>
+<div class="mapa-panel-nav">
+<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+</div>
+</div>
+<p class="lead">El método <code>__init__</code> (dos guiones bajos a cada lado) se ejecuta automáticamente apenas creás un objeto, y sirve para inicializar sus atributos de una sola vez. Su primer parámetro siempre es <code>self</code>: una referencia a "este objeto en particular" que Python pasa solo, sin que vos lo escribas al llamar.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class Perro:
+    def __init__(self, nombre, edad):
+        self.nombre = nombre
+        self.edad = edad
+
+rex = Perro("Rex", 3)
+firulais = Perro("Firulais", 7)
+
+print(rex.nombre, rex.edad)
+print(firulais.nombre, firulais.edad)</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-4">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe una clase Gato con __init__(self, nombre, color) que guarde ambos atributos, y crea dos gatos distintos."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<div class="highlight">
+<strong>self no lo escribís vos al llamar</strong>
+<p><code>Perro("Rex", 3)</code> tiene dos argumentos, pero <code>__init__</code> recibe tres parámetros (<code>self, nombre, edad</code>). Python completa <code>self</code> automáticamente con el objeto recién creado —por eso nunca aparece en la llamada, solo en la definición. Esta misma regla vale para <strong>cualquier</strong> método de la clase, no solo <code>__init__</code>, como vas a ver en el próximo nodo.</p>
+</div>
+</div>
+</div>
+
+<div class="mapa-panel" id="panel-metodos">
+<div class="card">
+<div class="mapa-panel-head">
+<h2 class="section-title" style="margin-bottom:0;">5 · Métodos</h2>
+<div class="mapa-panel-nav">
+<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+</div>
+</div>
+<p class="lead">Un <strong>método</strong> es una función definida dentro de una clase, que usa <code>self</code> para leer o modificar los atributos de ese objeto en particular. Se define igual que una función (<code>def</code>), y se llama con <code>objeto.metodo(...)</code> en vez de <code>nombre_funcion(...)</code>.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class Perro:
+    def __init__(self, nombre, edad):
+        self.nombre = nombre
+        self.edad = edad
+
+    def ladrar(self):
+        print(self.nombre, "dice: ¡Guau!")
+
+    def cumplir_anios(self):
+        self.edad = self.edad + 1
+
+rex = Perro("Rex", 3)
+rex.ladrar()
+rex.cumplir_anios()
+print(rex.edad)</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-5">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="A tu clase Gato, agrégale un método maullar(self) que imprima el nombre del gato, y otro método que modifique algún atributo suyo. Probalos."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<div class="highlight">
+<strong>Atributo vs. método</strong>
+<p>Un atributo es un <strong>dato</strong> (<code>self.nombre</code>, un texto); un método es una <strong>acción</strong> (<code>ladrar()</code>, algo que el objeto hace, definido con <code>def</code> dentro de la clase). <code>cumplir_anios</code> muestra que un método puede leer <em>y</em> modificar un atributo del mismo objeto usando <code>self</code>.</p>
+</div>
+</div>
+</div>
+
+<div class="mapa-panel" id="panel-instancias">
+<div class="card">
+<div class="mapa-panel-head">
+<h2 class="section-title" style="margin-bottom:0;">6 · Instancias múltiples</h2>
+<div class="mapa-panel-nav">
+<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+</div>
+</div>
+<p class="lead">Cerremos el círculo con varios objetos a la vez: cada uno guarda su propio estado (atributos) y responde a los mismos métodos, sin pisarse entre sí.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class Perro:
+    def __init__(self, nombre, edad):
+        self.nombre = nombre
+        self.edad = edad
+
+    def ladrar(self):
+        print(self.nombre, "dice: ¡Guau!")
+
+    def cumplir_anios(self):
+        self.edad = self.edad + 1
+
+perros = [Perro("Rex", 3), Perro("Firulais", 7), Perro("Toby", 1)]
+
+for perro in perros:
+    perro.ladrar()
+    perro.cumplir_anios()
+    print(perro.nombre, "ahora tiene", perro.edad, "años")</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-6">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Crea 3 objetos de tu clase Gato con datos distintos y, con un for elemento in lista, llamá a un método de cada uno."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="concepto-1" style="margin-top:24px;">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas frases describe mejor la relación entre <code>Perro</code> (la clase) y <code>rex</code> (creado con <code>Perro()</code>)?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Perro es un objeto, y rex es la clase que lo define.</button>
+<button class="quiz-opt" data-correct>Perro es la clase (el molde); rex es un objeto creado a partir de ella.</button>
+<button class="quiz-opt">Perro y rex son dos nombres distintos para lo mismo.</button>
+<button class="quiz-opt">rex es una función que crea copias de la clase Perro.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la clase es el molde/plantilla; el objeto es una instancia concreta creada a partir de ese molde, con Perro()." data-ko="Perro es la clase (el molde). rex es el objeto: una instancia concreta creada a partir de ese molde con Perro()." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="concepto-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En la clase Perro, <code>self.nombre</code> es un atributo y <code>ladrar(self)</code> es un método. ¿Qué distingue a ambos?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Un atributo es un dato del objeto; un método es una acción que puede hacer.</button>
+<button class="quiz-opt">Un atributo es una acción del objeto; un método es un dato que guarda.</button>
+<button class="quiz-opt">Atributo y método son dos nombres para la misma idea.</button>
+<button class="quiz-opt">Un método solo existe fuera de la clase, nunca adentro.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un atributo guarda un dato del objeto (self.nombre); un método define una acción que ese objeto puede ejecutar (ladrar(), usando self)." data-ko="Un atributo guarda un dato del objeto (self.nombre). Un método define una acción que el objeto puede ejecutar (ladrar(), usando self)." hidden></p>
+</div>
+</div>
+</div>
+
+<div class="mapa-panel" id="panel-repaso">
+<div class="card">
+<div class="mapa-panel-head">
+<h2 class="section-title" style="margin-bottom:0;">7 · Repaso rápido</h2>
+<div class="mapa-panel-nav">
+<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+</div>
+</div>
+<p class="lead">Repasemos los seis conceptos del mapa, todos en un mismo ejemplo:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto</th><th scope="col">En este ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Clase</td><td><code>class Perro:</code> — el molde</td></tr>
+<tr><td>Objeto</td><td><code>rex = Perro("Rex", 3)</code> — una instancia concreta</td></tr>
+<tr><td>Atributo</td><td><code>self.nombre</code>, <code>self.edad</code> — datos propios de cada objeto</td></tr>
+<tr><td>Constructor</td><td><code>__init__(self, nombre, edad)</code> — se ejecuta al crear el objeto</td></tr>
+<tr><td>self</td><td>referencia a "este objeto"; Python lo pasa solo</td></tr>
+<tr><td>Método</td><td><code>ladrar(self)</code> — una acción del objeto</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>La idea central</strong>
+<p>Antes tenías datos (variables) y comportamiento (funciones) por separado. Una clase los junta: cada objeto que crees lleva consigo <em>sus propios</em> datos, y sabe qué hacer con ellos. Esa combinación —estado propio + comportamiento propio— es la base de todo lo que viene después en Programación Orientada a Objetos.</p>
+</div>
+<p>Cuando te sientas listo, cerrá este mapa y bajá al <strong>Reto Final</strong> para poner todo junto.</p>
+</div>
+</div>
+
+</div>
+<!-- ===================== FIN OVERLAY DE NODOS ===================== -->
+
+<section class="flow-flat" id="reto">
+<h2>Reto Final</h2>
+<p class="lead">Antes de escribir una clase de cero, ordená esta: alguien mezcló las líneas de una clase <code>Auto</code>.</p>
+
+<div class="quiz quiz-parsons" data-quiz-id="parsons-auto">
+<span class="quiz-badge">Ordená el código</span>
+<p class="quiz-q">Usá las flechas ↑ ↓ de cada bloque hasta dejar la clase en el orden correcto, y después presioná "Verificar orden".</p>
+<ol class="parsons-list">
+<li class="parsons-block" data-order="3"><span class="parsons-code">        self.marca = marca</span><span class="parsons-controls"><button type="button" class="parsons-btn up" aria-label="Mover arriba">↑</button><button type="button" class="parsons-btn down" aria-label="Mover abajo">↓</button></span></li>
+<li class="parsons-block" data-order="1"><span class="parsons-code">class Auto:</span><span class="parsons-controls"><button type="button" class="parsons-btn up" aria-label="Mover arriba">↑</button><button type="button" class="parsons-btn down" aria-label="Mover abajo">↓</button></span></li>
+<li class="parsons-block" data-order="5"><span class="parsons-code">    def arrancar(self):</span><span class="parsons-controls"><button type="button" class="parsons-btn up" aria-label="Mover arriba">↑</button><button type="button" class="parsons-btn down" aria-label="Mover abajo">↓</button></span></li>
+<li class="parsons-block" data-order="2"><span class="parsons-code">    def __init__(self, marca, modelo):</span><span class="parsons-controls"><button type="button" class="parsons-btn up" aria-label="Mover arriba">↑</button><button type="button" class="parsons-btn down" aria-label="Mover abajo">↓</button></span></li>
+<li class="parsons-block" data-order="4"><span class="parsons-code">        self.modelo = modelo</span><span class="parsons-controls"><button type="button" class="parsons-btn up" aria-label="Mover arriba">↑</button><button type="button" class="parsons-btn down" aria-label="Mover abajo">↓</button></span></li>
+<li class="parsons-block" data-order="6"><span class="parsons-code">        print(self.marca, "está arrancando")</span><span class="parsons-controls"><button type="button" class="parsons-btn up" aria-label="Mover arriba">↑</button><button type="button" class="parsons-btn down" aria-label="Mover abajo">↓</button></span></li>
+</ol>
+<div class="parsons-actions">
+<button type="button" class="code-btn run parsons-check">✅ Verificar orden</button>
+</div>
+<p class="quiz-fb" data-ok="¡Perfecto! class Auto: va primero; __init__ recibe y guarda los atributos con self; y arrancar(self) va al final, ya usando self.marca para actuar sobre el objeto." data-ko="Todavía hay bloques en rojo, fuera de lugar. Pista: class Auto: va primero, __init__ justo después (guarda los atributos con self), y arrancar(self) al final." hidden></p>
+</div>
+
+<p style="margin-top:26px;">Ahora escribí una clase parecida, de cero:</p>
+<div class="highlight">
+<strong>Clase Persona</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><code>__init__(self, nombre, edad)</code> que guarde ambos como atributos.</li>
+<li>Un método <code>saludar(self)</code> que imprima <code>"Hola, soy " + self.nombre</code>.</li>
+<li>Un método <code>cumplir_anios(self)</code> que le sume 1 a <code>self.edad</code>.</li>
+<li>Creá un objeto y probá los dos métodos, imprimiendo la edad antes y después.</li>
+</ul>
+</div>
+<div class="editor-panel independiente" data-quiz-id="codigo-reto">
+<div class="editor-header">
+<span>🏆 Resuelve aquí el reto</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="class Persona:&#10;    def __init__(self, nombre, edad):&#10;        # completa los atributos&#10;&#10;    def saludar(self):&#10;        # completa el método&#10;&#10;    def cumplir_anios(self):&#10;        # completa el método"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet">
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Uso</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Definir una clase</td><td><code>class Nombre: ...</code></td></tr>
+<tr><td>Crear un objeto</td><td><code>objeto = Nombre(argumentos)</code></td></tr>
+<tr><td>Constructor</td><td><code>def __init__(self, ...): ...</code></td></tr>
+<tr><td>Guardar un atributo</td><td><code>self.atributo = valor</code></td></tr>
+<tr><td>Leer un atributo</td><td><code>objeto.atributo</code></td></tr>
+<tr><td>Definir un método</td><td><code>def nombre_metodo(self, ...): ...</code></td></tr>
+<tr><td>Llamar un método</td><td><code>objeto.nombre_metodo(argumentos)</code></td></tr>
+<tr><td>self</td><td>Primer parámetro de todo método; Python lo pasa solo</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat">
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🏛️ De dónde viene la idea</h3><p>Los conceptos de "clase" y "objeto" nacieron en <strong>Simula 67</strong>, un lenguaje noruego pensado para simulaciones, décadas antes de que la Programación Orientada a Objetos se volviera popular.</p></div>
+<div class="info"><h3>🧬 En Python, todo es un objeto</h3><p>Un número, un texto o una lista también son instancias de una clase (<code>int</code>, <code>str</code>, <code>list</code>), aunque nunca hayas escrito <code>class</code> para usarlos.</p></div>
+<div class="info"><h3>🔒 Atributos "privados" (más adelante)</h3><p>Anteponer <code>_</code> o <code>__</code> al nombre de un atributo es una convención para señalar "no lo toques desde afuera" —el tema de encapsulación de una guía futura.</p></div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Clases y Objetos en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<script>
+
+/* ===== Menú (índice de nodos) ===== */
+const mapaMenuBtn = document.getElementById("mapaMenuBtn");
+const mapaMenuPanel = document.getElementById("mapaMenuPanel");
+const mapaMenuOverlay = document.getElementById("mapaMenuOverlay");
+function abrirMenu(){ mapaMenuPanel.classList.add("show"); mapaMenuOverlay.classList.add("show"); mapaMenuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ mapaMenuPanel.classList.remove("show"); mapaMenuOverlay.classList.remove("show"); mapaMenuBtn.setAttribute("aria-expanded","false"); }
+mapaMenuBtn.addEventListener("click", () => mapaMenuPanel.classList.contains("show") ? cerrarMenu() : abrirMenu());
+mapaMenuOverlay.addEventListener("click", cerrarMenu);
+document.querySelectorAll(".mapa-menu-list button[data-nodo]").forEach(b => {
+  b.addEventListener("click", () => { cerrarMenu(); abrirNodo(b.dataset.nodo); });
+});
+document.querySelectorAll(".mapa-menu-list button[data-scroll]").forEach(b => {
+  b.addEventListener("click", () => {
+    cerrarMenu();
+    const destino = document.getElementById(b.dataset.scroll);
+    if (destino) destino.scrollIntoView({ behavior: "smooth" });
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const mapaThemeBtn = document.getElementById("mapaThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  mapaThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+mapaThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Explicación reactiva (nodo Atributos) — exploratoria, sin
+   calificar: solo recalcula texto en la misma oración al tipear. ===== */
+(function(){
+  const inputRex = document.getElementById("reactivoEdadRex");
+  const inputFir = document.getElementById("reactivoEdadFirulais");
+  const salidaDif = document.getElementById("reactivoDiferencia");
+  const salidaSuma = document.getElementById("reactivoSuma");
+  if (!inputRex || !inputFir) return;
+  function recalcular(){
+    const a = Number(inputRex.value) || 0;
+    const b = Number(inputFir.value) || 0;
+    salidaDif.textContent = Math.abs(b - a);
+    salidaSuma.textContent = a + b;
+  }
+  inputRex.addEventListener("input", recalcular);
+  inputFir.addEventListener("input", recalcular);
+  recalcular();
+})();
+
+/* ===== Mapa conceptual: nodos, apertura/cierre, progreso ===== */
+const NODOS = [
+  { id:"clase",       numero:1, editorIds:["codigo-1"] },
+  { id:"objeto",      numero:2, editorIds:["codigo-2"] },
+  { id:"atributos",   numero:3, editorIds:["codigo-3"] },
+  { id:"constructor", numero:4, editorIds:["codigo-4"] },
+  { id:"metodos",     numero:5, editorIds:["codigo-5"] },
+  { id:"instancias",  numero:6, editorIds:["codigo-6"], quizIds:["concepto-1","concepto-2"] },
+  { id:"repaso",      numero:7, marcarAlAbrir:true },
+];
+
+const MAPA_PREFIX = "poo-mapa-" + location.pathname + "-";
+const mapaOverlay = document.getElementById("mapaOverlay");
+let nodoActualIndex = -1;
+
+function idxDeNodo(id){ return NODOS.findIndex(n => n.id === id); }
+
+function abrirNodo(id){
+  const idx = idxDeNodo(id);
+  if (idx === -1) return;
+  nodoActualIndex = idx;
+  document.querySelectorAll(".mapa-panel").forEach(p => p.classList.remove("active"));
+  const panel = document.getElementById("panel-" + id);
+  if (panel) panel.classList.add("active");
+  document.querySelectorAll(".mapa-node").forEach(n => n.classList.toggle("active", n.dataset.nodo === id));
+  mapaOverlay.classList.add("show");
+  document.body.style.overflow = "hidden";
+  const nodo = NODOS[idx];
+  if (nodo.marcarAlAbrir) {
+    localStorage.setItem(MAPA_PREFIX + id, "1");
+    actualizarEstadoNodos();
+  }
+  actualizarNavPanel();
+  mapaOverlay.scrollTop = 0;
+}
+
+function cerrarNodo(){
+  mapaOverlay.classList.remove("show");
+  document.body.style.overflow = "";
+}
+
+function actualizarNavPanel(){
+  document.querySelectorAll(".mapa-panel-prev").forEach(b => b.disabled = nodoActualIndex <= 0);
+  document.querySelectorAll(".mapa-panel-next").forEach(b => b.disabled = nodoActualIndex >= NODOS.length - 1);
+}
+
+document.querySelectorAll(".mapa-node").forEach(btn => {
+  btn.addEventListener("click", () => abrirNodo(btn.dataset.nodo));
+});
+document.querySelectorAll(".mapa-panel-close").forEach(b => b.addEventListener("click", cerrarNodo));
+document.querySelectorAll(".mapa-panel-prev").forEach(b => b.addEventListener("click", () => { if (nodoActualIndex > 0) abrirNodo(NODOS[nodoActualIndex - 1].id); }));
+document.querySelectorAll(".mapa-panel-next").forEach(b => b.addEventListener("click", () => { if (nodoActualIndex < NODOS.length - 1) abrirNodo(NODOS[nodoActualIndex + 1].id); }));
+mapaOverlay.addEventListener("click", e => { if (e.target === mapaOverlay) cerrarNodo(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && mapaOverlay.classList.contains("show")) cerrarNodo(); });
+
+function nodoCompleto(nodo){
+  const quizOk = (nodo.quizIds || []).every(id => !!localStorage.getItem(QUIZ_PREFIX + id));
+  const editorOk = (nodo.editorIds || []).every(id => localStorage.getItem(MAPA_PREFIX + id) === "1");
+  const abiertoOk = nodo.marcarAlAbrir ? localStorage.getItem(MAPA_PREFIX + nodo.id) === "1" : true;
+  return quizOk && editorOk && abiertoOk;
+}
+
+function actualizarEstadoNodos(){
+  let completos = 0;
+  NODOS.forEach(nodo => {
+    const boton = document.querySelector('.mapa-node[data-nodo="' + nodo.id + '"]');
+    const ok = nodoCompleto(nodo);
+    if (boton) boton.classList.toggle("done", ok);
+    if (ok) completos++;
+  });
+  const fill = document.getElementById("mapaFill");
+  const counter = document.getElementById("mapaCounter");
+  if (fill) fill.style.width = (completos / NODOS.length * 100) + "%";
+  if (counter) counter.textContent = completos + " / " + NODOS.length + " nodos";
+}
+
+/* ===== Motor de preguntas conceptuales (quiz-mc) — igual al de
+   funciones.html, reutilizado tal cual ===== */
+const QUIZ_PREFIX = "poo-quiz-" + location.pathname + "-";
+
+function paramsDeAtenza() {
+  const candidatos = [location.search];
+  const posInterrogante = location.hash.indexOf("?");
+  if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+  for (const c of candidatos) {
+    const p = new URLSearchParams(c);
+    if (p.get("atenza_token") && p.get("guia_intento")) return p;
+  }
+  return new URLSearchParams(candidatos[0]);
+}
+
+const abiertoDesdeAtenza = (() => {
+  const p = paramsDeAtenza();
+  return Boolean(p.get("atenza_token") && p.get("guia_intento"));
+})();
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (barra && etiqueta) {
+    const ids = new Set();
+    document.querySelectorAll("[data-quiz-id]").forEach(q => {
+      if (q.classList.contains("editor-panel") && !abiertoDesdeAtenza) return;
+      ids.add(q.dataset.quizId);
+    });
+    let correctas = 0;
+    ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+    const total = ids.size;
+    etiqueta.textContent = correctas + " / " + total;
+    barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+  }
+  actualizarEstadoNodos();
+}
+
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* ===== Motor de quiz-parsons (reordenar bloques de código) — nuevo,
+   piloto de esta guía. Botones ↑/↓, no drag-and-drop. ===== */
+document.querySelectorAll(".quiz-parsons").forEach(quiz => {
+  const lista = quiz.querySelector(".parsons-list");
+  const id = quiz.dataset.quizId;
+  const fb = quiz.querySelector(".quiz-fb");
+  const checkBtn = quiz.querySelector(".parsons-check");
+
+  function actualizarBotones(){
+    const bloques = [...lista.children];
+    bloques.forEach((li, i) => {
+      li.querySelector(".parsons-btn.up").disabled = (i === 0);
+      li.querySelector(".parsons-btn.down").disabled = (i === bloques.length - 1);
+    });
+  }
+
+  lista.addEventListener("click", e => {
+    const btn = e.target.closest(".parsons-btn");
+    if (!btn) return;
+    const li = btn.closest(".parsons-block");
+    li.classList.remove("correct", "incorrect");
+    if (btn.classList.contains("up") && li.previousElementSibling) {
+      lista.insertBefore(li, li.previousElementSibling);
+    } else if (btn.classList.contains("down") && li.nextElementSibling) {
+      lista.insertBefore(li.nextElementSibling, li);
+    }
+    actualizarBotones();
+  });
+
+  checkBtn.addEventListener("click", () => {
+    const bloques = [...lista.children];
+    let todoBien = true;
+    bloques.forEach((li, i) => {
+      const correcto = Number(li.dataset.order) === i + 1;
+      li.classList.toggle("correct", correcto);
+      li.classList.toggle("incorrect", !correcto);
+      if (!correcto) todoBien = false;
+    });
+    fb.hidden = false;
+    fb.textContent = todoBien ? fb.dataset.ok : fb.dataset.ko;
+    fb.classList.toggle("ok", todoBien);
+    fb.classList.toggle("ko", !todoBien);
+    if (todoBien) marcarResuelto(id, "ok");
+  });
+
+  /* Barajar el orden inicial (Fisher-Yates), evitando dejarlo ya resuelto */
+  let bloques = [...lista.children];
+  let intentos = 0;
+  do {
+    for (let i = bloques.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [bloques[i], bloques[j]] = [bloques[j], bloques[i]];
+    }
+    intentos++;
+  } while (bloques.every((li, i) => Number(li.dataset.order) === i + 1) && intentos < 10);
+  bloques.forEach(li => lista.appendChild(li));
+  actualizarBotones();
+});
+
+actualizarProgreso();
+
+/* ===== Resaltado de sintaxis (sin librerías externas) ===== */
+const PY_KEYWORDS = ["False","None","True","and","as","assert","async","await","break","class",
+  "continue","def","del","elif","else","except","finally","for","from","global","if","import",
+  "in","is","lambda","nonlocal","not","or","pass","raise","return","try","while","with","yield",
+  "print","len","int","str","float","bool","input","type","isinstance","round","self"];
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function highlightPython(code){
+  const escaped = escapeHtml(code);
+  const tokens = [];
+  const mask = (html) => {
+    const marker = String.fromCharCode(0xE000 + tokens.length);
+    tokens.push(html);
+    return marker;
+  };
+  let out = escaped.replace(
+    /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:[^"\\]|\\.)*"|f?'(?:[^'\\]|\\.)*')/gm,
+    (m, comment, str) => comment !== undefined
+      ? mask(`<span class="comment">${comment}</span>`)
+      : mask(`<span class="string">${str}</span>`)
+  );
+  out = out.replace(/\b\d+\.?\d*\b/g, m => mask(`<span class="number">${m}</span>`));
+  out = out.replace(new RegExp(`\\b(${PY_KEYWORDS.join("|")})\\b`, "g"), m => mask(`<span class="keyword">${m}</span>`));
+  out = out.replace(/\b([A-Za-z_]\w*)(?=\()/g, m => mask(`<span class="func">${m}</span>`));
+  out = out.replace(/[-]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
+  return out;
+}
+
+/* ===== Pyodide en un Web Worker (así un bucle infinito nunca cuelga la pestaña) —
+   copiado tal cual de guias/funciones.html, sin modificar. ===== */
+const __CONTROL_SLOTS = 3;
+const __CONTROL_BYTES = __CONTROL_SLOTS * 4;
+const __TAM_BUFFER_INPUT = 8192;
+
+function __crearSabInput(){
+  if (typeof SharedArrayBuffer === "undefined") return null;
+  try {
+    return new SharedArrayBuffer(__CONTROL_BYTES + __TAM_BUFFER_INPUT);
+  } catch (e) {
+    return null;
+  }
+}
+
+function __responderInput(sab, mensaje){
+  const control = new Int32Array(sab, 0, __CONTROL_SLOTS);
+  const textBuf = new Uint8Array(sab, __CONTROL_BYTES);
+  const respuesta = prompt(mensaje);
+  if (respuesta === null) {
+    Atomics.store(control, 2, 1);
+    Atomics.store(control, 1, 0);
+  } else {
+    Atomics.store(control, 2, 0);
+    const bytes = new TextEncoder().encode(respuesta);
+    const len = Math.min(bytes.length, textBuf.length);
+    textBuf.set(bytes.subarray(0, len));
+    Atomics.store(control, 1, len);
+  }
+  Atomics.store(control, 0, 1);
+  Atomics.notify(control, 0);
+}
+
+function __codigoWorkerPyodide(){
+  return `
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js");
+
+let __sabInput = null;
+let pyodideReadyPromise = null;
+
+function inputSincrono(mensaje){
+  if (!__sabInput) {
+    throw new Error("input() no está disponible: este navegador no soporta el modo protegido contra bucles infinitos (SharedArrayBuffer). Probá con una versión reciente de Chrome, Edge o Firefox.");
+  }
+  const control = new Int32Array(__sabInput, 0, ${__CONTROL_SLOTS});
+  const textBuf = new Uint8Array(__sabInput, ${__CONTROL_BYTES});
+  Atomics.store(control, 0, 0);
+  self.postMessage({ tipo: "input-request", mensaje: String(mensaje) });
+  Atomics.wait(control, 0, 0);
+  if (Atomics.load(control, 2)) return null;
+  const len = Atomics.load(control, 1);
+  return new TextDecoder().decode(textBuf.slice(0, len));
+}
+
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.tipo === "init") {
+    __sabInput = e.data.sab;
+  }
+});
+
+async function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      const pyodide = await loadPyodide();
+      await pyodide.runPythonAsync(\`
+import sys, io, builtins, time
+from js import inputSincrono as __input_sincrono
+
+__LIMITE_SEGUNDOS = 8
+
+def __custom_input(mensaje=""):
+    respuesta = __input_sincrono(str(mensaje))
+    if respuesta is None:
+        raise EOFError("Entrada cancelada por el usuario")
+    print(mensaje, end="")
+    print(respuesta)
+    return respuesta
+
+def __run_capture(src):
+    buf = io.StringIO()
+    old_stdout = sys.stdout
+    old_input = builtins.input
+    sys.stdout = buf
+    inicio = time.time()
+
+    def __watchdog(frame, event, arg):
+        if time.time() - inicio > __LIMITE_SEGUNDOS:
+            raise TimeoutError(f"El código tardó más de {__LIMITE_SEGUNDOS} segundos en ejecutarse (¿bucle infinito?) y fue detenido.")
+        return __watchdog
+
+    builtins.input = __custom_input
+    err = None
+    sys.settrace(__watchdog)
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.settrace(None)
+        sys.stdout = old_stdout
+        builtins.input = old_input
+    return buf.getvalue(), err
+\`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+self.onmessage = async (e) => {
+  if (e.data && e.data.tipo === "init") return;
+  const { id, codigo } = e.data;
+  try {
+    const pyodide = await cargarPyodide();
+    const funcion = pyodide.globals.get("__run_capture");
+    const resultado = funcion(codigo);
+    const [salida, error] = resultado.toJs();
+    resultado.destroy();
+    self.postMessage({ id, salida, error });
+  } catch (err) {
+    self.postMessage({ id, salida: "", error: "No se pudo ejecutar el código: " + err });
+  }
+};
+`;
+}
+
+let workerPy = null;
+let sabInputActual = null;
+let pedidoIdPy = 0;
+let pedidoActualPy = null;
+
+function __programarTimeoutPy(pedido){
+  pedido.timer = setTimeout(() => {
+    if (pedidoActualPy && pedidoActualPy.id === pedido.id) {
+      reiniciarWorkerPyodide();
+      pedidoActualPy.reject(new Error("El código tardó demasiado y fue detenido automáticamente."));
+      pedidoActualPy = null;
+    }
+  }, 20000);
+}
+
+function crearWorkerPyodide(){
+  const blob = new Blob([__codigoWorkerPyodide()], { type: "application/javascript" });
+  const worker = new Worker(URL.createObjectURL(blob));
+  sabInputActual = __crearSabInput();
+  worker.postMessage({ tipo: "init", sab: sabInputActual });
+  worker.onmessage = (e) => {
+    const msg = e.data;
+    if (msg && msg.tipo === "input-request") {
+      if (pedidoActualPy) clearTimeout(pedidoActualPy.timer);
+      __responderInput(sabInputActual, msg.mensaje);
+      if (pedidoActualPy) __programarTimeoutPy(pedidoActualPy);
+      return;
+    }
+    const { id, salida, error } = msg;
+    if (pedidoActualPy && pedidoActualPy.id === id) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.resolve({ salida, error });
+      pedidoActualPy = null;
+    }
+  };
+  worker.onerror = () => {
+    if (pedidoActualPy) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.reject(new Error("El intérprete de Python se cerró inesperadamente."));
+      pedidoActualPy = null;
+    }
+    reiniciarWorkerPyodide();
+  };
+  return worker;
+}
+
+function obtenerWorkerPyodide(){
+  if (!workerPy) workerPy = crearWorkerPyodide();
+  return workerPy;
+}
+
+function reiniciarWorkerPyodide(){
+  if (workerPy) workerPy.terminate();
+  workerPy = null;
+  sabInputActual = null;
+}
+
+function detenerEjecucion(){
+  reiniciarWorkerPyodide();
+  if (pedidoActualPy) {
+    clearTimeout(pedidoActualPy.timer);
+    pedidoActualPy.reject(new Error("Ejecución detenida."));
+    pedidoActualPy = null;
+  }
+}
+
+async function ejecutarPython(codigo){
+  const worker = obtenerWorkerPyodide();
+  const id = ++pedidoIdPy;
+  return new Promise((resolve, reject) => {
+    pedidoActualPy = { id, resolve, reject, timer: null };
+    __programarTimeoutPy(pedidoActualPy);
+    worker.postMessage({ id, codigo });
+  });
+}
+
+/* ===== Resaltar cada ejemplo de solo lectura ===== */
+function resaltarEjemplo(bloque){
+  const codeEl = bloque.querySelector("pre code.src");
+  if (!codeEl) return;
+  codeEl.innerHTML = highlightPython(codeEl.textContent.trim());
+}
+
+/* ===== Conectar un panel de editor en blanco (ejecutar código real) —
+   copiado de funciones.html; solo se agrega la línea que marca el
+   nodo como "practicado" en MAPA_PREFIX tras una corrida sin errores. ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const submitBtn = panel.querySelector(".code-btn.submit");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+  const quizId = panel.dataset.quizId;
+
+  const stopBtn = document.createElement("button");
+  stopBtn.type = "button";
+  stopBtn.className = "code-btn stop";
+  stopBtn.textContent = "⏹ Detener";
+  stopBtn.setAttribute("aria-label", "Detener la ejecución");
+  stopBtn.hidden = true;
+  runBtn.after(stopBtn);
+  stopBtn.onclick = () => detenerEjecucion();
+
+  textarea.addEventListener("paste", e => e.preventDefault());
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key !== "Tab") return;
+    e.preventDefault();
+    const inicio = textarea.selectionStart;
+    const fin = textarea.selectionEnd;
+    textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+    textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "📨 Enviar para revisión"; }
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    stopBtn.hidden = false;
+    try {
+      const { salida, error } = await ejecutarPython(textarea.value);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+        if (submitBtn) submitBtn.disabled = false;
+        if (quizId) {
+          localStorage.setItem(MAPA_PREFIX + quizId, "1");
+          actualizarEstadoNodos();
+        }
+      }
+    } catch (e) {
+      outputBody.textContent = e && e.message ? e.message : String(e);
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+      stopBtn.hidden = true;
+    }
+  };
+
+  if (submitBtn && quizId) {
+    submitBtn.onclick = () => {
+      marcarResuelto(quizId, "ok");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "✅ Enviado";
+    };
+  }
+}
+
+/* ===== Bloquear copiado del ejemplo (para que se escriba a mano) ===== */
+function bloquearCopiado(bloque){
+  const pre = bloque.querySelector("pre");
+  if (!pre) return;
+  const header = bloque.querySelector(".code-header span");
+  const avisar = () => {
+    if (!header) return;
+    const original = header.dataset.original || header.textContent;
+    header.dataset.original = original;
+    header.textContent = "🔒 Escríbelo tú mismo";
+    clearTimeout(header._avisoTimeout);
+    header._avisoTimeout = setTimeout(() => { header.textContent = original; }, 1600);
+  };
+  pre.addEventListener("copy", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("contextmenu", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("dragstart", e => e.preventDefault());
+}
+
+/* ===== Igualar la altura del editor a la del ejemplo ===== */
+function sincronizarAltura(bloque, panel){
+  const pre = bloque.querySelector("pre");
+  const textarea = panel.querySelector(".editor");
+  if (pre && textarea) textarea.style.minHeight = pre.offsetHeight + "px";
+}
+
+if (!abiertoDesdeAtenza) {
+  document.querySelectorAll(".editor-panel .code-btn.submit").forEach(btn => btn.remove());
+}
+
+const parejas = [];
+document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
+  resaltarEjemplo(bloque);
+  bloquearCopiado(bloque);
+  const panel = bloque.nextElementSibling;
+  if (!panel || !panel.classList.contains("editor-panel")) return;
+  conectarEditor(panel);
+  parejas.push([bloque, panel]);
+});
+
+document.querySelectorAll(".editor-panel.independiente").forEach(conectarEditor);
+document.querySelectorAll(".code.salida").forEach(bloquearCopiado);
+
+parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel));
+window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel)));
+
+actualizarEstadoNodos();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=...
+     en la URL); accedida directo, como siempre, no dispara nada nuevo.
+     No toca el motor de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. Copiado del bloque ya
+     probado en guias/funciones.html. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return;
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else if (quiz && quiz.classList.contains('editor-panel')) {
+      var codigo = quiz.querySelector('.editor');
+      var salida = quiz.querySelector('.output-body');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre:
+          (codigo ? codigo.value : '') +
+          '\n\n--- Salida ---\n' +
+          (salida ? salida.textContent : ''),
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
