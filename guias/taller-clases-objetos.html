@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller de Clases y Objetos: Practica POO en Python | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* Bloqueo de copiar/pegar en los editores: flash de aviso + toast global.
+   Mismo patrón que taller-repaso.html, taller-funciones.html y los
+   talleres de Base de Datos II. */
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>Taller</span></div>
+<p>Repaso integrador: clases y objetos en Python</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#zona-pruebas">Zona de pruebas libres</a>
+<a href="#atributos-metodos">1. Atributos y métodos que deciden</a>
+<a href="#constructor-listas">2. Constructores y listas de objetos</a>
+<a href="#metodos-que-llaman">3. Métodos que llaman a otros métodos</a>
+<a href="#reto">Reto final</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Taller de Repaso</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Clases y Objetos: <span>Taller Integrador</span></h1>
+<p>Ya viste <code>class</code>, <code>__init__</code>, <code>self</code>, atributos y métodos como tema separado. Este taller no enseña nada nuevo: te da <strong>10 problemas cortos más un reto final</strong> para que combines clases y objetos con todo lo que ya sabías (condicionales, bucles, funciones, listas) resolviendo problemas de verdad — cerrando el arco de fundamentos de esta materia antes de seguir con ideas más avanzadas de POO.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Este taller es la práctica integradora de <a href="clases-objetos.html">Clases y Objetos</a> junto con todo lo anterior: <a href="funciones.html">Funciones</a>, <a href="bucles.html">Bucles</a>, <a href="condicionales.html">Condicionales</a> y el resto de guías de POO. No repite la teoría de ninguna — si algo no te suena, es el momento de volver a repasarlo antes de seguir.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito y alcance</strong>
+<p>Este taller asume que ya completaste <a href="clases-objetos.html">Clases y Objetos desde cero</a> y las guías previas. Ningún ejercicio necesita <strong>herencia</strong>, <strong>polimorfismo</strong> ni <strong>encapsulación</strong> (<code>_</code>/<code>__</code> antes del nombre) — nada de eso se explicó todavía. Tampoco hace falta indexado de listas (<code>lista[0]</code>) ni métodos como <code>.append()</code>: alcanza con <code>for elemento in lista</code>, igual que en los talleres anteriores, aunque ahora esos elementos van a ser objetos en vez de números.</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Cada ejercicio trae un editor <strong>vacío</strong>: el enunciado te dice qué clase o función tenés que escribir, y vos escribís el código Python de cero. Presiona <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador con Pyodide (Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete. Si estás resolviendo el taller desde un lanzamiento de ATENZA, además aparece el botón <strong>📨 Enviar para revisión</strong> una vez que el código corra sin errores, para mandar ese ejercicio al docente (no se autocorrige).</p>
+</div>
+<div class="highlight">
+<strong>✋ Se escribe a mano</strong>
+<p>En este taller, copiar y pegar código en los editores está deshabilitado (incluido arrastrar y soltar). La idea es que practiques escribiendo la sintaxis vos mismo, no que la traigas de otro lado.</p>
+</div>
+<div class="quiz-tracker" id="quizTracker" hidden>
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">ejercicios enviados</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🧩 Integrador</h3><p>Cada bloque mezcla clases y objetos con condicionales, bucles, funciones y listas.</p></div>
+<div class="info"><h3>🔁 Objetos en listas</h3><p>La sección 2 recorre listas de objetos con <code>for</code>, igual que antes recorrías listas de números.</p></div>
+<div class="info"><h3>🎯 Reto final</h3><p>Un boletín de notas, pero ahora cada estudiante es un objeto con sus propios métodos.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Este bloque queda disponible durante todo el taller. Usalo en cualquier momento para probar una idea suelta, revisar cómo se comporta una clase, o experimentar algo que se te ocurra a mitad de un ejercicio — sin desordenar los bloques numerados.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🧪 Escribe cualquier código Python</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu código">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Zona de pruebas libres" placeholder="# Por ejemplo: class Punto:&#10;#     def __init__(self, x, y):&#10;#         self.x = x&#10;#         self.y = y"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="atributos-metodos">
+<div class="card">
+<h2 class="section-title">1. Atributos y métodos que deciden</h2>
+<p class="lead">Tres clases donde un método usa <code>if</code>/<code>elif</code>/<code>else</code> por dentro, leyendo o modificando los atributos de <code>self</code> para decidir qué hacer o qué devolver.</p>
+
+<div class="highlight">
+<strong>Enunciado — 1.1: ¿Aprobó?</strong>
+<p>Escribe una clase <code>Estudiante</code> con <code>__init__(self, nombre, nota)</code> que guarde ambos atributos. Agrégale un método <code>aprobo(self)</code> que devuelva <code>True</code> si <code>self.nota</code> es mayor o igual a 51, o <code>False</code> en caso contrario. Crea un objeto <code>Estudiante("Ana", 65)</code> y otro <code>Estudiante("Luis", 40)</code>, e imprime el resultado de <code>aprobo()</code> para cada uno.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-1-1">
+<div class="editor-header">
+<span>✍️ Ejercicio 1.1 — ¿Aprobó?</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: aprobó" placeholder="# Escribe la clase Estudiante con __init__(self, nombre, nota) y el método aprobo(self)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.2: Retiro con fondos</strong>
+<p>Escribe una clase <code>CuentaBancaria</code> con <code>__init__(self, saldo)</code>. Agrégale un método <code>retirar(self, monto)</code>: si <code>monto</code> es mayor que <code>self.saldo</code>, debe devolver el texto <em>"Fondos insuficientes"</em> sin tocar el saldo; si alcanza, debe restar <code>monto</code> de <code>self.saldo</code> y devolver <em>"Retiro exitoso"</em>. Crea una cuenta con saldo 500, prueba un retiro de 200 (debería funcionar) y después uno de 1000 (debería fallar), imprimiendo el mensaje de cada intento.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-1-2">
+<div class="editor-header">
+<span>✍️ Ejercicio 1.2 — Retiro con fondos</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: retiro con fondos" placeholder="# Escribe la clase CuentaBancaria con __init__(self, saldo) y el método retirar(self, monto)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.3: Clasificar la temperatura</strong>
+<p>Escribe una clase <code>Termometro</code> con <code>__init__(self, temperatura)</code>. Agrégale un método <code>clasificar(self)</code> que devuelva <em>"Frío"</em> si <code>self.temperatura &lt; 15</code>, <em>"Templado"</em> si está entre 15 y 25 (sin incluir 25), o <em>"Caluroso"</em> si es mayor o igual a 25 — usando <code>if</code>/<code>elif</code>/<code>else</code> adentro del método. Prueba con al menos tres objetos distintos, uno para cada categoría.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-1-3">
+<div class="editor-header">
+<span>✍️ Ejercicio 1.3 — Clasificar la temperatura</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: clasificar la temperatura" placeholder="# Escribe la clase Termometro con __init__(self, temperatura) y el método clasificar(self)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="constructor-listas">
+<div class="card">
+<h2 class="section-title">2. Constructores y listas de objetos</h2>
+<p class="lead">Una lista ya no tiene que ser solo números o textos: también puede guardar objetos. Se recorre exactamente igual, con <code>for objeto in lista</code>, y adentro del <code>for</code> accedés a los atributos y métodos de cada objeto como siempre.</p>
+
+<div class="highlight">
+<strong>Enunciado — 2.1: Lista de empleados</strong>
+<p>Escribe una clase <code>Empleado</code> con <code>__init__(self, nombre, salario)</code>. Crea una lista con al menos 5 objetos <code>Empleado</code>, con nombres y salarios distintos: <code>empleados = [Empleado("...", ...), Empleado("...", ...), ...]</code>. Con un <code>for empleado in empleados</code>, imprime el nombre y el salario de cada uno.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-2-1">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.1 — Lista de empleados</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: lista de empleados" placeholder="# Escribe la clase Empleado, crea una lista de al menos 5, e imprímelos con un for."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.2: Salario total</strong>
+<p>Reutiliza la clase <code>Empleado</code> y la lista del ejercicio anterior. Ahora escribe, <strong>fuera de la clase</strong>, una función <code>salario_total(lista)</code> que reciba la lista de objetos y devuelva la suma de todos los salarios, recorriéndola con <code>for empleado in lista</code> y accediendo a <code>empleado.salario</code> en cada vuelta. Imprime el resultado.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-2-2">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.2 — Salario total</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: salario total" placeholder="# Escribe salario_total(lista) sumando empleado.salario en un for, sobre tu lista de empleados."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.3: Contar bien pagados</strong>
+<p>Escribe una función <code>contar_bien_pagados(lista, minimo)</code> que devuelva cuántos empleados de la lista tienen <code>salario</code> mayor o igual a <code>minimo</code> — el mismo patrón que <code>contar_pares()</code> del taller de repaso anterior, pero ahora comparando <code>empleado.salario</code> dentro del <code>for</code> en vez de un número suelto. Pruébala sobre tu lista de empleados con un par de valores distintos de <code>minimo</code>.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-2-3">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.3 — Contar bien pagados</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: contar bien pagados" placeholder="# Escribe contar_bien_pagados(lista, minimo) comparando empleado.salario dentro del for."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="metodos-que-llaman">
+<div class="card">
+<h2 class="section-title">3. Métodos que llaman a otros métodos</h2>
+<p class="lead">Tres problemas con dos ideas nuevas, extensión directa de lo que ya sabés: un método puede llamar a otro método del mismo objeto, y una función común (no un método) puede recibir un objeto como parámetro.</p>
+
+<div class="highlight">
+<strong>💡 self.metodo() — llamar a otro método del mismo objeto</strong>
+<p>Dentro de un método, usa <code>self.otro_metodo()</code> para llamar a otro método de ese mismo objeto — igual que <code>self.atributo</code> te deja leer un atributo. Así evitás repetir una lógica que ya escribiste en otro método.</p>
+</div>
+
+<div class="highlight">
+<strong>Enunciado — 3.1: Resumen de un rectángulo</strong>
+<p>Escribe una clase <code>Rectangulo</code> con <code>__init__(self, base, altura)</code>, un método <code>area(self)</code> que devuelva <code>self.base * self.altura</code>, y un método <code>perimetro(self)</code> que devuelva <code>2 * (self.base + self.altura)</code>. Agrégale un tercer método <code>resumen(self)</code> que llame a <code>self.area()</code> y <code>self.perimetro()</code> por dentro, y devuelva un texto como <code>"Área: 24, Perímetro: 20"</code>. Crea un objeto y prueba <code>print(rect.resumen())</code>.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-3-1">
+<div class="editor-header">
+<span>✍️ Ejercicio 3.1 — Resumen de un rectángulo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: resumen de un rectángulo" placeholder="# Escribe Rectangulo con area(self), perimetro(self) y resumen(self) llamando a los dos anteriores."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>💡 Pasar un objeto como parámetro a una función común</strong>
+<p>Un objeto se puede pasar como argumento a una función que <strong>no</strong> es método de su clase, igual que pasarías un número o una lista. La función recibe el objeto y puede leer sus atributos o llamar a sus métodos con normalidad.</p>
+</div>
+
+<div class="highlight">
+<strong>Enunciado — 3.2: Ficha de un estudiante</strong>
+<p>Vuelve a escribir la clase <code>Estudiante</code> del ejercicio 1.1 (con <code>nombre</code>, <code>nota</code> y el método <code>aprobo(self)</code>). Ahora, <strong>fuera de la clase</strong>, escribe una función <code>mostrar_ficha(estudiante)</code> que reciba un objeto <code>Estudiante</code> como parámetro e imprima su nombre, su nota, y si aprobó o no (llamando a <code>estudiante.aprobo()</code>). Crea dos estudiantes distintos y llama <code>mostrar_ficha()</code> con cada uno.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-3-2">
+<div class="editor-header">
+<span>✍️ Ejercicio 3.2 — Ficha de un estudiante</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: ficha de un estudiante" placeholder="# Escribe Estudiante (con aprobo) y luego mostrar_ficha(estudiante) como función común."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.3: Vehículo con freno de seguridad</strong>
+<p>Escribe una clase <code>Vehiculo</code> con <code>__init__(self, velocidad)</code>. Agrégale un método <code>acelerar(self, incremento)</code> que sume <code>incremento</code> a <code>self.velocidad</code>, y un método <code>frenar(self, decremento)</code> que lo reste, pero <strong>sin dejar que <code>self.velocidad</code> baje de 0</strong> (si restar daría un número negativo, dejalo en 0 usando <code>if</code>). Por último, un método <code>estado(self)</code> que devuelva <em>"Detenido"</em> si <code>self.velocidad</code> es 0, <em>"Velocidad normal"</em> si es menor a 80, o <em>"Exceso de velocidad"</em> si es 80 o más. Crea un objeto, acelera y frena un par de veces, e imprime <code>estado()</code> después de cada cambio.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-3-3">
+<div class="editor-header">
+<span>✍️ Ejercicio 3.3 — Vehículo con freno de seguridad</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: vehículo con freno de seguridad" placeholder="# Escribe Vehiculo con acelerar(self, incremento), frenar(self, decremento) sin bajar de 0, y estado(self)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="reto">
+<div class="card">
+<h2 class="section-title">Reto final: Boletín de notas, con objetos</h2>
+<p class="lead">El mismo problema del reto final del taller de funciones — pero esta vez cada estudiante es un <strong>objeto</strong>, con sus propias notas guardadas como atributo, y sus propios métodos para calcular su promedio y saber si aprobó.</p>
+<div class="highlight">
+<strong>Clase que tenés que escribir</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><code>__init__(self, nombre, notas)</code> — guarda ambos como atributos. <code>notas</code> es una lista de números sobre 20 (por ejemplo <code>[15, 18, 12]</code>).</li>
+<li><strong>1.</strong> <code>promedio(self)</code> — devuelve el promedio de <code>self.notas</code>, recorriéndola con <code>for nota in self.notas</code>.</li>
+<li><strong>2.</strong> <code>aprobo(self)</code> — devuelve <code>True</code> si <code>self.promedio()</code> es mayor o igual a 11 (llamando a tu propio método <code>promedio()</code>, no recalculando nada).</li>
+<li><strong>3.</strong> <code>resumen(self)</code> — devuelve un texto con el nombre, el promedio (con <code>round(..., 2)</code>) y si aprobó o no, reutilizando <code>self.promedio()</code> y <code>self.aprobo()</code>.</li>
+</ul>
+</div>
+<div class="highlight">
+<strong>Datos de partida</strong>
+<p>Escribe en el editor una lista con al menos 4 objetos <code>Estudiante</code>, cada uno con su propia lista de notas, por ejemplo:</p>
+<p style="margin-top:8px;"><code>estudiantes = [Estudiante("Ana", [15, 18, 12]), Estudiante("Luis", [8, 10, 9]), ...]</code></p>
+</div>
+<div class="highlight">
+<strong>Función que tenés que escribir (fuera de la clase)</strong>
+<p><code>contar_aprobados(lista)</code> — recibe la lista de estudiantes y devuelve cuántos aprobaron, recorriéndola con <code>for</code> y llamando a <code>estudiante.aprobo()</code> en cada vuelta.</p>
+</div>
+<div class="highlight">
+<strong>Al final, imprime</strong>
+<p>Con un <code>for estudiante in estudiantes</code>, el <code>resumen()</code> de cada uno. Después, llamando a <code>contar_aprobados()</code>, cuántos estudiantes aprobaron en total.</p>
+</div>
+<div class="editor-panel independiente" data-quiz-id="ej-reto-final">
+<div class="editor-header">
+<span>🏆 Resuelve aquí el reto</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu solución al reto final" placeholder="# class Estudiante:
+#     def __init__(self, nombre, notas):
+#         self.nombre = nombre
+#         self.notas = notas
+#
+#     def promedio(self):
+#         ...
+#
+#     def aprobo(self):
+#         ...
+#
+#     def resumen(self):
+#         ...
+#
+# def contar_aprobados(lista):
+#     ...
+#
+# estudiantes = [Estudiante(...), Estudiante(...), ...]
+# Al final, imprime el resumen() de cada estudiante y el total de aprobados."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet del taller</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Herramienta</th><th scope="col">Para qué la usaste hoy</th></tr></thead>
+<tbody>
+<tr><td><code>class Nombre:</code> + <code>__init__(self, ...)</code></td><td>Definir el molde de un objeto y su constructor.</td></tr>
+<tr><td><code>if</code>/<code>elif</code>/<code>else</code> dentro de un método</td><td>Decidir qué devolver según el estado del propio objeto (<code>self.atributo</code>).</td></tr>
+<tr><td><code>lista = [Clase(...), Clase(...)]</code></td><td>Una lista puede guardar objetos, no solo números o textos.</td></tr>
+<tr><td><code>for objeto in lista:</code></td><td>Recorrer objetos y llamar sus métodos, exactamente igual que con cualquier otro dato.</td></tr>
+<tr><td><code>self.otro_metodo()</code></td><td>Llamar a otro método del mismo objeto desde adentro de un método, sin repetir su lógica.</td></tr>
+<tr><td><code>funcion(objeto)</code></td><td>Pasar un objeto como parámetro a una función común, no solo a métodos de su clase.</td></tr>
+<tr><td>Atributo que guarda una lista (<code>self.notas</code>)</td><td>Un objeto puede tener, entre sus atributos, una lista propia.</td></tr>
+<tr><td>Función que recibe una lista de objetos</td><td>Recorrer y agregar datos de varios objetos a la vez (<code>salario_total()</code>, <code>contar_aprobados()</code>).</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🖨️ print(objeto) por defecto es feo</h3><p>Si probás <code>print(estudiante)</code> directo, en vez de <code>print(estudiante.resumen())</code>, vas a ver algo como <code>&lt;__main__.Estudiante object at 0x7f...&gt;</code>. Python no sabe cómo mostrar tu objeto en texto a menos que se lo digas vos — con un método especial llamado <code>__str__</code>, otro "dunder" como <code>__init__</code>, que todavía no viste.</p></div>
+<div class="info"><h3>🧬 Cada objeto sigue siendo independiente</h3><p>Aunque ahora vivan juntos dentro de una lista, cada <code>Estudiante</code> guarda su propio <code>nombre</code> y su propia lista de <code>notas</code> — modificar uno nunca afecta a los demás, la misma idea que ya viste con <code>rex</code> y <code>firulais</code>.</p></div>
+<div class="info"><h3>🏗️ Herencia, la siguiente gran idea</h3><p><code>Estudiante</code> y <code>Empleado</code> de este taller se parecen: ambos tienen un nombre y un método que decide algo. La <strong>herencia</strong> permite definir esas partes compartidas una sola vez y que otras clases las hereden — el siguiente paso natural después de dominar clases y objetos por separado.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller de Clases y Objetos en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Integración con ATENZA (progreso y envío de ejercicios) =====
+   Este taller no tiene motor de quiz-mc — cada "pregunta" es un
+   ejercicio de código, así que marcarResuelto()/actualizarProgreso()
+   solo las disparan los botones "📨 Enviar para revisión" de los
+   editor-panel con data-quiz-id (la zona de pruebas libres no tiene
+   uno a propósito: no es un ejercicio evaluable). Mismo patrón que
+   taller-funciones.html. */
+const QUIZ_PREFIX = "poo-quiz-" + location.pathname + "-";
+
+// El link real que arma ATENZA para "Tomar la guía" puede llegar con el
+// "?" después del "#" (ej. "...html#reto?atenza_token=..."), lo que deja
+// los parámetros dentro del fragmento en vez de la query string — ahí
+// location.search por sí solo siempre da vacío. Ver la misma nota en
+// funciones.html y taller-funciones.html.
+function paramsDeAtenza() {
+  const candidatos = [location.search];
+  const posInterrogante = location.hash.indexOf("?");
+  if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+  for (const c of candidatos) {
+    const p = new URLSearchParams(c);
+    if (p.get("atenza_token") && p.get("guia_intento")) return p;
+  }
+  return new URLSearchParams(candidatos[0]);
+}
+
+// "Enviar para revisión" solo tiene sentido si hay alguien del otro lado
+// para revisar — la guía abierta desde un lanzamiento de ATENZA. El
+// data-quiz-id de cada editor-panel ya está en el HTML sin importar este
+// flag, para que ATENZA pueda detectarlos al armar el manifest incluso
+// antes de que exista ningún token.
+const abiertoDesdeAtenza = (() => {
+  const p = paramsDeAtenza();
+  return Boolean(p.get("atenza_token") && p.get("guia_intento"));
+})();
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+const quizTracker = document.getElementById("quizTracker");
+if (abiertoDesdeAtenza && quizTracker) quizTracker.hidden = false;
+actualizarProgreso();
+
+/* ===== Pyodide en un Web Worker (así un bucle infinito nunca cuelga la pestaña) ===== */
+const __CONTROL_SLOTS = 3;      // [0]=listo, [1]=largo de la respuesta, [2]=cancelado
+const __CONTROL_BYTES = __CONTROL_SLOTS * 4;
+const __TAM_BUFFER_INPUT = 8192; // bytes UTF-8 para la respuesta de input()
+
+function __crearSabInput(){
+  if (typeof SharedArrayBuffer === "undefined") return null;
+  try {
+    return new SharedArrayBuffer(__CONTROL_BYTES + __TAM_BUFFER_INPUT);
+  } catch (e) {
+    return null;
+  }
+}
+
+function __responderInput(sab, mensaje){
+  const control = new Int32Array(sab, 0, __CONTROL_SLOTS);
+  const textBuf = new Uint8Array(sab, __CONTROL_BYTES);
+  const respuesta = prompt(mensaje);
+  if (respuesta === null) {
+    Atomics.store(control, 2, 1);
+    Atomics.store(control, 1, 0);
+  } else {
+    Atomics.store(control, 2, 0);
+    const bytes = new TextEncoder().encode(respuesta);
+    const len = Math.min(bytes.length, textBuf.length);
+    textBuf.set(bytes.subarray(0, len));
+    Atomics.store(control, 1, len);
+  }
+  Atomics.store(control, 0, 1);
+  Atomics.notify(control, 0);
+}
+
+function __codigoWorkerPyodide(){
+  return `
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js");
+
+let __sabInput = null;
+let pyodideReadyPromise = null;
+
+function inputSincrono(mensaje){
+  if (!__sabInput) {
+    throw new Error("input() no está disponible: este navegador no soporta el modo protegido contra bucles infinitos (SharedArrayBuffer). Probá con una versión reciente de Chrome, Edge o Firefox.");
+  }
+  const control = new Int32Array(__sabInput, 0, ${__CONTROL_SLOTS});
+  const textBuf = new Uint8Array(__sabInput, ${__CONTROL_BYTES});
+  Atomics.store(control, 0, 0);
+  self.postMessage({ tipo: "input-request", mensaje: String(mensaje) });
+  Atomics.wait(control, 0, 0);
+  if (Atomics.load(control, 2)) return null;
+  const len = Atomics.load(control, 1);
+  return new TextDecoder().decode(textBuf.slice(0, len));
+}
+
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.tipo === "init") {
+    __sabInput = e.data.sab;
+  }
+});
+
+async function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      const pyodide = await loadPyodide();
+      await pyodide.runPythonAsync(\`
+import sys, io, builtins, time
+from js import inputSincrono as __input_sincrono
+
+__LIMITE_SEGUNDOS = 8
+
+def __custom_input(mensaje=""):
+    respuesta = __input_sincrono(str(mensaje))
+    if respuesta is None:
+        raise EOFError("Entrada cancelada por el usuario")
+    print(mensaje, end="")
+    print(respuesta)
+    return respuesta
+
+def __run_capture(src):
+    buf = io.StringIO()
+    old_stdout = sys.stdout
+    old_input = builtins.input
+    sys.stdout = buf
+    inicio = time.time()
+
+    def __watchdog(frame, event, arg):
+        if time.time() - inicio > __LIMITE_SEGUNDOS:
+            raise TimeoutError(f"El código tardó más de {__LIMITE_SEGUNDOS} segundos en ejecutarse (¿bucle infinito?) y fue detenido.")
+        return __watchdog
+
+    builtins.input = __custom_input
+    err = None
+    sys.settrace(__watchdog)
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.settrace(None)
+        sys.stdout = old_stdout
+        builtins.input = old_input
+    return buf.getvalue(), err
+\`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+self.onmessage = async (e) => {
+  if (e.data && e.data.tipo === "init") return;
+  const { id, codigo } = e.data;
+  try {
+    const pyodide = await cargarPyodide();
+    const funcion = pyodide.globals.get("__run_capture");
+    const resultado = funcion(codigo);
+    const [salida, error] = resultado.toJs();
+    resultado.destroy();
+    self.postMessage({ id, salida, error });
+  } catch (err) {
+    self.postMessage({ id, salida: "", error: "No se pudo ejecutar el código: " + err });
+  }
+};
+`;
+}
+
+let workerPy = null;
+let sabInputActual = null;
+let pedidoIdPy = 0;
+let pedidoActualPy = null;
+
+function __programarTimeoutPy(pedido){
+  pedido.timer = setTimeout(() => {
+    if (pedidoActualPy && pedidoActualPy.id === pedido.id) {
+      reiniciarWorkerPyodide();
+      pedidoActualPy.reject(new Error("El código tardó demasiado y fue detenido automáticamente."));
+      pedidoActualPy = null;
+    }
+  }, 20000);
+}
+
+function crearWorkerPyodide(){
+  const blob = new Blob([__codigoWorkerPyodide()], { type: "application/javascript" });
+  const worker = new Worker(URL.createObjectURL(blob));
+  sabInputActual = __crearSabInput();
+  worker.postMessage({ tipo: "init", sab: sabInputActual });
+  worker.onmessage = (e) => {
+    const msg = e.data;
+    if (msg && msg.tipo === "input-request") {
+      if (pedidoActualPy) clearTimeout(pedidoActualPy.timer);
+      __responderInput(sabInputActual, msg.mensaje);
+      if (pedidoActualPy) __programarTimeoutPy(pedidoActualPy);
+      return;
+    }
+    const { id, salida, error } = msg;
+    if (pedidoActualPy && pedidoActualPy.id === id) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.resolve({ salida, error });
+      pedidoActualPy = null;
+    }
+  };
+  worker.onerror = () => {
+    if (pedidoActualPy) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.reject(new Error("El intérprete de Python se cerró inesperadamente."));
+      pedidoActualPy = null;
+    }
+    reiniciarWorkerPyodide();
+  };
+  return worker;
+}
+
+function obtenerWorkerPyodide(){
+  if (!workerPy) workerPy = crearWorkerPyodide();
+  return workerPy;
+}
+
+function reiniciarWorkerPyodide(){
+  if (workerPy) workerPy.terminate();
+  workerPy = null;
+  sabInputActual = null;
+}
+
+function detenerEjecucion(){
+  reiniciarWorkerPyodide();
+  if (pedidoActualPy) {
+    clearTimeout(pedidoActualPy.timer);
+    pedidoActualPy.reject(new Error("Ejecución detenida."));
+    pedidoActualPy = null;
+  }
+}
+
+async function ejecutarPython(codigo){
+  const worker = obtenerWorkerPyodide();
+  const id = ++pedidoIdPy;
+  return new Promise((resolve, reject) => {
+    pedidoActualPy = { id, resolve, reject, timer: null };
+    __programarTimeoutPy(pedidoActualPy);
+    worker.postMessage({ id, codigo });
+  });
+}
+
+/* ===== Toast de aviso al bloquear copiar/pegar en los editores ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  if (!clipboardToast) return;
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
+/* ===== Conectar un panel de editor (bloqueado a copiar/pegar, ejecuta código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const submitBtn = panel.querySelector(".code-btn.submit");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+  const quizId = panel.dataset.quizId;
+
+  const stopBtn = document.createElement("button");
+  stopBtn.type = "button";
+  stopBtn.className = "code-btn stop";
+  stopBtn.textContent = "⏹ Detener";
+  stopBtn.setAttribute("aria-label", "Detener la ejecución");
+  stopBtn.hidden = true;
+  runBtn.after(stopBtn);
+  stopBtn.onclick = () => detenerEjecucion();
+
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En este taller el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  ["copy", "cut", "paste", "drop"].forEach(evt => {
+    textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); });
+  });
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart;
+      const fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (teclaCtrl && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      avisarBloqueo();
+    }
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    // Cada nueva ejecución invalida un posible envío anterior: hay que
+    // volver a confirmar que el código actual corrió bien antes de poder
+    // reenviarlo para revisión.
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "📨 Enviar para revisión"; }
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    stopBtn.hidden = false;
+    try {
+      const { salida, error } = await ejecutarPython(codigo);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+        if (submitBtn) submitBtn.disabled = false; // solo se puede enviar tras una corrida sin errores
+      }
+    } catch (e) {
+      outputBody.textContent = e && e.message ? e.message : String(e);
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+      stopBtn.hidden = true;
+    }
+  };
+
+  // "Enviar para revisión": solo existe si el panel tiene data-quiz-id
+  // y el botón submit sigue en el DOM (se retira fuera de ATENZA, ver
+  // más abajo). No se autocorrige — siempre marca "ok" y es el docente
+  // quien lo revisa desde el panel de ATENZA.
+  if (submitBtn && quizId) {
+    submitBtn.onclick = () => {
+      marcarResuelto(quizId, "ok");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "✅ Enviado";
+    };
+  }
+}
+
+// Los editor-panel de los 10 ejercicios + el reto final ya traen su
+// data-quiz-id escrito directo en el HTML (a propósito, para que ATENZA
+// pueda detectarlos al armar el manifest incluso antes de que exista
+// ningún token). El botón "Enviar para revisión" no tiene sentido fuera
+// de ATENZA (no hay quién lo reciba), así que acá solo se esconde en
+// tiempo de ejecución cuando no corresponde mostrarlo.
+if (!abiertoDesdeAtenza) {
+  document.querySelectorAll(".editor-panel .code-btn.submit").forEach(btn => btn.remove());
+}
+
+document.querySelectorAll(".editor-panel").forEach(conectarEditor);
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo (24/08). Solo actúa si el taller se abrió
+     desde un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=...
+     en la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedido directo, como siempre, no dispara nada nuevo. No toca el
+     motor de ejercicios de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen (ver DEPLOY-GUIAS-SNIPPET.md en
+     el repo de atenza para el detalle de cada endpoint). Mismo bloque que
+     taller-funciones.html, adaptado porque este taller no tiene
+     quiz-mc/quiz-open — cada data-quiz-id es siempre un editor-panel. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  // paramsDeAtenza() (definida arriba) también busca dentro de
+  // location.hash — el link real que arma ATENZA a veces llega como
+  // "...html#reto?atenza_token=...", con el "?" después del "#", y ahí
+  // location.search por sí solo siempre da vacío.
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  // ── Progreso limpio por intento: QUIZ_PREFIX guarda el progreso por
+  // PÁGINA (pensado para "completaste esto alguna vez en tu vida"), sin
+  // saber nada de "intentos" de ATENZA. Sin esto, cualquier resto de una
+  // práctica libre o de un lanzamiento anterior ya deja casi todo marcado
+  // "ok" de entrada — enviar el primer ejercicio NUEVO alcanza para que
+  // actualizarProgreso() crea que ya se terminó todo. Se guarda a qué
+  // guia_intento pertenece el progreso actual de esta página; si cambió,
+  // se limpia todo antes de que el estudiante toque nada. Si es el mismo
+  // (recargó la pestaña a mitad de camino), no se toca — sigue donde quedó.
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  // ── Aviso flotante — clave para "cuándo termina el taller": antes de
+  // esto el estudiante llegaba al 100% local y no había ninguna señal de
+  // que ya había terminado, y una falla de red al reportar quedaba
+  // invisible (nota mal calculada sin que nadie se entere). onClick, si
+  // se pasa, permite reintentar tocando el aviso.
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  // ── Pantalla completa: se pide en un click real del usuario, no solo.
+  // z-index alto para quedar por encima del sidebar y cualquier menú.
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  // ── Reportar cada ejercicio enviado — engancha marcarResuelto(), que ya
+  // usa el botón "📨 Enviar para revisión" de cada editor-panel, sin tocar
+  // ningún call-site. Manda código + salida como texto_libre, para que el
+  // docente lo revise sin tener que ejecutar nada — no se autocorrige
+  // (siempre "ok").
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var panel = document.querySelector('[data-quiz-id="' + id + '"]');
+    var codigo = panel ? panel.querySelector('.editor') : null;
+    var salida = panel ? panel.querySelector('.output-body') : null;
+    post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+      referencia: id,
+      texto_libre:
+        (codigo ? codigo.value : '') +
+        '\n\n--- Salida ---\n' +
+        (salida ? salida.textContent : ''),
+    }).catch(function () {});
+  };
+
+  // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder foco.
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ── Finalizar al completar el 100% — mismo cálculo que ya usa la barra
+  // de progreso de arriba (todos los ejercicios enviados). Si falla, NO
+  // se queda marcado como finalizado — el aviso rojo deja reintentar con
+  // un toque.
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Taller enviado! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu taller — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu taller — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  // Cuenta ENVIADOS (cualquier valor guardado, siempre "ok" en este
+  // taller porque no se autocorrige).
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var enviados = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) enviados++; });
+    if (ids.size > 0 && enviados === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
