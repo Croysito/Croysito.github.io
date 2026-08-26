@@ -121,6 +121,7 @@ img{ max-width:100%; }
   background:rgba(201,162,39,.08); display:flex; align-items:center; gap:14px;
   animation:secretoAparecer .5s ease;
 }
+.secreto-hallado[hidden]{ display:none; }
 .secreto-hallado-icono{ font-size:1.6rem; flex:none; }
 .secreto-hallado strong{ display:block; margin-bottom:4px; font-size:.95rem; }
 .secreto-hallado code{ font-size:.95rem; background:rgba(201,162,39,.18); }
