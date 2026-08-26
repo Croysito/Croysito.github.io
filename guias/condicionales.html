@@ -860,14 +860,21 @@ function activarCodigoSecreto(panel){
     <div><strong>Código secreto de CodeHawks</strong><code>CODEHAWKS-PROGRAMACION</code></div>`;
   panel.after(tarjeta);
 
-  let hallado = false;
   new MutationObserver(() => {
-    if (!hallado && outputBody.textContent.includes(FRASE_ESPERADA)) {
-      hallado = true;
-      tarjeta.hidden = false;
-    }
+    tarjeta.hidden = !outputBody.textContent.includes(FRASE_ESPERADA);
   }).observe(outputBody, { childList: true, characterData: true, subtree: true });
 }
+
+/* Si el navegador restaura la página desde caché (bfcache) al volver/recargar,
+   el DOM vuelve tal cual quedó (incluida la salida de una ejecución previa).
+   Se fuerza a que un refresh siempre arranque en blanco, sin salidas ni tarjetas
+   secretas de la sesión anterior. */
+window.addEventListener("pageshow", e => {
+  if (!e.persisted) return;
+  document.querySelectorAll(".output-body").forEach(el => { el.textContent = ""; });
+  document.querySelectorAll(".output").forEach(el => { el.hidden = true; el.classList.remove("error"); });
+  document.querySelectorAll(".secreto-hallado").forEach(el => { el.hidden = true; });
+});
 
 /* ===== Igualar la altura del editor a la del ejemplo ===== */
 function sincronizarAltura(bloque, panel){
