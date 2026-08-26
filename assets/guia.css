@@ -510,6 +510,235 @@ body.flow-mode{ background:var(--fondo); }
 }
 
 /* =========================================================
+   FLUJO CON PANEL FIJO — variante "consola a pantalla completa"
+   (handoff "Opción 1c", piloto real: guias_bd/agregacion-vistas.html
+   (26/08) — NO en joins-subconsultas.html, que ya está publicada
+   y vinculada en ATENZA; las guías publicadas no se migran a un
+   estilo nuevo sin pedido explícito).
+
+   Reusa el mismo esqueleto HTML de .flow-*/.scrolly-* de arriba
+   (mismas clases: .flow-topbar, .flow-beat, .flow-panel,
+   .scrolly-query, .scrolly-result-table, .scrolly-dg-wrap...) —
+   la diferencia es puramente visual: el panel pasa de tarjeta
+   angosta a una consola SQL que ocupa casi todo el viewport, con
+   la consulta arriba, el resultado en el medio (estirado con
+   1fr) y el diagrama de enlaces reducido a una tira al pie.
+
+   Para no pisar el estilo ya publicado de joins-subconsultas.html
+   (que usa <body class="flow-mode">), esta variante vive bajo su
+   propia clase de body, flow-console-mode — NO hace falta sumar
+   flow-mode también: las reglas .flow-*/.scrolly-* de arriba son
+   selectores sueltos, sin ningún ancestro body.flow-mode salvo el
+   único body.flow-mode{background...} de la línea de arriba, así
+   que <body class="flow-console-mode"> alcanza por sí solo (y de
+   paso queda más claro que es un modo alternativo, no un extra
+   sobre el mismo). Todo lo de acá abajo va prefijado con ese
+   selector.
+
+   Cambios de HTML que esta variante espera (ver handoff
+   completo, archivado en el historial de esta conversación):
+   - .flow-panel-wrap va ANTES que .flow-beats dentro de
+     .flow-grid (panel a la izquierda, prosa a la derecha).
+   - Dentro del panel: cabecera → .scrolly-query → contenedor de
+     resultado → .scrolly-dg-wrap (el diagrama baja al final).
+   - El div de resultado debe llevar además class="scrolly-result-box"
+     (junto a su id propio, para que el JS de cada guía lo siga
+     targeteando por getElementById sin cambios) — el CSS de acá
+     abajo lo usa para estirarlo con el 1fr del grid del panel.
+   - El SVG del diagrama usa un viewBox ancho y bajo (~340×120,
+     en vez del ~264×216 vertical de JOINs) con las coordenadas Y
+     comprimidas para cada guía nueva que lo use.
+   ========================================================= */
+:root{
+  --con-bg:#0d1117;
+  --con-bg2:#0b0e14;
+  --con-panel:#161b22;
+  --con-borde:#1e242e;
+  --con-borde2:#232a35;
+  --con-texto:#e6edf3;
+  --con-texto2:#c3ccd8;
+  --con-gris:#6e7a8a;
+  --con-gris2:#9aa7b8;
+  --con-acento:#7ee787;
+  --con-acento2:#2d8a4e;
+  --con-num:#f2cc60;
+}
+
+body.flow-console-mode{ background:var(--con-bg); }
+
+body.flow-console-mode .flow-topbar{
+  position:fixed; top:0; left:0; right:0; height:50px; z-index:800;
+  display:flex; align-items:center; gap:14px; padding:0 20px;
+  background:var(--con-bg2); border-bottom:1px solid var(--con-borde);
+}
+body.flow-console-mode .flow-brand{
+  font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:400;
+  letter-spacing:.03em; color:var(--con-gris2); white-space:nowrap;
+}
+body.flow-console-mode .flow-brand span{ color:var(--con-acento); }
+body.flow-console-mode .flow-progress-track{
+  flex:0 0 170px; height:3px; background:var(--con-borde); border-radius:3px; overflow:hidden;
+  margin-left:auto;
+}
+body.flow-console-mode .flow-progress-fill{ height:100%; background:var(--con-acento); width:0%; }
+body.flow-console-mode .flow-icon-btn{
+  width:32px; height:32px; flex:none; border:1px solid var(--con-borde);
+  border-radius:8px; background:transparent; color:var(--con-gris2);
+  cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center;
+}
+body.flow-console-mode .flow-icon-btn:hover{ border-color:var(--con-acento); color:var(--con-acento); }
+
+body.flow-console-mode .flow-body{ padding-top:50px; }
+
+body.flow-console-mode .flow-section{ max-width:1440px; margin:0 auto; padding:0 0 20px; }
+body.flow-console-mode .flow-grid{
+  display:grid; grid-template-columns:1fr 400px; gap:0; align-items:start;
+}
+
+/* PANEL — ocupa todo el alto útil del viewport */
+body.flow-console-mode .flow-panel-wrap{ position:sticky; top:50px; height:calc(100vh - 50px); }
+body.flow-console-mode .flow-panel{
+  height:100%; background:var(--con-bg); border:none;
+  border-right:1px solid var(--con-borde); border-radius:0; box-shadow:none;
+  padding:26px 28px; display:grid; grid-template-rows:auto auto 1fr auto; gap:18px;
+  overflow:hidden;
+}
+body.flow-console-mode .flow-panel-head{
+  display:flex; align-items:center; justify-content:space-between;
+  font-family:'JetBrains Mono',monospace; font-size:11px;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--con-gris);
+}
+body.flow-console-mode .flow-panel-head span:first-child{ font-weight:400; font-size:11px; }
+body.flow-console-mode .flow-panel-step{
+  font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:var(--con-acento); background:transparent; padding:0; border-radius:0;
+  text-transform:none; letter-spacing:.02em;
+}
+
+/* Columna de prosa — solo el paso activo muestra tarjeta+texto */
+body.flow-console-mode .flow-beats{
+  border-left:none; padding:0; display:flex; flex-direction:column;
+  background:var(--con-bg2);
+}
+body.flow-console-mode .flow-beat{
+  position:relative; min-height:72vh; display:flex; flex-direction:column;
+  justify-content:center; padding:26px 26px 26px 24px;
+  opacity:.3; transition:opacity .3s ease;
+}
+body.flow-console-mode .flow-beat.is-active{ opacity:1; }
+body.flow-console-mode .flow-beat::before{ display:none; }
+body.flow-console-mode .flow-beat.is-active{
+  background:var(--con-panel);
+  border:1px solid var(--con-borde2);
+  border-left:3px solid var(--con-acento);
+  border-radius:10px;
+}
+body.flow-console-mode .flow-beat-eyebrow{
+  display:block; font-family:'JetBrains Mono',monospace; font-size:11px;
+  font-weight:400; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--con-acento); margin-bottom:10px;
+}
+body.flow-console-mode .flow-beat h3{
+  font-family:'Space Grotesk',sans-serif; font-weight:600;
+  font-size:23px; line-height:1.25; color:var(--con-texto); margin-bottom:12px;
+}
+body.flow-console-mode .flow-beat:not(.is-active) h3{ font-size:18px; margin-bottom:0; }
+body.flow-console-mode .flow-beat:not(.is-active) p{ display:none; }
+body.flow-console-mode .flow-beat p{
+  font-family:'Space Grotesk',sans-serif; font-size:15px; line-height:1.7;
+  color:var(--con-texto2); max-width:none; margin-bottom:10px; opacity:1;
+}
+body.flow-console-mode .flow-beat p:last-child{ margin-bottom:0; }
+body.flow-console-mode .flow-beat strong{ color:var(--con-texto); }
+body.flow-console-mode .flow-beat code{ background:rgba(255,255,255,.07); color:var(--con-acento); }
+body.flow-console-mode .flow-beat:last-child{ min-height:60vh; }
+
+/* Consulta y resultado dentro del panel — overrides sobre .scrolly-* */
+body.flow-console-mode .flow-panel .scrolly-query{
+  background:var(--con-panel); border:1px solid var(--con-borde);
+  border-radius:10px; margin-bottom:0;
+}
+body.flow-console-mode .flow-panel .scrolly-query-head{
+  padding:9px 16px; background:transparent; border-bottom:1px solid var(--con-borde);
+  color:var(--con-gris); font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+}
+body.flow-console-mode .flow-panel .scrolly-query-pre{
+  padding:16px 20px; font-size:15px; line-height:1.9; color:var(--con-texto);
+}
+body.flow-console-mode .flow-panel .scrolly-qline.is-new{
+  background:rgba(126,231,135,.12); border-left-color:var(--con-acento);
+}
+
+/* zona de resultado: se estira con el 1fr de la grilla del panel —
+   el div de resultado de la guía nueva debe llevar esta clase */
+body.flow-console-mode .flow-panel .scrolly-result-box{ min-height:0; overflow:auto; }
+
+body.flow-console-mode .flow-panel .scrolly-result-table{
+  font-family:'JetBrains Mono',monospace; font-size:14px;
+}
+body.flow-console-mode .flow-panel .scrolly-result-table th{
+  background:var(--con-panel); color:var(--con-gris); font-weight:500;
+  font-size:11px; padding:8px 10px; letter-spacing:.05em;
+}
+body.flow-console-mode .flow-panel .scrolly-result-table th:first-child{ border-radius:6px 0 0 6px; }
+body.flow-console-mode .flow-panel .scrolly-result-table th:last-child{ border-radius:0 6px 6px 0; text-align:right; }
+body.flow-console-mode .flow-panel .scrolly-result-table td{
+  padding:10px; border-bottom:1px solid #1a1f27; color:var(--con-texto);
+}
+body.flow-console-mode .flow-panel .scrolly-result-table td:nth-child(2){ color:var(--con-gris2); }
+body.flow-console-mode .flow-panel .scrolly-result-table td:last-child{ text-align:right; color:var(--con-num); }
+body.flow-console-mode .flow-panel .scrolly-null{ color:var(--con-gris); font-style:italic; font-size:13px; }
+body.flow-console-mode .flow-panel .scrolly-result-count{ color:var(--con-acento); font-size:11px; }
+body.flow-console-mode .flow-panel .scrolly-result-empty{ color:var(--con-gris); }
+body.flow-console-mode .flow-panel .scrolly-result-success{ color:var(--con-acento); }
+
+/* Diagrama de enlaces — tira al pie del panel */
+body.flow-console-mode .flow-panel .scrolly-dg-wrap{
+  background:transparent; border:none; border-top:1px solid var(--con-borde);
+  border-radius:0; padding:14px 0 0; margin:0;
+}
+body.flow-console-mode .flow-panel .scrolly-dg-wrap svg{ max-height:120px; }
+body.flow-console-mode .flow-panel .scrolly-dg-caption{ color:var(--con-gris); font-size:10.5px; }
+body.flow-console-mode .flow-panel .scrolly-edge{ stroke:var(--con-borde); stroke-width:1.2; }
+body.flow-console-mode .flow-panel .scrolly-edge.active{ stroke:var(--con-acento); stroke-width:1.6; }
+body.flow-console-mode .flow-panel .scrolly-node-c circle{ fill:var(--con-bg); stroke:var(--con-acento); stroke-width:1.5; }
+body.flow-console-mode .flow-panel .scrolly-node-c.active circle{ fill:var(--con-acento); stroke:var(--con-acento); }
+body.flow-console-mode .flow-panel .scrolly-node-c text{ fill:var(--con-gris2); }
+body.flow-console-mode .flow-panel .scrolly-node-p circle{ fill:var(--con-bg); stroke:#3d4653; }
+body.flow-console-mode .flow-panel .scrolly-node-p.active circle{ fill:var(--con-acento2); stroke:var(--con-acento2); }
+body.flow-console-mode .flow-panel .scrolly-node-p text{ fill:var(--con-gris); }
+body.flow-console-mode .flow-panel line.scrolly-ghost{ stroke:#3d4653; }
+body.flow-console-mode .flow-panel circle.scrolly-ghost{ stroke:#3d4653; }
+body.flow-console-mode .flow-panel text.scrolly-ghost{ fill:#3d4653; }
+
+/* Intro sobre fondo de consola */
+body.flow-console-mode .flow-intro{
+  max-width:900px; margin:0 auto; padding:70px 40px 44px;
+  background:var(--con-bg); color:var(--con-texto);
+}
+body.flow-console-mode .flow-intro .flow-h1{ font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--con-texto); }
+body.flow-console-mode .flow-intro .flow-h1 span{ color:var(--con-acento); }
+body.flow-console-mode .flow-intro .flow-lead{ color:var(--con-texto2); }
+body.flow-console-mode .flow-intro .flow-sub{ color:var(--con-gris2); }
+body.flow-console-mode .flow-badge{
+  background:rgba(126,231,135,.12); color:var(--con-acento);
+  font-family:'JetBrains Mono',monospace; font-weight:400; letter-spacing:.06em;
+}
+
+@media(max-width:1100px){
+  body.flow-console-mode .flow-grid{ grid-template-columns:1fr 340px; }
+}
+@media(max-width:900px){
+  body.flow-console-mode .flow-grid{ grid-template-columns:1fr; }
+  body.flow-console-mode .flow-panel-wrap{ position:sticky; top:50px; height:auto; z-index:5; order:-1; }
+  body.flow-console-mode .flow-panel{ height:auto; grid-template-rows:auto auto auto auto; padding:16px 18px; }
+  body.flow-console-mode .flow-panel .scrolly-query-pre{ font-size:13px; }
+  body.flow-console-mode .flow-panel .scrolly-result-table{ font-size:12.5px; }
+  body.flow-console-mode .flow-panel .scrolly-dg-wrap{ display:none; }
+  body.flow-console-mode .flow-beat{ min-height:52vh; padding:20px; }
+}
+
+/* =========================================================
    SCROLLYTELLING ACOTADO A UNA SECCIÓN (Nivel 2 — aún sin
    pilotar; candidato: ISW, una sección donde la arquitectura
    evoluciona con cada decisión de diseño. Ver .flow-* arriba
@@ -566,6 +795,7 @@ text.scrolly-ghost{ font-family:'JetBrains Mono',monospace; font-size:8px; fill:
 .scrolly-qline.is-new{ background:rgba(255,212,59,.18); border-left-color:#c99400; }
 
 .scrolly-result-empty{ font-size:13px; color:var(--gris); padding:10px 4px; }
+.scrolly-result-success{ font-size:13px; color:var(--verde); padding:10px 4px; font-weight:600; }
 .scrolly-result-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
 .scrolly-result-table th{ text-align:left; padding:6px 8px; background:var(--grisClaro); font-size:10.5px; letter-spacing:.03em; text-transform:uppercase; color:var(--gris); font-weight:600; }
 .scrolly-result-table td{ padding:7px 8px; border-bottom:1px solid var(--borde); }
