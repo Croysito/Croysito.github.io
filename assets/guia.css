@@ -516,7 +516,7 @@ body.flow-mode{ background:var(--fondo); }
    y vinculada en ATENZA; las guías publicadas no se migran a un
    estilo nuevo sin pedido explícito).
 
-   Reusa el mismo esqueleto HTML de .flow-*/.scrolly-* de arriba
+   Reusa el mismo esqueleto HTML de .flow-* y .scrolly-* de arriba
    (mismas clases: .flow-topbar, .flow-beat, .flow-panel,
    .scrolly-query, .scrolly-result-table, .scrolly-dg-wrap...) —
    la diferencia es puramente visual: el panel pasa de tarjeta
@@ -527,7 +527,7 @@ body.flow-mode{ background:var(--fondo); }
    Para no pisar el estilo ya publicado de joins-subconsultas.html
    (que usa <body class="flow-mode">), esta variante vive bajo su
    propia clase de body, flow-console-mode — NO hace falta sumar
-   flow-mode también: las reglas .flow-*/.scrolly-* de arriba son
+   flow-mode también: las reglas .flow-* y .scrolly-* de arriba son
    selectores sueltos, sin ningún ancestro body.flow-mode salvo el
    único body.flow-mode{background...} de la línea de arriba, así
    que <body class="flow-console-mode"> alcanza por sí solo (y de
@@ -825,7 +825,7 @@ text.scrolly-ghost{ font-family:'JetBrains Mono',monospace; font-size:8px; fill:
    #3 al esqueleto lineal — piloto: guias/clases-objetos.html).
    Nivel 1 completo: sin sidebar, topbar fija (marca + progreso
    de NODOS completados + menú + tema), mismo patrón de chrome
-   ya usado por .deck-*/.flow-* pero con su propia unidad de
+   ya usado por .deck-* y .flow-* pero con su propia unidad de
    progreso. A diferencia de .deck-mode, el body scrollea
    normal (como .flow-mode): el mapa es una sección más dentro
    del flujo, seguida de un cierre plano de siempre (reusa

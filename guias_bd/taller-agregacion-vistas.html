@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller: Agregación y Vistas en Vivo — PostgreSQL Real en tu Navegador | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* Estilos propios de este taller: tabla de resultados y barra de la base de datos, con la
+   misma estética "consola oscura" que ya usa .output-body en guia.css. No toca el CSS compartido. */
+.sql-result-table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+.sql-result-table th,.sql-result-table td{ padding:8px 10px; text-align:left; border:1px solid rgba(255,255,255,.15); }
+.sql-result-table thead th{ background:rgba(255,255,255,.08); color:#8fd48a; }
+.sql-result-table td em{ color:#7d8899; font-style:italic; }
+.sql-status{ margin:4px 0 10px; color:#8fd48a; }
+.sql-meta{ margin:0 0 10px; color:#7d8899; font-size:12px; }
+.db-toolbar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:18px 0 8px; padding:16px 20px; background:var(--highlightBg); border-left:6px solid var(--verde); border-radius:8px; }
+.db-toolbar button{ background:var(--verde); color:white; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:14px; }
+.db-toolbar button:hover{ background:var(--verde2); }
+.db-toolbar button:disabled{ opacity:.5; cursor:wait; }
+.db-toolbar button.secundario{ background:transparent; color:var(--verde); border:2px solid var(--verde); }
+.db-estado{ font-size:14px; opacity:.85; }
+
+/* Bloqueo de copiar/pegar en los editores: flash de aviso + toast global */
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>Taller Agregación</span></div>
+<p>SQL en vivo con PostgreSQL real</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#zona-pruebas">Zona de pruebas libres</a>
+<a href="#preparar">Prepara tu base de datos</a>
+<a href="#groupby-vivo">1. GROUP BY</a>
+<a href="#having-vivo">2. HAVING</a>
+<a href="#orderby-agg-vivo">3. ORDER BY y LIMIT sobre grupos</a>
+<a href="#vistas-vivo">4. Vistas</a>
+<a href="#reto">Reto final</a>
+<a href="#repaso">Repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Taller de Laboratorio</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Agregación y Vistas en Vivo: Resúmenes <span>Reales</span></h1>
+<p>Otra vez PostgreSQL de verdad, compilado a WebAssembly, corriendo enteramente en tu navegador. Esta vez vas a convertir <strong>14 ventas sueltas en resúmenes por categoría y por vendedor</strong>, filtrar esos resúmenes ya calculados, y guardarlos bajo un nombre con vistas — viendo en cada paso exactamente qué calcula el motor.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Este taller es la práctica de laboratorio de <strong>agregación (GROUP BY/HAVING) y vistas en PostgreSQL</strong>. No vuelve a explicar la teoría desde cero —asume que ya viste <a href="agregacion-vistas.html">la guía</a>— y en cambio te da un PostgreSQL real para escribir cada consulta, viendo exactamente qué filas agrupa, cuáles filtra y qué guarda cada vista.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Si todavía no viste la teoría, repasa primero <a href="agregacion-vistas.html">Agregación y Vistas</a> antes de continuar. Este taller usa una sola tabla —<code>ventas</code>, con 14 filas— pensada para que cada resumen se vea clarísimo, sin el ruido de un catálogo completo.</p>
+</div>
+<div class="highlight">
+<strong>⚠️ Todo vive en la memoria de esta pestaña</strong>
+<p>Esta página corre su <strong>propia</strong> base de datos, independiente de cualquier otro taller que hayas abierto antes. Existe solo mientras esta pestaña siga abierta: si <strong>recargas la página, la cierras, o navegas a otra guía, se pierde todo</strong> y hay que empezar de nuevo desde "Prepara tu base de datos". Si te equivocás y querés reiniciar sin recargar, usa el botón "Reiniciar base de datos" de abajo.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>✍️ Lo escribís vos</h3><p>Cada bloque parte vacío. El enunciado te dice qué tenés que lograr — el código SQL lo escribís de cero.</p></div>
+<div class="info"><h3>🩻 Errores reales</h3><p>Los mensajes de error que vas a ver son exactamente los que da PostgreSQL en producción.</p></div>
+<div class="info"><h3>🔢 14 ventas, 4 vendedores, 4 categorías</h3><p>Suficientes filas para que agrupar por categoría o por vendedor dé resultados distintos entre sí — y para que HAVING tenga algo real que filtrar.</p></div>
+</div>
+
+<div class="db-toolbar">
+<button type="button" id="resetDbBtn">🔄 Reiniciar base de datos</button>
+<span class="db-estado" id="dbEstado">La base de datos está vacía. Baja a "Prepara tu base de datos" para empezar.</span>
+</div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Este bloque queda disponible durante toda la guía. Usalo en cualquier momento para probar una idea propia, revisar el estado de una tabla con <code>SELECT * FROM tabla;</code>, o experimentar con algo que se te ocurra a mitad de un ejercicio — sin desordenar los bloques guiados.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🧪 Escribe cualquier sentencia SQL</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Zona de pruebas libres" placeholder="Por ejemplo: SELECT * FROM ventas;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="preparar">
+<div class="card">
+<h2 class="section-title">Prepara tu base de datos</h2>
+<p class="lead">Este bloque <strong>no es un ejercicio</strong> — ya viene resuelto. Crea una tabla, <code>ventas</code>, con 14 filas de ejemplo. Ejecútalo tal cual, una sola vez, antes de seguir.</p>
+<div class="highlight">
+<strong>Qué hace este bloque</strong>
+<p>Crea <code>ventas</code> con columnas <code>vendedor</code>, <code>categoria</code> y <code>monto</code>: 4 vendedores (Marisol, Iván, Daniela, Esteban) repartidos en 4 categorías (Electrónica, Ropa, Hogar, Deportes), con montos distintos entre sí para que cada resumen agrupado dé un número distinto y fácil de verificar a ojo.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🏗️ Ejecuta esta preparación tal cual</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:400px" aria-label="Script de preparación de la base de datos">CREATE TABLE IF NOT EXISTS ventas (
+    id INTEGER PRIMARY KEY,
+    vendedor VARCHAR(60) NOT NULL,
+    categoria VARCHAR(60) NOT NULL,
+    monto NUMERIC(10,2) NOT NULL
+);
+
+INSERT INTO ventas (id, vendedor, categoria, monto) VALUES
+    (1, 'Marisol', 'Electrónica', 320.00),
+    (2, 'Iván', 'Ropa', 150.00),
+    (3, 'Marisol', 'Electrónica', 890.00),
+    (4, 'Daniela', 'Ropa', 60.00),
+    (5, 'Iván', 'Electrónica', 640.00),
+    (6, 'Marisol', 'Hogar', 95.00),
+    (7, 'Daniela', 'Electrónica', 480.00),
+    (8, 'Iván', 'Hogar', 210.00),
+    (9, 'Esteban', 'Deportes', 275.00),
+    (10, 'Marisol', 'Deportes', 130.00),
+    (11, 'Daniela', 'Hogar', 340.00),
+    (12, 'Iván', 'Deportes', 420.00),
+    (13, 'Esteban', 'Electrónica', 560.00),
+    (14, 'Esteban', 'Ropa', 90.00);
+
+SELECT * FROM ventas;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight">
+<strong>Confirma los datos</strong>
+<p>El resultado final debería mostrarte <strong>14 filas</strong>. Si contás menos o más, usa "🔄 Reiniciar base de datos" y vuelve a ejecutar este bloque — el resto del taller asume exactamente estos datos.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="groupby-vivo">
+<div class="card">
+<h2 class="section-title">1. GROUP BY</h2>
+<p class="lead">Un grupo por cada valor distinto de la columna elegida, con una función de agregación calculada dentro de cada grupo.</p>
+
+<div class="highlight">
+<strong>Enunciado — 1.1</strong>
+<p>Escribe un <code>SELECT</code> que agrupe <code>ventas</code> por <code>categoria</code>, trayendo <code>categoria</code>, <code>COUNT(*) AS ventas</code> y <code>SUM(monto) AS total</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.1 — GROUP BY categoria</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: GROUP BY categoria" placeholder="-- Escribe el SELECT con GROUP BY categoria, COUNT(*) y SUM(monto)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Contá las filas</strong>
+<p>Deberían salir <strong>4</strong> filas, una por cada categoría distinta — sin importar que la tabla completa tenga 14 filas.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.2</strong>
+<p>Ahora agrupa por <code>vendedor</code> en vez de <code>categoria</code>, trayendo <code>vendedor</code>, <code>COUNT(*) AS ventas</code>, <code>SUM(monto) AS total</code> y <code>AVG(monto) AS promedio</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.2 — GROUP BY vendedor con varias funciones</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: GROUP BY vendedor" placeholder="-- Escribe el SELECT con GROUP BY vendedor, COUNT(*), SUM(monto) y AVG(monto)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<p style="margin-top:25px;"><strong>1.3 — Antes de ejecutar, predice:</strong> ¿cuántas filas devuelve <code>SELECT COUNT(*) FROM ventas</code> (sin GROUP BY)? ¿Y cuántas devuelve <code>SELECT categoria, COUNT(*) FROM ventas GROUP BY categoria</code>? Escribe las dos consultas en este mismo editor, una debajo de otra, para comprobarlo.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.3 — Predice y comprueba con dos consultas</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: comparar COUNT sin y con GROUP BY" placeholder="-- 1. SELECT COUNT(*) FROM ventas;
+-- 2. SELECT categoria, COUNT(*) FROM ventas GROUP BY categoria;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="having-vivo">
+<div class="card">
+<h2 class="section-title">2. HAVING</h2>
+<p class="lead">Filtrar los grupos ya calculados, después de agrupar — no las filas individuales de la tabla.</p>
+
+<div class="highlight">
+<strong>Enunciado — 2.1</strong>
+<p>Repite el ejercicio 1.1 (GROUP BY categoria con COUNT y SUM) y agrégale <code>HAVING SUM(monto) > 700</code> para quedarte solo con las categorías que vendieron más de Bs 700 en total.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.1 — HAVING sobre el total por categoría</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:80px" aria-label="Editor SQL: HAVING SUM sobre categoria" placeholder="-- Escribe el SELECT con GROUP BY categoria y HAVING SUM(monto) > 700."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Solo dos categorías</strong>
+<p>Deberían quedar <strong>Electrónica</strong> y <strong>Deportes</strong>. Ropa (Bs 300) y Hogar (Bs 645) no superan los Bs 700 del filtro, así que HAVING las descarta.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.2</strong>
+<p>Agrupa por <code>vendedor</code> y agrega <code>HAVING COUNT(*) >= 4</code> para quedarte solo con quienes hicieron 4 o más ventas.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.2 — HAVING sobre la cantidad de ventas</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:80px" aria-label="Editor SQL: HAVING COUNT sobre vendedor" placeholder="-- Escribe el SELECT con GROUP BY vendedor y HAVING COUNT(*) >= 4."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.3</strong>
+<p>Combina los tres filtros en una sola consulta: primero <code>WHERE monto > 100</code> (descarta ventas chicas antes de agrupar), después <code>GROUP BY vendedor</code>, y por último <code>HAVING COUNT(*) >= 3</code> (vendedores con al menos 3 ventas grandes).</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.3 — WHERE + GROUP BY + HAVING juntos</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:80px" aria-label="Editor SQL: WHERE, GROUP BY y HAVING combinados" placeholder="-- Escribe el SELECT con WHERE monto > 100, GROUP BY vendedor y HAVING COUNT(*) >= 3."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Cada filtro en su momento</strong>
+<p>Deberían quedar <strong>Marisol</strong> e <strong>Iván</strong>. Daniela y Esteban pierden una de sus ventas grandes al aplicar el WHERE (les queda una venta de Bs 100 o menos fuera del conteo), y terminan con menos de 3 ventas grandes cada uno.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="orderby-agg-vivo">
+<div class="card">
+<h2 class="section-title">3. ORDER BY y LIMIT sobre grupos</h2>
+<p class="lead">El resultado ya agregado se puede ordenar y recortar exactamente igual que filas comunes.</p>
+
+<div class="highlight">
+<strong>Enunciado — 3.1</strong>
+<p>Sobre <code>GROUP BY categoria</code> con <code>SUM(monto) AS total</code>, ordena de mayor a menor y quedate con las <strong>2</strong> categorías que más vendieron usando <code>LIMIT 2</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.1 — Top 2 categorías</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:80px" aria-label="Editor SQL: ORDER BY y LIMIT sobre categoria" placeholder="-- Escribe el SELECT con GROUP BY categoria, ORDER BY total DESC y LIMIT 2."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.2</strong>
+<p>Sobre <code>GROUP BY vendedor</code> con <code>SUM(monto) AS total</code>, encuentra al vendedor con <strong>menos</strong> ventas totales usando <code>ORDER BY total ASC</code> y <code>LIMIT 1</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.2 — El vendedor con menos ventas totales</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:80px" aria-label="Editor SQL: ORDER BY ASC y LIMIT 1 sobre vendedor" placeholder="-- Escribe el SELECT con GROUP BY vendedor, ORDER BY total ASC y LIMIT 1."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Una sola fila</strong>
+<p>Debería salir <strong>Daniela</strong>, con Bs 880 — el total más bajo de los cuatro vendedores.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="vistas-vivo">
+<div class="card">
+<h2 class="section-title">4. Vistas</h2>
+<p class="lead">Guardar una consulta con nombre, para no reescribirla cada vez que alguien la necesita.</p>
+
+<div class="highlight">
+<strong>Enunciado — 4.1</strong>
+<p>Crea una vista llamada <code>resumen_vendedores</code> a partir de la consulta del ejercicio 1.2: <code>vendedor</code>, <code>COUNT(*) AS ventas</code>, <code>SUM(monto) AS total</code> y <code>AVG(monto) AS promedio</code>, agrupando por <code>vendedor</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.1 — CREATE VIEW resumen_vendedores</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:100px" aria-label="Editor SQL: CREATE VIEW resumen_vendedores" placeholder="-- Escribe CREATE VIEW resumen_vendedores AS SELECT ... GROUP BY vendedor;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.2</strong>
+<p>Consulta la vista completa con <code>SELECT * FROM resumen_vendedores;</code>. Confirma que el resultado es idéntico al del ejercicio 1.2.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.2 — Consultar la vista</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: SELECT sobre la vista" placeholder="-- Escribe SELECT * FROM resumen_vendedores;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.3</strong>
+<p>Sobre la vista, agrega <code>WHERE total > 900</code> para quedarte solo con los vendedores que más vendieron. Ojo: acá es <code>WHERE</code>, no <code>HAVING</code> — para la vista, <code>total</code> ya es una columna común.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.3 — Filtrar la vista con WHERE</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: WHERE sobre la vista" placeholder="-- Escribe SELECT * FROM resumen_vendedores WHERE total > 900;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Tres vendedores</strong>
+<p>Deberían quedar <strong>Marisol</strong> (Bs 1435), <strong>Iván</strong> (Bs 1420) y <strong>Esteban</strong> (Bs 925). Daniela (Bs 880) no supera los Bs 900 del filtro.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.4</strong>
+<p>Actualiza la vista con <code>CREATE OR REPLACE VIEW resumen_vendedores</code>, agregando <code>MAX(monto) AS venta_max</code> a las columnas que ya tenía. Después vuelve a consultarla completa con <code>SELECT *</code> para confirmar que la columna nueva aparece.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.4 — CREATE OR REPLACE VIEW</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Editor SQL: CREATE OR REPLACE VIEW" placeholder="-- 1. CREATE OR REPLACE VIEW resumen_vendedores AS SELECT ... MAX(monto) AS venta_max ... GROUP BY vendedor;
+-- 2. SELECT * FROM resumen_vendedores;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Sin borrar nada</strong>
+<p>La vista no se borró ni se recreó desde cero: <code>CREATE OR REPLACE VIEW</code> actualizó su definición en el lugar. La consulta del ejercicio 4.3 seguiría funcionando igual si la volvieras a ejecutar, ahora con una columna más disponible.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="reto">
+<div class="card">
+<h2 class="section-title">Reto final: de la tabla a la vista</h2>
+<p class="lead">Sin reiniciar la base de datos, resuelve estos tres desafíos combinando GROUP BY, HAVING y vistas.</p>
+<div class="highlight">
+<strong>Requisitos</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><strong>1.</strong> Con <code>GROUP BY categoria</code>, trae <code>categoria</code>, <code>COUNT(*) AS ventas</code> y <code>SUM(monto) AS total</code> para las 4 categorías, ordenado por <code>total</code> de mayor a menor.</li>
+<li><strong>2.</strong> Con <code>GROUP BY vendedor</code> y <code>HAVING</code>, encuentra a los vendedores cuyo total de ventas supere Bs 900.</li>
+<li><strong>3.</strong> Crea una vista llamada <code>top_categorias</code> que guarde el resultado del punto 1, pero recortado a las <strong>2</strong> categorías de mayor total (con <code>ORDER BY</code> y <code>LIMIT</code> dentro de la propia vista), y consúltala al final con <code>SELECT *</code>.</li>
+</ul>
+</div>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>🏆 Resuelve aquí el reto</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu solución al reto final" placeholder="-- 1. GROUP BY categoria con COUNT(*) y SUM(monto), ORDER BY total DESC.
+-- 2. GROUP BY vendedor con HAVING SUM(monto) > 900.
+-- 3. CREATE VIEW top_categorias AS ... ORDER BY total DESC LIMIT 2; y después SELECT * FROM top_categorias;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="repaso">
+<div class="card">
+<h2 class="section-title">Repaso</h2>
+<p class="lead">Seis preguntas cortas sobre lo que acabas de observar en vivo. Tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 1.1 agrupaste las ventas por categoría. ¿Cuántas filas devolvió esa consulta, y por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">14 — una fila por cada venta registrada en la tabla.</button>
+<button class="quiz-opt">1 — GROUP BY siempre colapsa todo en una sola fila.</button>
+<button class="quiz-opt" data-correct>4 — una fila por cada categoría distinta que aparece en ventas.</button>
+<button class="quiz-opt">0 — GROUP BY necesita HAVING para poder ejecutarse.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: GROUP BY categoria arma un grupo por cada valor distinto de esa columna. Con 4 categorías distintas en la tabla, el resultado tiene 4 filas, sin importar que la tabla completa tenga 14." data-ko="No fueron 14, 1 ni 0: GROUP BY da una fila por cada valor distinto de la columna agrupada. Como ventas tiene 4 categorías distintas, el resultado tiene exactamente 4 filas." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 2.1 agregaste HAVING SUM(monto) > 700 sobre el GROUP BY por categoría. ¿Qué categorías quedaron afuera, y por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Electrónica y Deportes — sus totales superan los Bs 700 del filtro.</button>
+<button class="quiz-opt">Ninguna — HAVING solo funciona sobre columnas de texto, no sobre SUM.</button>
+<button class="quiz-opt">Todas — HAVING siempre descarta el resultado si hay más de un grupo.</button>
+<button class="quiz-opt" data-correct>Ropa y Hogar — sus totales (Bs 300 y Bs 645) no superan los Bs 700 del filtro.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Ropa (Bs 300) y Hogar (Bs 645) quedan por debajo del umbral de Bs 700, así que HAVING los descarta. Electrónica (Bs 2890) y Deportes (Bs 825) sí lo superan y se mantienen en el resultado." data-ko="Al revés: HAVING descarta a Ropa y Hogar, porque sus totales (Bs 300 y Bs 645) no llegan a los Bs 700 del filtro. Electrónica y Deportes sí superan ese umbral y se quedan." hidden></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada fragmento de consulta según qué hace.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">WHERE monto > 100</span>
+<div class="quiz-classify-btns">
+<button>Agrupa las filas</button>
+<button data-correct>Filtra filas antes de agrupar</button>
+<button>Filtra grupos ya calculados</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">GROUP BY vendedor</span>
+<div class="quiz-classify-btns">
+<button data-correct>Agrupa las filas</button>
+<button>Filtra grupos ya calculados</button>
+<button>Filtra filas antes de agrupar</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">HAVING COUNT(*) >= 4</span>
+<div class="quiz-classify-btns">
+<button>Filtra filas antes de agrupar</button>
+<button>Agrupa las filas</button>
+<button data-correct>Filtra grupos ya calculados</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">WHERE vendedor = 'Marisol'</span>
+<div class="quiz-classify-btns">
+<button data-correct>Filtra filas antes de agrupar</button>
+<button>Filtra grupos ya calculados</button>
+<button>Agrupa las filas</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="repaso-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre el ejercicio 2.3 (WHERE monto > 100, GROUP BY vendedor, HAVING COUNT(*) >= 3).</p>
+<p>1. El primer filtro en aplicarse, antes de que exista ningún grupo, es
+<select class="quiz-blank" data-correct="where">
+<option value="">— elige —</option>
+<option value="groupby">GROUP BY</option>
+<option value="having">HAVING</option>
+<option value="where">WHERE</option>
+</select>.</p>
+<p>2. El filtro que se aplica al final, sobre los grupos ya armados, es
+<select class="quiz-blank" data-correct="having">
+<option value="">— elige —</option>
+<option value="where">WHERE</option>
+<option value="groupby">GROUP BY</option>
+<option value="having">HAVING</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-vistas">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 4.4 actualizaste la vista con CREATE OR REPLACE VIEW, agregando MAX(monto). ¿Qué pasó con la consulta del ejercicio 4.3, que ya usaba resumen_vendedores antes de ese cambio?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Dejó de funcionar — hay que reescribirla para incluir la columna nueva.</button>
+<button class="quiz-opt" data-correct>Sigue funcionando igual: CREATE OR REPLACE VIEW actualiza la definición sin borrar la vista.</button>
+<button class="quiz-opt">Devuelve un error, porque la vista cambió de nombre automáticamente.</button>
+<button class="quiz-opt">Se ejecuta dos veces: una con la definición vieja y otra con la nueva.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: CREATE OR REPLACE VIEW reemplaza la definición de la vista en el lugar, sin eliminarla. Cualquier consulta que ya la usaba —como la del ejercicio 4.3— sigue funcionando exactamente igual." data-ko="No dejó de funcionar, no dio error ni se ejecutó dos veces: CREATE OR REPLACE VIEW actualiza la definición de la vista sin borrarla, así que las consultas que ya la usaban siguen funcionando igual." hidden></p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="repaso-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada cláusula con lo que hace en una consulta con agregación.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="where">WHERE</button>
+<button class="quiz-match-item" data-pair="groupby">GROUP BY</button>
+<button class="quiz-match-item" data-pair="having">HAVING</button>
+<button class="quiz-match-item" data-pair="orderlimit">ORDER BY + LIMIT</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="groupby">Arma un grupo por cada valor distinto de la columna elegida.</button>
+<button class="quiz-match-item" data-pair="having">Filtra los grupos ya calculados, usando funciones de agregación.</button>
+<button class="quiz-match-item" data-pair="where">Filtra filas individuales antes de armar los grupos.</button>
+<button class="quiz-match-item" data-pair="orderlimit">Ordena el resultado ya agregado y se queda con los primeros N.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet del taller</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Forma</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>GROUP BY columna</code></td><td>Agrupa filas que comparten el mismo valor en esa columna.</td></tr>
+<tr><td><code>COUNT() / SUM() / AVG() / MAX() / MIN()</code></td><td>Funciones de agregación: un valor por grupo (o por toda la tabla, sin GROUP BY).</td></tr>
+<tr><td><code>WHERE</code></td><td>Filtra filas individuales, antes de agrupar.</td></tr>
+<tr><td><code>HAVING</code></td><td>Filtra grupos ya calculados, después de agrupar.</td></tr>
+<tr><td><code>... GROUP BY col ORDER BY total DESC LIMIT n</code></td><td>Ordena y recorta el resultado ya agregado.</td></tr>
+<tr><td><code>CREATE VIEW nombre AS SELECT ...</code></td><td>Guarda una consulta con nombre; no copia datos.</td></tr>
+<tr><td><code>SELECT * FROM vista</code></td><td>Se consulta como una tabla común.</td></tr>
+<tr><td><code>CREATE OR REPLACE VIEW ...</code></td><td>Reemplaza la definición de una vista sin borrarla.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🧮 GROUP BY sin ORDER BY no promete ningún orden</h3><p>El orden en que aparecieron las categorías en este taller es el que decidió PostgreSQL internamente, no uno garantizado por el estándar SQL. Si el orden importa para tu resultado, siempre hay que agregar un ORDER BY explícito.</p></div>
+<div class="info"><h3>🔒 Las vistas también sirven para seguridad</h3><p>En vez de dar acceso directo a ventas completa, se le podría dar a alguien acceso solo a resumen_vendedores — ve los totales, no cada venta individual. Un adelanto de lo que vas a ver en la guía de roles y GRANT/REVOKE.</p></div>
+<div class="info"><h3>💾 Existen las vistas materializadas</h3><p>A diferencia de las vistas de este taller, una <em>vista materializada</em> (MATERIALIZED VIEW) sí guarda una copia física del resultado, que hay que refrescar a mano — útil cuando la consulta original es cara de recalcular cada vez.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller: Agregación y Vistas en Vivo — PostgreSQL Real en tu Navegador</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* =======================================================================
+   PGlite: PostgreSQL real compilado a WebAssembly, corriendo en el navegador.
+   Mismo patrón de carga perezosa que Pyodide en las guías de POO.
+   ======================================================================= */
+const PGLITE_CDN = "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.5.4/dist/index.js";
+let pgliteReadyPromise = null;
+
+function cargarPGlite(){
+  if (!pgliteReadyPromise) {
+    pgliteReadyPromise = (async () => {
+      const { PGlite } = await import(PGLITE_CDN);
+      return new PGlite();
+    })();
+  }
+  return pgliteReadyPromise;
+}
+
+function reiniciarPGlite(){
+  pgliteReadyPromise = null;
+}
+
+async function ejecutarSQL(codigo){
+  try {
+    const db = await cargarPGlite();
+    const resultados = await db.exec(codigo);
+    return { resultados, error: null };
+  } catch (e) {
+    return { resultados: null, error: (e && e.message) ? e.message : String(e) };
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* ===== Toast de aviso al bloquear copiar/pegar en los editores ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  if (!clipboardToast) return;
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
+function formatearValor(v){
+  if (v === null || v === undefined) return "<em>NULL</em>";
+  return escapeHtml(v);
+}
+
+function renderizarResultados(resultados){
+  if (!resultados || !resultados.length) {
+    return '<p class="sql-status">✅ Ejecutado. No se generó ningún resultado.</p>';
+  }
+  return resultados.map(r => {
+    const columnas = (r.fields || []).map(f => f.name);
+    if (columnas.length) {
+      let html = '<table class="sql-result-table"><thead><tr>' +
+        columnas.map(c => `<th scope="col">${escapeHtml(c)}</th>`).join("") +
+        "</tr></thead><tbody>";
+      if (!r.rows || !r.rows.length) {
+        html += `<tr><td colspan="${columnas.length}"><em>(0 filas)</em></td></tr>`;
+      } else {
+        r.rows.forEach(fila => {
+          html += "<tr>" + columnas.map(c => `<td>${formatearValor(fila[c])}</td>`).join("") + "</tr>";
+        });
+      }
+      html += "</tbody></table>";
+      return html;
+    }
+    const n = typeof r.affectedRows === "number" ? r.affectedRows : null;
+    const msg = n !== null
+      ? `✅ Sentencia ejecutada (${n} fila${n === 1 ? "" : "s"} afectada${n === 1 ? "" : "s"}).`
+      : "✅ Sentencia ejecutada correctamente.";
+    return `<p class="sql-status">${msg}</p>`;
+  }).join("");
+}
+
+function conectarSqlLab(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  /* En este taller el código se escribe, no se copia ni se pega: bloqueamos
+     copiar/cortar/pegar/arrastrar y avisamos brevemente por qué. */
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En este taller el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  ["copy", "cut", "paste", "drop"].forEach(evt => {
+    textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); });
+  });
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart;
+      const fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (teclaCtrl && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      avisarBloqueo();
+    }
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe alguna sentencia SQL antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando PostgreSQL real (WebAssembly)… la primera vez puede tardar varios segundos.";
+    runBtn.disabled = true;
+    try {
+      const { resultados, error } = await ejecutarSQL(codigo);
+      if (error) {
+        outputBody.textContent = "❌ Error de PostgreSQL: " + error;
+        output.classList.add("error");
+      } else {
+        outputBody.innerHTML = renderizarResultados(resultados);
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el motor de PostgreSQL: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+document.querySelectorAll(".editor-panel").forEach(conectarSqlLab);
+
+/* ===== Botón "Reiniciar base de datos" ===== */
+const resetBtn = document.getElementById("resetDbBtn");
+const dbEstado = document.getElementById("dbEstado");
+resetBtn.addEventListener("click", () => {
+  reiniciarPGlite();
+  document.querySelectorAll(".editor-panel .output").forEach(o => { o.hidden = true; });
+  dbEstado.textContent = "🔄 Base de datos reiniciada — todo lo creado antes se perdió. Vuelve a ejecutar 'Prepara tu base de datos'.";
+});
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo (26/08). Solo actúa si la guía se abrió
+     desde un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=...
+     en la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedida directo, como siempre, no dispara nada nuevo. No toca el
+     motor de quizzes de arriba (repaso) ni la parte de PGlite/editores: se
+     engancha a marcarResuelto() y actualizarProgreso(), que ya existen
+     (ver DEPLOY-GUIAS-SNIPPET.md en el repo de atenza para el detalle de
+     cada endpoint). Los ejercicios sueltos con editor SQL no reportan nada
+     acá — solo cuentan las preguntas de la sección "Repaso" (data-quiz-id),
+     igual que en taller-joins-subconsultas.html. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  var params = new URLSearchParams(location.search);
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  // ── Progreso limpio por intento: QUIZ_PREFIX guarda el progreso por
+  // PÁGINA, sin saber nada de "intentos" de ATENZA. Sin esto, cualquier
+  // resto de una práctica libre o de un lanzamiento anterior ya deja casi
+  // todo marcado "ok"/"ko" de entrada. Se guarda a qué guia_intento
+  // pertenece el progreso actual de esta página; si cambió, se limpia todo
+  // antes de que el estudiante toque nada. Si es el mismo (recargó la
+  // pestaña a mitad de camino), no se toca — sigue donde quedó.
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  // ── Aviso flotante — clave para "cuándo termina la guía": antes de esto
+  // el estudiante llegaba al 100% local y no había ninguna señal de que ya
+  // había terminado, y una falla de red al reportar quedaba invisible.
+  // onClick, si se pasa, permite reintentar tocando el aviso.
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  // ── Pantalla completa: se pide en un click real del usuario. Estilos en
+  // línea porque esta página todavía no tiene una clase para esto — fixed
+  // y con z-index por encima de .menu-btn (900, solo visible en mobile)
+  // para que no quede tapado.
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  // terminado se pone en true recién cuando /finalizar responde ok (más
+  // abajo). Antes de esto, comenzado se quedaba en true para siempre en
+  // otras guías con este mismo bloque: salir de pantalla completa, cambiar
+  // de pestaña o cerrar la pestaña después de haber enviado la guía seguía
+  // reportando incidencias y disparando el aviso de "¿seguro que salís?" —
+  // contradiciendo el propio mensaje de "ya podés cerrar esta pestaña".
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  // ── Reportar cada pregunta resuelta — engancha marcarResuelto(), que ya
+  // usan los tipos de actividad de la sección "Repaso" (mc/classify/fill/
+  // match) sin tocar ninguno de sus call-sites.
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder foco.
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ── Finalizar al completar el 100% — mismo cálculo que ya usa la barra
+  // de progreso de arriba (todas las preguntas de "Repaso" en "ok"/"ko").
+  // Si falla, NO se queda marcado como finalizado — el aviso rojo deja
+  // reintentar con un toque.
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  // Cuenta CONTESTADAS (ok o ko, cualquier valor guardado), no solo
+  // correctas — un estudiante que se equivoca en una quiz-mc de un solo
+  // intento nunca llegaría a "ok" en esa pregunta, y exigir 100% correcto
+  // dejaría la guía "en curso" para siempre aunque ya no le quede nada
+  // más por hacer.
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
