@@ -549,7 +549,27 @@ body.flow-mode{ background:var(--fondo); }
      en vez del ~264×216 vertical de JOINs) con las coordenadas Y
      comprimidas para cada guía nueva que lo use.
    ========================================================= */
+/* Consola — tema claro: papel frío, no negro */
 :root{
+  --con-bg:#eef2f6;        /* fondo del panel */
+  --con-bg2:#f7fafc;       /* columna de prosa */
+  --con-panel:#ffffff;     /* cajas internas: consulta, tarjeta activa */
+  --con-borde:#d7e0ea;
+  --con-borde2:#c9d5e2;
+  --con-texto:#0f2c4d;
+  --con-texto2:#3b5773;
+  --con-gris:#6b7d92;
+  --con-gris2:#4d6479;
+  --con-acento:#2f7d4a;    /* verde legible sobre claro */
+  --con-acento2:#78b159;
+  --con-num:#9a6b00;
+  --con-fila:#dde5ec;      /* borde entre filas de resultado */
+  --con-kw:#c0392b;        /* palabras clave SQL */
+  --con-hl:rgba(47,125,74,.10);  /* línea nueva de la consulta */
+}
+
+/* Consola — tema oscuro: la terminal original de la maqueta */
+:root[data-theme="dark"]{
   --con-bg:#0d1117;
   --con-bg2:#0b0e14;
   --con-panel:#161b22;
@@ -562,9 +582,12 @@ body.flow-mode{ background:var(--fondo); }
   --con-acento:#7ee787;
   --con-acento2:#2d8a4e;
   --con-num:#f2cc60;
+  --con-fila:#1a1f27;
+  --con-kw:#ff7b72;
+  --con-hl:rgba(126,231,135,.12);
 }
 
-body.flow-console-mode{ background:var(--con-bg); }
+body.flow-console-mode{ background:var(--con-bg2); color:var(--con-texto); }
 
 body.flow-console-mode .flow-topbar{
   position:fixed; top:0; left:0; right:0; height:50px; z-index:800;
@@ -666,8 +689,10 @@ body.flow-console-mode .flow-panel .scrolly-query-pre{
   padding:16px 20px; font-size:15px; line-height:1.9; color:var(--con-texto);
 }
 body.flow-console-mode .flow-panel .scrolly-qline.is-new{
-  background:rgba(126,231,135,.12); border-left-color:var(--con-acento);
+  background:var(--con-hl); border-left-color:var(--con-acento);
 }
+body.flow-console-mode .flow-panel .keyword{ color:var(--con-kw); }
+body.flow-console-mode .flow-panel .number{ color:var(--con-num); }
 
 /* zona de resultado: se estira con el 1fr de la grilla del panel —
    el div de resultado de la guía nueva debe llevar esta clase */
@@ -683,7 +708,7 @@ body.flow-console-mode .flow-panel .scrolly-result-table th{
 body.flow-console-mode .flow-panel .scrolly-result-table th:first-child{ border-radius:6px 0 0 6px; }
 body.flow-console-mode .flow-panel .scrolly-result-table th:last-child{ border-radius:0 6px 6px 0; text-align:right; }
 body.flow-console-mode .flow-panel .scrolly-result-table td{
-  padding:10px; border-bottom:1px solid #1a1f27; color:var(--con-texto);
+  padding:10px; border-bottom:1px solid var(--con-fila); color:var(--con-texto);
 }
 body.flow-console-mode .flow-panel .scrolly-result-table td:nth-child(2){ color:var(--con-gris2); }
 body.flow-console-mode .flow-panel .scrolly-result-table td:last-child{ text-align:right; color:var(--con-num); }
@@ -721,7 +746,7 @@ body.flow-console-mode .flow-intro .flow-h1 span{ color:var(--con-acento); }
 body.flow-console-mode .flow-intro .flow-lead{ color:var(--con-texto2); }
 body.flow-console-mode .flow-intro .flow-sub{ color:var(--con-gris2); }
 body.flow-console-mode .flow-badge{
-  background:rgba(126,231,135,.12); color:var(--con-acento);
+  background:var(--con-hl); color:var(--con-acento);
   font-family:'JetBrains Mono',monospace; font-weight:400; letter-spacing:.06em;
 }
 
@@ -737,6 +762,147 @@ body.flow-console-mode .flow-badge{
   body.flow-console-mode .flow-panel .scrolly-dg-wrap{ display:none; }
   body.flow-console-mode .flow-beat{ min-height:52vh; padding:20px; }
 }
+
+/* Ejercicios (.flow-flat) hablando el mismo idioma que el panel de consola —
+   addendum "Opción 1c" (26/08). .flow-flat/.quiz/.highlight/.tabla/.info/
+   footer son clases genéricas usadas por toda la guía (y por
+   joins-subconsultas.html, que las deja con el estilo de tarjeta blanca de
+   siempre) — por eso cada regla de acá va prefijada con
+   body.flow-console-mode, igual que el resto de esta variante. Las clases
+   de estado (.correct/.incorrect/.matched/.selected/.wrong) las sigue
+   poniendo el motor de quizzes de siempre: acá solo cambia cómo se pintan. */
+body.flow-console-mode .flow-flat{
+  max-width:900px; margin:0 auto; padding:64px 40px 56px;
+  border-top:1px solid var(--con-borde);
+}
+body.flow-console-mode .flow-flat h2{
+  font-family:'Space Grotesk',sans-serif; font-weight:700;
+  font-size:28px; line-height:1.2; color:var(--con-texto); margin-bottom:12px;
+}
+body.flow-console-mode .flow-flat h2::before{
+  content:attr(data-eyebrow);
+  display:block; font-family:'JetBrains Mono',monospace; font-size:11px;
+  font-weight:400; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--con-acento); margin-bottom:10px;
+}
+body.flow-console-mode .flow-flat .lead{
+  font-family:'Space Grotesk',sans-serif; font-size:16px;
+  line-height:1.7; color:var(--con-texto2); margin-bottom:28px;
+}
+
+body.flow-console-mode .flow-flat .quiz{
+  background:var(--con-panel);
+  border:1px solid var(--con-borde);
+  border-left:3px solid var(--con-acento);
+  border-radius:10px; box-shadow:none;
+  padding:22px 24px; margin:18px 0;
+}
+body.flow-console-mode .flow-flat .quiz-badge{
+  display:inline-block; margin-bottom:12px;
+  font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:400;
+  letter-spacing:.08em; text-transform:uppercase;
+  color:var(--con-acento); background:transparent;
+  border:1px solid var(--con-borde2); border-radius:20px; padding:3px 10px;
+}
+body.flow-console-mode .flow-flat .quiz-q{
+  font-family:'Space Grotesk',sans-serif; font-weight:600;
+  font-size:16px; line-height:1.5; color:var(--con-texto); margin-bottom:16px;
+}
+body.flow-console-mode .flow-flat .quiz p{ color:var(--con-texto2); }
+
+body.flow-console-mode .flow-flat .quiz-opt,
+body.flow-console-mode .flow-flat .quiz-match-item,
+body.flow-console-mode .flow-flat .quiz-classify-btns button{
+  font-family:'Space Grotesk',sans-serif;
+  background:transparent; color:var(--con-texto2);
+  border:1px solid var(--con-borde2); border-radius:8px;
+}
+body.flow-console-mode .flow-flat .quiz-opt:hover:not(:disabled),
+body.flow-console-mode .flow-flat .quiz-match-item:hover:not(:disabled),
+body.flow-console-mode .flow-flat .quiz-classify-btns button:hover:not(:disabled){
+  border-color:var(--con-acento); color:var(--con-texto);
+}
+body.flow-console-mode .flow-flat .quiz-opt.correct,
+body.flow-console-mode .flow-flat .quiz-classify-btns button.correct,
+body.flow-console-mode .flow-flat .quiz-match-item.matched{
+  background:var(--con-hl); border-color:var(--con-acento); color:var(--con-texto);
+}
+body.flow-console-mode .flow-flat .quiz-opt.incorrect,
+body.flow-console-mode .flow-flat .quiz-classify-btns button.incorrect{
+  background:rgba(192,57,43,.10); border-color:#c0392b; color:var(--con-texto);
+}
+body.flow-console-mode .flow-flat .quiz-fb{
+  font-family:'Space Grotesk',sans-serif; font-size:14.5px;
+  border-radius:8px; border:1px solid var(--con-borde2);
+}
+body.flow-console-mode .flow-flat .quiz-fb.ok{ background:var(--con-hl); border-color:var(--con-acento); color:var(--con-texto); }
+body.flow-console-mode .flow-flat .quiz-fb.ko{ background:rgba(192,57,43,.08); border-color:#c0392b; color:var(--con-texto); }
+body.flow-console-mode .flow-flat .quiz-progress{
+  font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  color:var(--con-gris); margin-top:14px;
+}
+body.flow-console-mode .flow-flat .quiz-blank{
+  font-family:'JetBrains Mono',monospace; font-size:13px;
+  background:var(--con-bg); color:var(--con-texto);
+  border:1px solid var(--con-borde2); border-radius:6px; padding:4px 8px;
+}
+body.flow-console-mode .flow-flat .quiz-blank.correct{ border-color:var(--con-acento); }
+body.flow-console-mode .flow-flat .quiz-blank.incorrect{ border-color:#c0392b; }
+
+body.flow-console-mode .flow-flat .highlight{
+  background:var(--con-hl); border-left:3px solid var(--con-acento);
+  border-radius:10px; padding:18px 20px; margin:26px 0 14px;
+  color:var(--con-texto2);
+}
+body.flow-console-mode .flow-flat .highlight strong{
+  display:block; margin-bottom:6px;
+  font-family:'JetBrains Mono',monospace; font-size:11px;
+  font-weight:400; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--con-acento);
+}
+
+body.flow-console-mode .flow-flat .tabla{ border:1px solid var(--con-borde); border-radius:10px; overflow:hidden; }
+body.flow-console-mode .flow-flat .tabla th,
+body.flow-console-mode .flow-flat .tabla td{ border:none; border-bottom:1px solid var(--con-fila); padding:12px 16px; }
+body.flow-console-mode .flow-flat .tabla thead th{
+  background:var(--con-bg); color:var(--con-gris);
+  font-family:'JetBrains Mono',monospace; font-size:11px;
+  font-weight:500; letter-spacing:.06em; text-transform:uppercase;
+}
+body.flow-console-mode .flow-flat .tabla td{ color:var(--con-texto2); }
+body.flow-console-mode .flow-flat .tabla td code{
+  font-family:'JetBrains Mono',monospace; font-size:13px;
+  background:var(--con-hl); color:var(--con-acento);
+  padding:2px 6px; border-radius:5px;
+}
+body.flow-console-mode .flow-flat .tabla tbody tr:last-child td{ border-bottom:none; }
+
+body.flow-console-mode .flow-flat .info{
+  background:var(--con-panel); border:1px solid var(--con-borde);
+  border-radius:10px; box-shadow:none; padding:20px;
+}
+body.flow-console-mode .flow-flat .info h3{
+  font-family:'Space Grotesk',sans-serif; font-size:16px;
+  color:var(--con-texto); margin-bottom:8px;
+}
+body.flow-console-mode .flow-flat .info p{ color:var(--con-texto2); font-size:14.5px; line-height:1.65; }
+
+body.flow-console-mode .flow-flat .quiz-tracker{
+  background:var(--con-panel); border:1px solid var(--con-borde);
+  border-radius:10px; box-shadow:none; padding:18px 20px;
+}
+body.flow-console-mode .flow-flat .quiz-tracker-count{
+  font-family:'JetBrains Mono',monospace; font-size:22px; color:var(--con-acento);
+}
+body.flow-console-mode .flow-flat .quiz-tracker-label{
+  font-family:'JetBrains Mono',monospace; font-size:11px;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--con-gris);
+}
+body.flow-console-mode .flow-flat .quiz-bar{ background:var(--con-bg); border-radius:4px; height:6px; }
+body.flow-console-mode .flow-flat .quiz-bar-fill{ background:var(--con-acento); height:100%; border-radius:4px; }
+
+body.flow-console-mode footer{ border-top:1px solid var(--con-borde); color:var(--con-gris); }
+body.flow-console-mode footer h2{ font-family:'Space Grotesk',sans-serif !important; color:var(--con-texto); }
 
 /* =========================================================
    SCROLLYTELLING ACOTADO A UNA SECCIÓN (Nivel 2 — aún sin
