@@ -848,6 +848,27 @@ function bloquearCopiado(bloque){
   pre.addEventListener("dragstart", e => e.preventDefault());
 }
 
+/* ===== Easter egg CodeHawks: código secreto al resolver bien el ejercicio de anidados ===== */
+function activarCodigoSecreto(panel){
+  const FRASE_ESPERADA = "Puede ingresar al evento";
+  const outputBody = panel.querySelector(".output-body");
+  const tarjeta = document.createElement("div");
+  tarjeta.className = "secreto-hallado";
+  tarjeta.hidden = true;
+  tarjeta.innerHTML = `
+    <span class="secreto-hallado-icono" aria-hidden="true">🦅</span>
+    <div><strong>Código secreto de CodeHawks</strong><code>CODEHAWKS-PROGRAMACION</code></div>`;
+  panel.after(tarjeta);
+
+  let hallado = false;
+  new MutationObserver(() => {
+    if (!hallado && outputBody.textContent.includes(FRASE_ESPERADA)) {
+      hallado = true;
+      tarjeta.hidden = false;
+    }
+  }).observe(outputBody, { childList: true, characterData: true, subtree: true });
+}
+
 /* ===== Igualar la altura del editor a la del ejemplo ===== */
 function sincronizarAltura(bloque, panel){
   const pre = bloque.querySelector("pre");
@@ -863,6 +884,7 @@ document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
   bloque.after(panel);
   conectarEditor(panel);
   parejas.push([bloque, panel]);
+  if (bloque.closest("section")?.id === "anidados") activarCodigoSecreto(panel);
 });
 
 document.querySelectorAll(".editor-panel.independiente").forEach(conectarEditor);
