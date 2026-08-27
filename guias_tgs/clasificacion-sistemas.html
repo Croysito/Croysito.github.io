@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clasificación y Propiedades de los Sistemas | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="deck-mode">
+
+<div class="deck-topbar">
+<button class="deck-icon-btn" id="deckMenuBtn" aria-label="Abrir índice de la presentación">☰</button>
+<div class="deck-progress-track"><div class="deck-progress-fill" id="deckFill"></div></div>
+<span class="deck-counter" id="deckCounter">1 / 1</span>
+<button class="deck-icon-btn" id="deckThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="deck-menu-overlay" id="deckMenuOverlay"></div>
+<nav class="deck-menu-panel" id="deckMenuPanel" aria-label="Índice de la presentación">
+<h3>Índice</h3>
+<div class="deck-menu-list">
+<button data-slide="0">🏠 Portada</button>
+<button data-slide="4">1 · Tres ejes de clasificación</button>
+<button data-slide="11">2 · Entropía, neguentropía y homeostasis</button>
+<button data-slide="16">3 · Equifinalidad, recursividad y caja negra</button>
+<button data-slide="23">4 · Caso comparativo</button>
+<button data-slide="28">Repaso final</button>
+<button data-slide="35">Cheat Sheet</button>
+<button data-slide="37">Cierre</button>
+</div>
+</nav>
+
+<div class="deck-viewport" id="deckViewport">
+
+<!-- 0 · PORTADA -->
+<section class="slide slide-title-slide active">
+<div class="slide-inner">
+<span class="slide-eyebrow">🧩 Guía de Aula Invertida · Presentación</span>
+<h1 class="slide-title">Clasificación y <span>Propiedades</span> de los Sistemas</h1>
+<p class="slide-lead">No todos los sistemas son iguales. Vas a aprender a ubicar cualquier sistema real en tres ejes de clasificación, y a reconocer seis propiedades que comparten los sistemas abiertos, sin importar su naturaleza.</p>
+<div class="author" style="justify-content:center;">
+<div class="avatar">RC</div>
+<div style="text-align:left;"><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+<p class="slide-hint">👁 <span id="viewCount">—</span> vistas · Usa las flechas ← → , el teclado o desliza para navegar</p>
+</div>
+</section>
+
+<!-- 1 · BIENVENIDA -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Introducción</p>
+<h2 class="slide-title">Bienvenido</h2>
+<div class="slide-body">
+<p>En <strong>Introducción a la Teoría General de Sistemas</strong> viste los cinco elementos que tiene cualquier sistema: componentes, atributos, relaciones, límite y entorno. Esta presentación da el siguiente paso: <strong>cómo ubicar</strong> un sistema real dentro de tres ejes de clasificación, y <strong>qué propiedades</strong> comparten los sistemas abiertos, sin importar si son biológicos, organizacionales o de software.</p>
+<p>Vas a cerrar la guía comparando tres sistemas de naturaleza completamente distinta con los mismos criterios — el mismo ejercicio que vas a hacer en equipo durante la clase.</p>
+</div>
+</div>
+</section>
+
+<!-- 2 · PRERREQUISITO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Introducción</p>
+<h2 class="slide-title">Antes de empezar</h2>
+<div class="slide-body highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Esta presentación da por sabido lo visto en <a href="sistema.html">Introducción a la Teoría General de Sistemas</a> (elementos, límite, entorno y retroalimentación positiva/negativa). No vuelve a explicar esos conceptos desde cero: los usa como punto de partida para clasificar y caracterizar sistemas reales.</p>
+</div>
+</div>
+</section>
+
+<!-- 3 · OBJETIVO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Introducción</p>
+<h2 class="slide-title">Objetivo del módulo</h2>
+<div class="slide-body">
+<ul>
+<li>Clasificar un sistema real según tres ejes: abierto/cerrado, determinista/probabilístico, natural/artificial.</li>
+<li>Explicar cómo compiten la entropía y la neguentropía dentro de todo sistema abierto.</li>
+<li>Reconocer homeostasis y equifinalidad en un caso concreto.</li>
+<li>Aplicar el principio de recursividad para ver un sistema como parte de otro más grande.</li>
+<li>Distinguir cuándo conviene analizar un sistema como caja negra y cuándo como caja blanca.</li>
+<li>Comparar tres sistemas de naturaleza distinta con los mismos criterios.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<!-- 4 · DIVISOR 1 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 1</p>
+<h2 class="slide-title">Tres ejes de clasificación</h2>
+</div>
+</section>
+
+<!-- 5 · ABIERTOS Y CERRADOS -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">1 · Tres ejes de clasificación</p>
+<h2 class="slide-title">Eje 1: abierto o cerrado</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Tipo</th><th scope="col">Según su relación con el entorno</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><strong>Abierto</strong></td><td>Intercambia materia, energía o información con su entorno.</td><td>Una colmena, que necesita polen y agua del exterior.</td></tr>
+<tr><td><strong>Cerrado</strong></td><td>No intercambia nada con su entorno; caso teórico casi imposible en la práctica.</td><td>Un sistema aislado de laboratorio, diseñado a propósito para no intercambiar nada.</td></tr>
+</tbody>
+</table>
+<div class="slide-body">
+<p>Casi todo sistema real que vas a analizar en esta materia es <strong>abierto</strong>. El eje "cerrado" existe sobre todo como referencia teórica: entenderlo ayuda a notar cuánto depende un sistema abierto de su entorno para sobrevivir.</p>
+</div>
+</div>
+</section>
+
+<!-- 6 · QUIZ classify abierto-cerrado -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">1 · Tres ejes de clasificación</p>
+<div class="quiz quiz-classify" data-quiz-id="abierto-cerrado">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Es un sistema abierto o cerrado?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una universidad, que recibe estudiantes, presupuesto e información de su entorno.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Abierto</button>
+<button>Cerrado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un termo perfectamente sellado que, en teoría, no intercambia calor con el ambiente.</span>
+<div class="quiz-classify-btns">
+<button>Abierto</button>
+<button data-correct>Cerrado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un experimento de laboratorio aislado a propósito, sin ningún intercambio con el exterior.</span>
+<div class="quiz-classify-btns">
+<button>Cerrado</button>
+<button data-correct>Abierto</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una app de mensajería, que recibe datos, usuarios nuevos y actualizaciones desde su entorno.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Cerrado</button>
+<button>Abierto</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 7 · DETERMINISTAS Y PROBABILÍSTICOS -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">1 · Tres ejes de clasificación</p>
+<h2 class="slide-title">Eje 2: determinista o probabilístico</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Tipo</th><th scope="col">Según cómo se comporta</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><strong>Determinista</strong></td><td>Con la misma entrada, produce siempre la misma salida.</td><td>Una calculadora: 2+2 da 4 todas las veces.</td></tr>
+<tr><td><strong>Probabilístico</strong></td><td>Su comportamiento no se puede predecir con certeza, solo estimar.</td><td>El tráfico de una ciudad a una hora dada.</td></tr>
+</tbody>
+</table>
+<div class="slide-body">
+<p>Este eje es distinto del anterior: un sistema puede ser abierto y a la vez determinista (una calculadora recibe electricidad del entorno, pero su lógica interna nunca varía), o abierto y probabilístico (una red social depende de miles de decisiones humanas impredecibles).</p>
+</div>
+</div>
+</section>
+
+<!-- 8 · QUIZ mc determinista-probabilistico -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">1 · Tres ejes de clasificación</p>
+<div class="quiz quiz-mc" data-quiz-id="determinista-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un cajero automático simple siempre entrega el mismo resultado (dispensar el monto pedido) ante la misma combinación de tarjeta, PIN y monto disponible. ¿Qué tipo de sistema es, según este eje?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Probabilístico: el resultado depende del azar en cada intento.</button>
+<button class="quiz-opt">No se puede clasificar en este eje: solo aplica a sistemas naturales.</button>
+<button class="quiz-opt" data-correct>Determinista: la misma entrada produce siempre la misma salida.</button>
+<button class="quiz-opt">Determinista solo si el cajero tiene poco dinero disponible.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: dada la misma tarjeta, el mismo PIN y el mismo monto, el cajero siempre responde igual — no hay ningún elemento de azar en su lógica interna. Eso lo hace determinista." data-ko="No hay ningún elemento de azar en la lógica del cajero (no es probabilístico), el eje sí aplica a sistemas artificiales, y el resultado disponible no cambia si es determinista o no. Con la misma entrada, la salida es siempre la misma: determinista." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 9 · NATURALES Y ARTIFICIALES -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">1 · Tres ejes de clasificación</p>
+<h2 class="slide-title">Eje 3: natural o artificial</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Tipo</th><th scope="col">Según su origen</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><strong>Natural</strong></td><td>Existe sin intervención humana en su diseño.</td><td>Una cordillera, el sistema circulatorio.</td></tr>
+<tr><td><strong>Artificial</strong></td><td>Fue diseñado y construido por personas.</td><td>Un puente, una aplicación de software.</td></tr>
+</tbody>
+</table>
+<div class="slide-body highlight">
+<p>Muchos sistemas que vas a analizar como ingeniero/a son <strong>sociotécnicos</strong>: combinan personas y tecnología (un sistema de información, una empresa). Siguen siendo artificiales — fueron diseñados — pero su comportamiento depende también de decisiones humanas, no solo de reglas técnicas.</p>
+</div>
+</div>
+</section>
+
+<!-- 10 · QUIZ classify natural-artificial -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">1 · Tres ejes de clasificación</p>
+<div class="quiz quiz-classify" data-quiz-id="natural-artificial">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Es un sistema natural o artificial?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una cordillera formada por movimientos tectónicos a lo largo de millones de años.</span>
+<div class="quiz-classify-btns">
+<button>Artificial</button>
+<button data-correct>Natural</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un puente diseñado y construido por un equipo de ingeniería civil.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Artificial</button>
+<button>Natural</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El sistema circulatorio de un ser humano.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Natural</button>
+<button>Artificial</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una aplicación de mensajería instantánea.</span>
+<div class="quiz-classify-btns">
+<button>Natural</button>
+<button data-correct>Artificial</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 11 · DIVISOR 2 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 2</p>
+<h2 class="slide-title">Entropía, neguentropía y homeostasis</h2>
+</div>
+</section>
+
+<!-- 12 · ENTROPÍA / NEGUENTROPÍA -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · Entropía, neguentropía y homeostasis</p>
+<h2 class="slide-title">La tendencia al desorden, y su contrapeso</h2>
+<div class="slide-body">
+<p><strong>Entropía:</strong> tendencia natural de todo sistema a perder organización y degradarse con el tiempo, si no recibe energía o información del exterior.</p>
+<p><strong>Neguentropía:</strong> capacidad de un sistema abierto de importar energía o información desde su entorno para contrarrestar la entropía y mantenerse organizado.</p>
+</div>
+<div class="slide-body highlight">
+<strong>Ejemplo: un proyecto de software</strong>
+<p>Un equipo deja de refactorizar su código: la deuda técnica crece sprint tras sprint y el sistema se vuelve cada vez más difícil de mantener (<strong>entropía</strong>). El equipo decide invertir un sprint completo en refactor y capacitación, importando esfuerzo y conocimiento nuevo (<strong>neguentropía</strong>).</p>
+</div>
+</div>
+</section>
+
+<!-- 13 · HOMEOSTASIS -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · Entropía, neguentropía y homeostasis</p>
+<h2 class="slide-title">Homeostasis: autorregularse para mantener el equilibrio</h2>
+<div class="slide-body">
+<p><strong>Homeostasis</strong> es la capacidad de un sistema de autorregularse para mantener su equilibrio interno pese a los cambios del entorno. No es lo mismo que "no cambiar nunca": es corregir activamente las desviaciones para volver a un rango estable.</p>
+</div>
+<div class="slide-body highlight">
+<p>Siguiendo el ejemplo anterior: después del sprint de refactor, el proyecto vuelve a estabilizarse en un nivel aceptable de mantenibilidad — y el equipo adopta revisiones de código periódicas para no volver a acumular tanta deuda técnica. Eso es <strong>homeostasis</strong>: un mecanismo activo que mantiene el equilibrio, no un estado que se logra una vez y ya.</p>
+</div>
+</div>
+</section>
+
+<!-- 14 · QUIZ mc entropia-homeostasis -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · Entropía, neguentropía y homeostasis</p>
+<div class="quiz quiz-mc" data-quiz-id="entropia-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">En el ejemplo del proyecto de software, ¿qué acción corresponde específicamente a la neguentropía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Que el código se vuelva cada vez más difícil de mantener.</button>
+<button class="quiz-opt" data-correct>Invertir un sprint en refactor y capacitación, importando esfuerzo nuevo.</button>
+<button class="quiz-opt">Que la deuda técnica siga creciendo sprint tras sprint.</button>
+<button class="quiz-opt">Que el proyecto llegue al mismo resultado por otro camino.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: importar esfuerzo y conocimiento nuevo desde afuera del sistema para contrarrestar el desorden acumulado es exactamente neguentropía." data-ko="Que el código se degrade o que la deuda siga creciendo es entropía, no su contrapeso. Llegar al mismo resultado por otro camino es equifinalidad, un concepto distinto. Importar esfuerzo/conocimiento nuevo para revertir el desorden es neguentropía." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 15 · QUIZ fill entropia-homeostasis -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">2 · Entropía, neguentropía y homeostasis</p>
+<div class="quiz quiz-fill" data-quiz-id="entropia-fill">
+<span class="quiz-badge">Completar</span>
+
+<p>1. Una startup deja de invertir en mantenimiento de sus servidores y sufre caídas cada vez más frecuentes: eso es
+<select class="quiz-blank" data-correct="entropia">
+<option value="">— elige —</option>
+<option value="entropia">entropía</option>
+<option value="neguentropia">neguentropía</option>
+<option value="homeostasis">homeostasis</option>
+</select>.</p>
+
+<p>2. Contrata un nuevo ingeniero DevOps y adopta monitoreo activo, trayendo recursos nuevos desde afuera: eso es
+<select class="quiz-blank" data-correct="neguentropia">
+<option value="">— elige —</option>
+<option value="homeostasis">homeostasis</option>
+<option value="entropia">entropía</option>
+<option value="neguentropia">neguentropía</option>
+</select>.</p>
+
+<p>3. Con el tiempo, el sistema vuelve a estabilizarse en un nivel aceptable de disponibilidad, y se mantiene así pese a nuevos picos de tráfico: eso es
+<select class="quiz-blank" data-correct="homeostasis">
+<option value="">— elige —</option>
+<option value="neguentropia">neguentropía</option>
+<option value="homeostasis">homeostasis</option>
+<option value="entropia">entropía</option>
+</select>.</p>
+
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 16 · DIVISOR 3 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 3</p>
+<h2 class="slide-title">Equifinalidad, recursividad y caja negra</h2>
+</div>
+</section>
+
+<!-- 17 · EQUIFINALIDAD -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Equifinalidad, recursividad y caja negra</p>
+<h2 class="slide-title">Equifinalidad: el mismo destino, caminos distintos</h2>
+<div class="slide-body">
+<p>Un sistema abierto puede llegar al <strong>mismo estado final</strong> partiendo de condiciones iniciales distintas y siguiendo <strong>caminos diferentes</strong>. No hay una única ruta correcta hacia un resultado.</p>
+</div>
+<div class="slide-body highlight">
+<strong>Ejemplo</strong>
+<p>Dos empresas de logística llegan al mismo nivel de satisfacción del cliente (95%) por caminos distintos: una invirtiendo en más camiones y conductores, la otra en mejor software de rutas y menos vehículos. Condiciones iniciales distintas, mismo destino.</p>
+</div>
+</div>
+</section>
+
+<!-- 18 · QUIZ mc equifinalidad -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Equifinalidad, recursividad y caja negra</p>
+<div class="quiz quiz-mc" data-quiz-id="equifinalidad-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Dos equipos de programación distintos, con integrantes de experiencia muy diferente, terminan entregando aplicaciones igual de estables y rápidas, usando arquitecturas completamente distintas entre sí. ¿Qué propiedad describe mejor esta situación?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Homeostasis: cada equipo corrigió desviaciones para mantener su equilibrio interno.</button>
+<button class="quiz-opt">Entropía: ambos equipos perdieron organización con el tiempo.</button>
+<button class="quiz-opt">Recursividad: cada equipo es, en sí mismo, un sistema completo.</button>
+<button class="quiz-opt" data-correct>Equifinalidad: llegaron al mismo resultado por caminos distintos.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: condiciones iniciales distintas (experiencia, arquitectura) y caminos distintos, pero el mismo estado final (estabilidad y velocidad). Eso es, por definición, equifinalidad." data-ko="No hubo corrección de desviaciones internas (no es homeostasis) ni pérdida de organización (no es entropía), y el caso no describe sistemas anidados (no es recursividad). Llegar al mismo resultado por caminos distintos es equifinalidad." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 19 · RECURSIVIDAD -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Equifinalidad, recursividad y caja negra</p>
+<h2 class="slide-title">Recursividad: sistemas dentro de sistemas</h2>
+<div class="slide-visual diagrama-caja">
+<svg viewBox="0 0 700 260" role="img" aria-label="Diagrama de rectángulos anidados: una empresa contiene un departamento de ventas, que contiene un equipo regional, que contiene un vendedor individual">
+<rect x="20" y="20" width="660" height="220" rx="10" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="45" y="45" class="dg-texto" font-size="11.5">EMPRESA</text>
+<rect x="70" y="55" width="560" height="165" rx="10" fill="none" stroke="var(--verde)" stroke-width="2"></rect>
+<text x="90" y="78" class="dg-texto" font-size="11">DEPARTAMENTO DE VENTAS</text>
+<rect x="130" y="90" width="420" height="110" rx="10" fill="none" stroke="var(--amarillo)" stroke-width="2"></rect>
+<text x="150" y="112" class="dg-texto" font-size="10.5">EQUIPO REGIONAL</text>
+<rect x="200" y="125" width="260" height="55" rx="10" fill="none" stroke="#c0392b" stroke-width="2"></rect>
+<text x="330" y="157" text-anchor="middle" class="dg-texto" font-size="10.5">VENDEDOR</text>
+</svg>
+</div>
+<div class="slide-body">
+<p>Cada uno de estos "cajones" es, en sí mismo, un <strong>sistema completo</strong>: tiene sus propios elementos, límites y relaciones. Y a la vez es un componente del sistema de nivel superior que lo contiene. Ese patrón — sistema dentro de sistema, en varios niveles — es la <strong>recursividad</strong>.</p>
+<p>Más adelante, en <a href="diagnostico-vsm.html">Diagnóstico y Rediseño Organizacional con el VSM</a> vas a ver una versión mucho más formal de esta misma idea, aplicada al diseño de organizaciones viables.</p>
+</div>
+</div>
+</section>
+
+<!-- 20 · QUIZ mc recursividad -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Equifinalidad, recursividad y caja negra</p>
+<div class="quiz quiz-mc" data-quiz-id="recursividad-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">El cuerpo humano contiene el sistema digestivo, que contiene el estómago, que a su vez está compuesto de células. ¿Qué propiedad ilustra mejor esta cadena?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Equifinalidad, porque el cuerpo puede llegar sano por caminos distintos.</button>
+<button class="quiz-opt" data-correct>Recursividad: cada nivel es, a su vez, un sistema completo dentro de otro.</button>
+<button class="quiz-opt">Entropía, porque cada nivel se degrada con el tiempo si no se cuida.</button>
+<button class="quiz-opt">Caja negra, porque no se conoce el interior de ninguno de esos niveles.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: cuerpo, sistema digestivo, estómago y células son, cada uno, un sistema completo con sus propios elementos, límite y relaciones — anidado dentro del nivel superior. Eso es recursividad." data-ko="No se trata de caminos alternativos hacia el mismo resultado (no es equifinalidad), ni de degradación con el tiempo (no es entropía), ni de desconocer el interior (no es caja negra). Un sistema completo dentro de otro sistema completo, en varios niveles, es recursividad." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 21 · CAJA NEGRA -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Equifinalidad, recursividad y caja negra</p>
+<h2 class="slide-title">Caja negra y caja blanca</h2>
+<div class="slide-visual diagrama-caja">
+<svg viewBox="0 0 700 190" role="img" aria-label="Comparación: una caja negra muestra solo entrada y salida, sin revelar su estructura interna; una caja blanca muestra también los componentes internos visibles">
+<defs>
+<marker id="a21g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--verde)"></path></marker>
+</defs>
+<rect x="40" y="40" width="220" height="110" rx="10" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<text x="150" y="100" text-anchor="middle" class="dg-texto" font-size="26">?</text>
+<text x="150" y="168" text-anchor="middle" class="dg-texto small">CAJA NEGRA (interior desconocido)</text>
+<line x1="0" y1="95" x2="38" y2="95" stroke="var(--verde)" stroke-width="2.5" marker-end="url(#a21g)"></line>
+<text x="10" y="85" text-anchor="start" class="dg-texto small">entrada</text>
+<line x1="260" y1="95" x2="300" y2="95" stroke="var(--verde)" stroke-width="2.5" marker-end="url(#a21g)"></line>
+<text x="270" y="85" text-anchor="start" class="dg-texto small">salida</text>
+<rect x="440" y="40" width="220" height="110" rx="10" fill="none" stroke="var(--azul2)" stroke-width="2"></rect>
+<rect x="460" y="58" width="60" height="30" rx="4" fill="none" stroke="var(--amarillo)" stroke-width="1.5"></rect>
+<rect x="530" y="58" width="60" height="30" rx="4" fill="none" stroke="var(--amarillo)" stroke-width="1.5"></rect>
+<rect x="495" y="100" width="60" height="30" rx="4" fill="none" stroke="var(--amarillo)" stroke-width="1.5"></rect>
+<text x="550" y="168" text-anchor="middle" class="dg-texto small">CAJA BLANCA (interior visible)</text>
+<line x1="400" y1="95" x2="438" y2="95" stroke="var(--verde)" stroke-width="2.5" marker-end="url(#a21g)"></line>
+<text x="410" y="85" text-anchor="start" class="dg-texto small">entrada</text>
+<line x1="660" y1="95" x2="700" y2="95" stroke="var(--verde)" stroke-width="2.5" marker-end="url(#a21g)"></line>
+<text x="670" y="85" text-anchor="start" class="dg-texto small">salida</text>
+</svg>
+</div>
+<div class="slide-body">
+<p>Analizar un sistema como <strong>caja negra</strong> es estudiar solo la relación entre sus entradas y salidas, sin conocer (o sin necesitar conocer) su estructura interna. Analizarlo como <strong>caja blanca</strong> es conocer y poder intervenir esa estructura interna directamente.</p>
+<p><strong>Ejemplo:</strong> para quien solo ejecuta <code>gcc archivo.c</code>, el compilador es caja negra — entra código fuente, sale un ejecutable, y no hace falta saber cómo funciona por dentro. Para quien desarrolla el compilador, es caja blanca: conoce y modifica cada parte de su estructura interna.</p>
+</div>
+</div>
+</section>
+
+<!-- 22 · QUIZ classify caja negra -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">3 · Equifinalidad, recursividad y caja negra</p>
+<div class="quiz quiz-classify" data-quiz-id="caja-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Esta persona está analizando el sistema como caja negra o caja blanca?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un usuario que solo sabe que, al tocar "enviar", el mensaje llega al otro lado.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Caja negra</button>
+<button>Caja blanca</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un desarrollador que lee y modifica el código fuente que enruta cada mensaje.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Caja blanca</button>
+<button>Caja negra</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un paciente que solo sabe que tomar cierta pastilla le baja la fiebre.</span>
+<div class="quiz-classify-btns">
+<button>Caja blanca</button>
+<button data-correct>Caja negra</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un ingeniero que conoce el circuito interno completo de un electrodoméstico.</span>
+<div class="quiz-classify-btns">
+<button>Caja negra</button>
+<button data-correct>Caja blanca</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 23 · DIVISOR 4 -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Sección 4</p>
+<h2 class="slide-title">Caso comparativo: tres sistemas</h2>
+</div>
+</section>
+
+<!-- 24 · PRESENTACIÓN DEL CASO -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">4 · Caso comparativo</p>
+<h2 class="slide-title">Tres sistemas, un mismo conjunto de criterios</h2>
+<div class="slide-body">
+<p>Vas a comparar tres sistemas de naturaleza completamente distinta, usando exactamente los mismos ejes y propiedades vistos en esta guía.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🫀 Biológico</h3><p>El cuerpo humano: mantiene su temperatura, hidratación y nivel de azúcar en rangos estables pese a un entorno que cambia constantemente.</p></div>
+<div class="info"><h3>🏢 Organizacional</h3><p>Una empresa de delivery de comida: coordina restaurantes, repartidores y clientes, ajustando precios y tiempos según la demanda del momento.</p></div>
+<div class="info"><h3>💬 De software</h3><p>Una app de mensajería instantánea: recibe usuarios, mensajes y actualizaciones, y debe seguir funcionando pese a picos de tráfico impredecibles.</p></div>
+</div>
+</div>
+</section>
+
+<!-- 25 · QUIZ fill comparativo -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">4 · Caso comparativo</p>
+<div class="quiz quiz-fill" data-quiz-id="comparativo-fill">
+<span class="quiz-badge">Cuadro comparativo</span>
+<p class="quiz-q">Completa la clasificación de cada sistema en los tres ejes vistos.</p>
+
+<p><strong>El cuerpo humano</strong> es un sistema
+<select class="quiz-blank" data-correct="abierto">
+<option value="">— elige —</option>
+<option value="abierto">abierto</option>
+<option value="cerrado">cerrado</option>
+</select>,
+<select class="quiz-blank" data-correct="probabilistico">
+<option value="">— elige —</option>
+<option value="determinista">determinista</option>
+<option value="probabilistico">probabilístico</option>
+</select>
+y
+<select class="quiz-blank" data-correct="natural">
+<option value="">— elige —</option>
+<option value="natural">natural</option>
+<option value="artificial">artificial</option>
+</select>.</p>
+
+<p><strong>La empresa de delivery</strong> es un sistema
+<select class="quiz-blank" data-correct="abierto">
+<option value="">— elige —</option>
+<option value="abierto">abierto</option>
+<option value="cerrado">cerrado</option>
+</select>,
+<select class="quiz-blank" data-correct="probabilistico">
+<option value="">— elige —</option>
+<option value="determinista">determinista</option>
+<option value="probabilistico">probabilístico</option>
+</select>
+y
+<select class="quiz-blank" data-correct="artificial">
+<option value="">— elige —</option>
+<option value="natural">natural</option>
+<option value="artificial">artificial</option>
+</select>.</p>
+
+<p><strong>La app de mensajería</strong> es un sistema
+<select class="quiz-blank" data-correct="abierto">
+<option value="">— elige —</option>
+<option value="abierto">abierto</option>
+<option value="cerrado">cerrado</option>
+</select>,
+<select class="quiz-blank" data-correct="probabilistico">
+<option value="">— elige —</option>
+<option value="determinista">determinista</option>
+<option value="probabilistico">probabilístico</option>
+</select>
+(el volumen de mensajes que recibe no se puede predecir con certeza)
+y
+<select class="quiz-blank" data-correct="artificial">
+<option value="">— elige —</option>
+<option value="natural">natural</option>
+<option value="artificial">artificial</option>
+</select>.</p>
+
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 26 · QUIZ mc comparativo homeostasis -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">4 · Caso comparativo</p>
+<div class="quiz quiz-mc" data-quiz-id="comparativo-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">De los tres sistemas comparados, ¿cuál muestra homeostasis de forma más directa e inmediata?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La app de mensajería: nunca deja de responder, pase lo que pase.</button>
+<button class="quiz-opt">Ninguno de los tres: la homeostasis es exclusiva de sistemas cerrados.</button>
+<button class="quiz-opt">La empresa de delivery: siempre entrega en el mismo tiempo exacto.</button>
+<button class="quiz-opt" data-correct>El cuerpo humano: regula temperatura y azúcar en rangos estables sin pensarlo.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: de hecho, 'homeostasis' es un término que viene originalmente de la fisiología — el cuerpo regula variables internas (temperatura, glucosa, hidratación) de forma automática y constante, el ejemplo más directo de los tres." data-ko="La homeostasis no es exclusiva de sistemas cerrados (los tres son abiertos), y ni la app ni la empresa se autorregulan de forma tan directa e inmediata como el cuerpo humano, que ajusta variables internas constantemente sin intervención consciente." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 27 · QUIZ open análisis abierto -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">4 · Caso comparativo</p>
+<div class="quiz quiz-open" data-quiz-id="comparativo-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Elegí uno de los tres sistemas (cuerpo humano, empresa de delivery o app de mensajería) y explicá: (a) un ejemplo de recursividad dentro de él, y (b) una situación en la que convenga analizarlo como caja negra.</p>
+<textarea class="quiz-open-input" placeholder="Escribe aquí tu análisis antes de ver la respuesta modelo…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver respuesta modelo</button>
+<div class="quiz-open-model" hidden>
+<strong>Respuesta modelo (con la app de mensajería)</strong>
+<p>(a) Recursividad: la app completa es un sistema que contiene el subsistema de mensajería, que contiene el módulo de cifrado, que a su vez está compuesto de funciones individuales — cada nivel es un sistema completo dentro de otro. (b) Caja negra: para la mayoría de los usuarios, la app es caja negra — escriben un mensaje y lo reciben del otro lado, sin necesitar saber cómo se enruta ni se cifra por dentro; solo el equipo de desarrollo la analiza como caja blanca.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 28 · DIVISOR REPASO + TRACKER -->
+<section class="slide slide-divider">
+<div class="slide-inner">
+<p class="slide-num">Repaso final</p>
+<h2 class="slide-title">Repaso final</h2>
+<div class="quiz-tracker" style="max-width:520px;margin:20px auto 0;text-align:left;">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la presentación</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+</div>
+</section>
+
+<!-- 29 · repaso-1 -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un cliente de un cajero automático que solo sabe que, con la tarjeta y el PIN correctos, recibe el dinero pedido, está analizando el sistema como...</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Sistema probabilístico, porque el resultado depende del azar.</button>
+<button class="quiz-opt">Caja blanca, porque conoce el circuito interno del cajero.</button>
+<button class="quiz-opt">Sistema cerrado, porque no interactúa con ningún entorno.</button>
+<button class="quiz-opt" data-correct>Caja negra: solo conoce la relación entre entrada y salida.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: el cliente no conoce (ni necesita conocer) la lógica interna del cajero — solo sabe qué entra (tarjeta, PIN) y qué sale (dinero). Eso es analizarlo como caja negra." data-ko="El cliente no está prediciendo un resultado azaroso (no es sobre probabilístico), no conoce el circuito interno (no es caja blanca), y el cajero sí interactúa con su entorno (no es cerrado). Conocer solo la relación entrada-salida, sin el interior, es caja negra." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 30 · repaso-2 -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">La recursividad implica que cada subsistema es exactamente idéntico al sistema completo, sin ninguna diferencia entre niveles.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: la recursividad dice que cada nivel es un sistema completo (con sus propios elementos, límite y relaciones), no una copia idéntica del sistema completo. Un equipo de ventas no es una réplica en miniatura de toda la empresa." data-ko="Es falso: recursividad no significa 'copia idéntica'. Significa que cada nivel —empresa, departamento, equipo, persona— es un sistema completo con sus propios elementos, límite y relaciones, aunque muy distinto en tamaño y función del nivel que lo contiene." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 31 · repaso-3 -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un simulador de dados de una mesa de juego, programado para que cada tirada dependa de un generador de números aleatorios real, es un sistema...</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Probabilístico: el resultado de cada tirada no se puede predecir.</button>
+<button class="quiz-opt">Determinista, porque el programa siempre corre el mismo código.</button>
+<button class="quiz-opt">Natural, porque simula un fenómeno del azar.</button>
+<button class="quiz-opt">Cerrado, porque no depende de ninguna entrada externa.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: aunque el código en sí sea siempre el mismo, el resultado de cada ejecución depende de un valor aleatorio real — no se puede predecir con certeza qué número va a salir. Eso lo hace probabilístico, no determinista." data-ko="Que el código sea siempre el mismo no lo hace determinista (lo que importa es si la SALIDA es predecible, y acá no lo es); es artificial, no natural (fue programado); y sí recibe una entrada externa (el número aleatorio). El resultado impredecible de cada tirada lo hace probabilístico." hidden></p>
+</div>
+</div>
+</section>
+
+<!-- 32 · repaso-classify -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Entropía o neguentropía?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un jardín sin riego ni poda, que se seca y se llena de maleza con el paso de las semanas.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Entropía</button>
+<button>Neguentropía</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un equipo que contrata a una persona nueva y adopta una herramienta para organizar mejor su trabajo.</span>
+<div class="quiz-classify-btns">
+<button>Entropía</button>
+<button data-correct>Neguentropía</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una biblioteca que deja de catalogar libros nuevos, y con el tiempo nadie encuentra nada en sus estantes.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Entropía</button>
+<button>Neguentropía</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una empresa que invierte en capacitar a su personal para revertir una caída sostenida en la calidad del servicio.</span>
+<div class="quiz-classify-btns">
+<button>Entropía</button>
+<button data-correct>Neguentropía</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 33 · repaso-match -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-match" data-quiz-id="repaso-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada término con su definición.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="homeostasis">Homeostasis</button>
+<button class="quiz-match-item" data-pair="equifinalidad">Equifinalidad</button>
+<button class="quiz-match-item" data-pair="recursividad">Recursividad</button>
+<button class="quiz-match-item" data-pair="cajanegra">Caja negra</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="cajanegra">Analizar un sistema solo por su relación entrada-salida, sin conocer su interior.</button>
+<button class="quiz-match-item" data-pair="recursividad">Cada subsistema es, a su vez, un sistema completo dentro de otro más grande.</button>
+<button class="quiz-match-item" data-pair="homeostasis">Autorregularse para mantener el equilibrio interno pese a los cambios del entorno.</button>
+<button class="quiz-match-item" data-pair="equifinalidad">Llegar al mismo estado final por caminos distintos, desde puntos de partida distintos.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 34 · repaso-fill -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Repaso final</p>
+<div class="quiz quiz-fill" data-quiz-id="repaso-fill">
+<span class="quiz-badge">Completar</span>
+
+<p>1. Un ecosistema de manglar, que intercambia agua, nutrientes y especies con el mar y la costa, es un sistema
+<select class="quiz-blank" data-correct="abierto">
+<option value="">— elige —</option>
+<option value="cerrado">cerrado</option>
+<option value="abierto">abierto</option>
+</select>
+y
+<select class="quiz-blank" data-correct="natural">
+<option value="">— elige —</option>
+<option value="artificial">artificial</option>
+<option value="natural">natural</option>
+</select>.</p>
+
+<p>2. Un simulador de vuelo, diseñado por ingenieros para entrenar pilotos, es un sistema
+<select class="quiz-blank" data-correct="artificial">
+<option value="">— elige —</option>
+<option value="natural">natural</option>
+<option value="artificial">artificial</option>
+</select>.</p>
+
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<!-- 35 · CHEAT SHEET -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Referencia</p>
+<h2 class="slide-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Abierto / cerrado</td><td>Según si intercambia (o no) materia, energía o información con su entorno.</td></tr>
+<tr><td>Determinista / probabilístico</td><td>Según si la misma entrada produce siempre la misma salida, o no se puede predecir con certeza.</td></tr>
+<tr><td>Natural / artificial</td><td>Según si existe sin intervención humana, o fue diseñado y construido por personas.</td></tr>
+<tr><td>Entropía</td><td>Tendencia a perder organización con el tiempo sin energía/información externa.</td></tr>
+<tr><td>Neguentropía</td><td>Importar recursos del entorno para contrarrestar la entropía.</td></tr>
+<tr><td>Homeostasis</td><td>Autorregularse activamente para mantener el equilibrio interno.</td></tr>
+<tr><td>Equifinalidad</td><td>Llegar al mismo estado final por caminos y condiciones iniciales distintas.</td></tr>
+<tr><td>Recursividad</td><td>Cada subsistema es, a su vez, un sistema completo dentro de otro.</td></tr>
+<tr><td>Caja negra / caja blanca</td><td>Según si se analiza solo entrada-salida, o se conoce e interviene el interior.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- 36 · SABÍAS QUE -->
+<section class="slide">
+<div class="slide-inner">
+<p class="slide-kicker">Referencia</p>
+<h2 class="slide-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📡 Caja negra, herencia de la Segunda Guerra</h3><p>El concepto de "caja negra" se popularizó en el contexto de la cibernética temprana, analizando sistemas de radar y control antiaéreo sin necesidad de abrir cada componente para entender su comportamiento externo.</p></div>
+<div class="info"><h3>🧬 Equifinalidad, una idea de biólogo</h3><p>Ludwig von Bertalanffy describió por primera vez la equifinalidad estudiando organismos vivos: a diferencia de un sistema cerrado, un organismo puede alcanzar el mismo estado de desarrollo desde huevos con condiciones iniciales distintas.</p></div>
+<div class="info"><h3>🔗 El "holón" de Koestler</h3><p>El escritor Arthur Koestler acuñó la palabra "holón" para nombrar algo que es, a la vez, un todo completo y una parte de algo más grande — la misma idea detrás de la recursividad sistémica, aplicada mucho más allá de la biología.</p></div>
+</div>
+</div>
+</section>
+
+<!-- 37 · CIERRE -->
+<section class="slide slide-title-slide">
+<div class="slide-inner">
+<h2 class="slide-title">Clasificación y <span>Propiedades</span></h2>
+<p class="slide-lead">de los Sistemas</p>
+<div class="slide-body" style="text-align:center;">
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<p><strong>Ing. Roy Carrasco</strong><br>Universidad Adventista de Bolivia · 2026</p>
+</div>
+</div>
+</section>
+
+</div>
+
+<button class="deck-nav-btn deck-nav-prev" id="deckPrev" aria-label="Diapositiva anterior">←</button>
+<button class="deck-nav-btn deck-nav-next" id="deckNext" aria-label="Diapositiva siguiente">→</button>
+
+<script>
+
+/* =========================================================
+   Motor de presentación (deck slide-a-slide). Reutilizable
+   tal cual en futuras guías con formato PPT-style.
+   ========================================================= */
+const slides = [...document.querySelectorAll(".slide")];
+const deckFill = document.getElementById("deckFill");
+const deckCounter = document.getElementById("deckCounter");
+const deckPrev = document.getElementById("deckPrev");
+const deckNext = document.getElementById("deckNext");
+const deckViewport = document.getElementById("deckViewport");
+const DECK_KEY = "tgs-deck-pos-" + location.pathname;
+
+let current = 0;
+
+function irA(index, silencioso){
+  index = Math.max(0, Math.min(slides.length - 1, index));
+  slides[current].classList.remove("active");
+  current = index;
+  slides[current].classList.add("active");
+  slides[current].scrollTop = 0;
+  deckFill.style.width = ((current + 1) / slides.length * 100) + "%";
+  deckCounter.textContent = (current + 1) + " / " + slides.length;
+  deckPrev.disabled = current === 0;
+  deckNext.disabled = current === slides.length - 1;
+  document.querySelectorAll(".deck-menu-list button").forEach(b => {
+    b.classList.toggle("current", Number(b.dataset.slide) === current);
+  });
+  if (!silencioso) { try { localStorage.setItem(DECK_KEY, String(current)); } catch(e){} }
+}
+
+function siguiente(){ irA(current + 1); }
+function anterior(){ irA(current - 1); }
+
+deckNext.addEventListener("click", siguiente);
+deckPrev.addEventListener("click", anterior);
+
+/* Restaurar posición guardada */
+(function(){
+  let guardado = 0;
+  try { guardado = parseInt(localStorage.getItem(DECK_KEY), 10) || 0; } catch(e){}
+  irA(guardado, true);
+})();
+
+/* Navegación por teclado (evita interferir con selects/textareas) */
+document.addEventListener("keydown", e => {
+  const tag = document.activeElement ? document.activeElement.tagName : "";
+  if (["SELECT", "TEXTAREA", "INPUT"].includes(tag)) return;
+  if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); siguiente(); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); anterior(); }
+  else if (e.key === "Home") { e.preventDefault(); irA(0); }
+  else if (e.key === "End") { e.preventDefault(); irA(slides.length - 1); }
+});
+
+/* Navegación por swipe (táctil) */
+let touchX = null;
+deckViewport.addEventListener("touchstart", e => { touchX = e.touches[0].clientX; }, {passive:true});
+deckViewport.addEventListener("touchend", e => {
+  if (touchX === null) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) { dx < 0 ? siguiente() : anterior(); }
+  touchX = null;
+}, {passive:true});
+
+/* Menú de índice */
+const deckMenuBtn = document.getElementById("deckMenuBtn");
+const deckMenuPanel = document.getElementById("deckMenuPanel");
+const deckMenuOverlay = document.getElementById("deckMenuOverlay");
+function abrirDeckMenu(){ deckMenuPanel.classList.add("show"); deckMenuOverlay.classList.add("show"); }
+function cerrarDeckMenu(){ deckMenuPanel.classList.remove("show"); deckMenuOverlay.classList.remove("show"); }
+deckMenuBtn.addEventListener("click", abrirDeckMenu);
+deckMenuOverlay.addEventListener("click", cerrarDeckMenu);
+document.querySelectorAll(".deck-menu-list button").forEach(b => {
+  b.addEventListener("click", () => { irA(Number(b.dataset.slide)); cerrarDeckMenu(); });
+});
+
+/* Tema claro / oscuro */
+const deckThemeBtn = document.getElementById("deckThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  deckThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+deckThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) — igual al de las demás guías TGS ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (respuesta modelo) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo (mismo bloque que arquetipos-sistemicos.html
+     e ingenieria-de-sistemas.html. Solo actúa si la guía se abrió desde un
+     lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en la URL,
+     agregado por IniciarOReanudarGuiaIntento del backend); accedida directo,
+     como siempre, no dispara nada nuevo. No toca el motor de quizzes de
+     arriba: se engancha a marcarResuelto() y actualizarProgreso(), que ya
+     existen (ver DEPLOY-GUIAS-SNIPPET.md en el repo de atenza para el detalle
+     de cada endpoint). Código listo; falta vincular esta guía como Clase en
+     el panel de ATENZA. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  var params = new URLSearchParams(location.search);
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  // ── Progreso limpio por intento: QUIZ_PREFIX guarda el progreso por PÁGINA
+  // (pensado para "completaste esto alguna vez en tu vida"), sin saber nada de
+  // "intentos" de ATENZA. Se guarda a qué guia_intento pertenece el progreso
+  // actual de esta página; si cambió, se limpia todo antes de que el
+  // estudiante toque nada. Si es el mismo (recargó la pestaña a mitad de
+  // camino), no se toca — sigue donde quedó.
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  // ── Aviso flotante — clave para "cuándo termina la guía": sin esto el
+  // estudiante llega al 100% local y no hay ninguna señal de que ya terminó,
+  // y una falla de red al reportar queda invisible. onClick, si se pasa,
+  // permite reintentar tocando el aviso.
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  // ── Pantalla completa: se pide en un click real del usuario, no solo.
+  // Estilos en línea porque esta página (deck) todavía no tiene una clase
+  // para esto — fixed y con z-index por encima de .deck-topbar (800) y
+  // .deck-menu-panel (891) para que no quede tapado por ninguno.
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  // ── Reportar cada pregunta resuelta — engancha marcarResuelto(), que ya
+  // usan los 5 tipos de actividad (mc/match/classify/fill/open) sin tocar
+  // ninguno de sus call-sites. quiz-open (textarea + ver modelo) se
+  // distingue por su propia clase y reporta el texto, no correcta/incorrecta.
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder foco.
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ── Finalizar al completar el 100% — cuenta CONTESTADAS (ok o ko, cualquier
+  // valor guardado), no solo correctas: un estudiante que contesta todo pero
+  // se equivoca en alguna quiz-mc de un solo intento igual debe poder
+  // terminar la guía. Si /finalizar falla, NO se queda marcado como
+  // finalizado — el aviso rojo deja reintentar con un toque.
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
