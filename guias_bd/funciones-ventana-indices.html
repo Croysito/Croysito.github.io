@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funciones de Ventana, Índices y EXPLAIN en PostgreSQL | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-console-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">BD II · <span>Ventanas e Índices</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="ventanas">Funciones de ventana</button>
+<button data-target="indices">Índices y EXPLAIN</button>
+<button data-target="razonamiento">Ejercicios de razonamiento</button>
+<button data-target="ejercicios">Actividades de repaso</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🗄️ Guía de Aula Invertida</span>
+<h1 class="flow-h1">Funciones de Ventana, <span>Índices</span> y EXPLAIN</h1>
+<p class="flow-lead">GROUP BY resume filas en un grupo. Pero a veces querés lo contrario: mantener cada fila individual y agregarle una columna calculada — un ranking, un total acumulado, el valor de la fila anterior. Para eso existen las funciones de ventana. Y una vez que tus tablas crecen de verdad, necesitás saber si Postgres está buscando fila por fila o usando un atajo: para eso están los índices y EXPLAIN.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Scrollea para empezar — a la izquierda vas a ver la consulta y su resultado armarse solos, mientras leés a la derecha.</p>
+</section>
+
+<section class="flow-section" id="ventanas">
+<div class="flow-grid">
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="wfPanel">
+<div class="flow-panel-head"><span>bd2 · ventanas_indices.sql</span><span class="flow-panel-step" id="wfPanelStep">Paso 1 / 7</span></div>
+
+<div class="scrolly-query">
+<div class="scrolly-query-head">consulta.sql</div>
+<pre class="scrolly-query-pre" id="wfQueryPre"><span class="scrolly-query-placeholder">-- todavía no escribimos nada</span></pre>
+</div>
+
+<div id="wfResultBox" class="scrolly-result-box"></div>
+</div>
+</div>
+
+<div class="flow-beats">
+
+<div class="flow-beat" data-step="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>Resumir sin perder el detalle</h3>
+<p>GROUP BY te da un total por categoría, pero colapsa las filas — ya no ves cada venta individual. ¿Y si querés un <strong>ranking de cada venta</strong>, o un <strong>total acumulado fila a fila</strong>, sin perder ni una sola fila de la tabla?</p>
+</div>
+
+<div class="flow-beat" data-step="1">
+<span class="flow-beat-eyebrow">Paso 02 · Sin funciones de ventana todavía</span>
+<h3>Las diez ventas, ordenadas</h3>
+<p>Arrancamos simple: todas las ventas de la tabla <strong>ventas</strong>, ordenadas de mayor a menor monto. Diez filas, ninguna función de ventana todavía.</p>
+</div>
+
+<div class="flow-beat" data-step="2">
+<span class="flow-beat-eyebrow">Paso 03 · OVER()</span>
+<h3>Una columna nueva, ninguna fila perdida</h3>
+<p><strong>ROW_NUMBER() OVER (ORDER BY monto DESC)</strong> numera cada fila según ese orden. <code>OVER</code> es lo que convierte a ROW_NUMBER en una función de ventana: le dice sobre qué conjunto de filas "mirar". Seguimos con las mismas diez filas — solo se agregó una columna.</p>
+</div>
+
+<div class="flow-beat" data-step="3">
+<span class="flow-beat-eyebrow">Paso 04 · PARTITION BY</span>
+<h3>Reiniciar la numeración por grupo</h3>
+<p><strong>PARTITION BY vendedor</strong> divide la tabla en ventanas separadas, una por vendedor, y <code>ROW_NUMBER()</code> vuelve a contar desde 1 en cada una. A diferencia de GROUP BY, esto no reduce las filas: solo cambia cómo se numeran.</p>
+</div>
+
+<div class="flow-beat" data-step="4">
+<span class="flow-beat-eyebrow">Paso 05 · RANK() y DENSE_RANK()</span>
+<h3>Dos formas distintas de manejar un empate</h3>
+<p>Entre las ventas de Electrónica hay un empate en Bs 640. <strong>RANK()</strong> le da el mismo puesto a los dos empatados y <em>salta</em> el siguiente número (1, 2, 2, 4). <strong>DENSE_RANK()</strong> también empata, pero no deja huecos (1, 2, 2, 3).</p>
+</div>
+
+<div class="flow-beat" data-step="5">
+<span class="flow-beat-eyebrow">Paso 06 · LAG()</span>
+<h3>Mirar la fila anterior sin un JOIN</h3>
+<p><strong>LAG(monto) OVER (PARTITION BY vendedor ORDER BY fecha)</strong> trae el monto de la venta anterior de ese mismo vendedor. La primera venta de cada uno no tiene anterior — por eso da <code>NULL</code>. <strong>LEAD()</strong> hace lo mismo pero mirando hacia adelante.</p>
+</div>
+
+<div class="flow-beat" data-step="6">
+<span class="flow-beat-eyebrow">Paso 07 · Total acumulado</span>
+<h3>SUM() que se acumula fila a fila</h3>
+<p><strong>SUM(monto) OVER (PARTITION BY vendedor ORDER BY fecha)</strong> ya no suma toda la partición de una — con <code>ORDER BY</code> adentro del OVER, cada fila suma solo hasta sí misma: un total acumulado real, venta tras venta.</p>
+</div>
+
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat">
+<h2 data-eyebrow="Práctica · Funciones de ventana">Practicá lo que viste</h2>
+<p class="lead">Antes de seguir a índices, confirmá que OVER, PARTITION BY y las funciones de ranking quedaron claras.</p>
+
+<div class="quiz quiz-mc" data-quiz-id="wf-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Una tabla ventas tiene 10 filas. Le agregás ROW_NUMBER() OVER (ORDER BY monto DESC) AS posicion al SELECT. ¿Cuántas filas devuelve ahora?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">1, porque OVER agrupa toda la tabla en una fila.</button>
+<button class="quiz-opt" data-correct>10, las mismas de siempre — solo se agrega la columna posicion.</button>
+<button class="quiz-opt">Depende de cuántos valores distintos tenga monto.</button>
+<button class="quiz-opt">20, porque OVER duplica cada fila para poder numerarla.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: una función de ventana nunca reduce ni duplica filas. Agrega una columna calculada a cada fila que ya existía — las 10 siguen ahí, ahora con su posición." data-ko="Una función de ventana no agrupa ni duplica nada: sigue habiendo 10 filas, la misma cantidad de antes. Lo único que cambia es que cada una ahora tiene una columna posicion calculada." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="wf-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre ROW_NUMBER() OVER (PARTITION BY vendedor ORDER BY monto DESC).</p>
+<p>1. La cláusula que abre una función de ventana, indicando sobre qué conjunto de filas opera, es
+<select class="quiz-blank" data-correct="over">
+<option value="">— elige —</option>
+<option value="group">GROUP BY</option>
+<option value="over">OVER</option>
+<option value="having">HAVING</option>
+</select>.</p>
+<p>2. Para que la numeración reinicie en cada vendedor, en vez de seguir de corrido en toda la tabla, se usa
+<select class="quiz-blank" data-correct="partition">
+<option value="">— elige —</option>
+<option value="order">ORDER BY</option>
+<option value="where">WHERE</option>
+<option value="partition">PARTITION BY</option>
+</select> dentro del OVER.</p>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="wf-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada función de ventana según qué tipo de cálculo hace.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">ROW_NUMBER()</span>
+<div class="quiz-classify-btns">
+<button>Acumulado</button>
+<button data-correct>Numeración / ranking</button>
+<button>Desplazamiento (fila vecina)</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">LAG()</span>
+<div class="quiz-classify-btns">
+<button data-correct>Desplazamiento (fila vecina)</button>
+<button>Numeración / ranking</button>
+<button>Acumulado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">SUM(monto) OVER (ORDER BY fecha)</span>
+<div class="quiz-classify-btns">
+<button>Numeración / ranking</button>
+<button>Desplazamiento (fila vecina)</button>
+<button data-correct>Acumulado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">RANK()</span>
+<div class="quiz-classify-btns">
+<button data-correct>Numeración / ranking</button>
+<button>Desplazamiento (fila vecina)</button>
+<button>Acumulado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">LEAD()</span>
+<div class="quiz-classify-btns">
+<button>Acumulado</button>
+<button data-correct>Desplazamiento (fila vecina)</button>
+<button>Numeración / ranking</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-section" id="indices">
+<div class="flow-grid">
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="idxPanel">
+<div class="flow-panel-head"><span>bd2 · ventanas_indices.sql</span><span class="flow-panel-step" id="idxPanelStep">Paso 1 / 6</span></div>
+<div class="scrolly-query">
+<div class="scrolly-query-head">consulta.sql</div>
+<pre class="scrolly-query-pre" id="idxQueryPre"><span class="scrolly-query-placeholder">-- todavía no escribimos nada</span></pre>
+</div>
+<div id="idxResultBox" class="scrolly-result-box"></div>
+</div>
+</div>
+
+<div class="flow-beats">
+
+<div class="flow-beat" data-sub="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>Una tabla que ya no es chiquita</h3>
+<p>La tabla <strong>ventas</strong> en producción no tiene 10 filas: tiene <strong>200.000</strong>. Buscar las ventas de un vendedor puntual obliga a Postgres a revisar fila por fila, una por una, si no le damos una forma más rápida de encontrarlas.</p>
+</div>
+
+<div class="flow-beat" data-sub="1">
+<span class="flow-beat-eyebrow">Paso 02 · EXPLAIN</span>
+<h3>Ver el plan antes de correr la consulta</h3>
+<p><strong>EXPLAIN</strong> antepuesto a un SELECT no ejecuta la consulta de verdad: le pregunta al planificador de Postgres cómo <em>piensa</em> resolverla, y con qué costo estimado. Acá dice <strong>Seq Scan</strong>: va a revisar la tabla entera, fila por fila.</p>
+</div>
+
+<div class="flow-beat" data-sub="2">
+<span class="flow-beat-eyebrow">Paso 03 · CREATE INDEX</span>
+<h3>Construir un atajo hacia los datos</h3>
+<p><strong>CREATE INDEX</strong> arma una estructura aparte (un árbol B-tree, ordenado) sobre la columna <code>vendedor</code>, que le permite a Postgres saltar directo a las filas que buscás en vez de mirarlas todas.</p>
+</div>
+
+<div class="flow-beat" data-sub="3">
+<span class="flow-beat-eyebrow">Paso 04 · El mismo EXPLAIN, otro plan</span>
+<h3>De Seq Scan a Index Scan</h3>
+<p>La misma consulta de antes, ahora con el índice creado. El plan cambió a <strong>Index Scan</strong>, y el costo estimado bajó de miles a cientos. Fijate que la cantidad de filas esperadas (<code>rows</code>) es la misma que antes — lo que cambió es <em>cómo</em> las busca, no cuántas espera encontrar.</p>
+</div>
+
+<div class="flow-beat" data-sub="4">
+<span class="flow-beat-eyebrow">Paso 05 · EXPLAIN ANALYZE</span>
+<h3>El plan más los tiempos reales</h3>
+<p><strong>EXPLAIN ANALYZE</strong> sí ejecuta la consulta de verdad, y le suma al plan los tiempos reales y la cantidad de filas que realmente encontró. Fijate que el estimado (14.238) y el real (14.251) casi nunca coinciden exactamente — y está bien que sea así.</p>
+</div>
+
+<div class="flow-beat" data-sub="5">
+<span class="flow-beat-eyebrow">Paso 06 · Los límites del índice</span>
+<h3>Un índice no acelera todo</h3>
+<p>El índice que creamos es sobre <code>vendedor</code>. Si ahora filtramos por <code>categoria</code>, ese índice no sirve de nada — Postgres vuelve a un <strong>Seq Scan</strong>. Cada índice cubre solo las columnas para las que se creó.</p>
+</div>
+
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat">
+<h2 data-eyebrow="Práctica · Índices y EXPLAIN">Practicá lo que viste</h2>
+<p class="lead">Emparejá cada concepto con lo que hace, y confirmá por qué un índice no es magia universal.</p>
+
+<div class="quiz quiz-match" data-quiz-id="idx-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada término con su descripción.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="seq">Seq Scan</button>
+<button class="quiz-match-item" data-pair="idxscan">Index Scan</button>
+<button class="quiz-match-item" data-pair="explain">EXPLAIN</button>
+<button class="quiz-match-item" data-pair="analyze">EXPLAIN ANALYZE</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="seq">Recorre la tabla entera, fila por fila.</button>
+<button class="quiz-match-item" data-pair="idxscan">Usa un índice para ir directo a las filas buscadas.</button>
+<button class="quiz-match-item" data-pair="explain">Muestra el plan estimado, sin ejecutar la consulta de verdad.</button>
+<button class="quiz-match-item" data-pair="analyze">Ejecuta la consulta de verdad y suma los tiempos reales al plan.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="idx-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Creaste un índice sobre vendedor, pero WHERE categoria = 'Electrónica' sigue mostrando Seq Scan en el plan. ¿Por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Porque el índice cubre la columna vendedor, no categoria.</button>
+<button class="quiz-opt">Porque los índices tardan 24 horas en activarse después de creados.</button>
+<button class="quiz-opt">Porque EXPLAIN (sin ANALYZE) nunca llega a usar ningún índice.</button>
+<button class="quiz-opt">Porque hay que crear el mismo índice dos veces para que funcione.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un índice solo acelera las consultas que filtran por la columna sobre la que se creó. Como categoria no tiene su propio índice, Postgres vuelve a recorrer la tabla entera con Seq Scan." data-ko="No es un tema de tiempo de activación ni de repetir el CREATE INDEX: el índice que creaste cubre vendedor, no categoria — por eso esa columna sigue sin acelerarse." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="razonamiento">
+<h2 data-eyebrow="Razonamiento">Ejercicios de razonamiento</h2>
+<p class="lead">En estas preguntas no se te pide recordar sintaxis: se te da un escenario, y debés <strong>razonar</strong> cuál sería la respuesta correcta antes de comprobarla.</p>
+
+<div class="highlight">
+<strong>Escenario</strong>
+<p>Necesitás mostrar cada venta individual junto con el total acumulado de ventas de su vendedor hasta esa fecha, sin resumir ni perder ninguna fila.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razon-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué usarías para resolver esto?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">GROUP BY vendedor con SUM(monto), para tener un total por vendedor.</button>
+<button class="quiz-opt">Una subconsulta que repita SELECT SUM(monto) por cada fila.</button>
+<button class="quiz-opt" data-correct>SUM(monto) OVER (PARTITION BY vendedor ORDER BY fecha).</button>
+<button class="quiz-opt">HAVING SUM(monto) > 0, para incluir todas las ventas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: una función de ventana con SUM() OVER (PARTITION BY ... ORDER BY ...) es justo lo que necesitás — cada fila mantiene su lugar, y el acumulado crece a medida que avanza la fecha dentro de cada vendedor." data-ko="GROUP BY colapsaría las filas (perdés el detalle), y HAVING no tiene sentido acá. Lo que necesitás es una función de ventana: SUM(monto) OVER (PARTITION BY vendedor ORDER BY fecha)." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Otro escenario</strong>
+<p>Querés el top 3 de ventas por categoría, pero si hay empate justo en el 3er lugar, necesitás incluir a todos los empatados, no cortar a la mitad.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razon-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿RANK(), DENSE_RANK() o ROW_NUMBER() encaja mejor acá?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>RANK(), porque los empatados en el mismo puesto comparten número.</button>
+<button class="quiz-opt">ROW_NUMBER(), porque numera sin importar los empates.</button>
+<button class="quiz-opt">DENSE_RANK(), porque nunca deja huecos en la numeración.</button>
+<button class="quiz-opt">Ninguna de las tres: hay que usar LIMIT 3 directamente.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: RANK() le da el mismo número a los empatados, así que filtrando por posicion <= 3 entran todos los que comparten el 3er puesto — exactamente lo que pide el escenario." data-ko="ROW_NUMBER() cortaría arbitrariamente a uno de los empatados, y LIMIT 3 no distingue empates. RANK() es la que deja el mismo puesto a los empatados, incluyendo a todos en el filtro." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Un último escenario</strong>
+<p>Un compañero de equipo propone crear un índice sobre cada columna de la tabla ventas, "para que todas las consultas sean instantáneas".</p>
+</div>
+<div class="quiz quiz-fill" data-quiz-id="razon-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Completá la explicación que le darías:</p>
+<p>Un índice acelera las consultas que
+<select class="quiz-blank" data-correct="usan">
+<option value="">— elige —</option>
+<option value="usan">usan</option>
+<option value="ignoran">ignoran</option>
+</select> esa columna en el WHERE, pero cada índice de más hace que INSERT, UPDATE y DELETE queden más
+<select class="quiz-blank" data-correct="lentos">
+<option value="">— elige —</option>
+<option value="rapidos">rápidos</option>
+<option value="lentos">lentos</option>
+</select>, porque Postgres también tiene que mantenerlo actualizado.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="ejercicios">
+<h2 data-eyebrow="Repaso integrador">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué le pasa al número de filas del resultado cuando agregás una función de ventana (OVER) a un SELECT?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Se reduce a una fila por grupo, igual que con GROUP BY.</button>
+<button class="quiz-opt">Se duplica, porque OVER() ejecuta la consulta dos veces.</button>
+<button class="quiz-opt">Depende de ORDER BY: sin él, el resultado queda vacío.</button>
+<button class="quiz-opt" data-correct>No cambia: la función de ventana agrega una columna, no agrupa filas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: a diferencia de GROUP BY, una función de ventana nunca colapsa filas — solo le suma una columna calculada a cada fila que ya existía." data-ko="No se reduce ni se duplica nada, y no depende de ORDER BY para existir: una función de ventana agrega una columna calculada, manteniendo intacta la cantidad de filas original." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">PARTITION BY hace lo mismo que GROUP BY: agrupa filas y las colapsa en un resultado por grupo.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: PARTITION BY divide la tabla en ventanas separadas para calcular sobre cada una, pero nunca colapsa filas — todas siguen presentes en el resultado, a diferencia de GROUP BY." data-ko="Es falso: PARTITION BY define grupos solo para el cálculo de la función de ventana, pero cada fila individual se mantiene en el resultado. GROUP BY sí colapsa; PARTITION BY no." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál es la diferencia entre RANK() y DENSE_RANK() ante un empate?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">RANK() ignora los empates; DENSE_RANK() los marca como error.</button>
+<button class="quiz-opt">Son exactamente iguales, solo cambia el nombre de la función.</button>
+<button class="quiz-opt" data-correct>RANK() deja un hueco después del empate; DENSE_RANK() no.</button>
+<button class="quiz-opt">DENSE_RANK() necesita PARTITION BY obligatoriamente; RANK() no.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: ante un empate, ambas dan el mismo número a los empatados, pero RANK() salta números en la siguiente posición (1,2,2,4) mientras que DENSE_RANK() sigue de corrido (1,2,2,3)." data-ko="Ninguna ignora ni marca error, y ninguna exige PARTITION BY. La diferencia real es el hueco: RANK() salta un número después del empate; DENSE_RANK() nunca deja huecos." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué diferencia real hay entre EXPLAIN y EXPLAIN ANALYZE?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">EXPLAIN ANALYZE es más lento de escribir, pero hacen lo mismo.</button>
+<button class="quiz-opt" data-correct>EXPLAIN solo estima; EXPLAIN ANALYZE ejecuta de verdad y mide tiempos reales.</button>
+<button class="quiz-opt">EXPLAIN funciona solo con SELECT; EXPLAIN ANALYZE con cualquier consulta.</button>
+<button class="quiz-opt">EXPLAIN muestra errores de sintaxis; EXPLAIN ANALYZE no.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: EXPLAIN se queda en la estimación del planificador, sin correr nada. EXPLAIN ANALYZE ejecuta la consulta de verdad y le suma al plan los tiempos reales y las filas realmente encontradas." data-ko="No es cuestión de sintaxis ni de qué tipo de consulta aceptan: la diferencia real es que EXPLAIN solo estima el plan, y EXPLAIN ANALYZE además ejecuta la consulta y mide lo que pasó de verdad." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Después de crear un índice sobre una columna, ¿qué le pasa exactamente a los datos de la tabla?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Se reordenan físicamente en disco según esa columna.</button>
+<button class="quiz-opt">Se duplican dentro del índice, ocupando el doble de espacio total.</button>
+<button class="quiz-opt">La tabla queda de solo lectura hasta que se borre el índice.</button>
+<button class="quiz-opt" data-correct>Nada: el índice es una estructura aparte que ayuda a encontrarlos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: los datos de la tabla no se tocan. El índice es una estructura aparte (un árbol B-tree, ordenado) que Postgres consulta para encontrar más rápido las filas que buscás." data-ko="Los datos no se reordenan en disco, no quedan de solo lectura, y no se duplican por completo: el índice es una estructura separada y más liviana que apunta hacia las filas reales." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet">
+<h2 data-eyebrow="Referencia">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Forma</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>funcion() OVER (PARTITION BY col ORDER BY col2)</code></td><td>Sintaxis general de una función de ventana.</td></tr>
+<tr><td><code>ROW_NUMBER()</code></td><td>Numera las filas 1, 2, 3... sin importar los empates.</td></tr>
+<tr><td><code>RANK()</code></td><td>Numera con huecos si hay empate (1, 1, 3).</td></tr>
+<tr><td><code>DENSE_RANK()</code></td><td>Numera sin huecos aunque haya empate (1, 1, 2).</td></tr>
+<tr><td><code>LAG(columna)</code></td><td>Valor de la fila anterior dentro de la partición.</td></tr>
+<tr><td><code>LEAD(columna)</code></td><td>Valor de la fila siguiente dentro de la partición.</td></tr>
+<tr><td><code>SUM(columna) OVER (...ORDER BY...)</code></td><td>Total acumulado (running total), fila a fila.</td></tr>
+<tr><td><code>CREATE INDEX nombre ON tabla(columna);</code></td><td>Crea un índice B-tree sobre esa columna.</td></tr>
+<tr><td><code>EXPLAIN consulta;</code></td><td>Muestra el plan estimado, sin ejecutar la consulta.</td></tr>
+<tr><td><code>EXPLAIN ANALYZE consulta;</code></td><td>Ejecuta la consulta de verdad y suma los tiempos reales.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat">
+<h2 data-eyebrow="Contexto">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📜 Llegaron después que GROUP BY</h3><p>GROUP BY es parte del estándar SQL desde 1992 (SQL-92). Las funciones de ventana recién se incorporaron al estándar en SQL:2003, más de una década después — Postgres las soporta desde su versión 8.4 (2009).</p></div>
+<div class="info"><h3>🎯 EXPLAIN nunca adivina al azar</h3><p>El costo estimado que muestra EXPLAIN sale de estadísticas reales que Postgres guarda sobre cada tabla (cuántas filas tiene, cómo se distribuyen los valores). El comando <code>ANALYZE</code> (sin EXPLAIN) es justamente el que actualiza esas estadísticas.</p></div>
+<div class="info"><h3>🌳 B-tree no es el único tipo de índice</h3><p>B-tree es el índice por defecto de PostgreSQL y el más común, pero no el único: existen también GIN (para arrays y JSON) y GiST (para datos geométricos o búsqueda de texto completo), cada uno pensado para un tipo de dato distinto.</p></div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Funciones de Ventana, Índices y EXPLAIN en PostgreSQL</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Nivel 1: flujo con panel fijo (consola) — tramo 1, Funciones de ventana =====
+   Prosa a la derecha (.flow-beat) + panel de consola fijo a la izquierda
+   (#wfPanel) que se redibuja según qué paso cruza el centro del viewport.
+   No es una actividad calificada: no llama a marcarResuelto. */
+(function(){
+  var wfSteps = document.querySelectorAll('#ventanas .flow-beat');
+  if (!wfSteps.length) return;
+
+  var ventas = [
+    {id:1,vendedor:'Marisol',categoria:'Electrónica',monto:320,fecha:'2026-01-05'},
+    {id:2,vendedor:'Iván',categoria:'Ropa',monto:150,fecha:'2026-01-06'},
+    {id:3,vendedor:'Marisol',categoria:'Electrónica',monto:890,fecha:'2026-01-08'},
+    {id:4,vendedor:'Daniela',categoria:'Ropa',monto:60,fecha:'2026-01-09'},
+    {id:5,vendedor:'Iván',categoria:'Electrónica',monto:640,fecha:'2026-01-11'},
+    {id:6,vendedor:'Marisol',categoria:'Hogar',monto:95,fecha:'2026-01-12'},
+    {id:7,vendedor:'Daniela',categoria:'Electrónica',monto:640,fecha:'2026-01-14'},
+    {id:8,vendedor:'Iván',categoria:'Hogar',monto:210,fecha:'2026-01-15'},
+    {id:9,vendedor:'Marisol',categoria:'Ropa',monto:180,fecha:'2026-01-17'},
+    {id:10,vendedor:'Daniela',categoria:'Hogar',monto:310,fecha:'2026-01-19'}
+  ];
+
+  var LINE = {
+    select_base:'<span class="keyword">SELECT</span> vendedor, categoria, monto',
+    from:'<span class="keyword">FROM</span> ventas',
+    order_monto:'<span class="keyword">ORDER BY</span> monto <span class="keyword">DESC</span>',
+    select_rn:'<span class="keyword">SELECT</span> vendedor, categoria, monto,\n  <span class="keyword">ROW_NUMBER</span>() <span class="keyword">OVER</span> (<span class="keyword">ORDER BY</span> monto <span class="keyword">DESC</span>) <span class="keyword">AS</span> posicion',
+    select_rn_part:'<span class="keyword">SELECT</span> vendedor, monto,\n  <span class="keyword">ROW_NUMBER</span>() <span class="keyword">OVER</span> (<span class="keyword">PARTITION BY</span> vendedor <span class="keyword">ORDER BY</span> monto <span class="keyword">DESC</span>) <span class="keyword">AS</span> posicion',
+    order_vend:'<span class="keyword">ORDER BY</span> vendedor, posicion',
+    select_rank:'<span class="keyword">SELECT</span> vendedor, monto,\n  <span class="keyword">RANK</span>() <span class="keyword">OVER</span> (<span class="keyword">ORDER BY</span> monto <span class="keyword">DESC</span>) <span class="keyword">AS</span> posicion_rank,\n  <span class="keyword">DENSE_RANK</span>() <span class="keyword">OVER</span> (<span class="keyword">ORDER BY</span> monto <span class="keyword">DESC</span>) <span class="keyword">AS</span> posicion_dense',
+    where_electronica:'<span class="keyword">WHERE</span> categoria = \'Electrónica\'',
+    select_lag:'<span class="keyword">SELECT</span> vendedor, fecha, monto,\n  <span class="keyword">LAG</span>(monto) <span class="keyword">OVER</span> (<span class="keyword">PARTITION BY</span> vendedor <span class="keyword">ORDER BY</span> fecha) <span class="keyword">AS</span> venta_anterior',
+    select_sum:'<span class="keyword">SELECT</span> vendedor, fecha, monto,\n  <span class="keyword">SUM</span>(monto) <span class="keyword">OVER</span> (<span class="keyword">PARTITION BY</span> vendedor <span class="keyword">ORDER BY</span> fecha) <span class="keyword">AS</span> acumulado',
+    order_vend_fecha:'<span class="keyword">ORDER BY</span> vendedor, fecha'
+  };
+
+  function wfQueryLines(step){
+    if(step===0) return [];
+    if(step===1) return [{id:'select',html:LINE.select_base},{id:'from',html:LINE.from},{id:'order',html:LINE.order_monto}];
+    if(step===2) return [{id:'select',html:LINE.select_rn},{id:'from',html:LINE.from},{id:'order',html:LINE.order_monto}];
+    if(step===3) return [{id:'select',html:LINE.select_rn_part},{id:'from',html:LINE.from},{id:'order',html:LINE.order_vend}];
+    if(step===4) return [{id:'select',html:LINE.select_rank},{id:'from',html:LINE.from},{id:'where',html:LINE.where_electronica},{id:'order',html:LINE.order_monto}];
+    if(step===5) return [{id:'select',html:LINE.select_lag},{id:'from',html:LINE.from},{id:'order',html:LINE.order_vend_fecha}];
+    if(step===6) return [{id:'select',html:LINE.select_sum},{id:'from',html:LINE.from},{id:'order',html:LINE.order_vend_fecha}];
+    return [];
+  }
+
+  function ordenar(rows){ return rows.slice().sort(function(a,b){ return b.monto-a.monto; }); }
+  function porVendedor(rows){
+    var orden=['Marisol','Iván','Daniela'], out=[];
+    orden.forEach(function(v){
+      out = out.concat(rows.filter(function(r){ return r.vendedor===v; }));
+    });
+    return out;
+  }
+
+  function wfComputeRows(step){
+    if(step===0) return null;
+    if(step===1){
+      var r1 = ordenar(ventas);
+      return {cols:['vendedor','categoria','monto'], rows: r1.map(function(v){ return [v.vendedor, v.categoria, 'Bs '+v.monto]; })};
+    }
+    if(step===2){
+      var r2 = ordenar(ventas);
+      return {cols:['vendedor','categoria','monto','posicion'], rows: r2.map(function(v,i){ return [v.vendedor, v.categoria, 'Bs '+v.monto, String(i+1)]; })};
+    }
+    if(step===3){
+      var porV = {Marisol:[],'Iván':[],Daniela:[]};
+      ventas.forEach(function(v){ porV[v.vendedor].push(v); });
+      var out3 = [];
+      ['Marisol','Iván','Daniela'].forEach(function(v){
+        ordenar(porV[v]).forEach(function(row,i){ out3.push([row.vendedor, 'Bs '+row.monto, String(i+1)]); });
+      });
+      return {cols:['vendedor','monto','posicion'], rows: out3};
+    }
+    if(step===4){
+      var elec = ordenar(ventas.filter(function(v){ return v.categoria==='Electrónica'; }));
+      var rank=0, dense=0, prev=null, out4=[];
+      elec.forEach(function(v,i){
+        rank = (prev===v.monto) ? rank : i+1;
+        dense = (prev===v.monto) ? dense : dense+1;
+        prev = v.monto;
+        out4.push([v.vendedor, 'Bs '+v.monto, String(rank), String(dense)]);
+      });
+      return {cols:['vendedor','monto','posicion_rank','posicion_dense'], rows: out4};
+    }
+    if(step===5){
+      var out5 = [];
+      porVendedor(ventas).forEach(function(v){
+        out5.push([v]);
+      });
+      var porV5 = {Marisol:[],'Iván':[],Daniela:[]};
+      ventas.forEach(function(v){ porV5[v.vendedor].push(v); });
+      var rows5 = [];
+      ['Marisol','Iván','Daniela'].forEach(function(v){
+        var lista = porV5[v].slice().sort(function(a,b){ return a.fecha.localeCompare(b.fecha); });
+        lista.forEach(function(row,i){
+          var anterior = i===0 ? 'NULL' : 'Bs '+lista[i-1].monto;
+          rows5.push([row.vendedor, row.fecha, 'Bs '+row.monto, anterior]);
+        });
+      });
+      return {cols:['vendedor','fecha','monto','venta_anterior'], rows: rows5};
+    }
+    if(step===6){
+      var porV6 = {Marisol:[],'Iván':[],Daniela:[]};
+      ventas.forEach(function(v){ porV6[v.vendedor].push(v); });
+      var rows6 = [];
+      ['Marisol','Iván','Daniela'].forEach(function(v){
+        var lista = porV6[v].slice().sort(function(a,b){ return a.fecha.localeCompare(b.fecha); });
+        var acumulado = 0;
+        lista.forEach(function(row){
+          acumulado += row.monto;
+          rows6.push([row.vendedor, row.fecha, 'Bs '+row.monto, 'Bs '+acumulado]);
+        });
+      });
+      return {cols:['vendedor','fecha','monto','acumulado'], rows: rows6};
+    }
+    return {cols:[],rows:[]};
+  }
+
+  var wfCurrentStep = -1;
+
+  function wfRender(step){
+    if(step===wfCurrentStep) return;
+    var prevLines = wfCurrentStep>=0 ? wfQueryLines(wfCurrentStep) : [];
+    var prevMap = {};
+    prevLines.forEach(function(l){ prevMap[l.id]=l.html; });
+    var lines = wfQueryLines(step);
+    lines.forEach(function(l){ l.isNew = prevMap[l.id] !== l.html; });
+    wfCurrentStep = step;
+
+    var pre = document.getElementById('wfQueryPre');
+    if(!lines.length){
+      pre.innerHTML = '<span class="scrolly-query-placeholder">-- todavía no escribimos nada</span>';
+    } else {
+      pre.innerHTML = lines.map(function(l,i){
+        return '<div class="scrolly-qline'+(l.isNew?' is-new':'')+'">'+l.html+(i===lines.length-1?';':'')+'</div>';
+      }).join('');
+    }
+
+    var data = wfComputeRows(step);
+    var box = document.getElementById('wfResultBox');
+    if(!data){
+      box.innerHTML = '<div class="scrolly-result-empty">Sin consulta todavía — el resultado aparece en el próximo paso.</div>';
+    } else {
+      var head = '<tr>'+data.cols.map(function(c){ return '<th>'+c+'</th>'; }).join('')+'</tr>';
+      var body = data.rows.map(function(r){ return '<tr>'+r.map(function(v){ return '<td>'+v+'</td>'; }).join('')+'</tr>'; }).join('');
+      box.innerHTML = '<table class="scrolly-result-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table><div class="scrolly-result-count">'+data.rows.length+' fila'+(data.rows.length===1?'':'s')+'</div>';
+    }
+
+    document.getElementById('wfPanelStep').textContent = 'Paso '+(step+1)+' / 7';
+    wfSteps.forEach(function(el){
+      el.classList.toggle('is-active', Number(el.dataset.step)===step);
+    });
+  }
+
+  var wfObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ wfRender(Number(e.target.dataset.step)); }
+    });
+  }, { rootMargin:'-35% 0px -55% 0px', threshold:0 });
+  wfSteps.forEach(function(s){ wfObserver.observe(s); });
+  wfRender(0);
+})();
+
+/* ===== Nivel 1: flujo con panel fijo (consola) — tramo 2, Índices y EXPLAIN =====
+   Mismo mecanismo que el tramo anterior, pero el panel no muestra filas de
+   resultado: muestra el plan de EXPLAIN como texto (reutilizando el mismo
+   bloque .scrolly-query para el "plan de ejecución"), o un mensaje de éxito
+   para CREATE INDEX. Números de costo/tiempo son ilustrativos, pensados
+   para una tabla hipotética de 200.000 filas — esta guía no ejecuta SQL
+   real (a diferencia de los talleres con PGlite). */
+(function(){
+  var idxSteps = document.querySelectorAll('#indices .flow-beat');
+  if (!idxSteps.length) return;
+
+  var IDX_QUERY = {
+    0: [],
+    1: [
+      '<span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> ventas',
+      '<span class="keyword">WHERE</span> vendedor = \'Marisol\''
+    ],
+    2: [
+      '<span class="keyword">CREATE INDEX</span> idx_ventas_vendedor',
+      '<span class="keyword">ON</span> ventas(vendedor)'
+    ],
+    3: [
+      '<span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> ventas',
+      '<span class="keyword">WHERE</span> vendedor = \'Marisol\''
+    ],
+    4: [
+      '<span class="keyword">EXPLAIN ANALYZE</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> ventas',
+      '<span class="keyword">WHERE</span> vendedor = \'Marisol\''
+    ],
+    5: [
+      '<span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> ventas',
+      '<span class="keyword">WHERE</span> categoria = \'Electrónica\''
+    ]
+  };
+
+  var IDX_PLAN = {
+    1: [
+      {t:'Seq Scan on ventas  (cost=0.00..4200.00 <span class="number">rows=14238</span> width=48)', hl:false},
+      {t:'&nbsp;&nbsp;Filter: (vendedor = \'Marisol\'::text)', hl:false}
+    ],
+    3: [
+      {t:'Index Scan using idx_ventas_vendedor on ventas  (cost=0.42..<span class="number">812.19</span> rows=14238 width=48)', hl:true},
+      {t:'&nbsp;&nbsp;Index Cond: (vendedor = \'Marisol\'::text)', hl:true}
+    ],
+    4: [
+      {t:'Index Scan using idx_ventas_vendedor on ventas  (cost=0.42..812.19 rows=14238 width=48)', hl:false},
+      {t:'&nbsp;&nbsp;(actual time=0.031..8.940 <span class="number">rows=14251</span> loops=1)', hl:true},
+      {t:'&nbsp;&nbsp;Index Cond: (vendedor = \'Marisol\'::text)', hl:false},
+      {t:'Planning Time: <span class="number">0.089</span> ms', hl:true},
+      {t:'Execution Time: <span class="number">9.104</span> ms', hl:true}
+    ],
+    5: [
+      {t:'Seq Scan on ventas  (cost=0.00..4200.00 rows=66875 width=48)', hl:true},
+      {t:'&nbsp;&nbsp;Filter: (categoria = \'Electrónica\'::text)', hl:true}
+    ]
+  };
+
+  function idxCompute(step){
+    if(step===0) return null;
+    if(step===2) return {type:'success', text:'Índice "idx_ventas_vendedor" creado sobre la columna vendedor.'};
+    if(IDX_PLAN[step]) return {type:'plan', lines: IDX_PLAN[step]};
+    return null;
+  }
+
+  var idxCurrentStep = -1;
+
+  function idxRender(step){
+    if(step===idxCurrentStep) return;
+    idxCurrentStep = step;
+
+    var pre = document.getElementById('idxQueryPre');
+    var lines = IDX_QUERY[step] || [];
+    if(!lines.length){
+      pre.innerHTML = '<span class="scrolly-query-placeholder">-- todavía no escribimos nada</span>';
+    } else {
+      pre.innerHTML = lines.map(function(l,i){ return '<div class="scrolly-qline'+(i===lines.length-1?' is-new':'')+'">'+l+(i===lines.length-1?';':'')+'</div>'; }).join('');
+    }
+
+    var data = idxCompute(step);
+    var box = document.getElementById('idxResultBox');
+    if(!data){
+      box.innerHTML = '<div class="scrolly-result-empty">Sin consulta todavía — el resultado aparece en el próximo paso.</div>';
+    } else if(data.type==='success'){
+      box.innerHTML = '<div class="scrolly-result-success">✅ '+data.text+'</div>';
+    } else {
+      var planHtml = data.lines.map(function(l){ return '<div class="scrolly-qline'+(l.hl?' is-new':'')+'">'+l.t+'</div>'; }).join('');
+      box.innerHTML = '<div class="scrolly-query"><div class="scrolly-query-head">plan de ejecución</div><pre class="scrolly-query-pre">'+planHtml+'</pre></div>';
+    }
+
+    document.getElementById('idxPanelStep').textContent = 'Paso '+(step+1)+' / 6';
+    idxSteps.forEach(function(el){
+      el.classList.toggle('is-active', Number(el.dataset.sub)===step);
+    });
+  }
+
+  var idxObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ idxRender(Number(e.target.dataset.sub)); }
+    });
+  }, { rootMargin:'-35% 0px -55% 0px', threshold:0 });
+  idxSteps.forEach(function(s){ idxObserver.observe(s); });
+  idxRender(0);
+})();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=...
+     en la URL); accedida directo, como siempre, no dispara nada nuevo.
+     No toca el motor de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. Copiado del bloque ya
+     probado en agregacion-vistas.html. Esta guía todavía no está
+     vinculada como Clase en el panel de ATENZA — falta ese paso aparte. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  var params = new URLSearchParams(location.search);
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return;
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Examen — DDL a Vistas | Base de Datos II</title>
+<meta name="robots" content="noindex, nofollow">
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* ===== Estilos propios del examen: no toca guia.css. ===== */
+body{ padding-top:0; }
+.examen-topbar{
+  position:sticky; top:0; z-index:80; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  padding:12px 24px; background:var(--blanco); border-bottom:2px solid var(--verde);
+}
+.examen-topbar .titulo{ font-family:'Fraunces',serif; font-weight:700; font-size:18px; }
+.examen-topbar .badge-caso{ background:var(--verde); color:#fff; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:600; }
+.examen-topbar .badge-nombre{ font-size:13px; opacity:.8; }
+.examen-topbar .espaciador{ flex:1; }
+#examenTimer{ font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; padding:6px 14px; border-radius:8px; background:var(--highlightBg); }
+#examenTimer.alerta{ background:#c0392b; color:#fff; }
+#examenTimer.agotado{ background:#c0392b; color:#fff; }
+.examen-theme-btn{
+  width:auto; margin:0; padding:8px 12px; border:1px solid var(--borde,#ccc); border-radius:8px;
+  background:var(--blanco); color:inherit; cursor:pointer; font-size:16px; line-height:1;
+}
+.examen-theme-btn:hover{ border-color:var(--verde); }
+
+.pantalla{ max-width:760px; margin:60px auto; padding:0 20px; }
+.pantalla .card{ padding:32px; }
+.pantalla label{ display:block; font-weight:600; margin:16px 0 6px; }
+.pantalla input[type="text"], .pantalla select{
+  width:100%; padding:12px 14px; border-radius:8px; border:2px solid var(--borde,#ccc);
+  font-size:16px; font-family:'DM Sans',sans-serif; background:var(--blanco); color:inherit;
+}
+.pantalla button.primario{
+  margin-top:24px; background:var(--verde); color:#fff; border:none; padding:14px 26px;
+  border-radius:10px; font-weight:700; font-size:16px; cursor:pointer;
+}
+.pantalla button.primario:hover{ background:var(--verde2); }
+.pantalla button.primario:disabled{ opacity:.5; cursor:not-allowed; }
+
+.paso{ position:relative; margin:28px 0; }
+.paso-header{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.paso-num{ display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; background:var(--verde); color:#fff; font-weight:700; flex-shrink:0; }
+.paso.completado .paso-num{ background:#2e7d32; }
+.paso-estado{ font-size:13px; padding:3px 10px; border-radius:14px; background:var(--highlightBg); }
+.paso.completado .paso-estado{ background:#d4edda; color:#1e7e34; }
+
+.paso-overlay{
+  position:absolute; inset:0; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:12px; background:rgba(120,120,120,.55); backdrop-filter:blur(2px); border-radius:12px; text-align:center; padding:20px;
+}
+.paso-overlay p{ color:#fff; font-weight:600; font-size:16px; margin:0; text-shadow:0 1px 3px rgba(0,0,0,.4); }
+.paso-overlay button{ background:#fff; color:#333; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:600; }
+.paso.desbloqueado .paso-overlay{ display:none; }
+.paso:not(.desbloqueado) .paso-contenido{ filter:blur(2px); pointer-events:none; user-select:none; min-height:160px; }
+
+.verif-box{ margin-top:12px; padding:12px 16px; border-radius:8px; font-weight:600; }
+.verif-box.ok{ background:#d4edda; color:#1e7e34; }
+.verif-box.fail{ background:#f8d7da; color:#a02330; }
+
+.certificado{ border:3px solid var(--verde); border-radius:14px; padding:28px; margin-top:30px; }
+.certificado table{ width:100%; border-collapse:collapse; margin:14px 0; }
+.certificado td, .certificado th{ padding:8px 10px; border-bottom:1px solid var(--borde,#ddd); text-align:left; }
+.certificado button{ background:var(--verde); color:#fff; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; margin-top:10px; }
+
+.admin-panel{ max-width:900px; margin:40px auto; padding:0 20px; }
+.admin-panel textarea{ width:100%; min-height:160px; font-family:'JetBrains Mono',monospace; padding:12px; border-radius:8px; border:2px solid var(--borde,#ccc); background:var(--blanco); color:inherit; }
+.admin-panel table{ width:100%; border-collapse:collapse; margin-top:16px; font-size:14px; }
+.admin-panel td, .admin-panel th{ padding:6px 8px; border-bottom:1px solid var(--borde,#ddd); text-align:left; word-break:break-all; }
+.admin-panel button{ background:var(--verde); color:#fff; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; margin-top:12px; }
+
+.banner-tiempo{ position:fixed; top:0; left:0; right:0; z-index:200; background:#c0392b; color:#fff; text-align:center; padding:10px; font-weight:700; }
+
+.sql-result-table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+.sql-result-table th,.sql-result-table td{ padding:8px 10px; text-align:left; border:1px solid rgba(255,255,255,.15); }
+.sql-result-table thead th{ background:rgba(255,255,255,.08); color:#8fd48a; }
+.sql-result-table td em{ color:#7d8899; font-style:italic; }
+.sql-status{ margin:4px 0 10px; color:#8fd48a; }
+.db-toolbar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:18px 0 8px; padding:16px 20px; background:var(--highlightBg); border-left:6px solid var(--verde); border-radius:8px; }
+.db-toolbar button{ background:var(--verde); color:white; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:14px; }
+.db-toolbar button:hover{ background:var(--verde2); }
+.db-toolbar button.secundario{ background:transparent; color:var(--verde); border:2px solid var(--verde); }
+
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================
+     PANTALLA: ADMIN (solo con ?admin=1) — sorteo y reparto de casos
+     ============================================================ -->
+<div id="pantallaAdmin" class="admin-panel" hidden>
+  <div class="card">
+    <h1 class="section-title">🎲 Panel del profesor — sorteo de casos</h1>
+    <p class="lead">Pega la lista de estudiantes (un nombre por línea) y sorteá. El sorteo mezcla los casos 4/5/6 en un ciclo equilibrado y después los baraja, para que no queden en orden 4,5,6,4,5,6 previsible ni el mismo caso repetido en cadena.</p>
+    <label for="listaNombres"><strong>Nombres (uno por línea)</strong></label>
+    <textarea id="listaNombres" placeholder="Ana Pérez&#10;Luis Gómez&#10;María Rojas&#10;..."></textarea>
+    <button type="button" id="btnSortear">🎲 Sortear y generar links</button>
+    <div id="resultadoSorteo"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PANTALLA: INICIO — nombre + caso, o autocompletado por URL
+     ============================================================ -->
+<div id="pantallaInicio" class="pantalla">
+  <div class="card">
+    <h1 class="section-title">📝 Examen parcial — DDL a Vistas</h1>
+    <p class="lead">Base de Datos II · Universidad Adventista de Bolivia</p>
+    <div class="highlight">
+      <strong>Alcance del examen</strong>
+      <p>Desde el diseño y creación de tablas hasta la creación o reemplazo de vistas: <strong>DDL → DML → JOIN → Subconsulta → GROUP BY/HAVING → VISTA</strong>. Corre PostgreSQL real (WebAssembly) en tu propio navegador — nada se comparte con tus compañeros.</p>
+    </div>
+    <div class="highlight">
+      <strong>⏱ Duración: 2 horas</strong>
+      <p>El cronómetro arranca en el momento en que tocás "Comenzar examen" y sigue corriendo aunque cierres o recargues la pestaña — no se puede pausar. Al llegar a 0, los editores se bloquean, pero tu progreso y certificado quedan intactos.</p>
+    </div>
+    <div class="highlight">
+      <strong>✋ Copiar y pegar deshabilitado</strong>
+      <p>Igual que en los talleres de la materia, el código se escribe a mano en cada editor.</p>
+    </div>
+
+    <label for="campoNombre">Tu nombre completo</label>
+    <input type="text" id="campoNombre" placeholder="Nombre y apellido">
+
+    <label for="campoCaso">Caso asignado</label>
+    <select id="campoCaso">
+      <option value="">— elegí tu caso (te lo indica tu profesor) —</option>
+      <option value="4">Caso 4 — Notas de venta</option>
+      <option value="5">Caso 5 — Gimnasio</option>
+      <option value="6">Caso 6 — Veterinaria</option>
+    </select>
+
+    <button type="button" class="primario" id="btnComenzar" disabled>▶ Comenzar examen</button>
+    <p id="avisoInicio" style="margin-top:10px;color:#a02330;font-weight:600;"></p>
+  </div>
+</div>
+
+<!-- ============================================================
+     CONTENEDOR DEL EXAMEN (oculto hasta "Comenzar examen")
+     ============================================================ -->
+<div id="contenedorExamen" hidden>
+
+<div class="examen-topbar">
+  <span class="titulo">Examen BD II</span>
+  <span class="badge-caso" id="badgeCaso"></span>
+  <span class="badge-nombre" id="badgeNombre"></span>
+  <span class="espaciador"></span>
+  <span id="examenTimer">⏱ --:--:--</span>
+  <button id="themeBtn" class="examen-theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="main" style="margin-left:0;max-width:900px;margin-inline:auto;">
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Tu caso</h2>
+<div id="contextoCaso"></div>
+<div class="highlight">
+<strong>⚠️ Todo vive en la memoria de esta pestaña</strong>
+<p>Si recargás o cerrás la pestaña, tu base de datos se pierde — pero tu progreso, tu SQL de cada paso y el cronómetro quedan guardados en este navegador. Al volver a entrar con el mismo nombre y caso, la página reconstruye automáticamente tu base de datos a partir de tu propio SQL guardado.</p>
+</div>
+<div class="db-toolbar">
+<button type="button" id="reconstruirBtn">🔁 Reconstruir mi base de datos</button>
+<span class="db-estado" id="dbEstado">Base de datos lista.</span>
+</div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Disponible durante todo el examen. No afecta la verificación de ningún paso — usala para explorar tus propias tablas.</p>
+<div class="editor-panel">
+<div class="editor-header"><span>🧪 Escribe cualquier sentencia SQL</span><button type="button" class="code-btn run">▶ Ejecutar</button></div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" placeholder="Por ejemplo: SELECT * FROM information_schema.tables WHERE table_schema='public';"></textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+</div>
+</section>
+
+<!-- ===== PASO 1 — DDL ===== -->
+<section class="paso" id="paso-1" data-paso="1">
+<div class="paso-overlay"><p>🔒 Este es el primer paso — ya está desbloqueado.</p></div>
+<div class="paso-contenido card">
+<div class="paso-header"><span class="paso-num">1</span><h2 class="section-title" style="margin:0;">DDL — Diseño y creación de tablas</h2><span class="paso-estado">pendiente</span></div>
+<div class="highlight" id="ddlEnunciado"></div>
+<div class="editor-panel">
+<div class="editor-header"><span>🗄️ Tu script de creación de tablas</span><button type="button" class="code-btn run">▶ Ejecutar y verificar</button></div>
+<textarea class="editor" spellcheck="false" style="min-height:260px" placeholder="-- Escribe aquí tus CREATE TABLE, con PRIMARY KEY y FOREIGN KEY."></textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+<div class="verif-box" hidden></div>
+</div>
+</section>
+
+<!-- ===== PASO 2 — DML ===== -->
+<section class="paso" id="paso-2" data-paso="2">
+<div class="paso-overlay"><p>🔒 Completa el Paso 1 para desbloquear este.</p><button type="button" class="btn-desbloqueo-manual">🔑 Clave del profesor</button></div>
+<div class="paso-contenido card">
+<div class="paso-header"><span class="paso-num">2</span><h2 class="section-title" style="margin:0;">DML — Carga de datos</h2><span class="paso-estado">pendiente</span></div>
+<div class="highlight" id="dmlEnunciado"></div>
+<div class="editor-panel">
+<div class="editor-header"><span>🗄️ Tus INSERT</span><button type="button" class="code-btn run">▶ Ejecutar y verificar</button></div>
+<textarea class="editor" spellcheck="false" style="min-height:260px" placeholder="-- Escribe aquí tus INSERT INTO, con datos inventados por ti."></textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+<div class="verif-box" hidden></div>
+</div>
+</section>
+
+<!-- ===== PASO 3 — JOIN ===== -->
+<section class="paso" id="paso-3" data-paso="3">
+<div class="paso-overlay"><p>🔒 Completa el Paso 2 para desbloquear este.</p><button type="button" class="btn-desbloqueo-manual">🔑 Clave del profesor</button></div>
+<div class="paso-contenido card">
+<div class="paso-header"><span class="paso-num">3</span><h2 class="section-title" style="margin:0;">JOIN</h2><span class="paso-estado">pendiente</span></div>
+<div class="highlight" id="paso3Enunciado"></div>
+<div class="editor-panel">
+<div class="editor-header"><span>🗄️ Tu consulta</span><button type="button" class="code-btn run">▶ Ejecutar y verificar</button></div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" placeholder="-- Escribe una única consulta SELECT con INNER JOIN."></textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+<div class="verif-box" hidden></div>
+</div>
+</section>
+
+<!-- ===== PASO 4 — SUBCONSULTA ===== -->
+<section class="paso" id="paso-4" data-paso="4">
+<div class="paso-overlay"><p>🔒 Completa el Paso 3 para desbloquear este.</p><button type="button" class="btn-desbloqueo-manual">🔑 Clave del profesor</button></div>
+<div class="paso-contenido card">
+<div class="paso-header"><span class="paso-num">4</span><h2 class="section-title" style="margin:0;">Subconsulta</h2><span class="paso-estado">pendiente</span></div>
+<div class="highlight" id="paso4Enunciado"></div>
+<div class="editor-panel">
+<div class="editor-header"><span>🗄️ Tu consulta</span><button type="button" class="code-btn run">▶ Ejecutar y verificar</button></div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" placeholder="-- Escribe una única consulta SELECT con subconsulta."></textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+<div class="verif-box" hidden></div>
+</div>
+</section>
+
+<!-- ===== PASO 5 — GROUP BY / HAVING ===== -->
+<section class="paso" id="paso-5" data-paso="5">
+<div class="paso-overlay"><p>🔒 Completa el Paso 4 para desbloquear este.</p><button type="button" class="btn-desbloqueo-manual">🔑 Clave del profesor</button></div>
+<div class="paso-contenido card">
+<div class="paso-header"><span class="paso-num">5</span><h2 class="section-title" style="margin:0;">GROUP BY / HAVING</h2><span class="paso-estado">pendiente</span></div>
+<div class="highlight" id="paso5Enunciado"></div>
+<div class="editor-panel">
+<div class="editor-header"><span>🗄️ Tu consulta</span><button type="button" class="code-btn run">▶ Ejecutar y verificar</button></div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" placeholder="-- Escribe una única consulta SELECT con GROUP BY y HAVING."></textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+<div class="verif-box" hidden></div>
+</div>
+</section>
+
+<!-- ===== PASO 6 — VISTA ===== -->
+<section class="paso" id="paso-6" data-paso="6">
+<div class="paso-overlay"><p>🔒 Completa el Paso 5 para desbloquear este.</p><button type="button" class="btn-desbloqueo-manual">🔑 Clave del profesor</button></div>
+<div class="paso-contenido card">
+<div class="paso-header"><span class="paso-num">6</span><h2 class="section-title" style="margin:0;">Vista</h2><span class="paso-estado">pendiente</span></div>
+<div class="highlight" id="paso6Enunciado"></div>
+<div class="editor-panel">
+<div class="editor-header"><span>🗄️ Tu script</span><button type="button" class="code-btn run">▶ Ejecutar y verificar</button></div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" placeholder="-- 1. CREATE VIEW ...
+-- 2. SELECT * FROM la_vista WHERE ...;
+-- 3. CREATE OR REPLACE VIEW ... (agregando la columna nueva)
+-- 4. SELECT * FROM la_vista;"></textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+<div class="verif-box" hidden></div>
+</div>
+</section>
+
+<!-- ===== CERTIFICADO FINAL ===== -->
+<section class="container" id="certificadoSeccion" hidden>
+<div class="certificado card">
+<h2 class="section-title">✅ Certificado del examen</h2>
+<p>Este resumen confirma que cada paso pasó su verificación automática. Tu profesor lo complementa con la rúbrica de evaluación para la nota final.</p>
+<table>
+<thead><tr><th>Paso</th><th>Estado</th><th>Hora</th></tr></thead>
+<tbody id="tablaCertificado"></tbody>
+</table>
+<p><strong>Estudiante:</strong> <span id="certNombre"></span> — <strong>Caso:</strong> <span id="certCaso"></span></p>
+<button type="button" id="btnCopiarSql">📋 Copiar todo mi examen (SQL de los 6 pasos)</button>
+</div>
+</section>
+
+</div>
+</div>
+
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =========================================================================
+   ESPECIFICACIÓN DE LOS 3 CASOS (4, 5, 6). Cada uno fija los nombres exactos
+   de tabla/columna requeridos (necesario para poder verificar en automático)
+   y las consultas de referencia que el motor corre por su cuenta sobre los
+   MISMOS datos que cada estudiante inventó, para comparar por diferencia.
+   ========================================================================= */
+const CASOS = {
+
+4: {
+  nombre: "Caso 4 — Notas de venta",
+  contexto: `<p>Una empresa registra sus ventas en <strong>notas</strong>. Cada nota tiene número, fecha, un <strong>cliente</strong> (con NIT), un <strong>vendedor</strong> (con un % de comisión) y una lista de <strong>ítems</strong> (producto, cantidad, precio unitario).</p>`,
+  ddl: {
+    enunciadoHtml: `Acá tienes que crear todas las tablas necesarias. Usa exactamente estos nombres de tabla y columna (definí vos las claves primarias, foráneas y el tipo de dato de cada columna):
+    <ul style="margin:10px 0 0 22px;line-height:1.9">
+    <li><code>cliente(nit, nombre)</code></li>
+    <li><code>vendedor(cod_vendedor, nombre, comision_pct)</code></li>
+    <li><code>producto(cod_producto, nombre)</code></li>
+    <li><code>nota_venta(nro_nota, fecha, nit_cliente, cod_vendedor)</code></li>
+    <li><code>detalle_nota(nro_nota, cod_producto, cantidad, precio_unitario)</code></li>
+    </ul>`,
+    tablas: {
+      cliente: { columnas: ["nit","nombre"], forbidden: [] },
+      vendedor: { columnas: ["cod_vendedor","nombre","comision_pct"], forbidden: [] },
+      producto: { columnas: ["cod_producto","nombre"], forbidden: [] },
+      nota_venta: { columnas: ["nro_nota","fecha","nit_cliente","cod_vendedor"], forbidden: ["comision","comision_pct","subtotal","total"] },
+      detalle_nota: { columnas: ["nro_nota","cod_producto","cantidad","precio_unitario"], forbidden: ["subtotal","total"] },
+    },
+    fks: [
+      {tabla:"nota_venta", refTabla:"cliente"},
+      {tabla:"nota_venta", refTabla:"vendedor"},
+      {tabla:"detalle_nota", refTabla:"nota_venta"},
+      {tabla:"detalle_nota", refTabla:"producto"},
+    ],
+  },
+  dml: {
+    enunciadoHtml: `Acá tienes que insertar los datos necesarios en tus tablas, inventados por ti.`,
+    checks: [
+      chk("SELECT COUNT(*)::int AS n FROM cliente", ">=", 2, "Necesitás al menos 2 clientes."),
+      chk("SELECT COUNT(*)::int AS n FROM vendedor", ">=", 2, "Necesitás al menos 2 vendedores."),
+      chk("SELECT COUNT(*)::int AS n FROM vendedor WHERE comision_pct > 4", ">=", 1, "Necesitás al menos un vendedor con comision_pct mayor a 4."),
+      chk("SELECT COUNT(*)::int AS n FROM vendedor WHERE comision_pct <= 4", ">=", 1, "Necesitás al menos un vendedor con comision_pct de 4 o menos."),
+      chk("SELECT COUNT(*)::int AS n FROM producto", ">=", 3, "Necesitás al menos 3 productos."),
+      chk("SELECT COUNT(*)::int AS n FROM nota_venta", ">=", 3, "Necesitás al menos 3 notas de venta."),
+      chk("SELECT COUNT(DISTINCT cod_vendedor)::int AS n FROM nota_venta", ">=", 2, "Tus notas deben repartirse entre al menos 2 vendedores distintos."),
+      chk("SELECT COUNT(*)::int AS n FROM detalle_nota", ">=", 6, "Necesitás al menos 6 filas en detalle_nota."),
+      chk("SELECT COUNT(*)::int AS n FROM nota_venta nv LEFT JOIN cliente c ON c.nit=nv.nit_cliente WHERE c.nit IS NULL", "<=", 0, "Hay notas con un nit_cliente que no existe en cliente."),
+      chk("SELECT COUNT(*)::int AS n FROM nota_venta nv LEFT JOIN vendedor v ON v.cod_vendedor=nv.cod_vendedor WHERE v.cod_vendedor IS NULL", "<=", 0, "Hay notas con un cod_vendedor que no existe en vendedor."),
+      chk("SELECT COUNT(*)::int AS n FROM detalle_nota d LEFT JOIN nota_venta nv ON nv.nro_nota=d.nro_nota WHERE nv.nro_nota IS NULL", "<=", 0, "Hay filas en detalle_nota con un nro_nota que no existe en nota_venta."),
+      chk("SELECT COUNT(*)::int AS n FROM detalle_nota d LEFT JOIN producto p ON p.cod_producto=d.cod_producto WHERE p.cod_producto IS NULL", "<=", 0, "Hay filas en detalle_nota con un cod_producto que no existe en producto."),
+      chk("SELECT COUNT(*)::int AS n FROM (SELECT nv.cod_vendedor tot0, SUM(d.cantidad*d.precio_unitario) tot FROM nota_venta nv JOIN detalle_nota d ON d.nro_nota=nv.nro_nota GROUP BY nv.cod_vendedor HAVING SUM(d.cantidad*d.precio_unitario) > 300) x", ">=", 1, "Necesitás que al menos un vendedor tenga un total vendido mayor a 300."),
+      chk("SELECT COUNT(*)::int AS n FROM (SELECT nv.cod_vendedor tot0, SUM(d.cantidad*d.precio_unitario) tot FROM nota_venta nv JOIN detalle_nota d ON d.nro_nota=nv.nro_nota GROUP BY nv.cod_vendedor HAVING SUM(d.cantidad*d.precio_unitario) <= 300) x", ">=", 1, "Necesitás que al menos un vendedor tenga un total vendido de 300 o menos."),
+    ],
+  },
+  pasos: [
+    {
+      enunciadoHtml: `Escribe <strong>una única</strong> consulta con <code>INNER JOIN</code> que muestre, para cada línea de <code>detalle_nota</code>, en este orden: <strong>nombre del cliente, nombre del vendedor, nombre del producto, cantidad, precio_unitario y el subtotal calculado</strong> (cantidad × precio_unitario).`,
+      referencia: `SELECT cl.nombre, v.nombre, p.nombre, d.cantidad, d.precio_unitario, d.cantidad*d.precio_unitario
+FROM detalle_nota d
+JOIN nota_venta n ON n.nro_nota = d.nro_nota
+JOIN cliente cl ON cl.nit = n.nit_cliente
+JOIN vendedor v ON v.cod_vendedor = n.cod_vendedor
+JOIN producto p ON p.cod_producto = d.cod_producto;`,
+      columnas: 6,
+    },
+    {
+      enunciadoHtml: `Escribe una consulta con <strong>subconsulta</strong> que muestre (sin repetir) el nombre de los clientes que hayan comprado con algún vendedor cuya <code>comision_pct</code> sea mayor a 4.`,
+      referencia: `SELECT DISTINCT cl.nombre
+FROM cliente cl
+WHERE cl.nit IN (
+  SELECT n.nit_cliente FROM nota_venta n
+  JOIN vendedor v ON v.cod_vendedor = n.cod_vendedor
+  WHERE v.comision_pct > 4
+);`,
+      columnas: 1,
+    },
+    {
+      enunciadoHtml: `Escribe una consulta que muestre, por vendedor, el <strong>nombre del vendedor</strong> y el <strong>total vendido</strong> (suma de cantidad × precio_unitario de todas sus notas), quedándote solo con los vendedores cuyo total supere <strong>300</strong>.`,
+      referencia: `SELECT v.nombre, SUM(d.cantidad*d.precio_unitario) AS total
+FROM vendedor v
+JOIN nota_venta n ON n.cod_vendedor = v.cod_vendedor
+JOIN detalle_nota d ON d.nro_nota = n.nro_nota
+GROUP BY v.nombre
+HAVING SUM(d.cantidad*d.precio_unitario) > 300;`,
+      columnas: 2,
+    },
+    {
+      enunciadoHtml: `Crea una vista llamada <code>resumen_ventas_vendedor</code> con el nombre del vendedor y el total vendido — igual que el paso anterior pero <strong>sin</strong> el HAVING (todos los vendedores). Consúltala con <code>SELECT *</code> agregando <code>WHERE total &gt; 300</code> para reproducir el filtro anterior. Después, con <code>CREATE OR REPLACE VIEW</code>, agrégale una tercera columna, <code>cantidad_notas</code>, con el número de notas distintas de cada vendedor, y vuelve a consultarla completa.`,
+      esVista: true,
+      nombreVista: "resumen_ventas_vendedor",
+      referencia: `SELECT v.nombre, SUM(d.cantidad*d.precio_unitario) AS total, COUNT(DISTINCT n.nro_nota) AS cantidad_notas
+FROM vendedor v
+JOIN nota_venta n ON n.cod_vendedor = v.cod_vendedor
+JOIN detalle_nota d ON d.nro_nota = n.nro_nota
+GROUP BY v.nombre;`,
+      columnas: 3,
+    },
+  ],
+},
+
+5: {
+  nombre: "Caso 5 — Gimnasio",
+  contexto: `<p>Un gimnasio tiene <strong>socios</strong>, cada uno con un <strong>plan</strong> (mensual, trimestral o anual) que tiene un precio. Los socios entran al gimnasio y se registra la hora (<strong>asistencia</strong>). Hay <strong>entrenadores</strong>; cualquier socio puede contratar <strong>sesiones personalizadas</strong> con cualquier entrenador, anotando fecha, hora y qué rutina hizo. Cada entrenador cobra su propia tarifa por sesión.</p>
+  <p><strong>Ah, y algunos entrenadores también son socios del gimnasio.</strong></p>`,
+  ddl: {
+    enunciadoHtml: `Acá tienes que crear todas las tablas necesarias. Usa exactamente estos nombres de tabla y columna (definí vos las claves primarias, foráneas y el tipo de dato de cada columna):
+    <ul style="margin:10px 0 0 22px;line-height:1.9">
+    <li><code>plan(cod_plan, nombre, precio)</code></li>
+    <li><code>socio(cod_socio, nombre, cod_plan)</code></li>
+    <li><code>entrenador(cod_entrenador, nombre, tarifa_sesion, cod_socio)</code></li>
+    <li><code>asistencia(cod_asistencia, cod_socio, fecha, hora)</code></li>
+    <li><code>sesion_personalizada(cod_sesion, cod_socio, cod_entrenador, fecha, hora, rutina)</code></li>
+    </ul>`,
+    tablas: {
+      plan: { columnas: ["cod_plan","nombre","precio"], forbidden: [] },
+      socio: { columnas: ["cod_socio","nombre","cod_plan"], forbidden: ["precio","precio_plan"] },
+      entrenador: { columnas: ["cod_entrenador","nombre","tarifa_sesion","cod_socio"], forbidden: [] },
+      asistencia: { columnas: ["cod_asistencia","cod_socio","fecha","hora"], forbidden: [] },
+      sesion_personalizada: { columnas: ["cod_sesion","cod_socio","cod_entrenador","fecha","hora","rutina"], forbidden: ["tarifa","costo","tarifa_sesion"] },
+    },
+    fks: [
+      {tabla:"socio", refTabla:"plan"},
+      {tabla:"entrenador", refTabla:"socio"},
+      {tabla:"asistencia", refTabla:"socio"},
+      {tabla:"sesion_personalizada", refTabla:"socio"},
+      {tabla:"sesion_personalizada", refTabla:"entrenador"},
+    ],
+  },
+  dml: {
+    enunciadoHtml: `Acá tienes que insertar los datos necesarios en tus tablas, inventados por ti.`,
+    checks: [
+      chk("SELECT COUNT(*)::int AS n FROM plan", ">=", 2, "Necesitás al menos 2 planes."),
+      chk("SELECT COUNT(*)::int AS n FROM socio", ">=", 3, "Necesitás al menos 3 socios."),
+      chk("SELECT COUNT(*)::int AS n FROM entrenador", ">=", 2, "Necesitás al menos 2 entrenadores."),
+      chk("SELECT COUNT(DISTINCT tarifa_sesion)::int AS n FROM entrenador", ">=", 2, "Las tarifas de tus entrenadores deben ser distintas entre sí."),
+      chk("SELECT COUNT(*)::int AS n FROM entrenador WHERE cod_socio IS NOT NULL", ">=", 1, "Necesitás al menos un entrenador que también sea socio (cod_socio cargado)."),
+      chk("SELECT COUNT(*)::int AS n FROM entrenador WHERE cod_socio IS NULL", ">=", 1, "Necesitás al menos un entrenador que NO sea socio (cod_socio vacío)."),
+      chk("SELECT COUNT(*)::int AS n FROM asistencia", ">=", 4, "Necesitás al menos 4 asistencias."),
+      chk("SELECT COUNT(*)::int AS n FROM sesion_personalizada", ">=", 5, "Necesitás al menos 5 sesiones personalizadas."),
+      chk("SELECT COUNT(DISTINCT cod_entrenador)::int AS n FROM sesion_personalizada", ">=", 2, "Tus sesiones deben repartirse entre al menos 2 entrenadores distintos."),
+      chk("SELECT COUNT(*)::int AS n FROM socio s LEFT JOIN plan p ON p.cod_plan=s.cod_plan WHERE p.cod_plan IS NULL", "<=", 0, "Hay socios con un cod_plan que no existe en plan."),
+      chk("SELECT COUNT(*)::int AS n FROM entrenador e LEFT JOIN socio s ON s.cod_socio=e.cod_socio WHERE e.cod_socio IS NOT NULL AND s.cod_socio IS NULL", "<=", 0, "Hay entrenadores con un cod_socio que no existe en socio."),
+      chk("SELECT COUNT(*)::int AS n FROM asistencia a LEFT JOIN socio s ON s.cod_socio=a.cod_socio WHERE s.cod_socio IS NULL", "<=", 0, "Hay asistencias con un cod_socio que no existe en socio."),
+      chk("SELECT COUNT(*)::int AS n FROM sesion_personalizada sp LEFT JOIN socio s ON s.cod_socio=sp.cod_socio WHERE s.cod_socio IS NULL", "<=", 0, "Hay sesiones con un cod_socio que no existe en socio."),
+      chk("SELECT COUNT(*)::int AS n FROM sesion_personalizada sp LEFT JOIN entrenador e ON e.cod_entrenador=sp.cod_entrenador WHERE e.cod_entrenador IS NULL", "<=", 0, "Hay sesiones con un cod_entrenador que no existe en entrenador."),
+      chk("SELECT COUNT(*)::int AS n FROM (SELECT cod_entrenador FROM sesion_personalizada GROUP BY cod_entrenador HAVING COUNT(*) >= 2) x", ">=", 1, "Necesitás que al menos un entrenador tenga 2 o más sesiones."),
+      chk("SELECT COUNT(*)::int AS n FROM (SELECT cod_entrenador FROM sesion_personalizada GROUP BY cod_entrenador HAVING COUNT(*) < 2) x", ">=", 1, "Necesitás que al menos un entrenador tenga menos de 2 sesiones."),
+    ],
+  },
+  pasos: [
+    {
+      enunciadoHtml: `Escribe <strong>una única</strong> consulta con <code>INNER JOIN</code> que muestre, para cada sesión personalizada, en este orden: <strong>nombre del socio, nombre del entrenador, fecha, hora, rutina y tarifa_sesion</strong>.`,
+      referencia: `SELECT s.nombre, e.nombre, sp.fecha, sp.hora, sp.rutina, e.tarifa_sesion
+FROM sesion_personalizada sp
+JOIN socio s ON s.cod_socio = sp.cod_socio
+JOIN entrenador e ON e.cod_entrenador = sp.cod_entrenador;`,
+      columnas: 6,
+    },
+    {
+      enunciadoHtml: `Escribe una consulta con <strong>subconsulta</strong> que muestre el nombre de los entrenadores cuya <code>tarifa_sesion</code> sea mayor al <strong>promedio</strong> (AVG) de <code>tarifa_sesion</code> de todos los entrenadores.`,
+      referencia: `SELECT e.nombre
+FROM entrenador e
+WHERE e.tarifa_sesion > (SELECT AVG(tarifa_sesion) FROM entrenador);`,
+      columnas: 1,
+    },
+    {
+      enunciadoHtml: `Escribe una consulta que muestre, por entrenador, el <strong>nombre del entrenador</strong> y su <strong>cantidad total de sesiones</strong>, quedándote solo con los entrenadores que dieron <strong>2 o más</strong> sesiones.`,
+      referencia: `SELECT e.nombre, COUNT(sp.cod_sesion) AS total_sesiones
+FROM entrenador e
+JOIN sesion_personalizada sp ON sp.cod_entrenador = e.cod_entrenador
+GROUP BY e.nombre
+HAVING COUNT(sp.cod_sesion) >= 2;`,
+      columnas: 2,
+    },
+    {
+      enunciadoHtml: `Crea una vista llamada <code>resumen_entrenadores</code> con el nombre del entrenador y su cantidad total de sesiones — sin el filtro del paso anterior (todos los entrenadores). Consúltala con <code>SELECT *</code> agregando <code>WHERE total_sesiones &gt;= 2</code>. Después, con <code>CREATE OR REPLACE VIEW</code>, agrégale una tercera columna, <code>ingreso_total</code>, con el total de sesiones multiplicado por su <code>tarifa_sesion</code>, y vuelve a consultarla completa.`,
+      esVista: true,
+      nombreVista: "resumen_entrenadores",
+      referencia: `SELECT e.nombre, COUNT(sp.cod_sesion) AS total_sesiones, COUNT(sp.cod_sesion)*e.tarifa_sesion AS ingreso_total
+FROM entrenador e
+JOIN sesion_personalizada sp ON sp.cod_entrenador = e.cod_entrenador
+GROUP BY e.nombre, e.tarifa_sesion;`,
+      columnas: 3,
+    },
+  ],
+},
+
+6: {
+  nombre: "Caso 6 — Veterinaria",
+  contexto: `<p>Una veterinaria entrega esta tabla única: <code>ATENCION(cod_animal, nombre_animal, tipo, num_jaula, tam_pecera, ci_dueño, nombre_dueño, fecha, diagnostico)</code>, donde <code>tipo</code> ∈ {perro, pez}; <code>num_jaula</code> solo aplica a perros y <code>tam_pecera</code> solo a peces.</p>`,
+  ddl: {
+    enunciadoHtml: `Acá tienes que crear todas las tablas necesarias. Usa exactamente estos nombres (evitamos la "ñ" en los identificadores SQL) y definí vos las claves primarias, foráneas y tipos de dato:
+    <ul style="margin:10px 0 0 22px;line-height:1.9">
+    <li><code>dueno(ci_dueno, nombre_dueno)</code></li>
+    <li><code>animal(cod_animal, nombre_animal, tipo, ci_dueno)</code></li>
+    <li><code>perro(cod_animal, num_jaula)</code></li>
+    <li><code>pez(cod_animal, tam_pecera)</code></li>
+    <li><code>atencion(cod_atencion, cod_animal, fecha, diagnostico)</code></li>
+    </ul>`,
+    tablas: {
+      dueno: { columnas: ["ci_dueno","nombre_dueno"], forbidden: [] },
+      animal: { columnas: ["cod_animal","nombre_animal","tipo","ci_dueno"], forbidden: ["nombre_dueno"] },
+      perro: { columnas: ["cod_animal","num_jaula"], forbidden: [] },
+      pez: { columnas: ["cod_animal","tam_pecera"], forbidden: [] },
+      atencion: { columnas: ["cod_atencion","cod_animal","fecha","diagnostico"], forbidden: ["nombre_animal","tipo","nombre_dueno","num_jaula","tam_pecera"] },
+    },
+    fks: [
+      {tabla:"animal", refTabla:"dueno"},
+      {tabla:"perro", refTabla:"animal"},
+      {tabla:"pez", refTabla:"animal"},
+      {tabla:"atencion", refTabla:"animal"},
+    ],
+  },
+  dml: {
+    enunciadoHtml: `Acá tienes que insertar los datos necesarios en tus tablas, inventados por ti.`,
+    checks: [
+      chk("SELECT COUNT(*)::int AS n FROM dueno", ">=", 2, "Necesitás al menos 2 dueños."),
+      chk("SELECT COUNT(*)::int AS n FROM animal", ">=", 3, "Necesitás al menos 3 animales."),
+      chk("SELECT COUNT(*)::int AS n FROM animal WHERE tipo='perro'", ">=", 1, "Necesitás al menos un animal de tipo 'perro'."),
+      chk("SELECT COUNT(*)::int AS n FROM animal WHERE tipo='pez'", ">=", 1, "Necesitás al menos un animal de tipo 'pez'."),
+      chk("SELECT COUNT(*)::int AS n FROM perro", ">=", 1, "Necesitás al menos 1 fila en la tabla perro."),
+      chk("SELECT COUNT(*)::int AS n FROM pez", ">=", 1, "Necesitás al menos 1 fila en la tabla pez."),
+      chk("SELECT COUNT(*)::int AS n FROM animal a WHERE a.tipo='perro' AND NOT EXISTS (SELECT 1 FROM perro p WHERE p.cod_animal=a.cod_animal)", "<=", 0, "Hay animales de tipo 'perro' sin su fila correspondiente en la tabla perro."),
+      chk("SELECT COUNT(*)::int AS n FROM animal a WHERE a.tipo='pez' AND NOT EXISTS (SELECT 1 FROM pez p WHERE p.cod_animal=a.cod_animal)", "<=", 0, "Hay animales de tipo 'pez' sin su fila correspondiente en la tabla pez."),
+      chk("SELECT COUNT(*)::int AS n FROM animal a LEFT JOIN dueno d ON d.ci_dueno=a.ci_dueno WHERE d.ci_dueno IS NULL", "<=", 0, "Hay animales con un ci_dueno que no existe en dueno."),
+      chk("SELECT COUNT(*)::int AS n FROM atencion", ">=", 5, "Necesitás al menos 5 atenciones."),
+      chk("SELECT COUNT(*)::int AS n FROM atencion at LEFT JOIN animal a ON a.cod_animal=at.cod_animal WHERE a.cod_animal IS NULL", "<=", 0, "Hay atenciones con un cod_animal que no existe en animal."),
+      chk("SELECT COUNT(*)::int AS n FROM (SELECT cod_animal FROM atencion GROUP BY cod_animal HAVING COUNT(*) >= 2) x", ">=", 1, "Necesitás que al menos un animal tenga 2 o más atenciones."),
+      chk("SELECT COUNT(*)::int AS n FROM (SELECT cod_animal FROM atencion GROUP BY cod_animal HAVING COUNT(*) < 2) x", ">=", 1, "Necesitás que al menos un animal tenga menos de 2 atenciones."),
+    ],
+  },
+  pasos: [
+    {
+      enunciadoHtml: `Escribe <strong>una única</strong> consulta con <code>INNER JOIN</code> (animal + perro + dueno + atencion) que muestre, solo para las atenciones a animales de tipo <code>'perro'</code>, en este orden: <strong>nombre_animal, num_jaula, nombre_dueno, fecha, diagnostico</strong>.`,
+      referencia: `SELECT a.nombre_animal, p.num_jaula, d.nombre_dueno, at.fecha, at.diagnostico
+FROM atencion at
+JOIN animal a ON a.cod_animal = at.cod_animal
+JOIN perro p ON p.cod_animal = a.cod_animal
+JOIN dueno d ON d.ci_dueno = a.ci_dueno;`,
+      columnas: 5,
+    },
+    {
+      enunciadoHtml: `Escribe una consulta con <strong>subconsulta</strong> que muestre (sin repetir) el <code>nombre_dueno</code> de los dueños que tienen al menos un perro registrado.`,
+      referencia: `SELECT DISTINCT d.nombre_dueno
+FROM dueno d
+WHERE d.ci_dueno IN (
+  SELECT a.ci_dueno FROM animal a WHERE a.tipo = 'perro'
+);`,
+      columnas: 1,
+    },
+    {
+      enunciadoHtml: `Escribe una consulta que muestre, por animal, <code>nombre_animal</code> y su <strong>cantidad total de atenciones</strong>, quedándote solo con los animales que tuvieron <strong>2 o más</strong> atenciones.`,
+      referencia: `SELECT a.nombre_animal, COUNT(at.cod_atencion) AS total_atenciones
+FROM animal a
+JOIN atencion at ON at.cod_animal = a.cod_animal
+GROUP BY a.nombre_animal
+HAVING COUNT(at.cod_atencion) >= 2;`,
+      columnas: 2,
+    },
+    {
+      enunciadoHtml: `Crea una vista llamada <code>resumen_atenciones_animal</code> con <code>nombre_animal</code> y su cantidad total de atenciones — sin el filtro del paso anterior (todos los animales). Consúltala con <code>SELECT *</code> agregando <code>WHERE total_atenciones &gt;= 2</code>. Después, con <code>CREATE OR REPLACE VIEW</code>, agrégale una tercera columna, <code>tipo</code>, con el tipo de animal, y vuelve a consultarla completa.`,
+      esVista: true,
+      nombreVista: "resumen_atenciones_animal",
+      referencia: `SELECT a.nombre_animal, COUNT(at.cod_atencion) AS total_atenciones, a.tipo
+FROM animal a
+JOIN atencion at ON at.cod_animal = a.cod_animal
+GROUP BY a.nombre_animal, a.tipo;`,
+      columnas: 3,
+    },
+  ],
+},
+
+};
+
+function chk(sql, cmp, valor, msg){ return { sql, cmp, valor, msg }; }
+
+/* =========================================================================
+   CONFIGURACIÓN GENERAL
+   ========================================================================= */
+const DURACION_MS = 2 * 60 * 60 * 1000; // 2 horas
+const CLAVE_PROFESOR = "bd2-2026-roy"; // ⚠️ Cambiala antes de rendir el examen si querés otra.
+const PASOS_TITULO = ["DDL","DML","JOIN","Subconsulta","GROUP BY / HAVING","Vista"];
+
+let estado = null; // { nombre, caso, claveStorage, inicio, pasoActual, sqlPorPaso[6], timestamps[6] }
+let temporizadorInterval = null;
+
+const REGEX_DIACRITICOS = new RegExp(String.fromCharCode(91,0x0300,45,0x036f,93), "g"); // [̀-ͯ], sin escribir el rango como caracteres literales en el archivo
+function slug(s){
+  return s.normalize("NFD").replace(REGEX_DIACRITICOS, "").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+}
+function claveStorage(nombre, caso){ return "examen-bd2-agv-" + caso + "-" + slug(nombre); }
+
+/* =========================================================================
+   PGlite: mismo patrón que los talleres de la materia.
+   ========================================================================= */
+const PGLITE_CDN = "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.5.4/dist/index.js";
+let pgliteReadyPromise = null;
+
+function cargarPGlite(){
+  if (!pgliteReadyPromise) {
+    pgliteReadyPromise = (async () => {
+      const { PGlite } = await import(PGLITE_CDN);
+      return new PGlite();
+    })();
+  }
+  return pgliteReadyPromise;
+}
+function reiniciarPGlite(){ pgliteReadyPromise = null; }
+
+async function ejecutarSQL(codigo){
+  try {
+    const db = await cargarPGlite();
+    const resultados = await db.exec(codigo);
+    return { resultados, error: null };
+  } catch (e) {
+    return { resultados: null, error: (e && e.message) ? e.message : String(e) };
+  }
+}
+
+function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function formatearValor(v){ if (v===null||v===undefined) return "<em>NULL</em>"; return escapeHtml(v); }
+
+function renderizarResultados(resultados){
+  if (!resultados || !resultados.length) return '<p class="sql-status">✅ Ejecutado. No se generó ningún resultado.</p>';
+  return resultados.map(r => {
+    const columnas = (r.fields || []).map(f => f.name);
+    if (columnas.length) {
+      let html = '<table class="sql-result-table"><thead><tr>' + columnas.map(c => `<th scope="col">${escapeHtml(c)}</th>`).join("") + "</tr></thead><tbody>";
+      if (!r.rows || !r.rows.length) html += `<tr><td colspan="${columnas.length}"><em>(0 filas)</em></td></tr>`;
+      else r.rows.forEach(fila => { html += "<tr>" + columnas.map(c => `<td>${formatearValor(fila[c])}</td>`).join("") + "</tr>"; });
+      html += "</tbody></table>";
+      return html;
+    }
+    const n = typeof r.affectedRows === "number" ? r.affectedRows : null;
+    return n !== null ? `<p class="sql-status">✅ Sentencia ejecutada (${n} fila${n===1?"":"s"} afectada${n===1?"":"s"}).</p>` : `<p class="sql-status">✅ Sentencia ejecutada correctamente.</p>`;
+  }).join("");
+}
+
+/* ===== Bloqueo de copiar/pegar ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  if (!clipboardToast) return;
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
+function conectarSqlLab(panel, onDespuesDeEjecutar){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En este examen el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  ["copy","cut","paste","drop"].forEach(evt => textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); }));
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart, fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0,inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (teclaCtrl && ["c","v","x"].includes(e.key.toLowerCase())) { e.preventDefault(); avisarBloqueo(); }
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe alguna sentencia SQL antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando PostgreSQL real (WebAssembly)… la primera vez puede tardar varios segundos.";
+    runBtn.disabled = true;
+    let resultado;
+    try {
+      resultado = await ejecutarSQL(codigo);
+      if (resultado.error) { outputBody.textContent = "❌ Error de PostgreSQL: " + resultado.error; output.classList.add("error"); }
+      else outputBody.innerHTML = renderizarResultados(resultado.resultados);
+    } catch (e) {
+      resultado = { resultados:null, error:String(e) };
+      outputBody.textContent = "No se pudo cargar el motor de PostgreSQL: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+    if (onDespuesDeEjecutar) await onDespuesDeEjecutar({ ...resultado, codigo });
+  };
+}
+
+/* =========================================================================
+   MOTOR DE VERIFICACIÓN DIFERENCIAL
+   ========================================================================= */
+function normalizarValor(v){
+  if (v===null || v===undefined) return "NULL";
+  if (typeof v === "number") return v.toFixed(2);
+  const s = String(v).trim();
+  if (/^-?\d+(\.\d+)?$/.test(s)) return parseFloat(s).toFixed(2);
+  return s.toLowerCase();
+}
+function compararResultados(actual, esperado, nColEsperadas){
+  if (!actual || !actual.fields) return { ok:false, motivo:"Tu código no tiene ninguna consulta SELECT con resultados." };
+  const colsA = actual.fields.map(f=>f.name);
+  const colsE = esperado.fields.map(f=>f.name);
+  if (colsA.length !== nColEsperadas) return { ok:false, motivo:`Tu consulta debería devolver ${nColEsperadas} columna(s) y devolvió ${colsA.length}.` };
+  const firmarA = (actual.rows||[]).map(r=>colsA.map(c=>normalizarValor(r[c])).join("||")).sort();
+  const firmarE = (esperado.rows||[]).map(r=>colsE.map(c=>normalizarValor(r[c])).join("||")).sort();
+  if (firmarA.length !== firmarE.length) return { ok:false, motivo:`Se esperaban ${firmarE.length} fila(s) sobre tus propios datos y tu consulta devolvió ${firmarA.length}.` };
+  for (let i=0;i<firmarA.length;i++) if (firmarA[i]!==firmarE[i]) return { ok:false, motivo:"Los valores no coinciden con lo esperado sobre tus propios datos. Revisa el JOIN, el filtro o el cálculo." };
+  return { ok:true };
+}
+
+async function verificarDDL(spec){
+  const colsRes = await ejecutarSQL("SELECT table_name, column_name FROM information_schema.columns WHERE table_schema='public';");
+  if (colsRes.error) return { ok:false, motivo:"Error al inspeccionar el esquema: "+colsRes.error };
+  const columnasPorTabla = {};
+  (colsRes.resultados[0].rows||[]).forEach(r=>{
+    const t = String(r.table_name).toLowerCase();
+    (columnasPorTabla[t] ||= new Set()).add(String(r.column_name).toLowerCase());
+  });
+  const pkRes = await ejecutarSQL("SELECT tc.table_name FROM information_schema.table_constraints tc WHERE tc.table_schema='public' AND tc.constraint_type='PRIMARY KEY';");
+  const tablasConPK = new Set((pkRes.resultados[0].rows||[]).map(r=>String(r.table_name).toLowerCase()));
+  const fkRes = await ejecutarSQL(`
+    SELECT tc.table_name AS tabla, ccu.table_name AS ref_tabla
+    FROM information_schema.table_constraints tc
+    JOIN information_schema.constraint_column_usage ccu ON tc.constraint_name = ccu.constraint_name
+    WHERE tc.table_schema='public' AND tc.constraint_type='FOREIGN KEY';`);
+  const fksEncontrados = (fkRes.resultados[0].rows||[]).map(r=>({tabla:String(r.tabla).toLowerCase(), refTabla:String(r.ref_tabla).toLowerCase()}));
+
+  for (const [tabla, def] of Object.entries(spec.tablas)) {
+    const cols = columnasPorTabla[tabla];
+    if (!cols) return { ok:false, motivo:`No encontré la tabla "${tabla}". Revisa el nombre exacto.` };
+    for (const col of def.columnas) if (!cols.has(col)) return { ok:false, motivo:`A la tabla "${tabla}" le falta la columna "${col}".` };
+    for (const col of (def.forbidden||[])) if (cols.has(col)) return { ok:false, motivo:`La tabla "${tabla}" no debería tener la columna "${col}" — revisa la regla de negocio del enunciado.` };
+    if (!tablasConPK.has(tabla)) return { ok:false, motivo:`La tabla "${tabla}" no tiene ninguna PRIMARY KEY definida.` };
+  }
+  for (const fk of spec.fks) {
+    const existe = fksEncontrados.some(f=>f.tabla===fk.tabla && f.refTabla===fk.refTabla);
+    if (!existe) return { ok:false, motivo:`Falta una FOREIGN KEY desde "${fk.tabla}" hacia "${fk.refTabla}".` };
+  }
+  return { ok:true };
+}
+
+async function ejecutarChecksDML(checks){
+  for (const c of checks) {
+    const { resultados, error } = await ejecutarSQL(c.sql);
+    if (error) return { ok:false, motivo:"Error interno de verificación (avisale a tu profesor): " + error };
+    const val = Number(resultados[0].rows[0].n);
+    const pasa = c.cmp === ">=" ? val>=c.valor : c.cmp === "<=" ? val<=c.valor : c.cmp === ">" ? val>c.valor : c.cmp === "<" ? val<c.valor : val===c.valor;
+    if (!pasa) return { ok:false, motivo:c.msg };
+  }
+  return { ok:true };
+}
+
+async function verificarPasoConsulta(pasoDef, codigoEstudiante){
+  const ejec = await ejecutarSQL(codigoEstudiante);
+  if (ejec.error) return { ok:false, motivo:"Tu código dio un error de PostgreSQL: " + ejec.error };
+  let actual;
+  if (pasoDef.esVista) {
+    if (!/create\s+view/i.test(codigoEstudiante)) return { ok:false, motivo:'Tu código no incluye ningún "CREATE VIEW".' };
+    if (!/create\s+or\s+replace\s+view/i.test(codigoEstudiante)) return { ok:false, motivo:'Tu código no incluye "CREATE OR REPLACE VIEW" para la segunda parte del ejercicio.' };
+    const chkVista = await ejecutarSQL(`SELECT table_name FROM information_schema.views WHERE table_schema='public' AND table_name='${pasoDef.nombreVista}';`);
+    if (chkVista.error || !chkVista.resultados[0].rows.length) return { ok:false, motivo:`No encontré ninguna vista llamada "${pasoDef.nombreVista}".` };
+    const consultaVista = await ejecutarSQL(`SELECT * FROM ${pasoDef.nombreVista};`);
+    if (consultaVista.error) return { ok:false, motivo:"Error al consultar tu vista: " + consultaVista.error };
+    actual = consultaVista.resultados[consultaVista.resultados.length-1];
+  } else {
+    const conDatos = ejec.resultados.filter(r=>r.fields && r.fields.length);
+    if (!conDatos.length) return { ok:false, motivo:"Tu código no tiene ninguna consulta SELECT con resultados." };
+    actual = conDatos[conDatos.length-1];
+  }
+  const ref = await ejecutarSQL(pasoDef.referencia);
+  if (ref.error) return { ok:false, motivo:"Error interno de verificación (avisale a tu profesor): " + ref.error };
+  const esperado = ref.resultados[ref.resultados.length-1];
+  return compararResultados(actual, esperado, pasoDef.columnas);
+}
+
+async function verificarPaso(n, codigo){
+  const caso = CASOS[estado.caso];
+  if (n===1) return verificarDDL(caso.ddl);
+  if (n===2) return ejecutarChecksDML(caso.dml.checks);
+  return verificarPasoConsulta(caso.pasos[n-3], codigo);
+}
+
+/* =========================================================================
+   PERSISTENCIA Y RECUPERACIÓN
+   ========================================================================= */
+function guardarEstado(){ localStorage.setItem(estado.claveStorage, JSON.stringify(estado)); }
+function cargarEstadoGuardado(clave){
+  const raw = localStorage.getItem(clave);
+  return raw ? JSON.parse(raw) : null;
+}
+async function reconstruirBaseDeDatos(){
+  reiniciarPGlite();
+  for (let i=1;i<estado.pasoActual;i++){
+    const sql = estado.sqlPorPaso[i-1];
+    if (sql && sql.trim()) {
+      const { error } = await ejecutarSQL(sql);
+      if (error) return { ok:false, pasoFallido:i, error };
+    }
+  }
+  return { ok:true };
+}
+
+/* =========================================================================
+   UI: pantalla de inicio / admin
+   ========================================================================= */
+const params = new URLSearchParams(location.search);
+if (params.get("admin") === "1") {
+  document.getElementById("pantallaAdmin").hidden = false;
+} else {
+  document.getElementById("pantallaInicio").hidden = false;
+  const campoNombre = document.getElementById("campoNombre");
+  const campoCaso = document.getElementById("campoCaso");
+  const btnComenzar = document.getElementById("btnComenzar");
+  const avisoInicio = document.getElementById("avisoInicio");
+
+  const casoUrl = params.get("caso");
+  const estUrl = params.get("est");
+  if (estUrl) { campoNombre.value = decodeURIComponent(estUrl); campoNombre.disabled = true; }
+  if (casoUrl && CASOS[casoUrl]) { campoCaso.value = casoUrl; campoCaso.disabled = true; }
+
+  function validar(){ btnComenzar.disabled = !(campoNombre.value.trim() && campoCaso.value); }
+  campoNombre.addEventListener("input", validar);
+  campoCaso.addEventListener("change", validar);
+  validar();
+
+  btnComenzar.addEventListener("click", async () => {
+    const nombre = campoNombre.value.trim();
+    const caso = campoCaso.value;
+    if (!nombre || !caso) return;
+    btnComenzar.disabled = true;
+    avisoInicio.textContent = "";
+    const clave = claveStorage(nombre, caso);
+    let guardado = cargarEstadoGuardado(clave);
+    if (guardado) {
+      estado = guardado;
+    } else {
+      estado = { nombre, caso, claveStorage: clave, inicio: Date.now(), pasoActual: 1, sqlPorPaso: ["","","","","",""], timestamps: [null,null,null,null,null,null] };
+      guardarEstado();
+    }
+    // Al ocultar la pantalla de inicio, el navegador mueve el foco (estaba en
+    // btnComenzar) a otro elemento del examen recién revelado y hace scroll
+    // automático para mostrarlo — dejando la barra superior sticky tapando el
+    // encabezado. document.activeElement.blur() antes de ocultar, más forzar
+    // scroll a 0 después, evita ese salto.
+    if (document.activeElement) document.activeElement.blur();
+    document.getElementById("pantallaInicio").hidden = true;
+    await iniciarExamen();
+    window.scrollTo(0, 0);
+  });
+}
+
+/* =========================================================================
+   UI: examen en curso
+   ========================================================================= */
+async function iniciarExamen(){
+  const caso = CASOS[estado.caso];
+  document.getElementById("contenedorExamen").hidden = false;
+  document.getElementById("badgeCaso").textContent = caso.nombre;
+  document.getElementById("badgeNombre").textContent = estado.nombre;
+  document.getElementById("contextoCaso").innerHTML = caso.contexto;
+  document.getElementById("ddlEnunciado").innerHTML = "<strong>Enunciado — DDL</strong><p>" + caso.ddl.enunciadoHtml + "</p>";
+  document.getElementById("dmlEnunciado").innerHTML = "<strong>Enunciado — DML</strong><p>" + caso.dml.enunciadoHtml + "</p>";
+  caso.pasos.forEach((p,i) => {
+    document.getElementById("paso" + (i+3) + "Enunciado").innerHTML = "<strong>Enunciado</strong><p>" + p.enunciadoHtml + "</p>";
+  });
+
+  // Restaurar SQL guardado en cada editor
+  for (let i=1;i<=6;i++){
+    const ta = document.querySelector(`#paso-${i} .editor`);
+    if (ta && estado.sqlPorPaso[i-1]) ta.value = estado.sqlPorPaso[i-1];
+  }
+
+  // Reconstruir la base de datos con lo ya aprobado
+  if (estado.pasoActual > 1) {
+    document.getElementById("dbEstado").textContent = "🔁 Reconstruyendo tu base de datos a partir de tu progreso guardado…";
+    const r = await reconstruirBaseDeDatos();
+    document.getElementById("dbEstado").textContent = r.ok
+      ? "✅ Base de datos reconstruida hasta el paso " + (estado.pasoActual-1) + "."
+      : "⚠️ Hubo un problema reconstruyendo el paso " + r.pasoFallido + " (" + r.error + "). Probá '🔁 Reconstruir mi base de datos' o avisale a tu profesor.";
+  }
+
+  // Pintar estado de pasos: completados hasta pasoActual-1, desbloqueado el actual
+  for (let i=1;i<=6;i++){
+    const sec = document.getElementById("paso-" + i);
+    if (i < estado.pasoActual) marcarPasoUI(i, true);
+    else if (i === estado.pasoActual) sec.classList.add("desbloqueado");
+  }
+  if (estado.pasoActual > 6) mostrarCertificado();
+
+  // Conectar cada editor-panel
+  document.querySelectorAll("#zona-pruebas .editor-panel").forEach(p => conectarSqlLab(p));
+  for (let i=1;i<=6;i++){
+    const panel = document.querySelector(`#paso-${i} .editor-panel`);
+    conectarSqlLab(panel, (res) => manejarVerificacion(i, res));
+  }
+
+  // Botón desbloqueo manual con clave
+  document.querySelectorAll(".btn-desbloqueo-manual").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const clave = prompt("Clave del profesor para desbloquear este paso:");
+      if (clave === CLAVE_PROFESOR) {
+        const n = Number(btn.closest(".paso").dataset.paso);
+        marcarPasoCompletado(n, true);
+      } else if (clave !== null) {
+        alert("Clave incorrecta.");
+      }
+    });
+  });
+
+  document.getElementById("reconstruirBtn").addEventListener("click", async () => {
+    document.getElementById("dbEstado").textContent = "🔁 Reconstruyendo…";
+    const r = await reconstruirBaseDeDatos();
+    document.getElementById("dbEstado").textContent = r.ok ? "✅ Base de datos reconstruida." : "⚠️ Problema en el paso " + r.pasoFallido + ": " + r.error;
+  });
+
+  iniciarTemporizador();
+}
+
+async function manejarVerificacion(n, { error, codigo }){
+  estado.sqlPorPaso[n-1] = codigo;
+  guardarEstado();
+  const caja = document.querySelector(`#paso-${n} .verif-box`);
+  caja.hidden = false;
+  if (error) { caja.className = "verif-box fail"; caja.textContent = "❌ Corrige el error de arriba antes de verificar."; return; }
+  caja.className = "verif-box"; caja.textContent = "⏳ Verificando…";
+  const veredicto = await verificarPaso(n, codigo);
+  if (veredicto.ok) {
+    caja.className = "verif-box ok";
+    caja.textContent = "✅ ¡Correcto! Paso " + n + " verificado.";
+    marcarPasoCompletado(n, false);
+  } else {
+    caja.className = "verif-box fail";
+    caja.textContent = "❌ " + veredicto.motivo;
+  }
+}
+
+function marcarPasoUI(n, completado){
+  const sec = document.getElementById("paso-" + n);
+  sec.classList.add("desbloqueado");
+  if (completado) {
+    sec.classList.add("completado");
+    sec.querySelector(".paso-estado").textContent = "✅ verificado";
+  }
+}
+
+function marcarPasoCompletado(n, porClaveProfesor){
+  estado.timestamps[n-1] = new Date().toLocaleTimeString();
+  if (estado.pasoActual === n) estado.pasoActual = n + 1;
+  guardarEstado();
+  marcarPasoUI(n, true);
+  if (n < 6) {
+    const siguiente = document.getElementById("paso-" + (n+1));
+    siguiente.classList.add("desbloqueado");
+    siguiente.scrollIntoView({ behavior:"smooth", block:"center" });
+  } else {
+    mostrarCertificado();
+  }
+}
+
+function mostrarCertificado(){
+  const sec = document.getElementById("certificadoSeccion");
+  sec.hidden = false;
+  document.getElementById("certNombre").textContent = estado.nombre;
+  document.getElementById("certCaso").textContent = CASOS[estado.caso].nombre;
+  const tbody = document.getElementById("tablaCertificado");
+  tbody.innerHTML = "";
+  PASOS_TITULO.forEach((titulo,i) => {
+    const tr = document.createElement("tr");
+    const ok = estado.timestamps[i];
+    tr.innerHTML = `<td>${i+1}. ${titulo}</td><td>${ok?"✅ verificado":"—"}</td><td>${ok||"—"}</td>`;
+    tbody.appendChild(tr);
+  });
+  sec.scrollIntoView({ behavior:"smooth" });
+}
+
+document.getElementById("btnCopiarSql").addEventListener("click", () => {
+  const partes = [`Examen BD II — ${CASOS[estado.caso].nombre}`, `Estudiante: ${estado.nombre}`, ""];
+  PASOS_TITULO.forEach((titulo,i) => {
+    partes.push(`-- ===== Paso ${i+1}: ${titulo} =====`);
+    partes.push(estado.sqlPorPaso[i] || "-- (vacío)");
+    partes.push("");
+  });
+  const texto = partes.join("\n");
+  navigator.clipboard.writeText(texto).then(
+    () => alert("Copiado. Pegalo donde tu profesor te indique."),
+    () => { prompt("No se pudo copiar automáticamente. Copiá manualmente:", texto); }
+  );
+});
+
+/* ===== Temporizador ===== */
+function iniciarTemporizador(){
+  actualizarTemporizador();
+  temporizadorInterval = setInterval(actualizarTemporizador, 1000);
+}
+function actualizarTemporizador(){
+  const el = document.getElementById("examenTimer");
+  const restante = DURACION_MS - (Date.now() - estado.inicio);
+  if (restante <= 0) {
+    el.textContent = "⏰ Tiempo terminado";
+    el.classList.add("agotado");
+    clearInterval(temporizadorInterval);
+    bloquearTodo();
+    return;
+  }
+  const s = Math.floor(restante/1000);
+  const h = String(Math.floor(s/3600)).padStart(2,"0");
+  const m = String(Math.floor((s%3600)/60)).padStart(2,"0");
+  const ss = String(s%60).padStart(2,"0");
+  el.textContent = "⏱ " + h + ":" + m + ":" + ss;
+  el.classList.toggle("alerta", restante < 10*60*1000);
+}
+function bloquearTodo(){
+  document.querySelectorAll(".editor").forEach(t => t.readOnly = true);
+  document.querySelectorAll(".code-btn.run").forEach(b => b.disabled = true);
+  const banner = document.createElement("div");
+  banner.className = "banner-tiempo";
+  banner.textContent = "⏰ El tiempo del examen terminó. Tu certificado de progreso quedó guardado.";
+  document.body.prepend(banner);
+}
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  themeBtn.textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* =========================================================================
+   PANEL DEL PROFESOR — sorteo balanceado de casos 4/5/6
+   ========================================================================= */
+const btnSortear = document.getElementById("btnSortear");
+if (btnSortear) {
+  btnSortear.addEventListener("click", () => {
+    const nombres = document.getElementById("listaNombres").value.split("\n").map(s=>s.trim()).filter(Boolean);
+    if (!nombres.length) return;
+    const ciclo = [];
+    for (let i=0;i<nombres.length;i++) ciclo.push([4,5,6][i%3]);
+    for (let i=ciclo.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [ciclo[i],ciclo[j]]=[ciclo[j],ciclo[i]]; }
+    const base = location.origin + location.pathname;
+    const filas = nombres.map((nombre,i) => ({ nombre, caso: ciclo[i], link: base + "?caso=" + ciclo[i] + "&est=" + encodeURIComponent(nombre) }));
+    let html = "<table><thead><tr><th>Nombre</th><th>Caso</th><th>Link</th></tr></thead><tbody>";
+    filas.forEach(f => { html += `<tr><td>${escapeHtml(f.nombre)}</td><td>${f.caso}</td><td><a href="${f.link}" target="_blank">${escapeHtml(f.link)}</a></td></tr>`; });
+    html += "</tbody></table><button type=\"button\" id=\"btnCopiarLinks\">📋 Copiar todos los links</button>";
+    document.getElementById("resultadoSorteo").innerHTML = html;
+    document.getElementById("btnCopiarLinks").addEventListener("click", () => {
+      const texto = filas.map(f => f.nombre + "\t" + f.caso + "\t" + f.link).join("\n");
+      navigator.clipboard.writeText(texto).then(() => alert("Copiado."), () => prompt("Copiá manualmente:", texto));
+    });
+  });
+}
+</script>
+
+</body>
+</html>

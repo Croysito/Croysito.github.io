@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo E-P-S y Retroalimentación | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">TGS · <span>E-P-S</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="eps-control">Modelo E-P-S y control</button>
+<button data-target="control-ajuste">Control y ajuste en acción</button>
+<button data-target="cajanegra">Caja negra y caja blanca</button>
+<button data-target="ejercicios">Actividades de repaso</button>
+<button data-target="evidencia">Evidencia: diagrama E-P-S</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🔁 Guía de Aula Invertida</span>
+<h1 class="flow-h1">Modelo E-P-S y <span>Retroalimentación</span></h1>
+<p class="flow-lead">Ya viste que un sistema recibe algo, lo transforma y entrega un resultado. Pero los sistemas que se autorregulan hacen algo más: miden su propio resultado, lo comparan contra un objetivo, y ajustan lo que hacen después. Esa es la diferencia entre solo procesar y controlar de verdad.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Scrollea para empezar — el diagrama del sistema de matrícula se arma solo, capa por capa, mientras leés.</p>
+</section>
+
+<section class="flow-section" id="eps-control">
+<div class="flow-grid">
+<div class="flow-beats">
+
+<div class="flow-beat" data-step="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>Un sistema que no se queda quieto</h3>
+<p>Hasta ahora vimos que un sistema recibe algo, lo transforma y entrega un resultado. Pero eso, por sí solo, describe una fábrica que nunca revisa lo que produjo. La mayoría de los sistemas reales miden su propio resultado y ajustan lo que van a hacer a continuación.</p>
+<p>Armemos ese diagrama en vivo, capa por capa, con un caso concreto: el sistema de matrícula de una universidad →</p>
+</div>
+
+<div class="flow-beat" data-step="1">
+<span class="flow-beat-eyebrow">Paso 02 · Entrada</span>
+<h3>Lo que llega desde el entorno</h3>
+<p>La <strong>entrada</strong> es lo que el sistema recibe desde afuera antes de hacer nada. En la matrícula, es la solicitud de inscripción que llena el estudiante: qué materias quiere cursar y en qué horario.</p>
+</div>
+
+<div class="flow-beat" data-step="2">
+<span class="flow-beat-eyebrow">Paso 03 · Proceso</span>
+<h3>Lo que el sistema hace con eso</h3>
+<p>El <strong>proceso</strong> transforma la entrada en algo nuevo. Acá valida que el estudiante no tenga materias pendientes de pago ni prerrequisitos sin aprobar, y le asigna cupo en cada materia disponible.</p>
+</div>
+
+<div class="flow-beat" data-step="3">
+<span class="flow-beat-eyebrow">Paso 04 · Salida</span>
+<h3>Lo que el sistema entrega al entorno</h3>
+<p>La <strong>salida</strong> es el resultado que vuelve a salir del sistema: la matrícula confirmada, con materias y horarios asignados — o el rechazo, si algo no se cumplió. Con esto ya tenés un modelo E-P-S completo.</p>
+</div>
+
+<div class="flow-beat" data-step="4">
+<span class="flow-beat-eyebrow">Paso 05 · Retroalimentación</span>
+<h3>El ciclo se cierra</h3>
+<p>Un E-P-S sin retroalimentación es una fábrica que nunca aprende. Si la facultad usa la cantidad de rechazos de este semestre para decidir cuántos cupos abrir el próximo, parte de esa salida vuelve a convertirse en entrada. Eso es <strong>retroalimentación</strong>.</p>
+</div>
+
+<div class="flow-beat" data-step="5">
+<span class="flow-beat-eyebrow">Paso 06 · Control y ajuste</span>
+<h3>Sensor, comparador y actuador</h3>
+<p>Toda retroalimentación que corrige una desviación tiene tres partes: un <strong>sensor</strong> que mide (¿cuántas solicitudes se rechazaron?), un <strong>comparador</strong> que calcula la diferencia contra un objetivo (¿cuántos cupos faltaron?), y un <strong>actuador</strong> que ajusta (abrir más cupos el próximo semestre).</p>
+<p>Sin esas tres piezas no hay ajuste real — solo un dato guardado que nadie usa.</p>
+</div>
+
+<div class="flow-beat" data-step="6">
+<span class="flow-beat-eyebrow">Paso 07 · Caja negra</span>
+<h3>Visto solo desde afuera</h3>
+<p>Desde la ventanilla de trámites, un estudiante solo ve dos cosas: la solicitud que entrega y la matrícula que recibe. No necesita saber cómo se valida ni cómo se asignan los cupos — para él, el proceso es una <strong>caja negra</strong>: entradas y salidas conocidas, mecanismo interno invisible (o irrelevante).</p>
+</div>
+
+<div class="flow-beat" data-step="7">
+<span class="flow-beat-eyebrow">Paso 08 · Caja blanca</span>
+<h3>Abrimos el proceso</h3>
+<p>Para quien diseña el sistema, en cambio, el proceso tiene que ser una <strong>caja blanca</strong>: cada paso interno —verificar pago, verificar prerrequisitos, asignar cupo, generar la boleta— tiene que estar documentado y ser auditable.</p>
+<p>La misma caja puede ser negra o blanca según quién la mire y para qué.</p>
+</div>
+
+</div>
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="epsPanel">
+<div class="flow-panel-head"><span>Diagrama en vivo</span><span class="flow-panel-step" id="epsPanelStep">Paso 1 / 8</span></div>
+
+<div class="eps-diagram-wrap">
+<svg viewBox="0 0 340 230" aria-hidden="true">
+
+<g class="eps-box" id="epsBoxEntrada">
+<rect x="15" y="40" width="85" height="50" rx="6"/>
+<text x="57" y="60" text-anchor="middle" font-size="10" font-weight="700">ENTRADA</text>
+<text x="57" y="75" text-anchor="middle" font-size="8">solicitud</text>
+</g>
+
+<g class="eps-box" id="epsBoxProceso">
+<rect x="127" y="40" width="85" height="50" rx="6"/>
+<text x="170" y="60" text-anchor="middle" font-size="10" font-weight="700">PROCESO</text>
+<text x="170" y="75" text-anchor="middle" font-size="8">validar / asignar</text>
+</g>
+
+<g class="eps-box" id="epsBoxSalida">
+<rect x="240" y="40" width="85" height="50" rx="6"/>
+<text x="282" y="60" text-anchor="middle" font-size="10" font-weight="700">SALIDA</text>
+<text x="282" y="75" text-anchor="middle" font-size="8">matrícula</text>
+</g>
+
+<g class="eps-arrow" id="epsArrowEP">
+<line x1="100" y1="65" x2="127" y2="65"/>
+<polygon points="127,65 118,60 118,70"/>
+</g>
+<g class="eps-arrow" id="epsArrowPS">
+<line x1="212" y1="65" x2="240" y2="65"/>
+<polygon points="240,65 231,60 231,70"/>
+</g>
+
+<g class="eps-feedback" id="epsFeedback">
+<path d="M282,90 C282,182 57,182 57,90" fill="none"/>
+<polygon points="57,90 51,101 63,101"/>
+</g>
+
+<text class="eps-fb-label" id="epsLabelSensor" x="315" y="118" text-anchor="end" font-size="8" font-weight="700">SENSOR</text>
+<text class="eps-fb-label" id="epsLabelSensor2" x="315" y="129" text-anchor="end" font-size="7">mide rechazos</text>
+<text class="eps-fb-label" id="epsLabelComparador" x="170" y="200" text-anchor="middle" font-size="8" font-weight="700">COMPARADOR</text>
+<text class="eps-fb-label" id="epsLabelComparador2" x="170" y="211" text-anchor="middle" font-size="7">rechazos vs. cupos</text>
+<text class="eps-fb-label" id="epsLabelActuador" x="25" y="118" text-anchor="start" font-size="8" font-weight="700">ACTUADOR</text>
+<text class="eps-fb-label" id="epsLabelActuador2" x="25" y="129" text-anchor="start" font-size="7">ajusta cupos</text>
+
+<rect class="eps-caja" id="epsCaja" x="120" y="32" width="100" height="66" rx="8" fill="none"/>
+<text class="eps-caja-mark" id="epsCajaMark" x="228" y="40" font-size="12">?</text>
+
+</svg>
+</div>
+
+<div class="eps-caption" id="epsCaption">Sin diagrama todavía — el sistema de matrícula, paso a paso.</div>
+
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat">
+<h2>Practicá lo que viste</h2>
+<p class="lead">Ahora con un sistema distinto: la facturación de una tienda en línea. Clasifica cada elemento como Entrada, Proceso o Salida.</p>
+
+<div class="quiz quiz-classify" data-quiz-id="facturacion-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Sistema de facturación de una tienda en línea.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Carrito de compras confirmado por el cliente</span>
+<div class="quiz-classify-btns">
+<button>Proceso</button>
+<button>Salida</button>
+<button data-correct>Entrada</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Calcular el total aplicando impuestos y descuentos</span>
+<div class="quiz-classify-btns">
+<button data-correct>Proceso</button>
+<button>Entrada</button>
+<button>Salida</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Factura electrónica enviada al correo del cliente</span>
+<div class="quiz-classify-btns">
+<button>Entrada</button>
+<button data-correct>Salida</button>
+<button>Proceso</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Catálogo de precios vigente cargado por el administrador</span>
+<div class="quiz-classify-btns">
+<button data-correct>Entrada</button>
+<button>Proceso</button>
+<button>Salida</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Verificar el stock disponible antes de confirmar la compra</span>
+<div class="quiz-classify-btns">
+<button>Salida</button>
+<button>Entrada</button>
+<button data-correct>Proceso</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Reporte diario de ventas generado al cierre</span>
+<div class="quiz-classify-btns">
+<button>Proceso</button>
+<button data-correct>Salida</button>
+<button>Entrada</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="control-ajuste">
+<h2>Control y ajuste en acción</h2>
+<p class="lead">El ejemplo clásico de un ciclo de control es el termostato. Igual que en la matrícula, tiene sensor (mide), comparador (calcula la desviación) y actuador (corrige).</p>
+
+<div class="highlight reactivo">
+<strong>probalo vos mismo</strong>
+<p>Cambiá el objetivo y lo que mide el sensor. El comparador calcula la <strong>desviación</strong> (medido − objetivo) y decide qué hace el actuador:</p>
+<p class="reactivo-frase">Si el objetivo es <input type="number" class="reactivo-input" id="reactivoObjetivo" value="22" min="0" max="40" aria-label="Temperatura objetivo"> °C y el sensor mide <input type="number" class="reactivo-input" id="reactivoMedida" value="18" min="0" max="40" aria-label="Temperatura medida"> °C, el comparador calcula una desviación de <span class="reactivo-resultado" id="reactivoDesviacion">-4</span> °C, así que el actuador <span class="reactivo-resultado" id="reactivoAccion">enciende la calefacción</span>.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="control-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ciclo de control del termostato, ¿qué componente decide si corresponde encender la calefacción o el aire acondicionado, según la desviación ya calculada?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El sensor, porque mide la temperatura actual.</button>
+<button class="quiz-opt">El setpoint, que define cuál es la temperatura deseada.</button>
+<button class="quiz-opt" data-correct>El actuador, que aplica la corrección física decidida.</button>
+<button class="quiz-opt">El entorno, que representa todo lo externo al sistema.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: el sensor mide y el comparador calcula la desviación, pero quien ejecuta la corrección física (encender calefacción o aire acondicionado) es el actuador." data-ko="El sensor solo mide, y el setpoint solo define el objetivo — ninguno de los dos actúa. Quien aplica la corrección física decidida por el comparador es el actuador." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="control-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un servidor web activa una instancia adicional cuando el uso de CPU supera el 80%, y la desactiva cuando vuelve a bajar. ¿Qué tipo de retroalimentación es esta?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Retroalimentación negativa: corrige la desviación y busca estabilidad.</button>
+<button class="quiz-opt">Retroalimentación positiva, porque amplifica la carga del servidor.</button>
+<button class="quiz-opt">Homeostasis, no retroalimentación: no hay ningún ajuste real.</button>
+<button class="quiz-opt">Equifinalidad, porque el servidor llega siempre al mismo estado.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: el sistema detecta una desviación (CPU sobrecargada) y actúa para corregirla y volver a un estado estable — exactamente lo que define a la retroalimentación negativa." data-ko="No amplifica ninguna tendencia ni es un caso sin ajuste: el sistema mide una desviación (CPU sobrecargada) y actúa para corregirla, devolviéndolo a un estado estable. Eso es retroalimentación negativa." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="cajanegra">
+<h2>Caja negra y caja blanca</h2>
+<p class="lead">Toda parte de un sistema puede mirarse de dos formas, según si te importa (o podés ver) su mecanismo interno.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Vista</th><th scope="col">Qué se conoce</th></tr></thead>
+<tbody>
+<tr><td><strong>Caja negra</strong></td><td>Solo las entradas y las salidas. El mecanismo interno es desconocido, oculto o simplemente irrelevante para quien observa.</td></tr>
+<tr><td><strong>Caja blanca</strong></td><td>El mecanismo interno completo: cada paso, regla o componente puede revisarse y auditarse.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>No es una propiedad fija del sistema</strong>
+<p>La misma parte de un sistema puede ser caja negra para una persona y caja blanca para otra: depende de quién la mira y para qué la necesita mirar, no de cómo esté construida.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="cajanegra-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada situación como caja negra o caja blanca.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un estudiante usa una librería de terceros sin leer su código fuente</span>
+<div class="quiz-classify-btns">
+<button>Caja blanca</button>
+<button data-correct>Caja negra</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un desarrollador revisa línea por línea el código de su propia función para corregir un error</span>
+<div class="quiz-classify-btns">
+<button data-correct>Caja blanca</button>
+<button>Caja negra</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un analista predice el comportamiento de un cliente solo observando sus compras pasadas, sin saber por qué las hizo</span>
+<div class="quiz-classify-btns">
+<button data-correct>Caja negra</button>
+<button>Caja blanca</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un ingeniero documenta cada componente interno y su función dentro de un circuito electrónico</span>
+<div class="quiz-classify-btns">
+<button>Caja negra</button>
+<button data-correct>Caja blanca</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="ejercicios">
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En pruebas de software, un tester ingresa datos y observa los resultados sin mirar el código interno de la función. Esa técnica se llama:</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Prueba de caja blanca, porque revisa el código completo.</button>
+<button class="quiz-opt">Prueba de regresión, para confirmar que nada se rompió.</button>
+<button class="quiz-opt">Prueba de estrés, para medir el límite de carga del sistema.</button>
+<button class="quiz-opt" data-correct>Prueba de caja negra: solo importan entradas y salidas.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: evaluar una función solo por sus entradas y salidas, sin mirar su código interno, es exactamente la idea de una prueba de caja negra." data-ko="No se trata de regresión ni de carga, y tampoco revisa el código (eso sería caja blanca). Ingresar datos y observar resultados sin mirar el interior es una prueba de caja negra." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">El ciclo sensor-comparador-actuador es un ejemplo de retroalimentación negativa cuando su objetivo es corregir una desviación respecto a un valor deseado.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: medir, comparar contra un objetivo y corregir la desviación es justo la definición de un ciclo de control por retroalimentación negativa." data-ko="En realidad es verdadero: ese ciclo completo (sensor mide, comparador calcula la desviación, actuador corrige) es exactamente cómo funciona la retroalimentación negativa." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un sistema convierte entradas en salidas, pero nunca compara ese resultado contra ningún objetivo ni cambia su comportamiento después. ¿Qué le falta para tener control por retroalimentación?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Le falta tener un límite que lo separe de su entorno.</button>
+<button class="quiz-opt" data-correct>Le falta un comparador y un actuador que ajusten su comportamiento.</button>
+<button class="quiz-opt">Le falta ser declarado formalmente como sistema abierto.</button>
+<button class="quiz-opt">Le falta tener un propósito definido con claridad.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: transformar entradas en salidas ya es un E-P-S, pero sin un comparador que calcule una desviación y un actuador que ajuste el comportamiento, no hay control por retroalimentación." data-ko="El límite, ser abierto y tener un propósito son otras propiedades de un sistema, pero no son lo que falta acá. Sin un comparador (calcula la desviación) y un actuador (ajusta), no hay control por retroalimentación real." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un servicio de streaming reduce la calidad del video apenas detecta que la conexión del usuario se volvió más lenta. ¿Qué corrige exactamente este mecanismo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Corrige la desviación entre la calidad ideal y la conexión real.</button>
+<button class="quiz-opt">Amplifica la lentitud de la conexión del usuario.</button>
+<button class="quiz-opt">Aumenta la entropía general del sistema de streaming.</button>
+<button class="quiz-opt">No es un caso de retroalimentación, solo de configuración.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: el sistema mide la conexión disponible, la compara contra la calidad que querría entregar, y ajusta la salida (baja la calidad) para corregir esa desviación." data-ko="No amplifica nada ni es un caso sin retroalimentación: el sistema detecta una desviación entre la calidad ideal y la conexión real disponible, y ajusta la salida para corregirla." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas situaciones es un ejemplo de caja blanca?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Usar un buscador web sin saber cómo ordena los resultados.</button>
+<button class="quiz-opt">Predecir el clima solo con datos históricos de temperatura.</button>
+<button class="quiz-opt" data-correct>Auditar el código fuente completo para verificar cómo decide.</button>
+<button class="quiz-opt">Diagnosticar una falla de motor solo por el sonido que hace.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: revisar el código fuente completo para entender exactamente cómo decide es tener acceso total al mecanismo interno — la definición misma de caja blanca." data-ko="Las otras tres situaciones solo observan entradas y salidas (resultados del buscador, datos históricos, el sonido), sin ver el mecanismo interno. Auditar el código fuente completo es lo único que da acceso real al interior: caja blanca." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="repaso-6">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Repasemos el sistema de matrícula que armamos al principio de la guía.</p>
+<p>1. La solicitud de inscripción del estudiante es la
+<select class="quiz-blank" data-correct="entrada">
+<option value="">— elige —</option>
+<option value="entrada">entrada</option>
+<option value="proceso">proceso</option>
+<option value="salida">salida</option>
+<option value="comparador">comparador</option>
+</select>.</p>
+<p>2. Validar prerrequisitos y asignar cupos es el
+<select class="quiz-blank" data-correct="proceso">
+<option value="">— elige —</option>
+<option value="entrada">entrada</option>
+<option value="proceso">proceso</option>
+<option value="salida">salida</option>
+<option value="actuador">actuador</option>
+</select>.</p>
+<p>3. La matrícula confirmada o rechazada es la
+<select class="quiz-blank" data-correct="salida">
+<option value="">— elige —</option>
+<option value="proceso">proceso</option>
+<option value="salida">salida</option>
+<option value="entrada">entrada</option>
+<option value="sensor">sensor</option>
+</select>.</p>
+<p>4. Si la facultad usa la tasa de rechazo del semestre pasado para decidir cuántos cupos abrir este semestre, eso es un ejemplo de
+<select class="quiz-blank" data-correct="retroalimentacion">
+<option value="">— elige —</option>
+<option value="entropia">entropía</option>
+<option value="retroalimentacion">retroalimentación</option>
+<option value="sinergia">sinergia</option>
+<option value="jerarquia">jerarquía</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="evidencia">
+<h2>📤 Evidencia de la sesión: diagrama E-P-S con feedback</h2>
+<p class="lead">Con tu equipo, modela un sistema de información que conozcan bien —puede ser el mismo de matrícula que usamos en esta guía, u otro: un ERP, una tienda en línea, un sistema de citas médicas— mostrando su ciclo completo de entrada, proceso, salida y retroalimentación.</p>
+<div class="highlight">
+<strong>Herramienta: Draw.io</strong>
+<p>Arma el diagrama en <a href="https://app.diagrams.net" target="_blank" rel="noopener">Draw.io</a> (gratuito, funciona desde el navegador, no necesita instalación).</p>
+</div>
+<p>Como mínimo, tu diagrama debe incluir:</p>
+<ul style="margin:0 0 20px 22px;line-height:1.9;">
+<li>Los tres bloques del modelo (<strong>Entrada</strong>, <strong>Proceso</strong>, <strong>Salida</strong>) conectados en orden.</li>
+<li>El <strong>bucle de retroalimentación</strong>, señalando qué parte de la salida vuelve a convertirse en entrada.</li>
+<li>Una anotación de qué sería el <strong>sensor</strong>, el <strong>comparador</strong> y el <strong>actuador</strong> en ese ciclo.</li>
+</ul>
+<div class="highlight">
+<strong>Entrega</strong>
+<p>Exporta el diagrama como imagen (PNG o JPG) desde Draw.io y súbelo a la tarea correspondiente en <strong>Classroom</strong> antes del inicio de la próxima sesión. No se acepta el link editable de Draw.io en lugar de la imagen: sube el archivo directamente.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet">
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Entrada</td><td>Lo que el sistema recibe del entorno.</td></tr>
+<tr><td>Proceso</td><td>Cómo el sistema transforma la entrada.</td></tr>
+<tr><td>Salida</td><td>El resultado que el sistema entrega al entorno.</td></tr>
+<tr><td>Retroalimentación</td><td>Parte de la salida vuelve a ser entrada.</td></tr>
+<tr><td>Retroalimentación negativa</td><td>Corrige una desviación, busca equilibrio.</td></tr>
+<tr><td>Retroalimentación positiva</td><td>Amplifica una tendencia.</td></tr>
+<tr><td>Sensor</td><td>Mide el valor real de la salida.</td></tr>
+<tr><td>Comparador</td><td>Calcula la desviación (medido − deseado).</td></tr>
+<tr><td>Actuador</td><td>Aplica el ajuste o corrección.</td></tr>
+<tr><td>Setpoint</td><td>El valor deseado u objetivo del sistema.</td></tr>
+<tr><td>Caja negra</td><td>Se conocen entradas/salidas, no el mecanismo interno.</td></tr>
+<tr><td>Caja blanca</td><td>El mecanismo interno es visible y auditable.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat">
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>⚓ Cibernética viene de "timonel"</h3><p>Norbert Wiener eligió la palabra griega <em>kybernetes</em> (timonel) pensando exactamente en el acto de comparar el rumbo real de un barco contra el deseado y corregirlo — el mismo comparador-actuador de cualquier termostato.</p></div>
+<div class="info"><h3>📦 "Caja negra" nació en la guerra</h3><p>El término se usó primero en la ingeniería eléctrica de la Segunda Guerra Mundial, para describir equipos cuyo interior era secreto o simplemente irrelevante para quien los operaba — mucho antes de que la aviación lo adoptara para sus grabadoras de vuelo.</p></div>
+<div class="info"><h3>🥚 El primer termostato incubaba huevos</h3><p>Cornelis Drebbel construyó en el siglo XVII un horno con retroalimentación negativa real para mantener constante la temperatura de incubación de huevos — siglos antes de que existiera el nombre "retroalimentación".</p></div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Modelo E-P-S y Retroalimentación</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Reactivo: termostato como sistema de control (exploratorio,
+   sin calificar). Recalcula la desviación y la acción del actuador en
+   la misma oración al tipear, mismo patrón que clases-objetos.html. ===== */
+(function(){
+  const inputObjetivo = document.getElementById("reactivoObjetivo");
+  const inputMedida = document.getElementById("reactivoMedida");
+  const salidaDesv = document.getElementById("reactivoDesviacion");
+  const salidaAccion = document.getElementById("reactivoAccion");
+  if (!inputObjetivo || !inputMedida) return;
+  function recalcular(){
+    const objetivo = Number(inputObjetivo.value) || 0;
+    const medida = Number(inputMedida.value) || 0;
+    const desviacion = medida - objetivo;
+    salidaDesv.textContent = (desviacion > 0 ? "+" : "") + desviacion;
+    if (desviacion < 0) salidaAccion.textContent = "enciende la calefacción";
+    else if (desviacion > 0) salidaAccion.textContent = "enciende el aire acondicionado";
+    else salidaAccion.textContent = "no hace nada: ya está en equilibrio";
+  }
+  inputObjetivo.addEventListener("input", recalcular);
+  inputMedida.addEventListener("input", recalcular);
+  recalcular();
+})();
+
+/* ===== Nivel 1: flujo con panel fijo — diagrama E-P-S del sistema de
+   matrícula, construido en capas. Prosa a la izquierda (.flow-beat) +
+   panel fijo a la derecha (#epsPanel) que revela cajas, flechas, el
+   bucle de retroalimentación, las etiquetas de control y la caja
+   negra/blanca según qué paso cruza el centro del viewport. No es una
+   actividad calificada: no llama a marcarResuelto. ===== */
+(function(){
+  var epsSteps = document.querySelectorAll('#eps-control .flow-beat');
+  if (!epsSteps.length) return;
+
+  var CAPTIONS = [
+    'Sin diagrama todavía — el sistema de matrícula, paso a paso.',
+    'ENTRADA: la solicitud de inscripción del estudiante.',
+    'PROCESO: validar requisitos y asignar cupos.',
+    'SALIDA: matrícula confirmada o rechazada.',
+    'RETROALIMENTACIÓN: la tasa de rechazo vuelve a influir en la próxima entrada.',
+    'CONTROL: el sensor mide, el comparador calcula la desviación, el actuador ajusta los cupos.',
+    'CAJA NEGRA: desde afuera solo se ven la entrada y la salida.',
+    'CAJA BLANCA: el mecanismo interno queda documentado y auditable.'
+  ];
+
+  var epsCurrentStep = -1;
+
+  function epsRender(step){
+    if (step === epsCurrentStep) return;
+    epsCurrentStep = step;
+
+    document.getElementById('epsBoxEntrada').classList.toggle('show', step >= 1);
+    document.getElementById('epsBoxProceso').classList.toggle('show', step >= 2);
+    document.getElementById('epsBoxSalida').classList.toggle('show', step >= 3);
+    document.getElementById('epsArrowEP').classList.toggle('show', step >= 2);
+    document.getElementById('epsArrowPS').classList.toggle('show', step >= 3);
+    document.getElementById('epsFeedback').classList.toggle('show', step >= 4);
+    ['epsLabelSensor','epsLabelSensor2','epsLabelComparador','epsLabelComparador2','epsLabelActuador','epsLabelActuador2'].forEach(function(id){
+      document.getElementById(id).classList.toggle('show', step >= 5);
+    });
+
+    var caja = document.getElementById('epsCaja');
+    var cajaMark = document.getElementById('epsCajaMark');
+    caja.classList.toggle('show', step >= 6);
+    caja.classList.toggle('open', step >= 7);
+    cajaMark.classList.toggle('show', step >= 6);
+    cajaMark.textContent = step >= 7 ? '👁' : '?';
+
+    document.getElementById('epsCaption').textContent = CAPTIONS[step] || '';
+    document.getElementById('epsPanelStep').textContent = 'Paso ' + (step + 1) + ' / 8';
+    epsSteps.forEach(function(el){
+      el.classList.toggle('is-active', Number(el.dataset.step) === step);
+    });
+  }
+
+  var epsObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) epsRender(Number(e.target.dataset.step));
+    });
+  }, { rootMargin: '-35% 0px -55% 0px', threshold: 0 });
+  epsSteps.forEach(function(s){ epsObserver.observe(s); });
+  epsRender(0);
+})();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

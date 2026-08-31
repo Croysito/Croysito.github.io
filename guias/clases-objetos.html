@@ -15,101 +15,80 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/guia.css">
 </head>
 
 <body class="mapa-mode">
 
 <div class="mapa-topbar">
-<button class="mapa-icon-btn" id="mapaMenuBtn" aria-label="Abrir índice de la guía" aria-expanded="false">☰</button>
-<div class="mapa-brand">Clases y <span>Objetos</span></div>
-<div class="mapa-progress-track"><div class="mapa-progress-fill" id="mapaFill"></div></div>
+<span class="mapa-brand-ns">poo/</span><span class="mapa-brand-slug">clases-y-objetos</span>
+<div class="mapa-topbar-spacer"></div>
 <span class="mapa-counter" id="mapaCounter">0 / 7 nodos</span>
-<button class="mapa-icon-btn" id="mapaThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+<div class="mapa-progress-track"><div class="mapa-progress-fill" id="mapaFill"></div></div>
+<button class="mapa-theme-btn" id="mapaThemeBtn" aria-label="Cambiar entre tema claro y oscuro">tema</button>
 </div>
-
-<div class="mapa-menu-overlay" id="mapaMenuOverlay"></div>
-<nav class="mapa-menu-panel" id="mapaMenuPanel" aria-label="Índice de la guía">
-<h3>Índice</h3>
-<div class="mapa-menu-list">
-<button data-nodo="clase">1 · Clase</button>
-<button data-nodo="objeto">2 · Objeto</button>
-<button data-nodo="atributos">3 · Atributos</button>
-<button data-nodo="constructor">4 · __init__ y self</button>
-<button data-nodo="metodos">5 · Métodos</button>
-<button data-nodo="instancias">6 · Instancias múltiples</button>
-<button data-nodo="repaso">7 · Repaso rápido</button>
-<button data-scroll="reto">🏆 Reto Final</button>
-<button data-scroll="cheatsheet">📋 Cheat Sheet</button>
-</div>
-</nav>
 
 <main class="mapa-body">
 
-<section class="flow-intro">
-<div class="flow-badge">🐍 Guía de Aula Invertida · Mapa conceptual</div>
-<h1 class="flow-h1">Clases y <span>Objetos</span> desde cero</h1>
-<p class="flow-lead">Hasta ahora organizaste tu código en funciones. El siguiente paso es organizar datos y comportamiento <strong>juntos</strong>, dentro de una misma unidad: eso es una clase. Esta guía es un <strong>mapa</strong>, no una lista de secciones: hacé clic en cualquier nodo, en el orden que prefieras. El recomendado es 1→7, pero no está bloqueado.</p>
-<div class="flow-sub">💻 Los nodos con ✍️ tienen un editor real (Pyodide, Python de verdad en tu navegador). Un nodo se pinta de verde en el mapa cuando ya lo practicaste.</div>
-<div class="quiz-tracker" style="margin-top:22px;">
+<section class="mapa-hero">
 <div>
-<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
-<div class="quiz-tracker-label">preguntas y ejercicios enviados</div>
+<div class="mapa-eyebrow">Aula invertida · mapa conceptual</div>
+<h1 class="mapa-h1">Clases y objetos desde cero</h1>
+<p class="mapa-lead">Hasta ahora organizaste tu código en funciones. El siguiente paso es organizar datos y comportamiento <strong>juntos</strong>, dentro de una misma unidad: eso es una clase. Esta guía es un <strong>mapa</strong>, no una lista de secciones: hacé clic en cualquier nodo, en el orden que prefieras. El recomendado es 1→7, pero no está bloqueado.</p>
+<p class="mapa-subtext">Los nodos marcados <span class="mapa-tag">editor</span> tienen Python real corriendo en tu navegador (Pyodide). Un nodo queda marcado en la ruta cuando ya lo practicaste.</p>
 </div>
-<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+<div class="mapa-avance-card">
+<div class="mapa-avance-head">Tu avance</div>
+<div class="mapa-avance-body">
+<div class="mapa-avance-count" id="quizBarLabel">0 / 0</div>
+<div class="mapa-avance-sub">preguntas y ejercicios enviados</div>
+<div class="mapa-avance-track"><div class="mapa-avance-fill" id="quizBarFill"></div></div>
+<div class="mapa-avance-foot"><strong>Ing. Roy Carrasco</strong><br>Fac. de Ingeniería de Sistemas · UAB<br><span class="mapa-avance-vistas"><span id="viewCount">—</span> vistas</span></div>
 </div>
-<div class="flow-author">
-<div class="avatar">RC</div>
-<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB · 👁 <span id="viewCount">—</span> vistas</div>
 </div>
 </section>
 
-<section class="mapa-section">
-<p class="mapa-section-hint">🗺️ Tocá un nodo para abrirlo. Las líneas punteadas muestran el orden sugerido, pero podés saltar a cualquiera.</p>
-<div class="mapa-canvas">
-<svg class="mapa-edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-<line class="mapa-edge" x1="12" y1="18" x2="37" y2="18"/>
-<line class="mapa-edge" x1="37" y1="18" x2="62" y2="18"/>
-<line class="mapa-edge" x1="62" y1="18" x2="87" y2="18"/>
-<line class="mapa-edge" x1="87" y1="18" x2="87" y2="68"/>
-<line class="mapa-edge" x1="87" y1="68" x2="62" y2="68"/>
-<line class="mapa-edge" x1="62" y1="68" x2="37" y2="68"/>
-</svg>
-<button class="mapa-node" data-nodo="clase" style="left:12%;top:18%;">
-<span class="mapa-node-icon">🏗️</span>
-<span class="mapa-node-num">1</span>
+<section class="mapa-ruta-section">
+<div class="mapa-ruta-headrow">
+<h2 class="mapa-ruta-title">La ruta</h2>
+<span class="mapa-ruta-note">siete nodos en orden sugerido · tocá cualquiera para abrirlo</span>
+</div>
+<div class="mapa-ruta-grid">
+<button class="mapa-node" data-nodo="clase">
+<span class="mapa-node-num" data-num>01</span>
 <span class="mapa-node-titulo">Clase</span>
+<span class="mapa-node-estado" data-state>editor</span>
 </button>
-<button class="mapa-node" data-nodo="objeto" style="left:37%;top:18%;">
-<span class="mapa-node-icon">🐾</span>
-<span class="mapa-node-num">2</span>
+<button class="mapa-node" data-nodo="objeto">
+<span class="mapa-node-num" data-num>02</span>
 <span class="mapa-node-titulo">Objeto</span>
+<span class="mapa-node-estado" data-state>editor</span>
 </button>
-<button class="mapa-node" data-nodo="atributos" style="left:62%;top:18%;">
-<span class="mapa-node-icon">🏷️</span>
-<span class="mapa-node-num">3</span>
+<button class="mapa-node" data-nodo="atributos">
+<span class="mapa-node-num" data-num>03</span>
 <span class="mapa-node-titulo">Atributos</span>
+<span class="mapa-node-estado" data-state>editor</span>
 </button>
-<button class="mapa-node" data-nodo="constructor" style="left:87%;top:18%;">
-<span class="mapa-node-icon">🔧</span>
-<span class="mapa-node-num">4</span>
+<button class="mapa-node" data-nodo="constructor">
+<span class="mapa-node-num" data-num>04</span>
 <span class="mapa-node-titulo">__init__ y self</span>
+<span class="mapa-node-estado" data-state>editor</span>
 </button>
-<button class="mapa-node" data-nodo="metodos" style="left:87%;top:68%;">
-<span class="mapa-node-icon">⚙️</span>
-<span class="mapa-node-num">5</span>
+<button class="mapa-node" data-nodo="metodos">
+<span class="mapa-node-num" data-num>05</span>
 <span class="mapa-node-titulo">Métodos</span>
+<span class="mapa-node-estado" data-state>editor</span>
 </button>
-<button class="mapa-node" data-nodo="instancias" style="left:62%;top:68%;">
-<span class="mapa-node-icon">🐕</span>
-<span class="mapa-node-num">6</span>
+<button class="mapa-node" data-nodo="instancias">
+<span class="mapa-node-num" data-num>06</span>
 <span class="mapa-node-titulo">Instancias múltiples</span>
+<span class="mapa-node-estado" data-state>editor + quiz</span>
 </button>
-<button class="mapa-node" data-nodo="repaso" style="left:37%;top:68%;">
-<span class="mapa-node-icon">📋</span>
-<span class="mapa-node-num">7</span>
+<button class="mapa-node" data-nodo="repaso">
+<span class="mapa-node-num" data-num>07</span>
 <span class="mapa-node-titulo">Repaso rápido</span>
+<span class="mapa-node-estado" data-state>lectura</span>
 </button>
 </div>
 </section>
@@ -118,16 +97,17 @@
 <div class="mapa-overlay" id="mapaOverlay">
 
 <div class="mapa-panel" id="panel-clase">
-<div class="card">
+<div class="mapa-panel-inner">
 <div class="mapa-panel-head">
-<h2 class="section-title" style="margin-bottom:0;">1 · Clase</h2>
-<div class="mapa-panel-nav">
-<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
-<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
-<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+<span class="mapa-panel-num">01</span>
+<span class="mapa-panel-title">Clase</span>
+<div class="mapa-panel-spacer"></div>
+<button class="mapa-nav-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-nav-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-nav-btn mapa-panel-close" aria-label="Cerrar">✕</button>
 </div>
-</div>
-<p class="lead">Hasta ahora, cada dato de tu programa vivía en una variable suelta y cada acción en una función suelta. Una <strong>clase</strong> es un molde que agrupa datos y comportamiento relacionados bajo un mismo nombre: define, de una vez, cómo va a ser <em>cualquier</em> cosa de ese tipo que crees más adelante.</p>
+<div class="mapa-panel-body">
+<p>Hasta ahora, cada dato de tu programa vivía en una variable suelta y cada acción en una función suelta. Una <strong>clase</strong> es un molde que agrupa datos y comportamiento relacionados bajo un mismo nombre: define, de una vez, cómo va a ser <em>cualquier</em> cosa de ese tipo que crees más adelante.</p>
 <div class="code">
 <div class="code-header"><span>Python</span></div>
 <pre><code class="src">class Perro:
@@ -138,13 +118,13 @@ print(Perro.especie)</code></pre>
 </div>
 <div class="editor-panel" data-quiz-id="codigo-1">
 <div class="editor-header">
-<span>✍️ Tu turno: escribe el código y ejecútalo</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+<span>tu turno · escribilo y ejecutalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Define una clase Gato con un atributo especie = &quot;Felino&quot;, e imprime la clase y el atributo."></textarea>
 <div class="output" hidden>
-<div class="output-head">Salida</div>
+<div class="output-head">salida</div>
 <pre class="output-body"></pre>
 </div>
 </div>
@@ -155,18 +135,20 @@ print(Perro.especie)</code></pre>
 <p>Por ahora <code>Perro</code> es solo el molde: todavía no creaste ningún perro concreto. Eso es lo que viene en el siguiente nodo.</p>
 </div>
 </div>
+</div>
 
 <div class="mapa-panel" id="panel-objeto">
-<div class="card">
+<div class="mapa-panel-inner">
 <div class="mapa-panel-head">
-<h2 class="section-title" style="margin-bottom:0;">2 · Objeto</h2>
-<div class="mapa-panel-nav">
-<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
-<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
-<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+<span class="mapa-panel-num">02</span>
+<span class="mapa-panel-title">Objeto</span>
+<div class="mapa-panel-spacer"></div>
+<button class="mapa-nav-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-nav-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-nav-btn mapa-panel-close" aria-label="Cerrar">✕</button>
 </div>
-</div>
-<p class="lead">Un <strong>objeto</strong> es una instancia concreta de una clase: se crea escribiendo el nombre de la clase seguido de paréntesis, como si la clase fuera una función que "fabrica" objetos. Podés crear tantos objetos como quieras a partir de la misma clase.</p>
+<div class="mapa-panel-body">
+<p>Un <strong>objeto</strong> es una instancia concreta de una clase: se crea escribiendo el nombre de la clase seguido de paréntesis, como si la clase fuera una función que "fabrica" objetos. Podés crear tantos objetos como quieras a partir de la misma clase.</p>
 <div class="code">
 <div class="code-header"><span>Python</span></div>
 <pre><code class="src">class Perro:
@@ -181,13 +163,13 @@ print(type(rex))</code></pre>
 </div>
 <div class="editor-panel" data-quiz-id="codigo-2">
 <div class="editor-header">
-<span>✍️ Tu turno: escribe el código y ejecútalo</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+<span>tu turno · escribilo y ejecutalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Define la clase Gato del nodo anterior, crea dos objetos (michi y tom) e imprime especie y type() de cada uno."></textarea>
 <div class="output" hidden>
-<div class="output-head">Salida</div>
+<div class="output-head">salida</div>
 <pre class="output-body"></pre>
 </div>
 </div>
@@ -197,18 +179,20 @@ print(type(rex))</code></pre>
 </div>
 </div>
 </div>
+</div>
 
 <div class="mapa-panel" id="panel-atributos">
-<div class="card">
+<div class="mapa-panel-inner">
 <div class="mapa-panel-head">
-<h2 class="section-title" style="margin-bottom:0;">3 · Atributos</h2>
-<div class="mapa-panel-nav">
-<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
-<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
-<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+<span class="mapa-panel-num">03</span>
+<span class="mapa-panel-title">Atributos</span>
+<div class="mapa-panel-spacer"></div>
+<button class="mapa-nav-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-nav-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-nav-btn mapa-panel-close" aria-label="Cerrar">✕</button>
 </div>
-</div>
-<p class="lead">Un <strong>atributo</strong> es un dato que pertenece a un objeto en particular, no a la clase entera. Se asigna con <code>objeto.atributo = valor</code>, y cada objeto guarda el suyo por separado.</p>
+<div class="mapa-panel-body">
+<p>Un <strong>atributo</strong> es un dato que pertenece a un objeto en particular, no a la clase entera. Se asigna con <code>objeto.atributo = valor</code>, y cada objeto guarda el suyo por separado.</p>
 <div class="code">
 <div class="code-header"><span>Python</span></div>
 <pre><code class="src">class Perro:
@@ -225,36 +209,38 @@ print(firulais.edad)</code></pre>
 </div>
 <div class="editor-panel" data-quiz-id="codigo-3">
 <div class="editor-header">
-<span>✍️ Tu turno: escribe el código y ejecútalo</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+<span>tu turno · escribilo y ejecutalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Crea una clase Gato vacía (con pass), crea dos objetos y asígnale a cada uno un atributo .nombre distinto. Imprime ambos."></textarea>
 <div class="output" hidden>
-<div class="output-head">Salida</div>
+<div class="output-head">salida</div>
 <pre class="output-body"></pre>
 </div>
 </div>
-<div class="highlight">
-<strong>🔬 Probalo vos mismo: cada objeto guarda su propio estado</strong>
+<div class="highlight reactivo">
+<strong>probalo vos mismo</strong>
 <p>Cambiá los números de abajo. Son dos objetos <code>Perro</code> distintos, cada uno con su propio <code>edad</code> —modificar uno nunca toca al otro:</p>
-<p style="margin-top:10px;">Si <code>rex.edad</code> vale <input type="number" class="reactivo-input" id="reactivoEdadRex" value="3" min="0" max="20" aria-label="Edad de rex"> años y <code>firulais.edad</code> vale <input type="number" class="reactivo-input" id="reactivoEdadFirulais" value="7" min="0" max="20" aria-label="Edad de firulais"> años, entonces <code>firulais</code> le lleva <span class="reactivo-resultado" id="reactivoDiferencia">4</span> años a <code>rex</code>, y en total entre los dos suman <span class="reactivo-resultado" id="reactivoSuma">10</span> años de perro.</p>
+<p class="reactivo-frase">Si <code>rex.edad</code> vale <input type="number" class="reactivo-input" id="reactivoEdadRex" value="3" min="0" max="20" aria-label="Edad de rex"> años y <code>firulais.edad</code> vale <input type="number" class="reactivo-input" id="reactivoEdadFirulais" value="7" min="0" max="20" aria-label="Edad de firulais"> años, entonces <code>firulais</code> le lleva <span class="reactivo-resultado" id="reactivoDiferencia">4</span> años a <code>rex</code>, y en total entre los dos suman <span class="reactivo-resultado" id="reactivoSuma">10</span> años de perro.</p>
 </div>
 <p>Esto ya funciona, pero escribir <code>rex.edad = 3</code> a mano después de crear cada objeto es repetitivo y fácil de olvidar. El próximo nodo resuelve exactamente ese problema.</p>
 </div>
 </div>
+</div>
 
 <div class="mapa-panel" id="panel-constructor">
-<div class="card">
+<div class="mapa-panel-inner">
 <div class="mapa-panel-head">
-<h2 class="section-title" style="margin-bottom:0;">4 · __init__ y self</h2>
-<div class="mapa-panel-nav">
-<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
-<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
-<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+<span class="mapa-panel-num">04</span>
+<span class="mapa-panel-title">__init__ y self</span>
+<div class="mapa-panel-spacer"></div>
+<button class="mapa-nav-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-nav-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-nav-btn mapa-panel-close" aria-label="Cerrar">✕</button>
 </div>
-</div>
-<p class="lead">El método <code>__init__</code> (dos guiones bajos a cada lado) se ejecuta automáticamente apenas creás un objeto, y sirve para inicializar sus atributos de una sola vez. Su primer parámetro siempre es <code>self</code>: una referencia a "este objeto en particular" que Python pasa solo, sin que vos lo escribas al llamar.</p>
+<div class="mapa-panel-body">
+<p>El método <code>__init__</code> (dos guiones bajos a cada lado) se ejecuta automáticamente apenas creás un objeto, y sirve para inicializar sus atributos de una sola vez. Su primer parámetro siempre es <code>self</code>: una referencia a "este objeto en particular" que Python pasa solo, sin que vos lo escribas al llamar.</p>
 <div class="code">
 <div class="code-header"><span>Python</span></div>
 <pre><code class="src">class Perro:
@@ -270,13 +256,13 @@ print(firulais.nombre, firulais.edad)</code></pre>
 </div>
 <div class="editor-panel" data-quiz-id="codigo-4">
 <div class="editor-header">
-<span>✍️ Tu turno: escribe el código y ejecútalo</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+<span>tu turno · escribilo y ejecutalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe una clase Gato con __init__(self, nombre, color) que guarde ambos atributos, y crea dos gatos distintos."></textarea>
 <div class="output" hidden>
-<div class="output-head">Salida</div>
+<div class="output-head">salida</div>
 <pre class="output-body"></pre>
 </div>
 </div>
@@ -286,18 +272,20 @@ print(firulais.nombre, firulais.edad)</code></pre>
 </div>
 </div>
 </div>
+</div>
 
 <div class="mapa-panel" id="panel-metodos">
-<div class="card">
+<div class="mapa-panel-inner">
 <div class="mapa-panel-head">
-<h2 class="section-title" style="margin-bottom:0;">5 · Métodos</h2>
-<div class="mapa-panel-nav">
-<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
-<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
-<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+<span class="mapa-panel-num">05</span>
+<span class="mapa-panel-title">Métodos</span>
+<div class="mapa-panel-spacer"></div>
+<button class="mapa-nav-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-nav-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-nav-btn mapa-panel-close" aria-label="Cerrar">✕</button>
 </div>
-</div>
-<p class="lead">Un <strong>método</strong> es una función definida dentro de una clase, que usa <code>self</code> para leer o modificar los atributos de ese objeto en particular. Se define igual que una función (<code>def</code>), y se llama con <code>objeto.metodo(...)</code> en vez de <code>nombre_funcion(...)</code>.</p>
+<div class="mapa-panel-body">
+<p>Un <strong>método</strong> es una función definida dentro de una clase, que usa <code>self</code> para leer o modificar los atributos de ese objeto en particular. Se define igual que una función (<code>def</code>), y se llama con <code>objeto.metodo(...)</code> en vez de <code>nombre_funcion(...)</code>.</p>
 <div class="code">
 <div class="code-header"><span>Python</span></div>
 <pre><code class="src">class Perro:
@@ -318,34 +306,36 @@ print(rex.edad)</code></pre>
 </div>
 <div class="editor-panel" data-quiz-id="codigo-5">
 <div class="editor-header">
-<span>✍️ Tu turno: escribe el código y ejecútalo</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+<span>tu turno · escribilo y ejecutalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="A tu clase Gato, agrégale un método maullar(self) que imprima el nombre del gato, y otro método que modifique algún atributo suyo. Probalos."></textarea>
 <div class="output" hidden>
-<div class="output-head">Salida</div>
+<div class="output-head">salida</div>
 <pre class="output-body"></pre>
 </div>
 </div>
 <div class="highlight">
-<strong>Atributo vs. método</strong>
+<strong>atributo vs. método</strong>
 <p>Un atributo es un <strong>dato</strong> (<code>self.nombre</code>, un texto); un método es una <strong>acción</strong> (<code>ladrar()</code>, algo que el objeto hace, definido con <code>def</code> dentro de la clase). <code>cumplir_anios</code> muestra que un método puede leer <em>y</em> modificar un atributo del mismo objeto usando <code>self</code>.</p>
+</div>
 </div>
 </div>
 </div>
 
 <div class="mapa-panel" id="panel-instancias">
-<div class="card">
+<div class="mapa-panel-inner">
 <div class="mapa-panel-head">
-<h2 class="section-title" style="margin-bottom:0;">6 · Instancias múltiples</h2>
-<div class="mapa-panel-nav">
-<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
-<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
-<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+<span class="mapa-panel-num">06</span>
+<span class="mapa-panel-title">Instancias múltiples</span>
+<div class="mapa-panel-spacer"></div>
+<button class="mapa-nav-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-nav-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-nav-btn mapa-panel-close" aria-label="Cerrar">✕</button>
 </div>
-</div>
-<p class="lead">Cerremos el círculo con varios objetos a la vez: cada uno guarda su propio estado (atributos) y responde a los mismos métodos, sin pisarse entre sí.</p>
+<div class="mapa-panel-body">
+<p>Cerremos el círculo con varios objetos a la vez: cada uno guarda su propio estado (atributos) y responde a los mismos métodos, sin pisarse entre sí.</p>
 <div class="code">
 <div class="code-header"><span>Python</span></div>
 <pre><code class="src">class Perro:
@@ -368,19 +358,19 @@ for perro in perros:
 </div>
 <div class="editor-panel" data-quiz-id="codigo-6">
 <div class="editor-header">
-<span>✍️ Tu turno: escribe el código y ejecútalo</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+<span>tu turno · escribilo y ejecutalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Crea 3 objetos de tu clase Gato con datos distintos y, con un for elemento in lista, llamá a un método de cada uno."></textarea>
 <div class="output" hidden>
-<div class="output-head">Salida</div>
+<div class="output-head">salida</div>
 <pre class="output-body"></pre>
 </div>
 </div>
 
-<div class="quiz quiz-mc" data-quiz-id="concepto-1" style="margin-top:24px;">
-<span class="quiz-badge">Selección múltiple</span>
+<div class="quiz quiz-mc" data-quiz-id="concepto-1">
+<span class="quiz-badge">selección múltiple</span>
 <p class="quiz-q">¿Cuál de estas frases describe mejor la relación entre <code>Perro</code> (la clase) y <code>rex</code> (creado con <code>Perro()</code>)?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Perro es un objeto, y rex es la clase que lo define.</button>
@@ -392,7 +382,7 @@ for perro in perros:
 </div>
 
 <div class="quiz quiz-mc" data-quiz-id="concepto-2">
-<span class="quiz-badge">Selección múltiple</span>
+<span class="quiz-badge">selección múltiple</span>
 <p class="quiz-q">En la clase Perro, <code>self.nombre</code> es un atributo y <code>ladrar(self)</code> es un método. ¿Qué distingue a ambos?</p>
 <div class="quiz-opts">
 <button class="quiz-opt" data-correct>Un atributo es un dato del objeto; un método es una acción que puede hacer.</button>
@@ -404,18 +394,20 @@ for perro in perros:
 </div>
 </div>
 </div>
+</div>
 
 <div class="mapa-panel" id="panel-repaso">
-<div class="card">
+<div class="mapa-panel-inner">
 <div class="mapa-panel-head">
-<h2 class="section-title" style="margin-bottom:0;">7 · Repaso rápido</h2>
-<div class="mapa-panel-nav">
-<button class="mapa-icon-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
-<button class="mapa-icon-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
-<button class="mapa-icon-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+<span class="mapa-panel-num">07</span>
+<span class="mapa-panel-title">Repaso rápido</span>
+<div class="mapa-panel-spacer"></div>
+<button class="mapa-nav-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-nav-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-nav-btn mapa-panel-close" aria-label="Cerrar">✕</button>
 </div>
-</div>
-<p class="lead">Repasemos los seis conceptos del mapa, todos en un mismo ejemplo:</p>
+<div class="mapa-panel-body">
+<p>Repasemos los seis conceptos del mapa, todos en un mismo ejemplo:</p>
 <table class="tabla">
 <thead><tr><th scope="col">Concepto</th><th scope="col">En este ejemplo</th></tr></thead>
 <tbody>
@@ -428,22 +420,28 @@ for perro in perros:
 </tbody>
 </table>
 <div class="highlight">
-<strong>La idea central</strong>
+<strong>la idea central</strong>
 <p>Antes tenías datos (variables) y comportamiento (funciones) por separado. Una clase los junta: cada objeto que crees lleva consigo <em>sus propios</em> datos, y sabe qué hacer con ellos. Esa combinación —estado propio + comportamiento propio— es la base de todo lo que viene después en Programación Orientada a Objetos.</p>
 </div>
 <p>Cuando te sientas listo, cerrá este mapa y bajá al <strong>Reto Final</strong> para poner todo junto.</p>
+</div>
 </div>
 </div>
 
 </div>
 <!-- ===================== FIN OVERLAY DE NODOS ===================== -->
 
-<section class="flow-flat" id="reto">
-<h2>Reto Final</h2>
-<p class="lead">Antes de escribir una clase de cero, ordená esta: alguien mezcló las líneas de una clase <code>Auto</code>.</p>
+<section class="mapa-reto" id="reto">
+<div class="mapa-reto-inner">
+<div class="mapa-reto-head">
+<span class="mapa-reto-eyebrow">cierre</span>
+<span class="mapa-reto-title">Reto final</span>
+</div>
+<div class="mapa-reto-body">
+<p>Antes de escribir una clase de cero, ordená esta: alguien mezcló las líneas de una clase <code>Auto</code>.</p>
 
 <div class="quiz quiz-parsons" data-quiz-id="parsons-auto">
-<span class="quiz-badge">Ordená el código</span>
+<span class="quiz-badge">ordená el código</span>
 <p class="quiz-q">Usá las flechas ↑ ↓ de cada bloque hasta dejar la clase en el orden correcto, y después presioná "Verificar orden".</p>
 <ol class="parsons-list">
 <li class="parsons-block" data-order="3"><span class="parsons-code">        self.marca = marca</span><span class="parsons-controls"><button type="button" class="parsons-btn up" aria-label="Mover arriba">↑</button><button type="button" class="parsons-btn down" aria-label="Mover abajo">↓</button></span></li>
@@ -454,15 +452,16 @@ for perro in perros:
 <li class="parsons-block" data-order="6"><span class="parsons-code">        print(self.marca, "está arrancando")</span><span class="parsons-controls"><button type="button" class="parsons-btn up" aria-label="Mover arriba">↑</button><button type="button" class="parsons-btn down" aria-label="Mover abajo">↓</button></span></li>
 </ol>
 <div class="parsons-actions">
-<button type="button" class="code-btn run parsons-check">✅ Verificar orden</button>
+<button type="button" class="code-btn run parsons-check">verificar orden</button>
 </div>
-<p class="quiz-fb" data-ok="¡Perfecto! class Auto: va primero; __init__ recibe y guarda los atributos con self; y arrancar(self) va al final, ya usando self.marca para actuar sobre el objeto." data-ko="Todavía hay bloques en rojo, fuera de lugar. Pista: class Auto: va primero, __init__ justo después (guarda los atributos con self), y arrancar(self) al final." hidden></p>
+<p class="quiz-fb" data-ok="¡Perfecto! class Auto: va primero; __init__ recibe y guarda los atributos con self; y arrancar(self) va al final, ya usando self.marca para actuar sobre el objeto." data-ko="Todavía hay bloques marcados fuera de lugar. Pista: class Auto: va primero, __init__ justo después (guarda los atributos con self), y arrancar(self) al final." hidden></p>
 </div>
 
-<p style="margin-top:26px;">Ahora escribí una clase parecida, de cero:</p>
-<div class="highlight">
-<strong>Clase Persona</strong>
-<ul style="margin-left:22px;line-height:2">
+<div class="mapa-challenge-grid">
+<div class="mapa-challenge-note">
+<div class="mapa-challenge-label">clase Persona</div>
+<p>Ahora escribí una clase parecida, de cero:</p>
+<ul class="mapa-challenge-list">
 <li><code>__init__(self, nombre, edad)</code> que guarde ambos como atributos.</li>
 <li>Un método <code>saludar(self)</code> que imprima <code>"Hola, soy " + self.nombre</code>.</li>
 <li>Un método <code>cumplir_anios(self)</code> que le sume 1 a <code>self.edad</code>.</li>
@@ -471,20 +470,24 @@ for perro in perros:
 </div>
 <div class="editor-panel independiente" data-quiz-id="codigo-reto">
 <div class="editor-header">
-<span>🏆 Resuelve aquí el reto</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
-<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+<span>resolvé el reto acá</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>enviar para revisión</button>
 </div>
 <textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="class Persona:&#10;    def __init__(self, nombre, edad):&#10;        # completa los atributos&#10;&#10;    def saludar(self):&#10;        # completa el método&#10;&#10;    def cumplir_anios(self):&#10;        # completa el método"></textarea>
 <div class="output" hidden>
-<div class="output-head">Salida</div>
+<div class="output-head">salida</div>
 <pre class="output-body"></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 </section>
 
-<section class="flow-flat" id="cheatsheet">
-<h2>Cheat Sheet</h2>
+<section class="mapa-close" id="cheatsheet">
+<div>
+<h2>Cheat sheet</h2>
 <table class="tabla">
 <thead><tr><th scope="col">Uso</th><th scope="col">Ejemplo</th></tr></thead>
 <tbody>
@@ -498,62 +501,38 @@ for perro in perros:
 <tr><td>self</td><td>Primer parámetro de todo método; Python lo pasa solo</td></tr>
 </tbody>
 </table>
-</section>
-
-<section class="flow-flat">
-<h2>¿Sabías que...?</h2>
+</div>
+<div>
+<h2>¿Sabías que…?</h2>
 <div class="info-grid">
-<div class="info"><h3>🏛️ De dónde viene la idea</h3><p>Los conceptos de "clase" y "objeto" nacieron en <strong>Simula 67</strong>, un lenguaje noruego pensado para simulaciones, décadas antes de que la Programación Orientada a Objetos se volviera popular.</p></div>
-<div class="info"><h3>🧬 En Python, todo es un objeto</h3><p>Un número, un texto o una lista también son instancias de una clase (<code>int</code>, <code>str</code>, <code>list</code>), aunque nunca hayas escrito <code>class</code> para usarlos.</p></div>
-<div class="info"><h3>🔒 Atributos "privados" (más adelante)</h3><p>Anteponer <code>_</code> o <code>__</code> al nombre de un atributo es una convención para señalar "no lo toques desde afuera" —el tema de encapsulación de una guía futura.</p></div>
+<div class="info"><h3>De dónde viene la idea</h3><p>Los conceptos de "clase" y "objeto" nacieron en <strong>Simula 67</strong>, un lenguaje noruego pensado para simulaciones, décadas antes de que la Programación Orientada a Objetos se volviera popular.</p></div>
+<div class="info"><h3>En Python, todo es un objeto</h3><p>Un número, un texto o una lista también son instancias de una clase (<code>int</code>, <code>str</code>, <code>list</code>), aunque nunca hayas escrito <code>class</code> para usarlos.</p></div>
+<div class="info"><h3>Atributos "privados" (más adelante)</h3><p>Anteponer <code>_</code> o <code>__</code> al nombre de un atributo es una convención para señalar "no lo toques desde afuera" —el tema de encapsulación de una guía futura.</p></div>
+</div>
 </div>
 </section>
 
-<footer>
-<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Clases y Objetos en Python</h2>
-<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
-<br>
-<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
-<p>Universidad Adventista de Bolivia</p>
-<p>2026</p>
-</footer>
-
 </main>
+
+<footer>
+<div class="mapa-footer-inner">
+<div>
+<div class="mapa-footer-title">Guía de Clases y Objetos en Python</div>
+<p class="mapa-footer-text">Material de apoyo para la asignatura de Programación Orientada a Objetos.<br>Elaborado por <strong>Ing. Roy Carrasco</strong> · Universidad Adventista de Bolivia</p>
+</div>
+<div class="mapa-footer-year">2026</div>
+</div>
+</footer>
 
 <script>
 
-/* ===== Menú (índice de nodos) ===== */
-const mapaMenuBtn = document.getElementById("mapaMenuBtn");
-const mapaMenuPanel = document.getElementById("mapaMenuPanel");
-const mapaMenuOverlay = document.getElementById("mapaMenuOverlay");
-function abrirMenu(){ mapaMenuPanel.classList.add("show"); mapaMenuOverlay.classList.add("show"); mapaMenuBtn.setAttribute("aria-expanded","true"); }
-function cerrarMenu(){ mapaMenuPanel.classList.remove("show"); mapaMenuOverlay.classList.remove("show"); mapaMenuBtn.setAttribute("aria-expanded","false"); }
-mapaMenuBtn.addEventListener("click", () => mapaMenuPanel.classList.contains("show") ? cerrarMenu() : abrirMenu());
-mapaMenuOverlay.addEventListener("click", cerrarMenu);
-document.querySelectorAll(".mapa-menu-list button[data-nodo]").forEach(b => {
-  b.addEventListener("click", () => { cerrarMenu(); abrirNodo(b.dataset.nodo); });
-});
-document.querySelectorAll(".mapa-menu-list button[data-scroll]").forEach(b => {
-  b.addEventListener("click", () => {
-    cerrarMenu();
-    const destino = document.getElementById(b.dataset.scroll);
-    if (destino) destino.scrollIntoView({ behavior: "smooth" });
-  });
-});
-
 /* ===== Tema claro / oscuro ===== */
 const mapaThemeBtn = document.getElementById("mapaThemeBtn");
-function actualizarIconoTema(){
-  const actual = document.documentElement.getAttribute("data-theme");
-  mapaThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
-}
-actualizarIconoTema();
 mapaThemeBtn.addEventListener("click", () => {
   const actual = document.documentElement.getAttribute("data-theme");
   const nuevo = actual === "dark" ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", nuevo);
   localStorage.setItem("guia-theme", nuevo);
-  actualizarIconoTema();
 });
 
 /* ===== Explicación reactiva (nodo Atributos) — exploratoria, sin
@@ -577,13 +556,13 @@ mapaThemeBtn.addEventListener("click", () => {
 
 /* ===== Mapa conceptual: nodos, apertura/cierre, progreso ===== */
 const NODOS = [
-  { id:"clase",       numero:1, editorIds:["codigo-1"] },
-  { id:"objeto",      numero:2, editorIds:["codigo-2"] },
-  { id:"atributos",   numero:3, editorIds:["codigo-3"] },
-  { id:"constructor", numero:4, editorIds:["codigo-4"] },
-  { id:"metodos",     numero:5, editorIds:["codigo-5"] },
-  { id:"instancias",  numero:6, editorIds:["codigo-6"], quizIds:["concepto-1","concepto-2"] },
-  { id:"repaso",      numero:7, marcarAlAbrir:true },
+  { id:"clase",       numero:1, editorIds:["codigo-1"], estadoBase:"editor" },
+  { id:"objeto",      numero:2, editorIds:["codigo-2"], estadoBase:"editor" },
+  { id:"atributos",   numero:3, editorIds:["codigo-3"], estadoBase:"editor" },
+  { id:"constructor", numero:4, editorIds:["codigo-4"], estadoBase:"editor" },
+  { id:"metodos",     numero:5, editorIds:["codigo-5"], estadoBase:"editor" },
+  { id:"instancias",  numero:6, editorIds:["codigo-6"], quizIds:["concepto-1","concepto-2"], estadoBase:"editor + quiz" },
+  { id:"repaso",      numero:7, marcarAlAbrir:true, estadoBase:"lectura" },
 ];
 
 const MAPA_PREFIX = "poo-mapa-" + location.pathname + "-";
@@ -599,7 +578,6 @@ function abrirNodo(id){
   document.querySelectorAll(".mapa-panel").forEach(p => p.classList.remove("active"));
   const panel = document.getElementById("panel-" + id);
   if (panel) panel.classList.add("active");
-  document.querySelectorAll(".mapa-node").forEach(n => n.classList.toggle("active", n.dataset.nodo === id));
   mapaOverlay.classList.add("show");
   document.body.style.overflow = "hidden";
   const nodo = NODOS[idx];
@@ -642,7 +620,11 @@ function actualizarEstadoNodos(){
   NODOS.forEach(nodo => {
     const boton = document.querySelector('.mapa-node[data-nodo="' + nodo.id + '"]');
     const ok = nodoCompleto(nodo);
-    if (boton) boton.classList.toggle("done", ok);
+    if (boton) {
+      boton.classList.toggle("done", ok);
+      const estado = boton.querySelector("[data-state]");
+      if (estado) estado.textContent = ok ? "completado" : nodo.estadoBase;
+    }
     if (ok) completos++;
   });
   const fill = document.getElementById("mapaFill");
@@ -680,14 +662,18 @@ function actualizarProgreso() {
   const barra = document.getElementById("quizBarFill");
   const etiqueta = document.getElementById("quizBarLabel");
   if (barra && etiqueta) {
-    const ids = new Set();
+    let total = 0, correctas = 0;
     document.querySelectorAll("[data-quiz-id]").forEach(q => {
-      if (q.classList.contains("editor-panel") && !abiertoDesdeAtenza) return;
-      ids.add(q.dataset.quizId);
+      const id = q.dataset.quizId;
+      total++;
+      if (q.classList.contains("editor-panel") && !abiertoDesdeAtenza) {
+        // Fuera de ATENZA el editor no tiene botón "enviar" (se quita del DOM):
+        // acá "enviado" equivale a haberlo ejecutado sin error al menos una vez.
+        if (localStorage.getItem(MAPA_PREFIX + id) === "1") correctas++;
+      } else if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") {
+        correctas++;
+      }
     });
-    let correctas = 0;
-    ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
-    const total = ids.size;
     etiqueta.textContent = correctas + " / " + total;
     barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
   }
@@ -716,8 +702,8 @@ document.querySelectorAll(".quiz-mc").forEach(quiz => {
   });
 });
 
-/* ===== Motor de quiz-parsons (reordenar bloques de código) — nuevo,
-   piloto de esta guía. Botones ↑/↓, no drag-and-drop. ===== */
+/* ===== Motor de quiz-parsons (reordenar bloques de código) —
+   botones ↑/↓, no drag-and-drop. ===== */
 document.querySelectorAll(".quiz-parsons").forEach(quiz => {
   const lista = quiz.querySelector(".parsons-list");
   const id = quiz.dataset.quizId;
@@ -1031,7 +1017,7 @@ function conectarEditor(panel){
   const stopBtn = document.createElement("button");
   stopBtn.type = "button";
   stopBtn.className = "code-btn stop";
-  stopBtn.textContent = "⏹ Detener";
+  stopBtn.textContent = "⏹ detener";
   stopBtn.setAttribute("aria-label", "Detener la ejecución");
   stopBtn.hidden = true;
   runBtn.after(stopBtn);
@@ -1052,9 +1038,9 @@ function conectarEditor(panel){
     const codigo = textarea.value.trim();
     output.hidden = false;
     output.classList.remove("error");
-    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "📨 Enviar para revisión"; }
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "enviar para revisión"; }
     if (!codigo) {
-      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      outputBody.textContent = "Escribí algo de código antes de ejecutar.";
       output.classList.add("error");
       return;
     }
@@ -1067,7 +1053,7 @@ function conectarEditor(panel){
         outputBody.textContent = (salida || "") + error;
         output.classList.add("error");
       } else {
-        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usá print() para mostrar algo)";
         if (submitBtn) submitBtn.disabled = false;
         if (quizId) {
           localStorage.setItem(MAPA_PREFIX + quizId, "1");
@@ -1087,7 +1073,7 @@ function conectarEditor(panel){
     submitBtn.onclick = () => {
       marcarResuelto(quizId, "ok");
       submitBtn.disabled = true;
-      submitBtn.textContent = "✅ Enviado";
+      submitBtn.textContent = "enviado";
     };
   }
 }
@@ -1101,7 +1087,7 @@ function bloquearCopiado(bloque){
     if (!header) return;
     const original = header.dataset.original || header.textContent;
     header.dataset.original = original;
-    header.textContent = "🔒 Escríbelo tú mismo";
+    header.textContent = "escribilo vos mismo";
     clearTimeout(header._avisoTimeout);
     header._avisoTimeout = setTimeout(() => { header.textContent = original; }, 1600);
   };
@@ -1178,23 +1164,24 @@ actualizarEstadoNodos();
     aviso.textContent = texto;
     aviso.style.cssText =
       'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
-      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
-      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      'padding:12px 22px; border-radius:4px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 24px 60px rgba(0,0,0,.35); max-width:90vw; text-align:center; cursor:' +
       (onClick ? 'pointer' : 'default') + ';' +
-      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+      'background:' + (ok ? '#2f7d4a' : '#c0392b') + ';';
     if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
     document.body.appendChild(aviso);
   }
 
   var pantallaBtn = document.createElement('button');
-  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.textContent = 'comenzar en pantalla completa';
   pantallaBtn.style.cssText =
     'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
-    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
-    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+    'border:none; border-radius:4px; background:#2f7d4a; color:#fff;' +
+    'font-size:13px; font-weight:600; cursor:pointer; box-shadow:0 24px 60px rgba(0,0,0,.35);';
   document.body.appendChild(pantallaBtn);
 
   var comenzado = false;
+  var terminado = false;
   pantallaBtn.addEventListener('click', function () {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(function () {});
@@ -1235,16 +1222,16 @@ actualizarEstadoNodos();
     post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
   }
   document.addEventListener('visibilitychange', function () {
-    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
   });
   document.addEventListener('fullscreenchange', function () {
-    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
   });
   window.addEventListener('blur', function () {
-    if (comenzado) reportarIncidente('blur');
+    if (comenzado && !terminado) reportarIncidente('blur');
   });
   window.addEventListener('beforeunload', function (e) {
-    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
   });
 
   var finalizado = false;
@@ -1253,15 +1240,16 @@ actualizarEstadoNodos();
     post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
       .then(function (res) {
         if (res.ok) {
-          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+          terminado = true;
+          avisar('Guía enviada. Ya podés cerrar esta pestaña.', true);
         } else {
           finalizado = false;
-          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+          avisar('No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
         }
       })
       .catch(function () {
         finalizado = false;
-        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        avisar('No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
       });
   }
 
