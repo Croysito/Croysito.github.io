@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clase, Objeto y sus Amigos: Analogías de la Vida Real | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="mapa-mode">
+
+<div class="mapa-topbar">
+<span class="mapa-brand-ns">poo/</span><span class="mapa-brand-slug">clase-objeto-analogias</span>
+<div class="mapa-topbar-spacer"></div>
+<span class="mapa-counter" id="mapaCounter">0 / 6 nodos</span>
+<div class="mapa-progress-track"><div class="mapa-progress-fill" id="mapaFill"></div></div>
+<button class="mapa-theme-btn" id="mapaThemeBtn" aria-label="Cambiar entre tema claro y oscuro">tema</button>
+</div>
+
+<main class="mapa-body">
+
+<section class="mapa-hero">
+<div>
+<div class="mapa-eyebrow">Aula invertida · mapa conceptual · sin código</div>
+<h1 class="mapa-h1">Clase, objeto y sus amigos</h1>
+<p class="mapa-lead">Antes de escribir una sola línea de Python, esta guía te muestra qué es una <strong>clase</strong>, un <strong>objeto</strong>, un <strong>atributo</strong>, un <strong>método</strong> y un <strong>constructor</strong> con cosas que ya conocés: personajes de videojuego y planos de casa. Es un <strong>mapa</strong>, no una lista: hacé clic en cualquier nodo, en el orden que prefieras. El recomendado es 1→6, pero no está bloqueado.</p>
+<p class="mapa-subtext">Ningún nodo tiene código ni editor — son preguntas, comparaciones y, al final, un sandbox para crear tus propios personajes a mano. Un nodo queda marcado en la ruta cuando ya lo completaste.</p>
+</div>
+<div class="mapa-avance-card">
+<div class="mapa-avance-head">Tu avance</div>
+<div class="mapa-avance-body">
+<div class="mapa-avance-count" id="quizBarLabel">0 / 0</div>
+<div class="mapa-avance-sub">preguntas y actividades enviadas</div>
+<div class="mapa-avance-track"><div class="mapa-avance-fill" id="quizBarFill"></div></div>
+<div class="mapa-avance-foot"><strong>Ing. Roy Carrasco</strong><br>Fac. de Ingeniería de Sistemas · UAB<br><span class="mapa-avance-vistas"><span id="viewCount">—</span> vistas</span></div>
+</div>
+</div>
+</section>
+
+<section class="mapa-ruta-section">
+<div class="mapa-ruta-headrow">
+<h2 class="mapa-ruta-title">La ruta</h2>
+<span class="mapa-ruta-note">seis nodos en orden sugerido · tocá cualquiera para abrirlo</span>
+</div>
+<div class="mapa-ruta-grid cols-6">
+<button class="mapa-node" data-nodo="clase">
+<span class="mapa-node-num" data-num>01</span>
+<span class="mapa-node-titulo">Clase</span>
+<span class="mapa-node-estado" data-state>quiz</span>
+</button>
+<button class="mapa-node" data-nodo="objeto">
+<span class="mapa-node-num" data-num>02</span>
+<span class="mapa-node-titulo">Objeto</span>
+<span class="mapa-node-estado" data-state>quiz</span>
+</button>
+<button class="mapa-node" data-nodo="atributo">
+<span class="mapa-node-num" data-num>03</span>
+<span class="mapa-node-titulo">Atributo</span>
+<span class="mapa-node-estado" data-state>quiz</span>
+</button>
+<button class="mapa-node" data-nodo="metodo">
+<span class="mapa-node-num" data-num>04</span>
+<span class="mapa-node-titulo">Método</span>
+<span class="mapa-node-estado" data-state>quiz</span>
+</button>
+<button class="mapa-node" data-nodo="constructor">
+<span class="mapa-node-num" data-num>05</span>
+<span class="mapa-node-titulo">Constructor</span>
+<span class="mapa-node-estado" data-state>quiz</span>
+</button>
+<button class="mapa-node" data-nodo="repaso">
+<span class="mapa-node-num" data-num>06</span>
+<span class="mapa-node-titulo">Repaso rápido</span>
+<span class="mapa-node-estado" data-state>lectura</span>
+</button>
+</div>
+</section>
+
+<!-- ===================== OVERLAY DE NODOS ===================== -->
+<div class="mapa-overlay" id="mapaOverlay">
+
+<div class="mapa-panel" id="panel-clase">
+<div class="mapa-panel-inner">
+<div class="mapa-panel-head">
+<span class="mapa-panel-num">01</span>
+<span class="mapa-panel-title">Clase</span>
+<div class="mapa-panel-spacer"></div>
+<button class="mapa-nav-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-nav-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-nav-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+</div>
+<div class="mapa-panel-body">
+<p>Empecemos sin una sola línea de código. Pensá en un videojuego: antes de que exista Mario, Luigi o cualquier otro personaje jugable, alguien tuvo que decidir qué información y qué acciones va a tener <strong>cualquier</strong> personaje del juego —cuánta vida arranca teniendo, qué tan fuerte ataca, si puede saltar. Esa decisión, tomada una sola vez, es la <strong>clase</strong>.</p>
+<p>Con una casa pasa lo mismo. Antes de levantar un solo ladrillo, un arquitecto dibuja un <strong>plano</strong>: cuántas habitaciones va a tener, dónde va la puerta, de qué tamaño es el living. El plano no es una casa —nadie puede vivir en un plano— pero define exactamente cómo va a ser cualquier casa construida siguiéndolo.</p>
+<div class="comparacion">
+<div class="comparacion-col">
+<span class="comparacion-tag">🎮 Videojuego</span>
+<p>La clase <strong>Personaje</strong>: define que todo personaje va a tener nombre, vida y ataque, sin ser todavía ningún personaje en particular.</p>
+</div>
+<div class="comparacion-col">
+<span class="comparacion-tag">🏠 Casa</span>
+<p>El <strong>plano</strong> de la casa modelo: define cuántas habitaciones y baños va a tener cualquier casa construida con él, sin ser todavía ninguna casa en particular.</p>
+</div>
+</div>
+<div class="highlight">
+<strong>una clase no ocupa lugar en el mundo</strong>
+<p>Ni la clase Personaje ni el plano de la casa "existen" de la forma en que existe Mario corriendo por la pantalla, o una casa con gente adentro. Son la idea, el molde —el paso siguiente es crear algo real a partir de ellos.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="clase-mc">
+<span class="quiz-badge">selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas opciones describe mejor qué es una clase?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un objeto concreto, ya construido, listo para usarse en el juego o la casa.</button>
+<button class="quiz-opt" data-correct>El molde que define qué atributos y qué métodos va a tener cualquier objeto creado a partir de él.</button>
+<button class="quiz-opt">El nombre que le ponés a un personaje o a una casa en particular.</button>
+<button class="quiz-opt">Una acción puntual que un personaje ejecuta, como saltar o atacar.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la clase es el molde o plantilla. Define de antemano la forma —qué datos y qué acciones— que va a tener cualquier objeto creado a partir de ella, sin ser ella misma ninguno de esos objetos." data-ko="La clase es el molde: define qué atributos y qué métodos va a tener cualquier objeto creado a partir de ella. Un objeto concreto, un nombre puntual o una acción son cosas distintas, que ves en los próximos nodos." hidden></p>
+</div>
+<p>Ya tenés el molde. Ahora falta lo interesante: usarlo para crear algo real.</p>
+</div>
+</div>
+</div>
+
+<div class="mapa-panel" id="panel-objeto">
+<div class="mapa-panel-inner">
+<div class="mapa-panel-head">
+<span class="mapa-panel-num">02</span>
+<span class="mapa-panel-title">Objeto</span>
+<div class="mapa-panel-spacer"></div>
+<button class="mapa-nav-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-nav-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-nav-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+</div>
+<div class="mapa-panel-body">
+<p>Cuando el juego arranca y aparece Mario en la pantalla, con su propio nombre, su propia vida y su propio puntaje, eso ya no es la clase: es un <strong>objeto</strong>. Un objeto es una instancia concreta, real, creada a partir de una clase. El mismo juego puede tener a Mario y a Luigi al mismo tiempo —dos objetos distintos, ambos creados a partir de la misma clase Personaje.</p>
+<p>Con la casa pasa igual: el plano es uno solo, pero a partir de él se pueden construir tantas casas como se quiera —la de la Av. Arce 123, la de la Calle Sucre 55— y cada una es una casa real, con su propia dirección y su propia gente viviendo adentro. Todas siguen el mismo plano, pero son construcciones distintas.</p>
+<div class="comparacion">
+<div class="comparacion-col">
+<span class="comparacion-tag">🎮 Videojuego</span>
+<p><strong>Mario</strong> y <strong>Luigi</strong>: dos objetos distintos, ambos creados a partir de la clase Personaje.</p>
+</div>
+<div class="comparacion-col">
+<span class="comparacion-tag">🏠 Casa</span>
+<p>La casa de <strong>Arce 123</strong> y la de <strong>Sucre 55</strong>: dos objetos distintos, construidas a partir del mismo plano.</p>
+</div>
+</div>
+<div class="highlight">
+<strong>un objeto sí ocupa lugar en el mundo</strong>
+<p>A diferencia de la clase, un objeto es concreto: podés señalarlo. "Ese personaje de ahí" o "esa casa de la esquina" son objetos. "Personaje" o "el plano" a secas, no.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="objeto-fill">
+<span class="quiz-badge">completar</span>
+<p class="quiz-q">Completá las dos frases eligiendo la palabra correcta.</p>
+<p>1. <strong>Personaje</strong>, que define qué atributos y métodos va a tener cualquier personaje, es la
+<select class="quiz-blank" data-correct="clase">
+<option value="">— elegí —</option>
+<option value="clase">clase</option>
+<option value="objeto">objeto</option>
+</select>.</p>
+<p>2. <strong>Mario</strong>, que ya tiene un nombre, una vida y un ataque concretos, es un
+<select class="quiz-blank" data-correct="objeto">
+<option value="">— elegí —</option>
+<option value="clase">clase</option>
+<option value="objeto">objeto</option>
+</select> creado a partir de esa clase.</p>
+<p class="quiz-progress"></p>
+</div>
+<p>Cada objeto ya tiene sus propios datos. ¿Cómo se llaman esos datos? Es el próximo nodo.</p>
+</div>
+</div>
+</div>
+
+<div class="mapa-panel" id="panel-atributo">
+<div class="mapa-panel-inner">
+<div class="mapa-panel-head">
+<span class="mapa-panel-num">03</span>
+<span class="mapa-panel-title">Atributo</span>
+<div class="mapa-panel-spacer"></div>
+<button class="mapa-nav-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-nav-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-nav-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+</div>
+<div class="mapa-panel-body">
+<p>Un <strong>atributo</strong> es un dato que le pertenece a un objeto en particular, no a la clase entera. La clase Personaje dice que todo personaje TIENE vida y ataque —pero no dice cuánta vida tiene Mario en este momento del juego. Eso lo decide cada objeto por su cuenta, y cada uno guarda su propio valor, sin pisar el de los demás.</p>
+<p>En la casa pasa lo mismo: el plano dice que la casa TIENE una cantidad de habitaciones y un color de paredes, pero no dice si son 3 o 5 habitaciones, ni si las paredes son celestes o blancas. Eso lo decide cada casa concreta —cada objeto— en el momento en que se construye.</p>
+<div class="comparacion">
+<div class="comparacion-col">
+<span class="comparacion-tag">🎮 Videojuego</span>
+<p>Vida = 80, Ataque = 15, Nombre = "Mario": tres atributos del objeto Mario.</p>
+</div>
+<div class="comparacion-col">
+<span class="comparacion-tag">🏠 Casa</span>
+<p>Habitaciones = 3, Color = "celeste", Dirección = "Arce 123": tres atributos de esa casa.</p>
+</div>
+</div>
+<div class="highlight reactivo">
+<strong>probalo vos mismo</strong>
+<p>Cambiá los números de abajo. Son dos objetos Personaje distintos, cada uno con su propio atributo vida —modificar uno nunca toca al otro:</p>
+<p class="reactivo-frase">Si la vida de <strong>Mario</strong> vale <input type="number" class="reactivo-input" id="reactivoVidaMario" value="80" min="0" max="100" aria-label="Vida de Mario"> y la vida de <strong>Luigi</strong> vale <input type="number" class="reactivo-input" id="reactivoVidaLuigi" value="60" min="0" max="100" aria-label="Vida de Luigi">, entonces Mario le lleva <span class="reactivo-resultado" id="reactivoDiferencia">20</span> puntos de vida a Luigi, y entre los dos suman <span class="reactivo-resultado" id="reactivoSuma">140</span> puntos de vida.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="atributo-mc">
+<span class="quiz-badge">selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas opciones es un ejemplo de ATRIBUTO?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La clase Personaje en sí misma, antes de crear ningún personaje.</button>
+<button class="quiz-opt">La acción de atacar a otro personaje del juego.</button>
+<button class="quiz-opt">El momento exacto en el que se crea un personaje nuevo.</button>
+<button class="quiz-opt" data-correct>La vida actual de un personaje concreto, por ejemplo 80 de 100.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un atributo es un dato propio de un objeto, como su vida actual. Se puede escribir como un número o un texto —si en cambio se describe con un verbo (atacar, crear), es otra cosa, que ves en los próximos nodos." data-ko="Un atributo es un dato propio de un objeto —como la vida actual de un personaje concreto. La clase, una acción o el momento de creación son otros conceptos, que ves en los próximos nodos." hidden></p>
+</div>
+<p>La vida es un dato. Atacar, en cambio, es otra cosa: una acción. Sigamos con eso.</p>
+</div>
+</div>
+</div>
+
+<div class="mapa-panel" id="panel-metodo">
+<div class="mapa-panel-inner">
+<div class="mapa-panel-head">
+<span class="mapa-panel-num">04</span>
+<span class="mapa-panel-title">Método</span>
+<div class="mapa-panel-spacer"></div>
+<button class="mapa-nav-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-nav-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-nav-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+</div>
+<div class="mapa-panel-body">
+<p>Un <strong>método</strong> es una acción que un objeto puede ejecutar. Mario puede saltar, atacar o curarse: esas acciones ya vienen definidas en la clase Personaje, así que absolutamente todos los personajes del juego pueden ejecutarlas, aunque cada uno lo haga con sus propios números (Mario ataca por 15 de daño, el enemigo por 30).</p>
+<p>La casa también "hace" cosas: se puede abrir la puerta principal o encender la calefacción. Esas acciones están disponibles en cualquier casa construida con ese plano, aunque el resultado dependa de los atributos de esa casa en particular.</p>
+<div class="comparacion">
+<div class="comparacion-col">
+<span class="comparacion-tag">🎮 Videojuego</span>
+<p>atacar(), curarse(), saltar(): métodos que cualquier objeto Personaje puede ejecutar.</p>
+</div>
+<div class="comparacion-col">
+<span class="comparacion-tag">🏠 Casa</span>
+<p>abrir la puerta, encender la calefacción: acciones que cualquier casa del plano puede hacer.</p>
+</div>
+</div>
+<div class="highlight">
+<strong>atributo vs. método, la diferencia de una línea</strong>
+<p>Un atributo es un <strong>dato</strong> (la vida, el color de las paredes). Un método es una <strong>acción</strong> (atacar, encender la luz). Si lo podés escribir como un número o un texto, es un atributo; si lo describís con un verbo, es un método.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="metodo-match">
+<span class="quiz-badge">emparejamiento</span>
+<p class="quiz-q">Uní cada método con lo que hace.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="atacar">Atacar()</button>
+<button class="quiz-match-item" data-pair="curarse">Curarse()</button>
+<button class="quiz-match-item" data-pair="puerta">Abrir la puerta principal</button>
+<button class="quiz-match-item" data-pair="calefaccion">Encender la calefacción</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="calefaccion">Cambia el estado de la calefacción, de apagada a encendida.</button>
+<button class="quiz-match-item" data-pair="curarse">Aumenta la propia vida del personaje, hasta un máximo.</button>
+<button class="quiz-match-item" data-pair="puerta">Cambia el estado de la puerta, de cerrada a abierta.</button>
+<button class="quiz-match-item" data-pair="atacar">Reduce la vida de otro personaje, según quien golpea.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+<p>Ya sabés qué acciones existen. Falta una pregunta: ¿cuándo nace un objeto y quién le pone sus primeros valores?</p>
+</div>
+</div>
+</div>
+
+<div class="mapa-panel" id="panel-constructor">
+<div class="mapa-panel-inner">
+<div class="mapa-panel-head">
+<span class="mapa-panel-num">05</span>
+<span class="mapa-panel-title">Constructor</span>
+<div class="mapa-panel-spacer"></div>
+<button class="mapa-nav-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-nav-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-nav-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+</div>
+<div class="mapa-panel-body">
+<p>Cuando se crea un personaje nuevo, alguien tiene que decidir con qué valores arranca: ¿vida 100 o vida 50? ¿ataque 10 o ataque 30? Ese momento exacto —el instante en que el objeto nace y recibe sus primeros valores— es el <strong>constructor</strong>. No es un método que el jugador llama después: es lo primero que pasa, automáticamente, apenas el objeto empieza a existir.</p>
+<p>Con la casa es literal: el constructor es el proceso de construcción según el plano. Ahí, y solo ahí, se decide con qué dirección, con qué color y con cuántas habitaciones nace esa casa en particular. Una vez construida, esos valores iniciales ya quedaron fijados —después se pueden modificar (pintarla de otro color), pero ya no se "construye" de nuevo.</p>
+<div class="comparacion">
+<div class="comparacion-col">
+<span class="comparacion-tag">🎮 Videojuego</span>
+<p>Al crear a Mario, el constructor recibe nombre="Mario", vida=100, ataque=15 y se los asigna.</p>
+</div>
+<div class="comparacion-col">
+<span class="comparacion-tag">🏠 Casa</span>
+<p>Al construir la casa, el constructor recibe dirección, color y habitaciones, y los deja fijados.</p>
+</div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="constructor-mc">
+<span class="quiz-badge">selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas frases describe mejor al constructor?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un método cualquiera que el jugador puede ejecutar cuando quiera.</button>
+<button class="quiz-opt">El plano completo, con todos los atributos y métodos ya definidos.</button>
+<button class="quiz-opt" data-correct>El momento en que un objeto nace y recibe sus primeros valores.</button>
+<button class="quiz-opt">La acción de eliminar un objeto que ya no hace falta.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el constructor es el momento en que un objeto nace y recibe sus primeros valores, automáticamente, no algo que el jugador ejecute cuando se le ocurra." data-ko="El constructor es el momento en que un objeto nace y recibe sus primeros valores. No es un método que se ejecuta cuando el jugador quiere, ni el plano en sí, ni una acción de eliminar." hidden></p>
+</div>
+<p>Ya tenés los cinco conceptos. Vamos a juntarlos todos en un mismo repaso.</p>
+</div>
+</div>
+</div>
+
+<div class="mapa-panel" id="panel-repaso">
+<div class="mapa-panel-inner">
+<div class="mapa-panel-head">
+<span class="mapa-panel-num">06</span>
+<span class="mapa-panel-title">Repaso rápido</span>
+<div class="mapa-panel-spacer"></div>
+<button class="mapa-nav-btn mapa-panel-prev" aria-label="Nodo anterior">←</button>
+<button class="mapa-nav-btn mapa-panel-next" aria-label="Nodo siguiente">→</button>
+<button class="mapa-nav-btn mapa-panel-close" aria-label="Cerrar">✕</button>
+</div>
+<div class="mapa-panel-body">
+<p>Repasemos los cinco conceptos, en las dos analogías a la vez:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto</th><th scope="col">🎮 Videojuego</th><th scope="col">🏠 Casa</th></tr></thead>
+<tbody>
+<tr><td>Clase</td><td>Personaje (el molde)</td><td>El plano de la casa</td></tr>
+<tr><td>Objeto</td><td>Mario, Luigi</td><td>La casa de Arce 123</td></tr>
+<tr><td>Atributo</td><td>vida = 80, ataque = 15</td><td>habitaciones = 3, color = "celeste"</td></tr>
+<tr><td>Método</td><td>atacar(), curarse()</td><td>abrir la puerta, encender la luz</td></tr>
+<tr><td>Constructor</td><td>crear a Mario con sus valores iniciales</td><td>construir la casa según el plano</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>la idea central</strong>
+<p>Una clase es un molde: define qué datos (atributos) y qué acciones (métodos) va a tener cualquier cosa creada a partir de ella. Un objeto es una de esas cosas, ya real y concreta, con su propio constructor que le dio sus primeros valores. Esa combinación —molde único, muchos objetos con datos propios— es la base de toda la Programación Orientada a Objetos.</p>
+</div>
+<p>Cuando te sientas listo, cerrá este mapa y bajá al <strong>Reto Final</strong> para crear tus propios personajes.</p>
+</div>
+</div>
+</div>
+
+</div>
+<!-- ===================== FIN OVERLAY DE NODOS ===================== -->
+
+<section class="mapa-reto" id="reto">
+<div class="mapa-reto-inner">
+<div class="mapa-reto-head">
+<span class="mapa-reto-eyebrow">cierre · sandbox</span>
+<span class="mapa-reto-title">Reto final: Creador de personajes</span>
+</div>
+<div class="mapa-reto-body">
+<p>Acá abajo tenés la clase <strong>Personaje</strong> ya lista, con 3 atributos (nombre, vida, ataque) y 2 métodos (atacar, curarse). Usá el constructor de la derecha para crear varios objetos y comprobá con tus propias manos lo que viste en el mapa: cada personaje guarda sus propios valores, pero todos comparten las mismas acciones. Nada de esto se corrige ni suma a tu progreso —es para explorar antes del chequeo final.</p>
+
+<div class="creador-wrap">
+<div class="creador-form">
+<h3>➕ Constructor</h3>
+<label>Nombre
+<input type="text" id="cpNombre" maxlength="16" placeholder="Ej: Guerrero">
+</label>
+<label>Vida inicial (10-100)
+<input type="number" id="cpVida" min="10" max="100" value="100">
+</label>
+<label>Ataque (5-50)
+<input type="number" id="cpAtaque" min="5" max="50" value="15">
+</label>
+<button type="button" class="code-btn run" id="cpCrear">crear objeto</button>
+<p class="creador-hint">Estos tres campos son los valores que el constructor le asigna al objeto nuevo, apenas nace.</p>
+</div>
+<div>
+<p class="creador-contador" id="cpContador">0 objetos creados</p>
+<div class="creador-personajes" id="cpLista">
+<div class="creador-vacio" id="cpVacio">Todavía no creaste ningún personaje. Completá el formulario y presioná "crear objeto".</div>
+</div>
+</div>
+</div>
+
+<p style="margin-top:28px;">Chequeo final: clasificá cada ejemplo según el concepto que le corresponde.</p>
+
+<div class="quiz quiz-classify" data-quiz-id="reto-classify">
+<span class="quiz-badge">clasificación</span>
+<p class="quiz-q">Elegí, para cada ejemplo, si es una Clase, un Objeto, un Atributo, un Método o un Constructor.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Personaje": el molde que define qué va a tener cualquier personaje.</span>
+<div class="quiz-classify-btns">
+<button>Objeto</button>
+<button>Método</button>
+<button data-correct>Clase</button>
+<button>Constructor</button>
+<button>Atributo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Mario, creado a partir de la clase Personaje.</span>
+<div class="quiz-classify-btns">
+<button>Constructor</button>
+<button>Atributo</button>
+<button>Método</button>
+<button>Clase</button>
+<button data-correct>Objeto</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Vida = 80.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Atributo</button>
+<button>Constructor</button>
+<button>Objeto</button>
+<button>Clase</button>
+<button>Método</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">saltar().</span>
+<div class="quiz-classify-btns">
+<button>Clase</button>
+<button>Atributo</button>
+<button>Objeto</button>
+<button data-correct>Método</button>
+<button>Constructor</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El momento en que el juego arranca con vida=100 y monedas=0 para un personaje nuevo.</span>
+<div class="quiz-classify-btns">
+<button>Objeto</button>
+<button data-correct>Constructor</button>
+<button>Clase</button>
+<button>Método</button>
+<button>Atributo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La cantidad de habitaciones de una casa.</span>
+<div class="quiz-classify-btns">
+<button>Método</button>
+<button>Clase</button>
+<button data-correct>Atributo</button>
+<button>Objeto</button>
+<button>Constructor</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El plano arquitectónico, antes de construir ninguna casa todavía.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Clase</button>
+<button>Método</button>
+<button>Constructor</button>
+<button>Atributo</button>
+<button>Objeto</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Encender la calefacción.</span>
+<div class="quiz-classify-btns">
+<button>Atributo</button>
+<button>Clase</button>
+<button>Constructor</button>
+<button>Objeto</button>
+<button data-correct>Método</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La casa construida en la Av. Arce 123, con paredes celestes.</span>
+<div class="quiz-classify-btns">
+<button>Constructor</button>
+<button>Método</button>
+<button>Clase</button>
+<button data-correct>Objeto</button>
+<button>Atributo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El proceso de construir una casa siguiendo las medidas y materiales del plano.</span>
+<div class="quiz-classify-btns">
+<button>Atributo</button>
+<button data-correct>Constructor</button>
+<button>Método</button>
+<button>Clase</button>
+<button>Objeto</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="mapa-close" id="cheatsheet">
+<div>
+<h2>Cheat sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto</th><th scope="col">En una frase</th></tr></thead>
+<tbody>
+<tr><td>Clase</td><td>El molde: define qué atributos y métodos va a tener cualquier objeto.</td></tr>
+<tr><td>Objeto</td><td>Una instancia concreta, creada a partir de una clase.</td></tr>
+<tr><td>Atributo</td><td>Un dato propio de un objeto en particular (un número, un texto).</td></tr>
+<tr><td>Método</td><td>Una acción que un objeto puede ejecutar (un verbo).</td></tr>
+<tr><td>Constructor</td><td>El momento en que un objeto nace y recibe sus primeros valores.</td></tr>
+</tbody>
+</table>
+</div>
+<div>
+<h2>¿Sabías que…?</h2>
+<div class="info-grid">
+<div class="info"><h3>Ya existían "objetos" antes de la programación</h3><p>Juegos de mesa como Dungeons &amp; Dragons usan hace décadas una "hoja de personaje": una plantilla con casilleros para nombre, vida y fuerza. Cada jugador completa la suya con valores distintos —clase y objeto, sin ninguna computadora de por medio.</p></div>
+<div class="info"><h3>Los planos se reusan de verdad</h3><p>En barrios o condominios construidos en serie es normal levantar decenas de casas idénticas en su plano, pero distintas en color o mobiliario —la misma relación clase/objeto, a escala de ciudad.</p></div>
+<div class="info"><h3>Lo que sigue</h3><p>Con los cinco conceptos claros, la próxima guía —"Clases y objetos desde cero"— los muestra escritos en código Python real, con las palabras <code>class</code>, <code>__init__</code> y <code>self</code>.</p></div>
+</div>
+</div>
+</section>
+
+</main>
+
+<footer>
+<div class="mapa-footer-inner">
+<div>
+<div class="mapa-footer-title">Clase, Objeto y sus Amigos: Analogías de la Vida Real</div>
+<p class="mapa-footer-text">Material de apoyo para la asignatura de Programación Orientada a Objetos.<br>Elaborado por <strong>Ing. Roy Carrasco</strong> · Universidad Adventista de Bolivia</p>
+</div>
+<div class="mapa-footer-year">2026</div>
+</div>
+</footer>
+
+<script>
+
+/* ===== Tema claro / oscuro ===== */
+const mapaThemeBtn = document.getElementById("mapaThemeBtn");
+mapaThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+});
+
+/* ===== Explicación reactiva (nodo Atributo) — exploratoria, sin
+   calificar: solo recalcula texto en la misma oración al tipear. ===== */
+(function(){
+  const inputMario = document.getElementById("reactivoVidaMario");
+  const inputLuigi = document.getElementById("reactivoVidaLuigi");
+  const salidaDif = document.getElementById("reactivoDiferencia");
+  const salidaSuma = document.getElementById("reactivoSuma");
+  if (!inputMario || !inputLuigi) return;
+  function recalcular(){
+    const a = Number(inputMario.value) || 0;
+    const b = Number(inputLuigi.value) || 0;
+    salidaDif.textContent = Math.abs(a - b);
+    salidaSuma.textContent = a + b;
+  }
+  inputMario.addEventListener("input", recalcular);
+  inputLuigi.addEventListener("input", recalcular);
+  recalcular();
+})();
+
+/* ===== Mapa conceptual: nodos, apertura/cierre, progreso ===== */
+const NODOS = [
+  { id:"clase",       numero:1, quizIds:["clase-mc"],        estadoBase:"quiz" },
+  { id:"objeto",      numero:2, quizIds:["objeto-fill"],     estadoBase:"quiz" },
+  { id:"atributo",    numero:3, quizIds:["atributo-mc"],     estadoBase:"quiz" },
+  { id:"metodo",      numero:4, quizIds:["metodo-match"],    estadoBase:"quiz" },
+  { id:"constructor", numero:5, quizIds:["constructor-mc"],  estadoBase:"quiz" },
+  { id:"repaso",      numero:6, marcarAlAbrir:true,          estadoBase:"lectura" },
+];
+
+const MAPA_PREFIX = "poo-mapa-" + location.pathname + "-";
+const mapaOverlay = document.getElementById("mapaOverlay");
+let nodoActualIndex = -1;
+
+function idxDeNodo(id){ return NODOS.findIndex(n => n.id === id); }
+
+function abrirNodo(id){
+  const idx = idxDeNodo(id);
+  if (idx === -1) return;
+  nodoActualIndex = idx;
+  document.querySelectorAll(".mapa-panel").forEach(p => p.classList.remove("active"));
+  const panel = document.getElementById("panel-" + id);
+  if (panel) panel.classList.add("active");
+  mapaOverlay.classList.add("show");
+  document.body.style.overflow = "hidden";
+  const nodo = NODOS[idx];
+  if (nodo.marcarAlAbrir) {
+    localStorage.setItem(MAPA_PREFIX + id, "1");
+    actualizarEstadoNodos();
+  }
+  actualizarNavPanel();
+  mapaOverlay.scrollTop = 0;
+}
+
+function cerrarNodo(){
+  mapaOverlay.classList.remove("show");
+  document.body.style.overflow = "";
+}
+
+function actualizarNavPanel(){
+  document.querySelectorAll(".mapa-panel-prev").forEach(b => b.disabled = nodoActualIndex <= 0);
+  document.querySelectorAll(".mapa-panel-next").forEach(b => b.disabled = nodoActualIndex >= NODOS.length - 1);
+}
+
+document.querySelectorAll(".mapa-node").forEach(btn => {
+  btn.addEventListener("click", () => abrirNodo(btn.dataset.nodo));
+});
+document.querySelectorAll(".mapa-panel-close").forEach(b => b.addEventListener("click", cerrarNodo));
+document.querySelectorAll(".mapa-panel-prev").forEach(b => b.addEventListener("click", () => { if (nodoActualIndex > 0) abrirNodo(NODOS[nodoActualIndex - 1].id); }));
+document.querySelectorAll(".mapa-panel-next").forEach(b => b.addEventListener("click", () => { if (nodoActualIndex < NODOS.length - 1) abrirNodo(NODOS[nodoActualIndex + 1].id); }));
+mapaOverlay.addEventListener("click", e => { if (e.target === mapaOverlay) cerrarNodo(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && mapaOverlay.classList.contains("show")) cerrarNodo(); });
+
+function nodoCompleto(nodo){
+  const quizOk = (nodo.quizIds || []).every(id => localStorage.getItem(QUIZ_PREFIX + id) === "ok");
+  const abiertoOk = nodo.marcarAlAbrir ? localStorage.getItem(MAPA_PREFIX + nodo.id) === "1" : true;
+  return quizOk && abiertoOk;
+}
+
+function actualizarEstadoNodos(){
+  let completos = 0;
+  NODOS.forEach(nodo => {
+    const boton = document.querySelector('.mapa-node[data-nodo="' + nodo.id + '"]');
+    const ok = nodoCompleto(nodo);
+    if (boton) {
+      boton.classList.toggle("done", ok);
+      const estado = boton.querySelector("[data-state]");
+      if (estado) estado.textContent = ok ? "completado" : nodo.estadoBase;
+    }
+    if (ok) completos++;
+  });
+  const fill = document.getElementById("mapaFill");
+  const counter = document.getElementById("mapaCounter");
+  if (fill) fill.style.width = (completos / NODOS.length * 100) + "%";
+  if (counter) counter.textContent = completos + " / " + NODOS.length + " nodos";
+}
+
+/* ===== Motor de quizzes (mc, match, classify, fill) — copiado tal
+   cual del ya usado en guias_bd/dml.html, reutilizado sin cambios. ===== */
+const QUIZ_PREFIX = "poo-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (barra && etiqueta) {
+    const ids = new Set();
+    document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+    let correctas = 0;
+    ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+    const total = ids.size;
+    etiqueta.textContent = correctas + " / " + total;
+    barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+  }
+  actualizarEstadoNodos();
+}
+
+/* Selección múltiple */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Reto final: Creador de personajes — sandbox exploratorio,
+   sin calificar (no usa data-quiz-id ni suma al progreso), mismo
+   criterio que el sandbox de guias_tgs/dinamica-sistemas.html.
+   Ilustra a mano lo que dice el mapa: una sola clase (el formulario
+   de constructor de la izquierda) produce muchos objetos (las fichas
+   de la derecha), cada uno con sus propios atributos, pero todos
+   comparten los mismos métodos (atacar/curarse). ===== */
+(function(){
+  const inputNombre = document.getElementById("cpNombre");
+  const inputVida = document.getElementById("cpVida");
+  const inputAtaque = document.getElementById("cpAtaque");
+  const btnCrear = document.getElementById("cpCrear");
+  const lista = document.getElementById("cpLista");
+  const vacio = document.getElementById("cpVacio");
+  const contador = document.getElementById("cpContador");
+  if (!btnCrear || !lista) return;
+
+  let personajes = [];
+  let siguienteId = 0;
+
+  function actualizarVacio(){
+    if (vacio) vacio.hidden = personajes.length > 0;
+  }
+
+  function actualizarContador(){
+    if (!contador) return;
+    contador.textContent = personajes.length + (personajes.length === 1 ? " objeto creado" : " objetos creados");
+  }
+
+  function actualizarFicha(p){
+    const div = lista.querySelector('[data-id="' + p.id + '"]');
+    if (!div) return;
+    div.querySelector(".ficha-nombre").textContent = p.nombre;
+    const pct = Math.max(0, Math.round((p.vida / p.vidaMax) * 100));
+    const fill = div.querySelector(".ficha-bar-fill");
+    fill.style.width = pct + "%";
+    fill.classList.toggle("baja", pct <= 30);
+    div.querySelector(".ficha-valor-vida").textContent = Math.max(0, p.vida) + "/" + p.vidaMax;
+    div.querySelector(".ficha-valor-ataque").textContent = p.ataque;
+    const derrotado = p.vida <= 0;
+    div.classList.toggle("derrotado", derrotado);
+    const hayObjetivos = personajes.some(o => o.id !== p.id && o.vida > 0);
+    div.querySelector(".ficha-btn.atacar").disabled = derrotado || !hayObjetivos;
+    div.querySelector(".ficha-btn.curar").disabled = derrotado;
+  }
+
+  function log(p, mensaje){
+    const div = lista.querySelector('[data-id="' + p.id + '"]');
+    if (div) div.querySelector(".ficha-log").textContent = mensaje;
+  }
+
+  function atacar(p){
+    const objetivos = personajes.filter(o => o.id !== p.id && o.vida > 0);
+    if (objetivos.length === 0) return;
+    const objetivo = objetivos[Math.floor(Math.random() * objetivos.length)];
+    objetivo.vida = Math.max(0, objetivo.vida - p.ataque);
+    log(objetivo, p.nombre + " te atacó por " + p.ataque + " de daño.");
+    log(p, "Atacaste a " + objetivo.nombre + ".");
+    if (objetivo.vida <= 0) log(objetivo, objetivo.nombre + " quedó fuera de combate.");
+    personajes.forEach(actualizarFicha);
+  }
+
+  function curar(p){
+    const antes = p.vida;
+    p.vida = Math.min(p.vidaMax, p.vida + 20);
+    log(p, "Recuperaste " + (p.vida - antes) + " puntos de vida.");
+    personajes.forEach(actualizarFicha);
+  }
+
+  function eliminar(p){
+    personajes = personajes.filter(o => o.id !== p.id);
+    const div = lista.querySelector('[data-id="' + p.id + '"]');
+    if (div) div.remove();
+    actualizarVacio();
+    actualizarContador();
+    personajes.forEach(actualizarFicha);
+  }
+
+  function crearFicha(p){
+    const div = document.createElement("div");
+    div.className = "ficha-personaje";
+    div.dataset.id = p.id;
+    div.innerHTML =
+      '<div class="ficha-header"><span class="ficha-nombre"></span><span class="ficha-clase">clase: Personaje</span></div>' +
+      '<div class="ficha-stat"><span>❤️ vida</span><div class="ficha-bar"><div class="ficha-bar-fill"></div></div><span class="ficha-valor ficha-valor-vida"></span></div>' +
+      '<div class="ficha-stat"><span>⚔️ ataque</span><span class="ficha-valor ficha-valor-ataque"></span></div>' +
+      '<div class="ficha-acciones">' +
+        '<button type="button" class="ficha-btn atacar">⚔️ atacar</button>' +
+        '<button type="button" class="ficha-btn curar">💚 curarse</button>' +
+        '<button type="button" class="ficha-btn eliminar" aria-label="Eliminar este objeto">🗑️</button>' +
+      '</div>' +
+      '<p class="ficha-log"></p>';
+    lista.appendChild(div);
+    div.querySelector(".ficha-btn.atacar").addEventListener("click", () => atacar(p));
+    div.querySelector(".ficha-btn.curar").addEventListener("click", () => curar(p));
+    div.querySelector(".ficha-btn.eliminar").addEventListener("click", () => eliminar(p));
+    actualizarFicha(p);
+  }
+
+  btnCrear.addEventListener("click", () => {
+    const nombre = (inputNombre.value || "").trim() || "Sin nombre";
+    const vida = Math.min(100, Math.max(10, Number(inputVida.value) || 100));
+    const ataque = Math.min(50, Math.max(5, Number(inputAtaque.value) || 15));
+    const p = { id: ++siguienteId, nombre, vidaMax: vida, vida, ataque };
+    personajes.push(p);
+    actualizarVacio();
+    actualizarContador();
+    crearFicha(p);
+    personajes.forEach(actualizarFicha);
+    inputNombre.value = "";
+    inputNombre.focus();
+  });
+
+  actualizarVacio();
+  actualizarContador();
+})();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
