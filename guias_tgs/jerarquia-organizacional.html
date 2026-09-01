@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jerarquía de Sistemas y Enfoque Organizacional | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // eps-retroalimentacion.html, con el parche de paramsAtenza() que
+  // también busca dentro de location.hash (el link real de ATENZA a
+  // veces llega como "...html#seccion?atenza_token=...", con el "?"
+  // después del "#"). El progreso de esta guía vive en localStorage por
+  // navegador, no por intento; si el guia_intento de la URL cambió, se
+  // limpia el progreso previo ANTES de que el motor de quizzes lo lea
+  // (por eso corre acá, en el <head>, antes que el resto de la página).
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  // Debe coincidir con QUIZ_PREFIX del motor de quizzes, más abajo en la página.
+  var QUIZ_PREFIX = 'tgs-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">TGS · <span>Jerarquía</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="empresa-sistema">Jerarquía en vivo</button>
+<button data-target="practica">Practicá lo que viste</button>
+<button data-target="jerarquia">Jerarquía: nivel correcto</button>
+<button data-target="recursividad">Recursividad organizacional</button>
+<button data-target="ejercicios">Actividades de repaso</button>
+<button data-target="evidencia">Evidencia: organigrama sistémico</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🔁 Guía de Aula Invertida</span>
+<h1 class="flow-h1">Jerarquía de Sistemas y <span>Enfoque Organizacional</span></h1>
+<p class="flow-lead">Ya sabés que todo sistema tiene límites, entorno y propósito. Ahora vamos a mirar una empresa completa como un sistema — y a descubrir que, si te asomás dentro de cualquiera de sus partes, encontrás el mismo patrón otra vez.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Scrollea para empezar — el organigrama sistémico de TecnoAndina se arma solo, capa por capa, mientras leés.</p>
+</section>
+
+<section class="flow-section" id="empresa-sistema">
+<div class="flow-grid">
+<div class="flow-beats">
+
+<div class="flow-beat" data-step="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>Una empresa no es un organigrama plano</h3>
+<p>Hasta ahora viste sistemas más simples: una materia, un servicio, un dispositivo. Una empresa real es un sistema mucho más grande, y para entenderla hace falta algo más que dibujar cajas conectadas por líneas: hace falta ver los niveles.</p>
+<p>Vamos a construir el organigrama sistémico de <strong>TecnoAndina</strong>, una empresa de software mediana, capa por capa →</p>
+</div>
+
+<div class="flow-beat" data-step="1">
+<span class="flow-beat-eyebrow">Paso 02 · Suprasistema</span>
+<h3>Lo que la rodea y la contiene</h3>
+<p>El <strong>suprasistema</strong> es el sistema mayor del que la empresa forma parte — en este caso, el sector tecnológico: el conjunto de clientes, competidores y regulaciones dentro del que TecnoAndina existe y compite. Ninguna empresa se entiende aislada de su suprasistema.</p>
+</div>
+
+<div class="flow-beat" data-step="2">
+<span class="flow-beat-eyebrow">Paso 03 · Sistema</span>
+<h3>La empresa completa</h3>
+<p>TecnoAndina es el <strong>sistema</strong> que vamos a analizar: tiene un límite (quién trabaja adentro y quién no), un propósito (desarrollar y vender software) y existe dentro del suprasistema que acabás de ver. Es, al mismo tiempo, más pequeña que su suprasistema y más grande que cualquiera de sus partes.</p>
+</div>
+
+<div class="flow-beat" data-step="3">
+<span class="flow-beat-eyebrow">Paso 04 · Subsistema: Finanzas</span>
+<h3>La primera parte funcional</h3>
+<p>Cada <strong>subsistema</strong> es una parte de la empresa con un propósito propio, que a su vez contribuye al propósito general. <strong>Finanzas</strong> administra el presupuesto, los pagos y los reportes económicos de TecnoAndina.</p>
+</div>
+
+<div class="flow-beat" data-step="4">
+<span class="flow-beat-eyebrow">Paso 05 · Subsistema: RRHH</span>
+<h3>Otra parte, otro propósito</h3>
+<p><strong>Recursos Humanos</strong> se encarga de contratar personal, pagar la nómina y acompañar a los empleados — un propósito distinto al de Finanzas, pero igual de necesario para que la empresa funcione como un todo.</p>
+</div>
+
+<div class="flow-beat" data-step="5">
+<span class="flow-beat-eyebrow">Paso 06 · Subsistema: Operaciones</span>
+<h3>Donde se produce el servicio</h3>
+<p><strong>Operaciones</strong> coordina que los proyectos de software se entreguen a tiempo: asigna equipos, prioriza tareas y da seguimiento a cada entrega.</p>
+</div>
+
+<div class="flow-beat" data-step="6">
+<span class="flow-beat-eyebrow">Paso 07 · Subsistema: TI</span>
+<h3>El cuarto subsistema funcional</h3>
+<p><strong>TI</strong> mantiene los sistemas internos y los datos de la propia empresa: servidores, respaldos, accesos. Con este último, ya tenés los cuatro subsistemas funcionales completos.</p>
+</div>
+
+<div class="flow-beat" data-step="7">
+<span class="flow-beat-eyebrow">Paso 08 · Jerarquía</span>
+<h3>Tres niveles, una sola idea</h3>
+<p>Fijate en lo que acabás de armar: el suprasistema contiene al sistema, y el sistema contiene a sus subsistemas. A eso se le llama <strong>jerarquía de sistemas</strong> — niveles anidados, cada uno dentro del anterior.</p>
+<p>Pensar en jerarquías te sirve para decidir en qué nivel buscar una solución: a veces el problema de un subsistema en realidad viene de arriba.</p>
+</div>
+
+<div class="flow-beat" data-step="8">
+<span class="flow-beat-eyebrow">Paso 09 · Recursividad</span>
+<h3>TI es, a su vez, un sistema</h3>
+<p>Abrí el subsistema TI y encontrarás el mismo patrón otra vez: sus propios subsistemas — <strong>Desarrollo</strong>, <strong>Soporte</strong> e <strong>Infraestructura</strong> — cada uno con su propio propósito adentro de TI.</p>
+<p>Eso es <strong>recursividad organizacional</strong>: el mismo principio (un sistema hecho de subsistemas) se repite dentro de cada parte, no solo a nivel de toda la empresa.</p>
+</div>
+
+</div>
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="jerPanel">
+<div class="flow-panel-head"><span>Organigrama en vivo</span><span class="flow-panel-step" id="jerPanelStep">Paso 1 / 9</span></div>
+
+<div class="jer-diagram-wrap">
+<svg viewBox="0 0 430 260" aria-hidden="true">
+
+<g class="jer-bracket" id="jerBracket">
+<line x1="12" y1="10" x2="12" y2="158"/>
+<line x1="8" y1="10" x2="16" y2="10"/>
+<line x1="8" y1="158" x2="16" y2="158"/>
+<text x="6" y="84" text-anchor="middle" transform="rotate(-90 6 84)">JERARQUÍA</text>
+</g>
+
+<g class="jer-line" id="jerLineSupraEmpresa"><line x1="190" y1="44" x2="190" y2="64"/></g>
+
+<g class="jer-box" id="jerBoxSupra">
+<rect x="140" y="10" width="100" height="34" rx="6"/>
+<text x="190" y="24" text-anchor="middle" font-size="9" font-weight="700">SUPRASISTEMA</text>
+<text x="190" y="36" text-anchor="middle" font-size="7">Sector Tecnológico</text>
+</g>
+
+<g class="jer-box" id="jerBoxEmpresa">
+<rect x="110" y="64" width="160" height="34" rx="6"/>
+<text x="190" y="78" text-anchor="middle" font-size="9" font-weight="700">SISTEMA</text>
+<text x="190" y="90" text-anchor="middle" font-size="7">TecnoAndina</text>
+</g>
+
+<g class="jer-cluster" id="jerClusterFinanzas">
+<g class="jer-line" id="jerLineEmpresaFinanzas"><line x1="190" y1="98" x2="59.5" y2="118"/></g>
+<g class="jer-box" id="jerBoxFinanzas">
+<rect x="22" y="118" width="75" height="40" rx="6"/>
+<text x="59.5" y="134" text-anchor="middle" font-size="9" font-weight="700">FINANZAS</text>
+<text x="59.5" y="147" text-anchor="middle" font-size="6.5">presupuesto y pagos</text>
+</g>
+</g>
+
+<g class="jer-cluster" id="jerClusterRRHH">
+<g class="jer-line" id="jerLineEmpresaRRHH"><line x1="190" y1="98" x2="146.5" y2="118"/></g>
+<g class="jer-box" id="jerBoxRRHH">
+<rect x="109" y="118" width="75" height="40" rx="6"/>
+<text x="146.5" y="134" text-anchor="middle" font-size="9" font-weight="700">RRHH</text>
+<text x="146.5" y="147" text-anchor="middle" font-size="6.5">personal y nómina</text>
+</g>
+</g>
+
+<g class="jer-cluster" id="jerClusterOperaciones">
+<g class="jer-line" id="jerLineEmpresaOperaciones"><line x1="190" y1="98" x2="233.5" y2="118"/></g>
+<g class="jer-box" id="jerBoxOperaciones">
+<rect x="196" y="118" width="75" height="40" rx="6"/>
+<text x="233.5" y="134" text-anchor="middle" font-size="8.5" font-weight="700">OPERACIONES</text>
+<text x="233.5" y="147" text-anchor="middle" font-size="6.5">coordina entregas</text>
+</g>
+</g>
+
+<g class="jer-cluster" id="jerClusterTI">
+<g class="jer-line" id="jerLineEmpresaTI"><line x1="190" y1="98" x2="320.5" y2="118"/></g>
+<g class="jer-box" id="jerBoxTI">
+<rect x="283" y="118" width="75" height="40" rx="6"/>
+<text x="320.5" y="134" text-anchor="middle" font-size="9" font-weight="700">TI</text>
+<text x="320.5" y="147" text-anchor="middle" font-size="6.5">sistemas y datos</text>
+</g>
+</g>
+
+<rect class="jer-caja" id="jerCaja" x="273" y="110" width="145" height="120" rx="10" fill="none"/>
+<text class="jer-caja-label" id="jerCajaLabel" x="422" y="170" text-anchor="middle" transform="rotate(-90 422 170)">RECURSIVIDAD</text>
+
+<g class="jer-line" id="jerLineTIDesarrollo"><line x1="320.5" y1="158" x2="261" y2="190"/></g>
+<g class="jer-box" id="jerBoxDesarrollo">
+<rect x="234" y="190" width="54" height="32" rx="6"/>
+<text x="261" y="210" text-anchor="middle" font-size="7">Desarrollo</text>
+</g>
+
+<g class="jer-line" id="jerLineTISoporte"><line x1="320.5" y1="158" x2="321" y2="190"/></g>
+<g class="jer-box" id="jerBoxSoporte">
+<rect x="294" y="190" width="54" height="32" rx="6"/>
+<text x="321" y="210" text-anchor="middle" font-size="7">Soporte</text>
+</g>
+
+<g class="jer-line" id="jerLineTIInfra"><line x1="320.5" y1="158" x2="381" y2="190"/></g>
+<g class="jer-box" id="jerBoxInfra">
+<rect x="354" y="190" width="54" height="32" rx="6"/>
+<text x="381" y="210" text-anchor="middle" font-size="7">Infra.</text>
+</g>
+
+</svg>
+</div>
+
+<div class="jer-caption" id="jerCaption">Sin diagrama todavía — armemos el sistema-empresa de TecnoAndina, capa por capa.</div>
+
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat" id="practica">
+<h2>Practicá lo que viste</h2>
+<p class="lead">Otra vez TecnoAndina, con situaciones nuevas. Clasifica cada una según el subsistema funcional responsable.</p>
+
+<div class="quiz quiz-classify" data-quiz-id="subsistemas-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Qué subsistema funcional de TecnoAndina resuelve cada situación?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Aprobar el presupuesto anual de cada área y pagar a los proveedores</span>
+<div class="quiz-classify-btns">
+<button>RRHH</button>
+<button>Operaciones</button>
+<button data-correct>Finanzas</button>
+<button>TI</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Publicar una vacante y coordinar entrevistas para contratar a un desarrollador</span>
+<div class="quiz-classify-btns">
+<button data-correct>RRHH</button>
+<button>TI</button>
+<button>Finanzas</button>
+<button>Operaciones</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Programar los turnos del equipo para cumplir con los proyectos de la semana</span>
+<div class="quiz-classify-btns">
+<button>Finanzas</button>
+<button>TI</button>
+<button>RRHH</button>
+<button data-correct>Operaciones</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Configurar un nuevo servidor y mantener actualizado el sistema de facturación</span>
+<div class="quiz-classify-btns">
+<button>Finanzas</button>
+<button data-correct>TI</button>
+<button>Operaciones</button>
+<button>RRHH</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Calcular la nómina mensual y los beneficios de cada empleado</span>
+<div class="quiz-classify-btns">
+<button>TI</button>
+<button>Operaciones</button>
+<button>Finanzas</button>
+<button data-correct>RRHH</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Analizar los costos de los proyectos y preparar el reporte financiero trimestral</span>
+<div class="quiz-classify-btns">
+<button data-correct>Finanzas</button>
+<button>RRHH</button>
+<button>TI</button>
+<button>Operaciones</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="jerarquia">
+<h2>Jerarquía: ¿en qué nivel buscar la solución?</h2>
+<p class="lead">La jerarquía no es solo para dibujar cajas: sirve para diagnosticar. Cuando algo falla, conviene preguntarse en qué nivel está realmente la causa.</p>
+
+<div class="quiz quiz-mc" data-quiz-id="jerarquia-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el caso de TecnoAndina, ¿qué es el "sector tecnológico" respecto a la empresa?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un subsistema de la empresa, igual que Finanzas o TI.</button>
+<button class="quiz-opt">El límite que separa a la empresa de su entorno.</button>
+<button class="quiz-opt" data-correct>Su suprasistema: el sistema mayor que la contiene.</button>
+<button class="quiz-opt">Un sinónimo de jerarquía, sin relación de contención.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el sector tecnológico es el sistema mayor dentro del cual existe TecnoAndina — exactamente la definición de suprasistema." data-ko="El sector tecnológico no es una parte de la empresa (eso sería un subsistema) ni un simple límite: es el sistema mayor que la contiene, es decir, su suprasistema." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="jerarquia-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">El subsistema Operaciones de TecnoAndina no logra cumplir sus metas de entrega, aunque cada persona del equipo trabaja bien. Investigando, la causa real es una política de compras que define toda la empresa, no algo que Operaciones controle. ¿En qué nivel hay que buscar la solución?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">En un subsistema aún más pequeño dentro de Operaciones.</button>
+<button class="quiz-opt">En el suprasistema, fuera de la empresa por completo.</button>
+<button class="quiz-opt">El problema no tiene relación con ningún nivel jerárquico.</button>
+<button class="quiz-opt" data-correct>En el sistema completo (la empresa), no solo en Operaciones.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: aunque el síntoma aparece en Operaciones, la causa está en una política que define toda la empresa. Analizar solo el subsistema no habría resuelto nada — hay que subir un nivel." data-ko="Bajar de nivel (a un subsistema de Operaciones) o subir hasta el suprasistema no resuelve esto: la causa está en una política de toda la empresa, así que hay que buscar la solución en el sistema completo." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="recursividad">
+<h2>Recursividad organizacional</h2>
+<p class="lead">Todavía hay más: cada subsistema puede, puertas adentro, tener sus propios subsistemas — el mismo patrón, repetido.</p>
+
+<div class="highlight reactivo">
+<strong>probalo vos mismo</strong>
+<p>La recursividad puede crecer más rápido de lo que parece. Cambiá cuántos subsistemas tiene cada nivel y cuántos niveles de profundidad imaginás:</p>
+<p class="reactivo-frase">Si cada subsistema tuviera <input type="number" class="reactivo-input" id="reactivoRamas" value="3" min="1" max="6" aria-label="Subsistemas propios por nivel"> subsistemas propios, y esto se repitiera <input type="number" class="reactivo-input" id="reactivoNiveles" value="2" min="1" max="5" aria-label="Niveles de profundidad"> niveles hacia abajo, en el último nivel habría <span class="reactivo-resultado" id="reactivoTotal">9</span> subsistemas — sin contar los de los niveles intermedios.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="recursividad-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Dentro del subsistema TI de TecnoAndina hay, a su vez, equipos de Desarrollo, Soporte e Infraestructura, cada uno con su propia coordinación interna. ¿Qué principio ilustra esto?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Recursividad: el subsistema es, a su vez, un sistema con subsistemas propios.</button>
+<button class="quiz-opt">Entropía: el desorden interno de TI aumenta con el tiempo.</button>
+<button class="quiz-opt">Sinergia: el todo vale más que la suma de sus partes.</button>
+<button class="quiz-opt">Homeostasis: TI mantiene su equilibrio interno pase lo que pase.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: que TI tenga sus propios subsistemas internos (Desarrollo, Soporte, Infraestructura) es el mismo patrón sistema-subsistema repetido puertas adentro — eso es recursividad." data-ko="No se trata de desorden, de sinergia ni de equilibrio interno: que un subsistema tenga, a su vez, sus propios subsistemas es exactamente la definición de recursividad." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="recursividad-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">La recursividad organizacional significa que todos los subsistemas de una empresa deben tener exactamente los mismos cuatro subsistemas funcionales que la empresa completa (Finanzas, RRHH, Operaciones y TI, sin excepción).</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la recursividad dice que cada nivel tiene su propia estructura interna con sentido propio, no que se copien literalmente los mismos cuatro subsistemas en todos lados. TI se dividió en Desarrollo/Soporte/Infraestructura, no en Finanzas/RRHH/Operaciones/TI otra vez." data-ko="Es falso: la recursividad no exige repetir exactamente los mismos subsistemas funcionales en cada nivel. Cada parte desarrolla la estructura interna que le tenga sentido a ella — TI se dividió en Desarrollo, Soporte e Infraestructura, no en una copia idéntica de la empresa." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="ejercicios">
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="repaso-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada subsistema funcional con lo que hace.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="finanzas">Finanzas</button>
+<button class="quiz-match-item" data-pair="rrhh">RRHH</button>
+<button class="quiz-match-item" data-pair="operaciones">Operaciones</button>
+<button class="quiz-match-item" data-pair="ti">TI</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="ti">Mantiene los sistemas internos, los datos y la infraestructura tecnológica.</button>
+<button class="quiz-match-item" data-pair="finanzas">Administra el presupuesto, los pagos y los reportes económicos de la empresa.</button>
+<button class="quiz-match-item" data-pair="operaciones">Coordina que los proyectos o productos se entreguen a tiempo.</button>
+<button class="quiz-match-item" data-pair="rrhh">Contrata personal, gestiona la nómina y acompaña a los empleados.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un banco comercial, "Banco XYZ", opera bajo las regulaciones del Banco Central del país, que define tasas mínimas y requisitos de capital para todo el sistema financiero. ¿Qué es el Banco Central respecto al Banco XYZ?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un subsistema interno del propio Banco XYZ.</button>
+<button class="quiz-opt">Un elemento aislado, sin relación jerárquica.</button>
+<button class="quiz-opt">Un ejemplo de recursividad dentro del Banco XYZ.</button>
+<button class="quiz-opt" data-correct>Su suprasistema: el sistema mayor que lo regula y contiene.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el Banco Central regula a todos los bancos comerciales, incluido el Banco XYZ — es el sistema mayor que lo contiene y lo condiciona, su suprasistema." data-ko="No es un subsistema (una parte interna del Banco XYZ) ni un elemento aislado: el Banco Central es el sistema mayor que regula y contiene al Banco XYZ, su suprasistema." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En una cadena de supermercados, ¿qué subsistema funcional coordina el abastecimiento y el nivel de stock en cada tienda?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Finanzas.</button>
+<button class="quiz-opt">RRHH.</button>
+<button class="quiz-opt" data-correct>Operaciones.</button>
+<button class="quiz-opt">TI.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: coordinar el abastecimiento y el stock es parte de la producción/entrega del servicio, la responsabilidad central del subsistema Operaciones." data-ko="Ni el presupuesto (Finanzas), ni el personal (RRHH), ni los sistemas internos (TI) son responsables de esto: coordinar abastecimiento y stock es tarea de Operaciones." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">El subsistema Operaciones de una fábrica tiene, puertas adentro, un equipo de Logística y un equipo de Control de Calidad, cada uno con sus propias tareas y su propia coordinación. ¿Qué principio es este?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Recursividad de Operaciones.</button>
+<button class="quiz-opt">Sinergia entre Logística y Calidad.</button>
+<button class="quiz-opt">Equifinalidad de la fábrica.</button>
+<button class="quiz-opt">Entropía del subsistema.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Operaciones tiene, a su vez, sus propios subsistemas (Logística y Calidad) — el mismo patrón sistema-subsistema, repetido dentro de Operaciones. Eso es recursividad." data-ko="No es sinergia, equifinalidad ni entropía: que Operaciones tenga sus propios subsistemas internos es exactamente el mismo principio de recursividad que viste con TI." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">En una jerarquía de sistemas, el suprasistema y los subsistemas son intercambiables entre sí, sin ningún orden ni relación de contención real.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: hay un orden real — el suprasistema contiene al sistema, y el sistema contiene a sus subsistemas. No son posiciones intercambiables." data-ko="Es falso: la jerarquía sí tiene un orden real de contención (suprasistema → sistema → subsistemas). No son posiciones intercambiables entre sí." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="repaso-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Repasemos el organigrama de TecnoAndina que armaste al principio de la guía.</p>
+<p>1. El sector tecnológico donde compite TecnoAndina es su
+<select class="quiz-blank" data-correct="suprasistema">
+<option value="">— elige —</option>
+<option value="suprasistema">suprasistema</option>
+<option value="sistema">sistema</option>
+<option value="subsistema">subsistema</option>
+<option value="elemento">elemento</option>
+</select>.</p>
+<p>2. TecnoAndina en sí misma es el
+<select class="quiz-blank" data-correct="sistema">
+<option value="">— elige —</option>
+<option value="sistema">sistema</option>
+<option value="suprasistema">suprasistema</option>
+<option value="entorno">entorno</option>
+<option value="subsistema">subsistema</option>
+</select>
+que estamos analizando.</p>
+<p>3. Finanzas, RRHH, Operaciones y TI son sus
+<select class="quiz-blank" data-correct="subsistemas">
+<option value="">— elige —</option>
+<option value="subsistemas">subsistemas</option>
+<option value="suprasistemas">suprasistemas</option>
+<option value="entornos">entornos</option>
+<option value="límites">límites</option>
+</select>.</p>
+<p>4. Que TI tenga sus propios subsistemas puertas adentro (Desarrollo, Soporte, Infraestructura) es un ejemplo de
+<select class="quiz-blank" data-correct="recursividad">
+<option value="">— elige —</option>
+<option value="entropia">entropía</option>
+<option value="sinergia">sinergia</option>
+<option value="recursividad">recursividad</option>
+<option value="homeostasis">homeostasis</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="evidencia">
+<h2>📤 Evidencia de la sesión: organigrama sistémico</h2>
+<p class="lead">Con tu equipo, elige una organización real que conozcan bien —puede ser su lugar de trabajo, un negocio familiar, o cualquier empresa u organización que puedan investigar— y mapeen su jerarquía completa como sistema.</p>
+<div class="highlight">
+<strong>Herramienta: Draw.io</strong>
+<p>Arma el diagrama en <a href="https://app.diagrams.net" target="_blank" rel="noopener">Draw.io</a> (gratuito, funciona desde el navegador, no necesita instalación).</p>
+</div>
+<p>Como mínimo, tu organigrama sistémico debe incluir:</p>
+<ul style="margin:0 0 20px 22px;line-height:1.9;">
+<li>El <strong>suprasistema</strong> de la organización (su sector, mercado o entorno regulador).</li>
+<li>El <strong>sistema</strong> completo: la organización elegida.</li>
+<li>Al menos tres <strong>subsistemas funcionales</strong> reales de esa organización, con su propósito.</li>
+<li>Un ejemplo de <strong>recursividad</strong>: un subsistema que, puertas adentro, tenga sus propios subsistemas.</li>
+</ul>
+<div class="highlight">
+<strong>Entrega</strong>
+<p>Exporta el diagrama como imagen (PNG o JPG) desde Draw.io y súbelo a la tarea correspondiente en <strong>Classroom</strong> antes del inicio de la próxima sesión. No se acepta el link editable de Draw.io en lugar de la imagen: sube el archivo directamente.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet">
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Sistema</td><td>El conjunto completo que se está analizando (ej. la empresa).</td></tr>
+<tr><td>Subsistema</td><td>Una parte del sistema, con propósito propio, que contribuye al propósito general.</td></tr>
+<tr><td>Suprasistema</td><td>El sistema mayor que contiene al que se está analizando.</td></tr>
+<tr><td>Jerarquía de sistemas</td><td>Niveles anidados: suprasistema → sistema → subsistemas.</td></tr>
+<tr><td>Recursividad</td><td>El mismo patrón (subsistemas dentro de un sistema) se repite en cada nivel.</td></tr>
+<tr><td>Subsistemas funcionales</td><td>Áreas típicas de una empresa: Finanzas, RRHH, Operaciones, TI.</td></tr>
+<tr><td>Organigrama sistémico</td><td>Diagrama que muestra los niveles y las relaciones entre subsistemas, no solo el mando.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat">
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🌿 Un helecho es recursivo de verdad</h3><p>Cada hoja de un helecho tiene, en miniatura, la misma forma ramificada que la planta completa — el mismo patrón que ves cuando TI se divide en Desarrollo, Soporte e Infraestructura, repetido a otra escala.</p></div>
+<div class="info"><h3>📊 La "Organización Requerida" de Elliot Jaques</h3><p>Este psicólogo organizacional pasó décadas estudiando cuántos niveles jerárquicos necesita realmente una empresa según la complejidad de sus decisiones — demasiados niveles generan burocracia inútil, muy pocos generan caos.</p></div>
+<div class="info"><h3>🐜 Una colonia de hormigas no tiene organigrama</h3><p>No existe una hormiga "gerente" dando órdenes: el orden de la colonia surge de reglas simples que cada hormiga sigue por su cuenta. No todo sistema necesita una jerarquía explícita para funcionar.</p></div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Jerarquía de Sistemas y Enfoque Organizacional</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Reactivo: crecimiento combinatorio de la recursividad
+   (exploratorio, sin calificar). Recalcula subsistemas^niveles en la
+   misma oración al tipear, mismo patrón que el termostato de
+   eps-retroalimentacion.html y las edades de clases-objetos.html. ===== */
+(function(){
+  const inputRamas = document.getElementById("reactivoRamas");
+  const inputNiveles = document.getElementById("reactivoNiveles");
+  const salidaTotal = document.getElementById("reactivoTotal");
+  if (!inputRamas || !inputNiveles) return;
+  function recalcular(){
+    const ramas = Math.max(1, Number(inputRamas.value) || 1);
+    const niveles = Math.max(1, Number(inputNiveles.value) || 1);
+    salidaTotal.textContent = Math.pow(ramas, niveles);
+  }
+  inputRamas.addEventListener("input", recalcular);
+  inputNiveles.addEventListener("input", recalcular);
+  recalcular();
+})();
+
+/* ===== Nivel 1: flujo con panel fijo — organigrama sistémico de
+   TecnoAndina, construido en capas. Prosa a la izquierda (.flow-beat)
+   + panel fijo a la derecha (#jerPanel) que revela suprasistema,
+   sistema, los cuatro subsistemas funcionales, la marca de jerarquía
+   y, al final, la recursividad dentro de TI, según qué paso cruza el
+   centro del viewport. No es una actividad calificada: no llama a
+   marcarResuelto. ===== */
+(function(){
+  var jerSteps = document.querySelectorAll('#empresa-sistema .flow-beat');
+  if (!jerSteps.length) return;
+
+  var CAPTIONS = [
+    'Sin diagrama todavía — armemos el sistema-empresa de TecnoAndina, capa por capa.',
+    'SUPRASISTEMA: el sector tecnológico que rodea y contiene a la empresa.',
+    'SISTEMA: TecnoAndina, la empresa completa que estamos analizando.',
+    'SUBSISTEMA: Finanzas — presupuesto, pagos y reportes.',
+    'SUBSISTEMA: RRHH — contratación, nómina y personal.',
+    'SUBSISTEMA: Operaciones — coordina la producción y las entregas.',
+    'SUBSISTEMA: TI — mantiene los sistemas y los datos.',
+    'JERARQUÍA: suprasistema → sistema → subsistemas, tres niveles anidados.',
+    'RECURSIVIDAD: TI tiene, puertas adentro, sus propios subsistemas.'
+  ];
+
+  var jerCurrentStep = -1;
+  var jerIds = ['jerLineSupraEmpresa','jerBoxSupra','jerBoxEmpresa'];
+
+  function jerRender(step){
+    if (step === jerCurrentStep) return;
+    jerCurrentStep = step;
+
+    document.getElementById('jerBoxSupra').classList.toggle('show', step >= 1);
+    document.getElementById('jerLineSupraEmpresa').classList.toggle('show', step >= 2);
+    document.getElementById('jerBoxEmpresa').classList.toggle('show', step >= 2);
+
+    document.getElementById('jerLineEmpresaFinanzas').classList.toggle('show', step >= 3);
+    document.getElementById('jerBoxFinanzas').classList.toggle('show', step >= 3);
+    document.getElementById('jerLineEmpresaRRHH').classList.toggle('show', step >= 4);
+    document.getElementById('jerBoxRRHH').classList.toggle('show', step >= 4);
+    document.getElementById('jerLineEmpresaOperaciones').classList.toggle('show', step >= 5);
+    document.getElementById('jerBoxOperaciones').classList.toggle('show', step >= 5);
+    document.getElementById('jerLineEmpresaTI').classList.toggle('show', step >= 6);
+    document.getElementById('jerBoxTI').classList.toggle('show', step >= 6);
+
+    document.getElementById('jerBracket').classList.toggle('show', step >= 7);
+
+    var recursivo = step >= 8;
+    ['jerLineTIDesarrollo','jerBoxDesarrollo','jerLineTISoporte','jerBoxSoporte','jerLineTIInfra','jerBoxInfra','jerCaja','jerCajaLabel'].forEach(function(id){
+      document.getElementById(id).classList.toggle('show', recursivo);
+    });
+    ['jerClusterFinanzas','jerClusterRRHH','jerClusterOperaciones'].forEach(function(id){
+      document.getElementById(id).classList.toggle('dim', recursivo);
+    });
+
+    document.getElementById('jerCaption').textContent = CAPTIONS[step] || '';
+    document.getElementById('jerPanelStep').textContent = 'Paso ' + (step + 1) + ' / 9';
+    jerSteps.forEach(function(el){
+      el.classList.toggle('is-active', Number(el.dataset.step) === step);
+    });
+  }
+
+  var jerObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) jerRender(Number(e.target.dataset.step));
+    });
+  }, { rootMargin: '-35% 0px -55% 0px', threshold: 0 });
+  jerSteps.forEach(function(s){ jerObserver.observe(s); });
+  jerRender(0);
+})();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedida directo, como siempre, no dispara nada nuevo. No toca el
+     motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen (ver DEPLOY-GUIAS-SNIPPET.md en
+     el repo de atenza para el detalle de cada endpoint). -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  // El link real que arma ATENZA a veces llega como
+  // "...html#seccion?atenza_token=...", con el "?" después del "#" — ahí
+  // location.search por sí solo da vacío, por eso se busca también
+  // dentro de location.hash (mismo parche que el script de limpieza del
+  // <head>, autocontenido acá para no tocar el motor de quizzes).
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  // ── Progreso limpio por intento (redundante con el script del <head>,
+  // pero si por lo que sea ese no corrió a tiempo, esto es la segunda
+  // red): QUIZ_PREFIX guarda el progreso por PÁGINA, sin saber nada de
+  // "intentos" de ATENZA. Si guia_intento cambió, se limpia todo antes
+  // de que el estudiante toque nada.
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  // ── Aviso flotante — la única señal visible de "ya terminaste, podés
+  // cerrar la pestaña" o "no se pudo enviar, tocá para reintentar".
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  // ── Pantalla completa: se pide en un click real del usuario, no solo.
+  // Estilos en línea porque esta página (flow) no tiene una clase para
+  // esto — fixed y con z-index por encima de .flow-topbar (800) y
+  // .flow-menu-panel (891) para que no quede tapado por ninguno.
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  // ── Reportar cada pregunta resuelta — engancha marcarResuelto(), que
+  // ya usan los tipos de actividad de esta guía (mc/match/classify/fill)
+  // sin tocar ninguno de sus call-sites.
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+      referencia: id,
+      correcta: estado === 'ok',
+    }).catch(function () {});
+  };
+
+  // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder foco.
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ── Finalizar al completar el 100% — cuenta CONTESTADAS (ok o ko,
+  // cualquier valor guardado), no solo correctas: con un solo intento
+  // por actividad, exigir 100% de correctas dejaría la guía "en curso"
+  // para siempre apenas alguien se equivoque una vez.
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

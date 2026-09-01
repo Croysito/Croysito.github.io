@@ -1036,6 +1036,37 @@ text.scrolly-ghost{ font-family:'JetBrains Mono',monospace; font-size:8px; fill:
 .eps-caption{ font-size:11.5px; color:var(--gris); margin-top:6px; line-height:1.5; }
 
 /* =========================================================
+   DIAGRAMA DE JERARQUÍA Y RECURSIVIDAD ORGANIZACIONAL (piloto 2 de
+   scrollytelling en TGS, guía jerarquia-organizacional.html — mismo
+   motor .flow-* de eps-retroalimentacion.html. El organigrama de
+   TecnoAndina se revela por capas según el paso activo: cajas, líneas
+   de conexión (sin punta de flecha, como un organigrama real), la
+   marca vertical de jerarquía y, al final, el clúster de recursividad
+   dentro de TI. Nadie más usa estas clases, sin prefijo, mismo
+   criterio que .eps-* y .venn-*. */
+.jer-diagram-wrap{ border:1px solid var(--borde); border-radius:10px; padding:14px 12px 10px; margin-bottom:14px; background:var(--blanco); }
+.jer-diagram-wrap svg{ width:100%; height:auto; display:block; }
+.jer-box rect{ fill:var(--blanco); stroke:var(--borde); stroke-width:1.6; opacity:.25; transition:opacity .3s ease,stroke .3s ease; }
+.jer-box text{ font-family:'JetBrains Mono',monospace; fill:var(--texto); opacity:.25; transition:opacity .3s ease; }
+.jer-box.show rect{ stroke:var(--verde); opacity:1; }
+.jer-box.show text{ opacity:1; }
+.jer-cluster{ transition:opacity .3s ease; }
+.jer-cluster.dim{ opacity:.3; }
+.jer-line{ opacity:0; transition:opacity .3s ease; }
+.jer-line line{ stroke:var(--borde); stroke-width:1.6; }
+.jer-line.show{ opacity:1; }
+.jer-line.show line{ stroke:var(--verde); }
+.jer-bracket{ opacity:0; transition:opacity .3s ease; }
+.jer-bracket.show{ opacity:1; }
+.jer-bracket line{ stroke:var(--azul2); stroke-width:1.4; }
+.jer-bracket text{ font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; fill:var(--azul2); }
+.jer-caja{ stroke:var(--gris); stroke-width:1.6; stroke-dasharray:3 3; opacity:0; transition:opacity .3s ease; }
+.jer-caja.show{ stroke:var(--azul2); opacity:1; }
+.jer-caja-label{ font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; fill:var(--azul2); opacity:0; transition:opacity .3s ease; }
+.jer-caja-label.show{ opacity:1; }
+.jer-caption{ font-size:11.5px; color:var(--gris); margin-top:6px; line-height:1.5; }
+
+/* =========================================================
    MAPA CONCEPTUAL NAVEGABLE — v2, rediseño de handoff hifi
    (31/08, design_handoff_guia_poo). Formato de página,
    alternativo #3 al esqueleto lineal — sigue siendo el único
