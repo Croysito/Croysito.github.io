@@ -38,6 +38,7 @@
 
 <nav class="menu">
 <a href="#intro">Introducción</a>
+<a href="#pensamiento">Pensamiento lineal vs. sistémico</a>
 <a href="#causales">Diagramas de bucle causal</a>
 <a href="#polaridad">Polaridad de las relaciones</a>
 <a href="#bucles">Bucles de refuerzo y balance</a>
@@ -74,7 +75,7 @@
 <p class="lead">En la guía anterior viste que un sistema puede autorregularse (retroalimentación negativa) o amplificar una tendencia (retroalimentación positiva). Esta guía te da el <strong>lenguaje visual</strong> para representar eso con precisión: los <strong>diagramas de bucle causal</strong> y los <strong>diagramas de stock y flujo</strong>, la base de la disciplina conocida como <strong>Dinámica de Sistemas</strong>, creada por Jay Forrester en el MIT.</p>
 <div class="highlight">
 <strong>Objetivo del módulo</strong>
-<p>Al finalizar esta guía sabrás construir diagramas de bucle causal, distinguir bucles de refuerzo y de balance, reconocer arquetipos sistémicos comunes en situaciones reales, diferenciar stocks de flujos, y explicar por qué un retardo puede hacer que un sistema oscile.</p>
+<p>Al finalizar esta guía sabrás distinguir el pensamiento lineal del sistémico, construir diagramas de bucle causal, distinguir bucles de refuerzo y de balance, reconocer arquetipos sistémicos comunes en situaciones reales, diferenciar stocks de flujos, y explicar por qué un retardo puede hacer que un sistema oscile.</p>
 </div>
 <div class="highlight">
 <strong>📝 Actividades de este módulo</strong>
@@ -84,6 +85,39 @@
 <div class="info"><h3>🔗 Conecta</h3><p>Formaliza lo que ya sabes de retroalimentación en un diagrama que se puede leer y predecir.</p></div>
 <div class="info"><h3>🔎 Razona</h3><p>Escenarios reales donde debes predecir el comportamiento del sistema antes de comprobarlo.</p></div>
 <div class="info"><h3>🛠️ Construye</h3><p>Un ejercicio guiado donde armas tu propio diagrama causal, paso a paso.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="pensamiento">
+<div class="card">
+<h2 class="section-title">Pensamiento lineal vs. sistémico</h2>
+<p class="lead">Antes de construir el primer diagrama, vale la pena nombrar el cambio de hábito mental que esta guía te pide. Ante un problema, la reacción más natural es buscar <strong>una causa y un efecto</strong>, en una sola dirección. El pensamiento sistémico pide algo distinto: mirar el problema como parte de una <strong>red de causas que se retroalimentan entre sí</strong>, algunas de ellas devolviendo el efecto hacia su propio origen.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Pensamiento lineal</th><th scope="col">Pensamiento sistémico</th></tr></thead>
+<tbody>
+<tr><td>Busca <strong>una</strong> causa para un efecto.</td><td>Busca <strong>varias</strong> causas interrelacionadas.</td></tr>
+<tr><td>La causa va en <strong>una sola dirección</strong> hacia el efecto.</td><td>El efecto puede <strong>volver</strong> a influir sobre su propia causa.</td></tr>
+<tr><td>Trata el síntoma más visible.</td><td>Busca el patrón de fondo que genera el síntoma.</td></tr>
+<tr><td>Ejemplo: "las ventas bajaron porque el vendedor rindió menos".</td><td>Ejemplo: "las ventas bajaron → las comisiones bajaron → el vendedor rindió menos → las ventas siguieron bajando".</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Un caso de TI para pensarlo</strong>
+<p>Un equipo de desarrollo, con la fecha de entrega encima, empieza a saltarse revisiones de código para ir más rápido. Un análisis lineal dice: "van más rápido porque revisan menos". El análisis sistémico pregunta qué pasa después: el código sin revisar acumula errores, esos errores exigen tiempo de corrección más adelante, y ese tiempo perdido vuelve a poner al equipo con la fecha encima — el mismo efecto que originó la decisión, alimentado por ella. Ese círculo que se cierra sobre sí mismo es exactamente lo que un <strong>diagrama de bucle causal</strong>, el tema de esta guía, permite dibujar y anticipar.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="pensamiento-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un supervisor nota que la rotación de personal en su equipo es alta y concluye: "la gente renuncia porque el sueldo es bajo". Un análisis sistémico agrega: la rotación alta obliga a contratar y capacitar seguido, eso reduce el tiempo disponible para mejorar procesos y pedir mejores presupuestos, lo que mantiene el sueldo bajo. ¿Qué distingue a la segunda lectura de la primera?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Nada: ambas señalan al sueldo bajo como única causa, solo que con más palabras.</button>
+<button class="quiz-opt" data-correct>La segunda muestra un bucle: el efecto (sueldo bajo) retroalimenta su propia causa (rotación alta).</button>
+<button class="quiz-opt">La segunda es lineal, porque nombra más de una variable en la explicación.</button>
+<button class="quiz-opt">La primera ya es sistémica: identifica la causa raíz real del problema.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: la clave del pensamiento sistémico no es 'usar más variables', sino que el efecto vuelve a alimentar la causa que lo originó, cerrando un bucle. La lectura lineal se detiene en el primer eslabón (sueldo → renuncias); la sistémica sigue la cadena hasta ver que vuelve sobre sí misma." data-ko="Mencionar varias variables no es lo que hace sistémico a un análisis — lo es que el efecto retroalimente su propia causa, cerrando un bucle. Aquí el sueldo bajo (efecto) termina siendo también una de las causas de la rotación (por qué sigue habiendo poco tiempo/presupuesto para subirlo): eso es lo que la lectura lineal no ve." hidden></p>
 </div>
 </div>
 </section>
@@ -463,6 +497,17 @@ Tiempo de espera, Satisfacción del cliente</pre>
 <div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
 </div>
 
+<div class="quiz quiz-mc" data-quiz-id="repaso-pensamiento">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Pensar de forma sistémica significa, sobre todo, dibujar diagramas en vez de explicar el problema con palabras.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: lo que distingue al pensamiento sistémico no es el formato (diagrama vs. texto), sino buscar varias causas interrelacionadas y bucles de retroalimentación en vez de una causa única y lineal. El diagrama es solo la herramienta para representarlo con precisión." data-ko="El formato no es lo que define al pensamiento sistémico: podés razonar sistémicamente en palabras, igual que podés dibujar un diagrama sin pensar en bucles. Lo que importa es buscar causas interrelacionadas que se retroalimentan, no una causa única en una sola dirección." hidden></p>
+</div>
+
 <div class="quiz quiz-mc" data-quiz-id="repaso-1">
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">¿Quién es considerado el creador de la Dinámica de Sistemas y sus diagramas de stock y flujo?</p>
@@ -534,6 +579,8 @@ Tiempo de espera, Satisfacción del cliente</pre>
 <table class="tabla">
 <thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
 <tbody>
+<tr><td>Pensamiento lineal</td><td>Busca una causa única para un efecto, en una sola dirección.</td></tr>
+<tr><td>Pensamiento sistémico</td><td>Busca causas interrelacionadas que se retroalimentan, cerrando bucles.</td></tr>
 <tr><td>Enlace causal</td><td>Flecha entre dos variables, con una polaridad (+ o −).</td></tr>
 <tr><td>Polaridad positiva (+)</td><td>Las variables se mueven en la misma dirección.</td></tr>
 <tr><td>Polaridad negativa (−)</td><td>Las variables se mueven en direcciones opuestas.</td></tr>

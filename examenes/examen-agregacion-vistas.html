@@ -326,28 +326,28 @@ const CASOS = {
 
 4: {
   nombre: "Caso 4 — Notas de venta",
-  contexto: `<p>Una empresa registra sus ventas en <strong>notas</strong>. Cada nota tiene número, fecha, un <strong>cliente</strong> (con NIT), un <strong>vendedor</strong> (con un % de comisión) y una lista de <strong>ítems</strong> (producto, cantidad, precio unitario).</p>`,
+  contexto: `<p>Una empresa registra sus ventas en <strong>notas</strong>. Cada nota tiene número, fecha, un <strong>cliente</strong> (con NIT y razón social), un <strong>vendedor</strong> (con un % de comisión) y una lista de <strong>ítems</strong> (producto, cantidad, precio unitario).</p>`,
   ddl: {
     enunciadoHtml: `Acá tienes que crear todas las tablas necesarias. Usa exactamente estos nombres de tabla y columna (definí vos las claves primarias, foráneas y el tipo de dato de cada columna):
     <ul style="margin:10px 0 0 22px;line-height:1.9">
-    <li><code>cliente(nit, nombre)</code></li>
-    <li><code>vendedor(cod_vendedor, nombre, comision_pct)</code></li>
-    <li><code>producto(cod_producto, nombre)</code></li>
-    <li><code>nota_venta(nro_nota, fecha, nit_cliente, cod_vendedor)</code></li>
-    <li><code>detalle_nota(nro_nota, cod_producto, cantidad, precio_unitario)</code></li>
+    <li><code>cliente(id, razon_social, nit)</code></li>
+    <li><code>vendedor(id, nombre, comision)</code></li>
+    <li><code>producto(id, nombre, detalle)</code></li>
+    <li><code>venta(id, nro_nota, fecha, id_cliente, id_vendedor)</code></li>
+    <li><code>venta_producto(id_producto, id_venta, cantidad, precio_unitario)</code></li>
     </ul>`,
     tablas: {
-      cliente: { columnas: ["nit","nombre"], forbidden: [] },
-      vendedor: { columnas: ["cod_vendedor","nombre","comision_pct"], forbidden: [] },
-      producto: { columnas: ["cod_producto","nombre"], forbidden: [] },
-      nota_venta: { columnas: ["nro_nota","fecha","nit_cliente","cod_vendedor"], forbidden: ["comision","comision_pct","subtotal","total"] },
-      detalle_nota: { columnas: ["nro_nota","cod_producto","cantidad","precio_unitario"], forbidden: ["subtotal","total"] },
+      cliente: { columnas: ["id","razon_social","nit"], forbidden: [] },
+      vendedor: { columnas: ["id","nombre","comision"], forbidden: [] },
+      producto: { columnas: ["id","nombre","detalle"], forbidden: [] },
+      venta: { columnas: ["id","nro_nota","fecha","id_cliente","id_vendedor"], forbidden: ["comision","subtotal","total"] },
+      venta_producto: { columnas: ["id_producto","id_venta","cantidad","precio_unitario"], forbidden: ["subtotal","total"] },
     },
     fks: [
-      {tabla:"nota_venta", refTabla:"cliente"},
-      {tabla:"nota_venta", refTabla:"vendedor"},
-      {tabla:"detalle_nota", refTabla:"nota_venta"},
-      {tabla:"detalle_nota", refTabla:"producto"},
+      {tabla:"venta", refTabla:"cliente"},
+      {tabla:"venta", refTabla:"vendedor"},
+      {tabla:"venta_producto", refTabla:"venta"},
+      {tabla:"venta_producto", refTabla:"producto"},
     ],
   },
   dml: {
@@ -355,61 +355,61 @@ const CASOS = {
     checks: [
       chk("SELECT COUNT(*)::int AS n FROM cliente", ">=", 2, "Necesitás al menos 2 clientes."),
       chk("SELECT COUNT(*)::int AS n FROM vendedor", ">=", 2, "Necesitás al menos 2 vendedores."),
-      chk("SELECT COUNT(*)::int AS n FROM vendedor WHERE comision_pct > 4", ">=", 1, "Necesitás al menos un vendedor con comision_pct mayor a 4."),
-      chk("SELECT COUNT(*)::int AS n FROM vendedor WHERE comision_pct <= 4", ">=", 1, "Necesitás al menos un vendedor con comision_pct de 4 o menos."),
+      chk("SELECT COUNT(*)::int AS n FROM vendedor WHERE comision > 4", ">=", 1, "Necesitás al menos un vendedor con comision mayor a 4."),
+      chk("SELECT COUNT(*)::int AS n FROM vendedor WHERE comision <= 4", ">=", 1, "Necesitás al menos un vendedor con comision de 4 o menos."),
       chk("SELECT COUNT(*)::int AS n FROM producto", ">=", 3, "Necesitás al menos 3 productos."),
-      chk("SELECT COUNT(*)::int AS n FROM nota_venta", ">=", 3, "Necesitás al menos 3 notas de venta."),
-      chk("SELECT COUNT(DISTINCT cod_vendedor)::int AS n FROM nota_venta", ">=", 2, "Tus notas deben repartirse entre al menos 2 vendedores distintos."),
-      chk("SELECT COUNT(*)::int AS n FROM detalle_nota", ">=", 6, "Necesitás al menos 6 filas en detalle_nota."),
-      chk("SELECT COUNT(*)::int AS n FROM nota_venta nv LEFT JOIN cliente c ON c.nit=nv.nit_cliente WHERE c.nit IS NULL", "<=", 0, "Hay notas con un nit_cliente que no existe en cliente."),
-      chk("SELECT COUNT(*)::int AS n FROM nota_venta nv LEFT JOIN vendedor v ON v.cod_vendedor=nv.cod_vendedor WHERE v.cod_vendedor IS NULL", "<=", 0, "Hay notas con un cod_vendedor que no existe en vendedor."),
-      chk("SELECT COUNT(*)::int AS n FROM detalle_nota d LEFT JOIN nota_venta nv ON nv.nro_nota=d.nro_nota WHERE nv.nro_nota IS NULL", "<=", 0, "Hay filas en detalle_nota con un nro_nota que no existe en nota_venta."),
-      chk("SELECT COUNT(*)::int AS n FROM detalle_nota d LEFT JOIN producto p ON p.cod_producto=d.cod_producto WHERE p.cod_producto IS NULL", "<=", 0, "Hay filas en detalle_nota con un cod_producto que no existe en producto."),
-      chk("SELECT COUNT(*)::int AS n FROM (SELECT nv.cod_vendedor tot0, SUM(d.cantidad*d.precio_unitario) tot FROM nota_venta nv JOIN detalle_nota d ON d.nro_nota=nv.nro_nota GROUP BY nv.cod_vendedor HAVING SUM(d.cantidad*d.precio_unitario) > 300) x", ">=", 1, "Necesitás que al menos un vendedor tenga un total vendido mayor a 300."),
-      chk("SELECT COUNT(*)::int AS n FROM (SELECT nv.cod_vendedor tot0, SUM(d.cantidad*d.precio_unitario) tot FROM nota_venta nv JOIN detalle_nota d ON d.nro_nota=nv.nro_nota GROUP BY nv.cod_vendedor HAVING SUM(d.cantidad*d.precio_unitario) <= 300) x", ">=", 1, "Necesitás que al menos un vendedor tenga un total vendido de 300 o menos."),
+      chk("SELECT COUNT(*)::int AS n FROM venta", ">=", 3, "Necesitás al menos 3 ventas."),
+      chk("SELECT COUNT(DISTINCT id_vendedor)::int AS n FROM venta", ">=", 2, "Tus ventas deben repartirse entre al menos 2 vendedores distintos."),
+      chk("SELECT COUNT(*)::int AS n FROM venta_producto", ">=", 6, "Necesitás al menos 6 filas en venta_producto."),
+      chk("SELECT COUNT(*)::int AS n FROM venta v LEFT JOIN cliente c ON c.id=v.id_cliente WHERE c.id IS NULL", "<=", 0, "Hay ventas con un id_cliente que no existe en cliente."),
+      chk("SELECT COUNT(*)::int AS n FROM venta v LEFT JOIN vendedor ve ON ve.id=v.id_vendedor WHERE ve.id IS NULL", "<=", 0, "Hay ventas con un id_vendedor que no existe en vendedor."),
+      chk("SELECT COUNT(*)::int AS n FROM venta_producto vp LEFT JOIN venta v ON v.id=vp.id_venta WHERE v.id IS NULL", "<=", 0, "Hay filas en venta_producto con un id_venta que no existe en venta."),
+      chk("SELECT COUNT(*)::int AS n FROM venta_producto vp LEFT JOIN producto p ON p.id=vp.id_producto WHERE p.id IS NULL", "<=", 0, "Hay filas en venta_producto con un id_producto que no existe en producto."),
+      chk("SELECT COUNT(*)::int AS n FROM (SELECT v.id_vendedor tot0, SUM(vp.cantidad*vp.precio_unitario) tot FROM venta v JOIN venta_producto vp ON vp.id_venta=v.id GROUP BY v.id_vendedor HAVING SUM(vp.cantidad*vp.precio_unitario) > 300) x", ">=", 1, "Necesitás que al menos un vendedor tenga un total vendido mayor a 300."),
+      chk("SELECT COUNT(*)::int AS n FROM (SELECT v.id_vendedor tot0, SUM(vp.cantidad*vp.precio_unitario) tot FROM venta v JOIN venta_producto vp ON vp.id_venta=v.id GROUP BY v.id_vendedor HAVING SUM(vp.cantidad*vp.precio_unitario) <= 300) x", ">=", 1, "Necesitás que al menos un vendedor tenga un total vendido de 300 o menos."),
     ],
   },
   pasos: [
     {
-      enunciadoHtml: `Escribe <strong>una única</strong> consulta con <code>INNER JOIN</code> que muestre, para cada línea de <code>detalle_nota</code>, en este orden: <strong>nombre del cliente, nombre del vendedor, nombre del producto, cantidad, precio_unitario y el subtotal calculado</strong> (cantidad × precio_unitario).`,
-      referencia: `SELECT cl.nombre, v.nombre, p.nombre, d.cantidad, d.precio_unitario, d.cantidad*d.precio_unitario
-FROM detalle_nota d
-JOIN nota_venta n ON n.nro_nota = d.nro_nota
-JOIN cliente cl ON cl.nit = n.nit_cliente
-JOIN vendedor v ON v.cod_vendedor = n.cod_vendedor
-JOIN producto p ON p.cod_producto = d.cod_producto;`,
+      enunciadoHtml: `Escribe <strong>una única</strong> consulta con <code>INNER JOIN</code> que muestre, para cada línea de <code>venta_producto</code>, en este orden: <strong>razón social del cliente, nombre del vendedor, nombre del producto, cantidad, precio_unitario y el subtotal calculado</strong> (cantidad × precio_unitario).`,
+      referencia: `SELECT cl.razon_social, ve.nombre, p.nombre, vp.cantidad, vp.precio_unitario, vp.cantidad*vp.precio_unitario
+FROM venta_producto vp
+JOIN venta v ON v.id = vp.id_venta
+JOIN cliente cl ON cl.id = v.id_cliente
+JOIN vendedor ve ON ve.id = v.id_vendedor
+JOIN producto p ON p.id = vp.id_producto;`,
       columnas: 6,
     },
     {
-      enunciadoHtml: `Escribe una consulta con <strong>subconsulta</strong> que muestre (sin repetir) el nombre de los clientes que hayan comprado con algún vendedor cuya <code>comision_pct</code> sea mayor a 4.`,
-      referencia: `SELECT DISTINCT cl.nombre
+      enunciadoHtml: `Escribe una consulta con <strong>subconsulta</strong> que muestre (sin repetir) la razón social de los clientes que hayan comprado con algún vendedor cuya <code>comision</code> sea mayor a 4.`,
+      referencia: `SELECT DISTINCT cl.razon_social
 FROM cliente cl
-WHERE cl.nit IN (
-  SELECT n.nit_cliente FROM nota_venta n
-  JOIN vendedor v ON v.cod_vendedor = n.cod_vendedor
-  WHERE v.comision_pct > 4
+WHERE cl.id IN (
+  SELECT v.id_cliente FROM venta v
+  JOIN vendedor ve ON ve.id = v.id_vendedor
+  WHERE ve.comision > 4
 );`,
       columnas: 1,
     },
     {
-      enunciadoHtml: `Escribe una consulta que muestre, por vendedor, el <strong>nombre del vendedor</strong> y el <strong>total vendido</strong> (suma de cantidad × precio_unitario de todas sus notas), quedándote solo con los vendedores cuyo total supere <strong>300</strong>.`,
-      referencia: `SELECT v.nombre, SUM(d.cantidad*d.precio_unitario) AS total
-FROM vendedor v
-JOIN nota_venta n ON n.cod_vendedor = v.cod_vendedor
-JOIN detalle_nota d ON d.nro_nota = n.nro_nota
-GROUP BY v.nombre
-HAVING SUM(d.cantidad*d.precio_unitario) > 300;`,
+      enunciadoHtml: `Escribe una consulta que muestre, por vendedor, el <strong>nombre del vendedor</strong> y el <strong>total vendido</strong> (suma de cantidad × precio_unitario de todas sus ventas), quedándote solo con los vendedores cuyo total supere <strong>300</strong>.`,
+      referencia: `SELECT ve.nombre, SUM(vp.cantidad*vp.precio_unitario) AS total
+FROM vendedor ve
+JOIN venta v ON v.id_vendedor = ve.id
+JOIN venta_producto vp ON vp.id_venta = v.id
+GROUP BY ve.nombre
+HAVING SUM(vp.cantidad*vp.precio_unitario) > 300;`,
       columnas: 2,
     },
     {
-      enunciadoHtml: `Crea una vista llamada <code>resumen_ventas_vendedor</code> con el nombre del vendedor y el total vendido — igual que el paso anterior pero <strong>sin</strong> el HAVING (todos los vendedores). Consúltala con <code>SELECT *</code> agregando <code>WHERE total &gt; 300</code> para reproducir el filtro anterior. Después, con <code>CREATE OR REPLACE VIEW</code>, agrégale una tercera columna, <code>cantidad_notas</code>, con el número de notas distintas de cada vendedor, y vuelve a consultarla completa.`,
+      enunciadoHtml: `Crea una vista llamada <code>resumen_ventas_vendedor</code> con el nombre del vendedor y el total vendido — igual que el paso anterior pero <strong>sin</strong> el HAVING (todos los vendedores). Consúltala con <code>SELECT *</code> agregando <code>WHERE total &gt; 300</code> para reproducir el filtro anterior. Después, con <code>CREATE OR REPLACE VIEW</code>, agrégale una tercera columna, <code>cantidad_notas</code>, con el número de ventas distintas de cada vendedor, y vuelve a consultarla completa.`,
       esVista: true,
       nombreVista: "resumen_ventas_vendedor",
-      referencia: `SELECT v.nombre, SUM(d.cantidad*d.precio_unitario) AS total, COUNT(DISTINCT n.nro_nota) AS cantidad_notas
-FROM vendedor v
-JOIN nota_venta n ON n.cod_vendedor = v.cod_vendedor
-JOIN detalle_nota d ON d.nro_nota = n.nro_nota
-GROUP BY v.nombre;`,
+      referencia: `SELECT ve.nombre, SUM(vp.cantidad*vp.precio_unitario) AS total, COUNT(DISTINCT v.id) AS cantidad_notas
+FROM vendedor ve
+JOIN venta v ON v.id_vendedor = ve.id
+JOIN venta_producto vp ON vp.id_venta = v.id
+GROUP BY ve.nombre;`,
       columnas: 3,
     },
   ],
@@ -417,30 +417,34 @@ GROUP BY v.nombre;`,
 
 5: {
   nombre: "Caso 5 — Gimnasio",
-  contexto: `<p>Un gimnasio tiene <strong>socios</strong>, cada uno con un <strong>plan</strong> (mensual, trimestral o anual) que tiene un precio. Los socios entran al gimnasio y se registra la hora (<strong>asistencia</strong>). Hay <strong>entrenadores</strong>; cualquier socio puede contratar <strong>sesiones personalizadas</strong> con cualquier entrenador, anotando fecha, hora y qué rutina hizo. Cada entrenador cobra su propia tarifa por sesión.</p>
-  <p><strong>Ah, y algunos entrenadores también son socios del gimnasio.</strong></p>`,
+  contexto: `<p>Un gimnasio tiene <strong>socios</strong>, cada uno con un <strong>plan</strong> (mensual, trimestral o anual) que tiene un precio. Los socios entran al gimnasio y se registra la fecha y hora (<strong>ingreso</strong>). Hay <strong>entrenadores</strong>; cualquier socio puede contratar <strong>sesiones</strong> con cualquier entrenador, anotando fecha, hora, qué rutina hizo y la tarifa que se le cobró esa vez. Los datos personales (nombre) de socios y entrenadores se guardan una sola vez, en <strong>persona</strong>.</p>
+  <p><strong>Ah, y algunos entrenadores también son socios del gimnasio</strong> — eso se modela con que su fila de <code>entrenador</code> y su fila de <code>socio</code> apunten a la <strong>misma</strong> fila de <code>persona</code>.</p>`,
   ddl: {
     enunciadoHtml: `Acá tienes que crear todas las tablas necesarias. Usa exactamente estos nombres de tabla y columna (definí vos las claves primarias, foráneas y el tipo de dato de cada columna):
     <ul style="margin:10px 0 0 22px;line-height:1.9">
-    <li><code>plan(cod_plan, nombre, precio)</code></li>
-    <li><code>socio(cod_socio, nombre, cod_plan)</code></li>
-    <li><code>entrenador(cod_entrenador, nombre, tarifa_sesion, cod_socio)</code></li>
-    <li><code>asistencia(cod_asistencia, cod_socio, fecha, hora)</code></li>
-    <li><code>sesion_personalizada(cod_sesion, cod_socio, cod_entrenador, fecha, hora, rutina)</code></li>
-    </ul>`,
+    <li><code>persona(id, nombre)</code></li>
+    <li><code>plan(id, nombre, precio)</code></li>
+    <li><code>socio(id, id_persona, id_plan, fecha_inicio)</code></li>
+    <li><code>entrenador(id, id_persona, tarifa)</code></li>
+    <li><code>ingreso(id, fecha_hora, id_socio)</code></li>
+    <li><code>sesion(id, id_socio, id_entrenador, fecha_hora, rutina, tarifa)</code></li>
+    </ul>
+    Un entrenador que también es socio <strong>no</strong> crea una fila nueva en <code>persona</code>: su <code>socio.id_persona</code> y su <code>entrenador.id_persona</code> apuntan al mismo <code>persona.id</code>.`,
     tablas: {
-      plan: { columnas: ["cod_plan","nombre","precio"], forbidden: [] },
-      socio: { columnas: ["cod_socio","nombre","cod_plan"], forbidden: ["precio","precio_plan"] },
-      entrenador: { columnas: ["cod_entrenador","nombre","tarifa_sesion","cod_socio"], forbidden: [] },
-      asistencia: { columnas: ["cod_asistencia","cod_socio","fecha","hora"], forbidden: [] },
-      sesion_personalizada: { columnas: ["cod_sesion","cod_socio","cod_entrenador","fecha","hora","rutina"], forbidden: ["tarifa","costo","tarifa_sesion"] },
+      persona: { columnas: ["id","nombre"], forbidden: [] },
+      plan: { columnas: ["id","nombre","precio"], forbidden: [] },
+      socio: { columnas: ["id","id_persona","id_plan","fecha_inicio"], forbidden: ["nombre","precio","precio_plan"] },
+      entrenador: { columnas: ["id","id_persona","tarifa"], forbidden: ["nombre"] },
+      ingreso: { columnas: ["id","fecha_hora","id_socio"], forbidden: [] },
+      sesion: { columnas: ["id","id_socio","id_entrenador","fecha_hora","rutina","tarifa"], forbidden: [] },
     },
     fks: [
+      {tabla:"socio", refTabla:"persona"},
       {tabla:"socio", refTabla:"plan"},
-      {tabla:"entrenador", refTabla:"socio"},
-      {tabla:"asistencia", refTabla:"socio"},
-      {tabla:"sesion_personalizada", refTabla:"socio"},
-      {tabla:"sesion_personalizada", refTabla:"entrenador"},
+      {tabla:"entrenador", refTabla:"persona"},
+      {tabla:"ingreso", refTabla:"socio"},
+      {tabla:"sesion", refTabla:"socio"},
+      {tabla:"sesion", refTabla:"entrenador"},
     ],
   },
   dml: {
@@ -449,54 +453,60 @@ GROUP BY v.nombre;`,
       chk("SELECT COUNT(*)::int AS n FROM plan", ">=", 2, "Necesitás al menos 2 planes."),
       chk("SELECT COUNT(*)::int AS n FROM socio", ">=", 3, "Necesitás al menos 3 socios."),
       chk("SELECT COUNT(*)::int AS n FROM entrenador", ">=", 2, "Necesitás al menos 2 entrenadores."),
-      chk("SELECT COUNT(DISTINCT tarifa_sesion)::int AS n FROM entrenador", ">=", 2, "Las tarifas de tus entrenadores deben ser distintas entre sí."),
-      chk("SELECT COUNT(*)::int AS n FROM entrenador WHERE cod_socio IS NOT NULL", ">=", 1, "Necesitás al menos un entrenador que también sea socio (cod_socio cargado)."),
-      chk("SELECT COUNT(*)::int AS n FROM entrenador WHERE cod_socio IS NULL", ">=", 1, "Necesitás al menos un entrenador que NO sea socio (cod_socio vacío)."),
-      chk("SELECT COUNT(*)::int AS n FROM asistencia", ">=", 4, "Necesitás al menos 4 asistencias."),
-      chk("SELECT COUNT(*)::int AS n FROM sesion_personalizada", ">=", 5, "Necesitás al menos 5 sesiones personalizadas."),
-      chk("SELECT COUNT(DISTINCT cod_entrenador)::int AS n FROM sesion_personalizada", ">=", 2, "Tus sesiones deben repartirse entre al menos 2 entrenadores distintos."),
-      chk("SELECT COUNT(*)::int AS n FROM socio s LEFT JOIN plan p ON p.cod_plan=s.cod_plan WHERE p.cod_plan IS NULL", "<=", 0, "Hay socios con un cod_plan que no existe en plan."),
-      chk("SELECT COUNT(*)::int AS n FROM entrenador e LEFT JOIN socio s ON s.cod_socio=e.cod_socio WHERE e.cod_socio IS NOT NULL AND s.cod_socio IS NULL", "<=", 0, "Hay entrenadores con un cod_socio que no existe en socio."),
-      chk("SELECT COUNT(*)::int AS n FROM asistencia a LEFT JOIN socio s ON s.cod_socio=a.cod_socio WHERE s.cod_socio IS NULL", "<=", 0, "Hay asistencias con un cod_socio que no existe en socio."),
-      chk("SELECT COUNT(*)::int AS n FROM sesion_personalizada sp LEFT JOIN socio s ON s.cod_socio=sp.cod_socio WHERE s.cod_socio IS NULL", "<=", 0, "Hay sesiones con un cod_socio que no existe en socio."),
-      chk("SELECT COUNT(*)::int AS n FROM sesion_personalizada sp LEFT JOIN entrenador e ON e.cod_entrenador=sp.cod_entrenador WHERE e.cod_entrenador IS NULL", "<=", 0, "Hay sesiones con un cod_entrenador que no existe en entrenador."),
-      chk("SELECT COUNT(*)::int AS n FROM (SELECT cod_entrenador FROM sesion_personalizada GROUP BY cod_entrenador HAVING COUNT(*) >= 2) x", ">=", 1, "Necesitás que al menos un entrenador tenga 2 o más sesiones."),
-      chk("SELECT COUNT(*)::int AS n FROM (SELECT cod_entrenador FROM sesion_personalizada GROUP BY cod_entrenador HAVING COUNT(*) < 2) x", ">=", 1, "Necesitás que al menos un entrenador tenga menos de 2 sesiones."),
+      chk("SELECT COUNT(DISTINCT tarifa)::int AS n FROM entrenador", ">=", 2, "Las tarifas de tus entrenadores deben ser distintas entre sí."),
+      chk("SELECT COUNT(*)::int AS n FROM entrenador e WHERE EXISTS (SELECT 1 FROM socio s WHERE s.id_persona = e.id_persona)", ">=", 1, "Necesitás al menos un entrenador que también sea socio (misma id_persona en socio y entrenador)."),
+      chk("SELECT COUNT(*)::int AS n FROM entrenador e WHERE NOT EXISTS (SELECT 1 FROM socio s WHERE s.id_persona = e.id_persona)", ">=", 1, "Necesitás al menos un entrenador que NO sea socio."),
+      chk("SELECT COUNT(*)::int AS n FROM ingreso", ">=", 4, "Necesitás al menos 4 ingresos."),
+      chk("SELECT COUNT(*)::int AS n FROM sesion", ">=", 5, "Necesitás al menos 5 sesiones."),
+      chk("SELECT COUNT(DISTINCT id_entrenador)::int AS n FROM sesion", ">=", 2, "Tus sesiones deben repartirse entre al menos 2 entrenadores distintos."),
+      chk("SELECT COUNT(*)::int AS n FROM socio s LEFT JOIN persona p ON p.id=s.id_persona WHERE p.id IS NULL", "<=", 0, "Hay socios con un id_persona que no existe en persona."),
+      chk("SELECT COUNT(*)::int AS n FROM socio s LEFT JOIN plan p ON p.id=s.id_plan WHERE p.id IS NULL", "<=", 0, "Hay socios con un id_plan que no existe en plan."),
+      chk("SELECT COUNT(*)::int AS n FROM entrenador e LEFT JOIN persona p ON p.id=e.id_persona WHERE p.id IS NULL", "<=", 0, "Hay entrenadores con un id_persona que no existe en persona."),
+      chk("SELECT COUNT(*)::int AS n FROM ingreso i LEFT JOIN socio s ON s.id=i.id_socio WHERE s.id IS NULL", "<=", 0, "Hay ingresos con un id_socio que no existe en socio."),
+      chk("SELECT COUNT(*)::int AS n FROM sesion se LEFT JOIN socio s ON s.id=se.id_socio WHERE s.id IS NULL", "<=", 0, "Hay sesiones con un id_socio que no existe en socio."),
+      chk("SELECT COUNT(*)::int AS n FROM sesion se LEFT JOIN entrenador e ON e.id=se.id_entrenador WHERE e.id IS NULL", "<=", 0, "Hay sesiones con un id_entrenador que no existe en entrenador."),
+      chk("SELECT COUNT(*)::int AS n FROM (SELECT id_entrenador FROM sesion GROUP BY id_entrenador HAVING COUNT(*) >= 2) x", ">=", 1, "Necesitás que al menos un entrenador tenga 2 o más sesiones."),
+      chk("SELECT COUNT(*)::int AS n FROM (SELECT id_entrenador FROM sesion GROUP BY id_entrenador HAVING COUNT(*) < 2) x", ">=", 1, "Necesitás que al menos un entrenador tenga menos de 2 sesiones."),
     ],
   },
   pasos: [
     {
-      enunciadoHtml: `Escribe <strong>una única</strong> consulta con <code>INNER JOIN</code> que muestre, para cada sesión personalizada, en este orden: <strong>nombre del socio, nombre del entrenador, fecha, hora, rutina y tarifa_sesion</strong>.`,
-      referencia: `SELECT s.nombre, e.nombre, sp.fecha, sp.hora, sp.rutina, e.tarifa_sesion
-FROM sesion_personalizada sp
-JOIN socio s ON s.cod_socio = sp.cod_socio
-JOIN entrenador e ON e.cod_entrenador = sp.cod_entrenador;`,
-      columnas: 6,
+      enunciadoHtml: `Escribe <strong>una única</strong> consulta con <code>INNER JOIN</code> que muestre, para cada sesión, en este orden: <strong>nombre del socio, nombre del entrenador, fecha_hora, rutina y tarifa</strong> (la de la sesión).`,
+      referencia: `SELECT ps.nombre, pe.nombre, se.fecha_hora, se.rutina, se.tarifa
+FROM sesion se
+JOIN socio s ON s.id = se.id_socio
+JOIN persona ps ON ps.id = s.id_persona
+JOIN entrenador e ON e.id = se.id_entrenador
+JOIN persona pe ON pe.id = e.id_persona;`,
+      columnas: 5,
     },
     {
-      enunciadoHtml: `Escribe una consulta con <strong>subconsulta</strong> que muestre el nombre de los entrenadores cuya <code>tarifa_sesion</code> sea mayor al <strong>promedio</strong> (AVG) de <code>tarifa_sesion</code> de todos los entrenadores.`,
-      referencia: `SELECT e.nombre
+      enunciadoHtml: `Escribe una consulta con <strong>subconsulta</strong> que muestre el nombre de los entrenadores cuya <code>tarifa</code> sea mayor al <strong>promedio</strong> (AVG) de <code>tarifa</code> de todos los entrenadores.`,
+      referencia: `SELECT pe.nombre
 FROM entrenador e
-WHERE e.tarifa_sesion > (SELECT AVG(tarifa_sesion) FROM entrenador);`,
+JOIN persona pe ON pe.id = e.id_persona
+WHERE e.tarifa > (SELECT AVG(tarifa) FROM entrenador);`,
       columnas: 1,
     },
     {
-      enunciadoHtml: `Escribe una consulta que muestre, por entrenador, el <strong>nombre del entrenador</strong> y su <strong>cantidad total de sesiones</strong>, quedándote solo con los entrenadores que dieron <strong>2 o más</strong> sesiones.`,
-      referencia: `SELECT e.nombre, COUNT(sp.cod_sesion) AS total_sesiones
+      enunciadoHtml: `Escribe una consulta que muestre, por entrenador, su <strong>nombre</strong> y su <strong>cantidad total de sesiones</strong>, quedándote solo con los entrenadores que dieron <strong>2 o más</strong> sesiones.`,
+      referencia: `SELECT pe.nombre, COUNT(se.id) AS total_sesiones
 FROM entrenador e
-JOIN sesion_personalizada sp ON sp.cod_entrenador = e.cod_entrenador
-GROUP BY e.nombre
-HAVING COUNT(sp.cod_sesion) >= 2;`,
+JOIN persona pe ON pe.id = e.id_persona
+JOIN sesion se ON se.id_entrenador = e.id
+GROUP BY pe.nombre
+HAVING COUNT(se.id) >= 2;`,
       columnas: 2,
     },
     {
-      enunciadoHtml: `Crea una vista llamada <code>resumen_entrenadores</code> con el nombre del entrenador y su cantidad total de sesiones — sin el filtro del paso anterior (todos los entrenadores). Consúltala con <code>SELECT *</code> agregando <code>WHERE total_sesiones &gt;= 2</code>. Después, con <code>CREATE OR REPLACE VIEW</code>, agrégale una tercera columna, <code>ingreso_total</code>, con el total de sesiones multiplicado por su <code>tarifa_sesion</code>, y vuelve a consultarla completa.`,
+      enunciadoHtml: `Crea una vista llamada <code>resumen_entrenadores</code> con el nombre del entrenador y su cantidad total de sesiones — sin el filtro del paso anterior (todos los entrenadores). Consúltala con <code>SELECT *</code> agregando <code>WHERE total_sesiones &gt;= 2</code>. Después, con <code>CREATE OR REPLACE VIEW</code>, agrégale una tercera columna, <code>ingreso_total</code>, con la suma de la <code>tarifa</code> cobrada en cada una de sus sesiones, y vuelve a consultarla completa.`,
       esVista: true,
       nombreVista: "resumen_entrenadores",
-      referencia: `SELECT e.nombre, COUNT(sp.cod_sesion) AS total_sesiones, COUNT(sp.cod_sesion)*e.tarifa_sesion AS ingreso_total
+      referencia: `SELECT pe.nombre, COUNT(se.id) AS total_sesiones, SUM(se.tarifa) AS ingreso_total
 FROM entrenador e
-JOIN sesion_personalizada sp ON sp.cod_entrenador = e.cod_entrenador
-GROUP BY e.nombre, e.tarifa_sesion;`,
+JOIN persona pe ON pe.id = e.id_persona
+JOIN sesion se ON se.id_entrenador = e.id
+GROUP BY pe.nombre;`,
       columnas: 3,
     },
   ],
@@ -504,25 +514,25 @@ GROUP BY e.nombre, e.tarifa_sesion;`,
 
 6: {
   nombre: "Caso 6 — Veterinaria",
-  contexto: `<p>Una veterinaria entrega esta tabla única: <code>ATENCION(cod_animal, nombre_animal, tipo, num_jaula, tam_pecera, ci_dueño, nombre_dueño, fecha, diagnostico)</code>, donde <code>tipo</code> ∈ {perro, pez}; <code>num_jaula</code> solo aplica a perros y <code>tam_pecera</code> solo a peces.</p>`,
+  contexto: `<p>Una veterinaria entrega esta tabla única: <code>ATENCION(id_animal, nombre_animal, tipo, num_jaula, tam_pecera, ci_duenio, nombre_duenio, fecha, diagnostico)</code>, donde <code>tipo</code> ∈ {perro, pez}; <code>num_jaula</code> solo aplica a perros y <code>tam_pecera</code> solo a peces.</p>`,
   ddl: {
-    enunciadoHtml: `Acá tienes que crear todas las tablas necesarias. Usa exactamente estos nombres (evitamos la "ñ" en los identificadores SQL) y definí vos las claves primarias, foráneas y tipos de dato:
+    enunciadoHtml: `Acá tienes que crear todas las tablas necesarias. Usa exactamente estos nombres de tabla y columna (definí vos las claves primarias, foráneas y tipos de dato):
     <ul style="margin:10px 0 0 22px;line-height:1.9">
-    <li><code>dueno(ci_dueno, nombre_dueno)</code></li>
-    <li><code>animal(cod_animal, nombre_animal, tipo, ci_dueno)</code></li>
-    <li><code>perro(cod_animal, num_jaula)</code></li>
-    <li><code>pez(cod_animal, tam_pecera)</code></li>
-    <li><code>atencion(cod_atencion, cod_animal, fecha, diagnostico)</code></li>
+    <li><code>duenio(id, nombre, ci)</code></li>
+    <li><code>animal(id, nombre, id_duenio, tipo)</code></li>
+    <li><code>perro(id, num_jaula, id_animal)</code></li>
+    <li><code>pez(id, tam_pecera, id_animal)</code></li>
+    <li><code>atencion(id, fecha, diagnostico, id_animal)</code></li>
     </ul>`,
     tablas: {
-      dueno: { columnas: ["ci_dueno","nombre_dueno"], forbidden: [] },
-      animal: { columnas: ["cod_animal","nombre_animal","tipo","ci_dueno"], forbidden: ["nombre_dueno"] },
-      perro: { columnas: ["cod_animal","num_jaula"], forbidden: [] },
-      pez: { columnas: ["cod_animal","tam_pecera"], forbidden: [] },
-      atencion: { columnas: ["cod_atencion","cod_animal","fecha","diagnostico"], forbidden: ["nombre_animal","tipo","nombre_dueno","num_jaula","tam_pecera"] },
+      duenio: { columnas: ["id","nombre","ci"], forbidden: [] },
+      animal: { columnas: ["id","nombre","id_duenio","tipo"], forbidden: ["ci"] },
+      perro: { columnas: ["id","num_jaula","id_animal"], forbidden: [] },
+      pez: { columnas: ["id","tam_pecera","id_animal"], forbidden: [] },
+      atencion: { columnas: ["id","fecha","diagnostico","id_animal"], forbidden: ["nombre","tipo","ci","num_jaula","tam_pecera"] },
     },
     fks: [
-      {tabla:"animal", refTabla:"dueno"},
+      {tabla:"animal", refTabla:"duenio"},
       {tabla:"perro", refTabla:"animal"},
       {tabla:"pez", refTabla:"animal"},
       {tabla:"atencion", refTabla:"animal"},
@@ -531,57 +541,57 @@ GROUP BY e.nombre, e.tarifa_sesion;`,
   dml: {
     enunciadoHtml: `Acá tienes que insertar los datos necesarios en tus tablas, inventados por ti.`,
     checks: [
-      chk("SELECT COUNT(*)::int AS n FROM dueno", ">=", 2, "Necesitás al menos 2 dueños."),
+      chk("SELECT COUNT(*)::int AS n FROM duenio", ">=", 2, "Necesitás al menos 2 dueños."),
       chk("SELECT COUNT(*)::int AS n FROM animal", ">=", 3, "Necesitás al menos 3 animales."),
       chk("SELECT COUNT(*)::int AS n FROM animal WHERE tipo='perro'", ">=", 1, "Necesitás al menos un animal de tipo 'perro'."),
       chk("SELECT COUNT(*)::int AS n FROM animal WHERE tipo='pez'", ">=", 1, "Necesitás al menos un animal de tipo 'pez'."),
       chk("SELECT COUNT(*)::int AS n FROM perro", ">=", 1, "Necesitás al menos 1 fila en la tabla perro."),
       chk("SELECT COUNT(*)::int AS n FROM pez", ">=", 1, "Necesitás al menos 1 fila en la tabla pez."),
-      chk("SELECT COUNT(*)::int AS n FROM animal a WHERE a.tipo='perro' AND NOT EXISTS (SELECT 1 FROM perro p WHERE p.cod_animal=a.cod_animal)", "<=", 0, "Hay animales de tipo 'perro' sin su fila correspondiente en la tabla perro."),
-      chk("SELECT COUNT(*)::int AS n FROM animal a WHERE a.tipo='pez' AND NOT EXISTS (SELECT 1 FROM pez p WHERE p.cod_animal=a.cod_animal)", "<=", 0, "Hay animales de tipo 'pez' sin su fila correspondiente en la tabla pez."),
-      chk("SELECT COUNT(*)::int AS n FROM animal a LEFT JOIN dueno d ON d.ci_dueno=a.ci_dueno WHERE d.ci_dueno IS NULL", "<=", 0, "Hay animales con un ci_dueno que no existe en dueno."),
+      chk("SELECT COUNT(*)::int AS n FROM animal a WHERE a.tipo='perro' AND NOT EXISTS (SELECT 1 FROM perro p WHERE p.id_animal=a.id)", "<=", 0, "Hay animales de tipo 'perro' sin su fila correspondiente en la tabla perro."),
+      chk("SELECT COUNT(*)::int AS n FROM animal a WHERE a.tipo='pez' AND NOT EXISTS (SELECT 1 FROM pez p WHERE p.id_animal=a.id)", "<=", 0, "Hay animales de tipo 'pez' sin su fila correspondiente en la tabla pez."),
+      chk("SELECT COUNT(*)::int AS n FROM animal a LEFT JOIN duenio d ON d.id=a.id_duenio WHERE d.id IS NULL", "<=", 0, "Hay animales con un id_duenio que no existe en duenio."),
       chk("SELECT COUNT(*)::int AS n FROM atencion", ">=", 5, "Necesitás al menos 5 atenciones."),
-      chk("SELECT COUNT(*)::int AS n FROM atencion at LEFT JOIN animal a ON a.cod_animal=at.cod_animal WHERE a.cod_animal IS NULL", "<=", 0, "Hay atenciones con un cod_animal que no existe en animal."),
-      chk("SELECT COUNT(*)::int AS n FROM (SELECT cod_animal FROM atencion GROUP BY cod_animal HAVING COUNT(*) >= 2) x", ">=", 1, "Necesitás que al menos un animal tenga 2 o más atenciones."),
-      chk("SELECT COUNT(*)::int AS n FROM (SELECT cod_animal FROM atencion GROUP BY cod_animal HAVING COUNT(*) < 2) x", ">=", 1, "Necesitás que al menos un animal tenga menos de 2 atenciones."),
+      chk("SELECT COUNT(*)::int AS n FROM atencion at LEFT JOIN animal a ON a.id=at.id_animal WHERE a.id IS NULL", "<=", 0, "Hay atenciones con un id_animal que no existe en animal."),
+      chk("SELECT COUNT(*)::int AS n FROM (SELECT id_animal FROM atencion GROUP BY id_animal HAVING COUNT(*) >= 2) x", ">=", 1, "Necesitás que al menos un animal tenga 2 o más atenciones."),
+      chk("SELECT COUNT(*)::int AS n FROM (SELECT id_animal FROM atencion GROUP BY id_animal HAVING COUNT(*) < 2) x", ">=", 1, "Necesitás que al menos un animal tenga menos de 2 atenciones."),
     ],
   },
   pasos: [
     {
-      enunciadoHtml: `Escribe <strong>una única</strong> consulta con <code>INNER JOIN</code> (animal + perro + dueno + atencion) que muestre, solo para las atenciones a animales de tipo <code>'perro'</code>, en este orden: <strong>nombre_animal, num_jaula, nombre_dueno, fecha, diagnostico</strong>.`,
-      referencia: `SELECT a.nombre_animal, p.num_jaula, d.nombre_dueno, at.fecha, at.diagnostico
+      enunciadoHtml: `Escribe <strong>una única</strong> consulta con <code>INNER JOIN</code> (animal + perro + duenio + atencion) que muestre, solo para las atenciones a animales de tipo <code>'perro'</code>, en este orden: <strong>nombre del animal, num_jaula, nombre del dueño, fecha, diagnostico</strong>.`,
+      referencia: `SELECT a.nombre, p.num_jaula, d.nombre, at.fecha, at.diagnostico
 FROM atencion at
-JOIN animal a ON a.cod_animal = at.cod_animal
-JOIN perro p ON p.cod_animal = a.cod_animal
-JOIN dueno d ON d.ci_dueno = a.ci_dueno;`,
+JOIN animal a ON a.id = at.id_animal
+JOIN perro p ON p.id_animal = a.id
+JOIN duenio d ON d.id = a.id_duenio;`,
       columnas: 5,
     },
     {
-      enunciadoHtml: `Escribe una consulta con <strong>subconsulta</strong> que muestre (sin repetir) el <code>nombre_dueno</code> de los dueños que tienen al menos un perro registrado.`,
-      referencia: `SELECT DISTINCT d.nombre_dueno
-FROM dueno d
-WHERE d.ci_dueno IN (
-  SELECT a.ci_dueno FROM animal a WHERE a.tipo = 'perro'
+      enunciadoHtml: `Escribe una consulta con <strong>subconsulta</strong> que muestre (sin repetir) el nombre de los dueños que tienen al menos un perro registrado.`,
+      referencia: `SELECT DISTINCT d.nombre
+FROM duenio d
+WHERE d.id IN (
+  SELECT a.id_duenio FROM animal a WHERE a.tipo = 'perro'
 );`,
       columnas: 1,
     },
     {
-      enunciadoHtml: `Escribe una consulta que muestre, por animal, <code>nombre_animal</code> y su <strong>cantidad total de atenciones</strong>, quedándote solo con los animales que tuvieron <strong>2 o más</strong> atenciones.`,
-      referencia: `SELECT a.nombre_animal, COUNT(at.cod_atencion) AS total_atenciones
+      enunciadoHtml: `Escribe una consulta que muestre, por animal, su <strong>nombre</strong> y su <strong>cantidad total de atenciones</strong>, quedándote solo con los animales que tuvieron <strong>2 o más</strong> atenciones.`,
+      referencia: `SELECT a.nombre, COUNT(at.id) AS total_atenciones
 FROM animal a
-JOIN atencion at ON at.cod_animal = a.cod_animal
-GROUP BY a.nombre_animal
-HAVING COUNT(at.cod_atencion) >= 2;`,
+JOIN atencion at ON at.id_animal = a.id
+GROUP BY a.nombre
+HAVING COUNT(at.id) >= 2;`,
       columnas: 2,
     },
     {
-      enunciadoHtml: `Crea una vista llamada <code>resumen_atenciones_animal</code> con <code>nombre_animal</code> y su cantidad total de atenciones — sin el filtro del paso anterior (todos los animales). Consúltala con <code>SELECT *</code> agregando <code>WHERE total_atenciones &gt;= 2</code>. Después, con <code>CREATE OR REPLACE VIEW</code>, agrégale una tercera columna, <code>tipo</code>, con el tipo de animal, y vuelve a consultarla completa.`,
+      enunciadoHtml: `Crea una vista llamada <code>resumen_atenciones_animal</code> con el nombre del animal y su cantidad total de atenciones — sin el filtro del paso anterior (todos los animales). Consúltala con <code>SELECT *</code> agregando <code>WHERE total_atenciones &gt;= 2</code>. Después, con <code>CREATE OR REPLACE VIEW</code>, agrégale una tercera columna, <code>tipo</code>, con el tipo de animal, y vuelve a consultarla completa.`,
       esVista: true,
       nombreVista: "resumen_atenciones_animal",
-      referencia: `SELECT a.nombre_animal, COUNT(at.cod_atencion) AS total_atenciones, a.tipo
+      referencia: `SELECT a.nombre, COUNT(at.id) AS total_atenciones, a.tipo
 FROM animal a
-JOIN atencion at ON at.cod_animal = a.cod_animal
-GROUP BY a.nombre_animal, a.tipo;`,
+JOIN atencion at ON at.id_animal = a.id
+GROUP BY a.nombre, a.tipo;`,
       columnas: 3,
     },
   ],
