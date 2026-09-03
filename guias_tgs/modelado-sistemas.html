@@ -112,8 +112,8 @@
 <p class="quiz-q">Un supervisor nota que la rotación de personal en su equipo es alta y concluye: "la gente renuncia porque el sueldo es bajo". Un análisis sistémico agrega: la rotación alta obliga a contratar y capacitar seguido, eso reduce el tiempo disponible para mejorar procesos y pedir mejores presupuestos, lo que mantiene el sueldo bajo. ¿Qué distingue a la segunda lectura de la primera?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Nada: ambas señalan al sueldo bajo como única causa, solo que con más palabras.</button>
-<button class="quiz-opt" data-correct>La segunda muestra un bucle: el efecto (sueldo bajo) retroalimenta su propia causa (rotación alta).</button>
 <button class="quiz-opt">La segunda es lineal, porque nombra más de una variable en la explicación.</button>
+<button class="quiz-opt" data-correct>La segunda muestra un bucle: el efecto (sueldo bajo) retroalimenta su propia causa (rotación alta).</button>
 <button class="quiz-opt">La primera ya es sistémica: identifica la causa raíz real del problema.</button>
 
 </div>
@@ -139,7 +139,7 @@
 <button class="quiz-opt" data-correct>Negativa (−): si el precio sube, la demanda baja (y viceversa).</button>
 <button class="quiz-opt">Positiva (+): si el precio sube, la demanda también sube.</button>
 <button class="quiz-opt">No se puede asignar polaridad a precios y demanda.</button>
-<button class="quiz-opt">Depende del color del producto.</button>
+<button class="quiz-opt">Depende del color o la marca del producto, no de su precio.</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: precio y demanda se mueven en direcciones opuestas (ley de la demanda), así que el enlace es negativo." data-ko="Piensa en un mercado real: cuando algo sube de precio, normalmente se demanda menos, no más. Las variables se mueven en direcciones opuestas: enlace negativo (−)." hidden></p>
@@ -167,15 +167,15 @@
 <div class="quiz-classify-row">
 <span class="quiz-classify-text">Horas de ejercicio semanal → Resistencia física.</span>
 <div class="quiz-classify-btns">
-<button data-correct>Positiva (+)</button>
 <button>Negativa (−)</button>
+<button data-correct>Positiva (+)</button>
 </div>
 </div>
 <div class="quiz-classify-row">
 <span class="quiz-classify-text">Tasa de interés de un préstamo → Cantidad de dinero disponible para ahorrar.</span>
 <div class="quiz-classify-btns">
-<button>Positiva (+)</button>
 <button data-correct>Negativa (−)</button>
+<button>Positiva (+)</button>
 </div>
 </div>
 <div class="quiz-classify-row">
@@ -235,9 +235,9 @@
 <p class="quiz-q">Un bucle tiene tres enlaces: "Población de conejos --(+)--> Población de zorros", "Población de zorros --(+)--> Conejos cazados", "Conejos cazados --(−)--> Población de conejos". ¿Qué tipo de bucle es, y qué comportamiento esperarías?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Refuerzo (R): ambas poblaciones crecerán sin límite.</button>
-<button class="quiz-opt" data-correct>Balance (B), porque tiene 1 enlace negativo (impar).</button>
 <button class="quiz-opt">No es un bucle válido porque mezcla dos especies distintas.</button>
 <button class="quiz-opt">Refuerzo (R), porque hay más enlaces positivos que negativos.</button>
+<button class="quiz-opt" data-correct>Balance (B), porque tiene 1 enlace negativo (impar).</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: hay exactamente 1 enlace negativo (impar), así que es un bucle de balance. Este es, de hecho, el modelo clásico depredador-presa: las poblaciones oscilan alrededor de un equilibrio, no crecen sin control." data-ko="No se trata de contar cuál polaridad predomina, sino si el número de enlaces NEGATIVOS es par o impar. Aquí hay exactamente 1 negativo (impar): bucle de balance." hidden></p>
@@ -285,13 +285,30 @@
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">¿Qué arquetipo describe mejor el caso de la autopista?</p>
 <div class="quiz-opts">
-<button class="quiz-opt">Límites del crecimiento.</button>
-<button class="quiz-opt">Escalada.</button>
+<button class="quiz-opt">Escalada de acciones.</button>
 <button class="quiz-opt" data-correct>Solución que falla.</button>
-<button class="quiz-opt">No corresponde a ningún arquetipo conocido.</button>
+<button class="quiz-opt">Límites del crecimiento.</button>
+<button class="quiz-opt">Ninguno de estos tres.</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: es un caso clásico de 'solución que falla' (a veces llamado 'demanda inducida' en planificación urbana): la solución rápida termina alimentando la causa raíz del problema." data-ko="No hay dos actores compitiendo (no es escalada) ni una restricción que frena un crecimiento (no es límites del crecimiento). La solución rápida termina alimentando el problema que quería resolver: solución que falla." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>🎯 Tu turno: identifica el arquetipo en un problema real de TI</strong>
+<p>Un equipo de desarrollo, presionado por las fechas, empieza a tomar atajos: código sin documentar, sin pruebas, con estructuras improvisadas "para después ordenar". Al principio funciona — salen más funcionalidades por semana, lo que genera más pedidos de nuevas funcionalidades, y el equipo vuelve a tomar atajos para cumplir con esos pedidos. Pero cada atajo suma <strong>deuda técnica</strong>: el código se vuelve más frágil, y cada cambio nuevo tarda más en hacerse sin romper algo. Con los meses, esa fragilidad empieza a frenar justo la velocidad de entrega que los atajos buscaban proteger.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="arquetipos-ti">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué arquetipo sistémico describe mejor esta deuda técnica que crece?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Escalada entre equipos.</button>
+<button class="quiz-opt">Solución que falla.</button>
+<button class="quiz-opt">Ninguno de los tres.</button>
+<button class="quiz-opt" data-correct>Límites del crecimiento.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: hay un bucle de refuerzo (entregar rápido → más pedidos → más atajos → entregar rápido) que impulsa la velocidad, y un bucle de balance que se activa con el tiempo (deuda técnica acumulada → código frágil → cambios más lentos) y termina frenándola. Es el mismo patrón que viste en la cafetería: un bucle R que empuja, un bucle B que limita — límites del crecimiento, aplicado a un problema real de ingeniería de software." data-ko="No hay dos equipos compitiendo entre sí (no es escalada) ni una solución puntual con un efecto secundario aislado y directo (no es solución que falla). Acá hay un bucle de refuerzo que impulsa la velocidad de entrega, frenado con el tiempo por un bucle de balance que activa la propia deuda técnica acumulada — el mismo patrón R-impulsa/B-frena que límites del crecimiento." hidden></p>
 </div>
 </div>
 </section>
@@ -339,15 +356,15 @@
 <div class="quiz-classify-row">
 <span class="quiz-classify-text">Inventario disponible en una bodega.</span>
 <div class="quiz-classify-btns">
-<button data-correct>Stock</button>
 <button>Flujo</button>
+<button data-correct>Stock</button>
 </div>
 </div>
 <div class="quiz-classify-row">
 <span class="quiz-classify-text">Unidades vendidas por día.</span>
 <div class="quiz-classify-btns">
-<button>Stock</button>
 <button data-correct>Flujo</button>
+<button>Stock</button>
 </div>
 </div>
 </div>
@@ -373,10 +390,10 @@
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">Un termostato moderno, con un sensor rápido y una calefacción que responde casi de inmediato, mantiene la temperatura muy estable. Uno viejo, con un sensor lento y una calefacción que tarda minutos en responder, produce cambios bruscos de temperatura. ¿Qué explica la diferencia?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>Ambos son bucles de balance, pero el retardo más largo produce sobrecorrección.</button>
 <button class="quiz-opt">El termostato viejo tiene un bucle de refuerzo en vez de uno de balance.</button>
 <button class="quiz-opt">El termostato viejo tiene una polaridad distinta en sus enlaces.</button>
 <button class="quiz-opt">No hay ninguna relación entre el retardo y la estabilidad del sistema.</button>
-<button class="quiz-opt" data-correct>Ambos son bucles de balance, pero el retardo más largo produce sobrecorrección.</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: el objetivo (la temperatura deseada) es el mismo en ambos casos porque ambos son bucles de balance. Lo que cambia es el retardo: cuanto más tarda el sistema en reaccionar, más se sobrecorrige antes de estabilizarse." data-ko="Ambos termostatos son bucles de balance con la misma polaridad; ninguno cambia de tipo. La diferencia está en cuánto tarda el sistema en reaccionar: más retardo produce más oscilación antes de estabilizarse." hidden></p>
@@ -398,9 +415,9 @@ Tiempo de espera, Satisfacción del cliente</pre>
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">Con estas relaciones: "Popularidad --(+)--> Clientes nuevos", "Clientes nuevos --(+)--> Ingresos", "Ingresos --(+)--> Inversión en marketing", "Inversión en marketing --(+)--> Popularidad", ¿qué tipo de bucle forman y qué comportamiento producirán si nada más interviene?</p>
 <div class="quiz-opts">
-<button class="quiz-opt" data-correct>Bucle de refuerzo (0 enlaces negativos): crecimiento acelerado sin límite.</button>
 <button class="quiz-opt">Bucle de balance: la cafetería se estabilizará sola en un número fijo de clientes.</button>
 <button class="quiz-opt">No es un bucle porque tiene cuatro variables en vez de tres.</button>
+<button class="quiz-opt" data-correct>Bucle de refuerzo (0 enlaces negativos): crecimiento acelerado sin límite.</button>
 <button class="quiz-opt">No se puede determinar el tipo de bucle sin más información.</button>
 
 </div>
@@ -439,10 +456,10 @@ Tiempo de espera, Satisfacción del cliente</pre>
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">Contando los enlaces negativos de esta cadena (hay 2), ¿qué tipo de bucle es y qué implica para el sistema climático?</p>
 <div class="quiz-opts">
-<button class="quiz-opt">Balance: el planeta se autorregulará y la temperatura volverá sola a su nivel original.</button>
 <button class="quiz-opt">No es un bucle válido porque el clima no es un sistema.</button>
+<button class="quiz-opt">Balance, porque hay más de un enlace negativo en la cadena.</button>
+<button class="quiz-opt">Balance: la temperatura volverá sola a su nivel original.</button>
 <button class="quiz-opt" data-correct>Refuerzo (2 negativos = número par): el sistema se amplifica solo.</button>
-<button class="quiz-opt">Balance, porque hay más de un enlace negativo.</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: 2 enlaces negativos es un número par, así que es un bucle de refuerzo. Este es el mecanismo real detrás de la 'retroalimentación del albedo' en el calentamiento global: el sistema se amplifica a sí mismo, no se autocorrige." data-ko="La regla es par/impar, no 'cuántos'. Aquí hay exactamente 2 enlaces negativos: número par, así que es un bucle de REFUERZO, no de balance. Por eso este mecanismo climático preocupa tanto: no se autocorrige, se amplifica." hidden></p>
@@ -456,10 +473,10 @@ Tiempo de espera, Satisfacción del cliente</pre>
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">Al principio de un brote, casi no hay medidas de restricción activas. ¿Qué bucle domina el comportamiento del sistema en esa etapa, y qué pasa después cuando las autoridades reaccionan?</p>
 <div class="quiz-opts">
+<button class="quiz-opt" data-correct>Al inicio domina el bucle A; al activarse medidas, domina el bucle B.</button>
 <button class="quiz-opt">El bucle B domina siempre; los contagios nunca crecen exponencialmente.</button>
 <button class="quiz-opt">Ambos bucles son de refuerzo, así que los contagios nunca se frenan.</button>
 <button class="quiz-opt">El bucle A es de balance porque involucra personas, no cantidades.</button>
-<button class="quiz-opt" data-correct>Al inicio domina el bucle A; al activarse medidas, domina el bucle B.</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: el bucle A (0 negativos, refuerzo) explica el crecimiento exponencial típico del inicio de un brote. El bucle B (1 negativo, balance) solo empieza a pesar cuando las medidas de restricción se activan con fuerza, frenando los contagios." data-ko="El bucle A tiene 0 enlaces negativos (refuerzo) y domina cuando no hay restricciones, explicando el crecimiento exponencial inicial. El bucle B tiene 1 enlace negativo (balance) y frena los contagios solo una vez que las medidas están activas." hidden></p>
@@ -473,8 +490,8 @@ Tiempo de espera, Satisfacción del cliente</pre>
 <span class="quiz-badge">Razonamiento</span>
 <p class="quiz-q">¿Qué elemento de los que viste en esta guía explica por qué un cambio pequeño (10%) termina amplificado (80%) a medida que se aleja del consumidor final?</p>
 <div class="quiz-opts">
+<button class="quiz-opt">Un bucle de balance con 0 enlaces negativos en la cadena.</button>
 <button class="quiz-opt" data-correct>El retardo y la incertidumbre en la información que recibe cada eslabón.</button>
-<button class="quiz-opt">Un bucle de balance con 0 enlaces negativos.</button>
 <button class="quiz-opt">Que la fábrica y la tienda son el mismo stock.</button>
 <button class="quiz-opt">Que no existe relación causal entre la demanda y la producción.</button>
 
@@ -513,9 +530,9 @@ Tiempo de espera, Satisfacción del cliente</pre>
 <p class="quiz-q">¿Quién es considerado el creador de la Dinámica de Sistemas y sus diagramas de stock y flujo?</p>
 <div class="quiz-opts">
 <button class="quiz-opt">Ludwig von Bertalanffy.</button>
-<button class="quiz-opt" data-correct>Jay Forrester, en el MIT.</button>
 <button class="quiz-opt">Norbert Wiener.</button>
 <button class="quiz-opt">Peter Chen.</button>
+<button class="quiz-opt" data-correct>Jay Forrester, en el MIT.</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: Jay Forrester desarrolló la Dinámica de Sistemas en el MIT a fines de los años 1950, inicialmente aplicada a problemas industriales." data-ko="Bertalanffy fundó la TGS en general y Wiener la cibernética; la Dinámica de Sistemas específicamente, con sus diagramas de stock y flujo, la desarrolló Jay Forrester en el MIT." hidden></p>
@@ -536,10 +553,10 @@ Tiempo de espera, Satisfacción del cliente</pre>
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">¿Cuál de estas variables es un stock, no un flujo?</p>
 <div class="quiz-opts">
-<button class="quiz-opt">Ventas mensuales.</button>
+<button class="quiz-opt">Ventas totales del mes pasado.</button>
 <button class="quiz-opt">Altas de usuarios por semana.</button>
 <button class="quiz-opt" data-correct>Inventario disponible en bodega.</button>
-<button class="quiz-opt">Litros de agua que entran por minuto a un tanque.</button>
+<button class="quiz-opt">Litros que entran por minuto a un tanque.</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: el inventario es una cantidad acumulada medible en un instante (stock). Las otras tres son tasas de cambio por unidad de tiempo (flujos)." data-ko="Ventas mensuales, altas por semana y litros por minuto son todas TASAS de cambio: flujos. El inventario disponible es una cantidad acumulada en un momento dado: eso es un stock." hidden></p>
@@ -549,10 +566,10 @@ Tiempo de espera, Satisfacción del cliente</pre>
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">Un equipo de desarrollo, presionado por una fecha límite, decide no escribir pruebas automatizadas. Entregan a tiempo, pero pasan las siguientes semanas corrigiendo bugs en producción, atrasando el siguiente proyecto. ¿Qué arquetipo es este?</p>
 <div class="quiz-opts">
-<button class="quiz-opt">Límites del crecimiento.</button>
-<button class="quiz-opt">Escalada.</button>
-<button class="quiz-opt">No corresponde a ningún arquetipo.</button>
 <button class="quiz-opt" data-correct>Solución que falla.</button>
+<button class="quiz-opt">Límites del crecimiento.</button>
+<button class="quiz-opt">Escalada entre partes.</button>
+<button class="quiz-opt">Ninguno de estos tres.</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: la solución rápida (no escribir pruebas) alivió la presión de tiempo hoy, pero generó una consecuencia no intencionada (más bugs) que terminó costando más tiempo después. Solución que falla." data-ko="No hay una restricción que frena un crecimiento (no es límites del crecimiento) ni dos actores compitiendo (no es escalada). Una solución rápida con efectos secundarios que empeoran el problema de fondo es 'solución que falla'." hidden></p>
@@ -562,8 +579,8 @@ Tiempo de espera, Satisfacción del cliente</pre>
 <span class="quiz-badge">Selección múltiple</span>
 <p class="quiz-q">¿Qué efecto tiene típicamente un retardo largo dentro de un bucle de balance?</p>
 <div class="quiz-opts">
-<button class="quiz-opt" data-correct>Puede causar oscilación antes de estabilizarse.</button>
 <button class="quiz-opt">Convierte el bucle de balance en un bucle de refuerzo.</button>
+<button class="quiz-opt" data-correct>Puede causar oscilación antes de estabilizarse.</button>
 <button class="quiz-opt">No tiene ningún efecto sobre el comportamiento del sistema.</button>
 <button class="quiz-opt">Hace que el sistema alcance su objetivo más rápido.</button>
 
