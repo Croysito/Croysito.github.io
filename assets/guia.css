@@ -1092,9 +1092,29 @@ text.scrolly-ghost{ font-family:'JetBrains Mono',monospace; font-size:8px; fill:
 .lab-cell-start{ fill:none; stroke:var(--verde); stroke-width:2; stroke-dasharray:4 3; }
 .lab-robot{ opacity:0; transition:opacity .3s ease; }
 .lab-robot.visible{ opacity:1; }
+/* gInner: traduce Y rota el grupo completo (flecha+emoji juntos) al
+   moverse/girar — así el muñequito gira de verdad, no solo una
+   flecha suelta. */
 .lab-robot-g{ transition:transform .18s linear; }
 .lab-robot-emoji{ font-size:20px; text-anchor:middle; dominant-baseline:central; }
-.lab-robot-dir{ fill:var(--azul2); transition:transform .18s linear; transform-origin:center; }
+.lab-robot-dir{ fill:var(--azul2); }
+/* gShake: sacudida de choque, en un grupo aparte de gInner para no
+   pelear con la transform de posición/orientación (una animación
+   CSS pisaría el transform inline si estuviera en el mismo nodo). */
+.lab-shake-wrap.choque{ animation:lab-choque-shake .42s ease; }
+@keyframes lab-choque-shake{
+  0%,100%{ transform:translate(0,0) rotate(0deg); }
+  20%{ transform:translate(-4px,0) rotate(-9deg); }
+  40%{ transform:translate(3px,0) rotate(7deg); }
+  60%{ transform:translate(-3px,0) rotate(-5deg); }
+  80%{ transform:translate(2px,0) rotate(3deg); }
+}
+.lab-bump-flash{ fill:none; stroke:#c0392b; stroke-width:2.5; opacity:0; }
+.lab-bump-flash.choque{ animation:lab-bump-fade .42s ease; }
+@keyframes lab-bump-fade{
+  0%{ opacity:.9; r:4; }
+  100%{ opacity:0; r:19; }
+}
 .lab-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:2px; }
 .lab-mensaje{ margin-top:12px; padding:10px 14px; border-radius:8px; font-size:14.5px; line-height:1.5; }
 .lab-mensaje.exito{ background:var(--highlightBg); color:var(--verde); border:1px solid var(--verde); }

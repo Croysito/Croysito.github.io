@@ -515,6 +515,7 @@ const DELTAS_DIR = { N: [-1, 0], E: [0, 1], S: [1, 0], W: [0, -1] };
 const ANGULOS_DIR = { N: 0, E: 90, S: 180, W: 270 };
 const LIMITE_ACCIONES = 60;   // tope de avanzar()/girar() por ejecución
 const DURACION_PASO = 200;    // ms que tarda la animación de cada acción
+const DURACION_CHOQUE = 420;  // ms que tarda la animación de choque (un poco más larga)
 
 function girarDireccion(dir, lado){
   const i = ORDEN_DIR.indexOf(dir);
@@ -670,18 +671,33 @@ function construirNivel(nivelDef){
   startRect.setAttribute("class", "lab-cell-start");
   svg.appendChild(startRect);
 
+  // Estructura: gRobot (opacidad: aparece recién al instanciar) >
+  // gInner (posición + orientación — traduce y rota TODO el grupo
+  // como una sola figura, así el muñequito gira de verdad, como el
+  // "pegman" de Blockly Games Maze) > gShake (sacudida de choque,
+  // en un grupo aparte para no pelear con la transform de gInner) >
+  // flecha + emoji + destello de choque.
   const gRobot = document.createElementNS(svgNS, "g");
   gRobot.setAttribute("class", "lab-robot");
   const gInner = document.createElementNS(svgNS, "g");
   gInner.setAttribute("class", "lab-robot-g");
-  const emoji = document.createElementNS(svgNS, "text");
-  emoji.setAttribute("class", "lab-robot-emoji");
-  emoji.textContent = "🧍";
+  const gShake = document.createElementNS(svgNS, "g");
+  gShake.setAttribute("class", "lab-shake-wrap");
   const flecha = document.createElementNS(svgNS, "polygon");
   flecha.setAttribute("class", "lab-robot-dir");
   flecha.setAttribute("points", "0,-17 -6,-10 6,-10");
-  gInner.appendChild(flecha);
-  gInner.appendChild(emoji);
+  const emoji = document.createElementNS(svgNS, "text");
+  emoji.setAttribute("class", "lab-robot-emoji");
+  emoji.textContent = "🧍";
+  const destello = document.createElementNS(svgNS, "circle");
+  destello.setAttribute("class", "lab-bump-flash");
+  destello.setAttribute("cx", 0);
+  destello.setAttribute("cy", 0);
+  destello.setAttribute("r", 4);
+  gShake.appendChild(flecha);
+  gShake.appendChild(emoji);
+  gShake.appendChild(destello);
+  gInner.appendChild(gShake);
   gRobot.appendChild(gInner);
   svg.appendChild(gRobot);
 
@@ -695,7 +711,7 @@ function construirNivel(nivelDef){
     CELL,
     r: startR, c: startC, dir: nivelDef.dirInicial,
     pasos: 0, llego: false,
-    el: { contenedor, gRobot, gInner, flecha },
+    el: { contenedor, gRobot, gInner, gShake, destello },
   };
   estadosLaberinto[nivelDef.id] = estado;
   posicionarRobot(estado, false);
@@ -703,19 +719,31 @@ function construirNivel(nivelDef){
 }
 
 function posicionarRobot(estado, animado){
-  const { gInner, flecha } = estado.el;
+  const { gInner } = estado.el;
   gInner.style.transition = animado ? "" : "none";
-  flecha.style.transition = animado ? "" : "none";
   const cx = estado.c * estado.CELL + estado.CELL / 2;
   const cy = estado.r * estado.CELL + estado.CELL / 2;
-  gInner.style.transform = `translate(${cx}px, ${cy}px)`;
-  flecha.style.transform = `rotate(${ANGULOS_DIR[estado.dir]}deg)`;
+  // Traduce Y rota el grupo completo (flecha + emoji juntos) — es lo
+  // que hace que el muñequito realmente "gire" al llamar girar_*(),
+  // no solo una flechita aparte.
+  gInner.style.transform = `translate(${cx}px, ${cy}px) rotate(${ANGULOS_DIR[estado.dir]}deg)`;
   if (!animado) {
     // fuerza reflow para que el próximo cambio sí anime
     void gInner.offsetWidth;
     gInner.style.transition = "";
-    flecha.style.transition = "";
   }
+}
+
+function animarChoque(estado){
+  const { gShake, destello } = estado.el;
+  [gShake, destello].forEach(el => el.classList.remove("choque"));
+  void gShake.offsetWidth; // fuerza reflow para poder reiniciar la animación
+  gShake.classList.add("choque");
+  destello.classList.add("choque");
+  setTimeout(() => {
+    gShake.classList.remove("choque");
+    destello.classList.remove("choque");
+  }, DURACION_CHOQUE);
 }
 
 function reiniciarNivel(estado){
@@ -725,6 +753,8 @@ function reiniciarNivel(estado){
   estado.pasos = 0;
   estado.llego = false;
   estado.el.gRobot.classList.remove("visible");
+  estado.el.gShake.classList.remove("choque");
+  estado.el.destello.classList.remove("choque");
   posicionarRobot(estado, false);
 }
 
@@ -778,7 +808,8 @@ function __responderRobotAccion(sab, accion, arg){
     const [dr, dc] = DELTAS_DIR[estado.dir];
     const nr = estado.r + dr, nc = estado.c + dc;
     if (esPared(estado.mapa, nr, nc)) {
-      responderTrasAnimar({ ok: false, error: "¡Choque! Hay una pared justo adelante." });
+      animarChoque(estado);
+      setTimeout(() => __escribirYNotificar(sab, { ok: false, error: "¡Choque! Hay una pared justo adelante." }), DURACION_CHOQUE);
       return;
     }
     estado.r = nr; estado.c = nc;
