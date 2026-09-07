@@ -1067,6 +1067,40 @@ text.scrolly-ghost{ font-family:'JetBrains Mono',monospace; font-size:8px; fill:
 .jer-caption{ font-size:11.5px; color:var(--gris); margin-top:6px; line-height:1.5; }
 
 /* =========================================================
+   LABERINTO DEL ROBOT (.lab-*) — guias/laberinto-robot.html.
+   Nuevo tipo de actividad (nivel 3): juego de laberinto resuelto
+   escribiendo Python real (no bloques), auto-verificado por
+   objetivo alcanzado. Página sigue siendo Lineal normal, así que
+   usa los tokens genéricos del sitio (--verde, --azul, --codigo,
+   etc.) en vez de un set de variables propio, igual que .eps-* y
+   .jer-*. Infraestructura pensada para reusarse en futuros
+   "niveles" de este mismo juego u otro parecido.
+   ========================================================= */
+.lab-nivel{ margin-bottom:10px; }
+.lab-titulo-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.lab-estado{ font-size:12.5px; font-weight:600; padding:3px 12px; border-radius:20px; background:var(--grisClaro); color:var(--gris); }
+.lab-estado.ok{ background:var(--highlightBg); color:var(--verde); }
+.lab-grid-wrap{
+  border:1px solid var(--borde); border-radius:10px; padding:16px;
+  margin:16px 0; background:var(--blanco); display:flex; justify-content:center;
+  transition:background .25s,border-color .25s;
+}
+.lab-svg{ width:100%; height:auto; display:block; }
+.lab-cell-wall{ fill:var(--codigo); }
+.lab-cell-path{ fill:var(--grisClaro); stroke:var(--borde); stroke-width:1; }
+.lab-cell-goal{ fill:var(--amarillo); opacity:.5; }
+.lab-cell-start{ fill:none; stroke:var(--verde); stroke-width:2; stroke-dasharray:4 3; }
+.lab-robot{ opacity:0; transition:opacity .3s ease; }
+.lab-robot.visible{ opacity:1; }
+.lab-robot-g{ transition:transform .18s linear; }
+.lab-robot-emoji{ font-size:20px; text-anchor:middle; dominant-baseline:central; }
+.lab-robot-dir{ fill:var(--azul2); transition:transform .18s linear; transform-origin:center; }
+.lab-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:2px; }
+.lab-mensaje{ margin-top:12px; padding:10px 14px; border-radius:8px; font-size:14.5px; line-height:1.5; }
+.lab-mensaje.exito{ background:var(--highlightBg); color:var(--verde); border:1px solid var(--verde); }
+.lab-mensaje.espera{ background:var(--grisClaro); color:var(--gris); border:1px solid var(--borde); }
+
+/* =========================================================
    MAPA CONCEPTUAL NAVEGABLE — v2, rediseño de handoff hifi
    (31/08, design_handoff_guia_poo). Formato de página,
    alternativo #3 al esqueleto lineal — sigue siendo el único
