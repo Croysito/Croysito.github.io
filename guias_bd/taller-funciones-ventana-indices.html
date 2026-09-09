@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller: Funciones de Ventana e Índices en Vivo — PostgreSQL Real en tu Navegador | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* Estilos propios de este taller: tabla de resultados y barra de la base de datos, con la
+   misma estética "consola oscura" que ya usa .output-body en guia.css. No toca el CSS compartido. */
+.sql-result-table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+.sql-result-table th,.sql-result-table td{ padding:8px 10px; text-align:left; border:1px solid rgba(255,255,255,.15); }
+.sql-result-table thead th{ background:rgba(255,255,255,.08); color:#8fd48a; }
+.sql-result-table td em{ color:#7d8899; font-style:italic; }
+.sql-status{ margin:4px 0 10px; color:#8fd48a; }
+.sql-meta{ margin:0 0 10px; color:#7d8899; font-size:12px; }
+.db-toolbar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:18px 0 8px; padding:16px 20px; background:var(--highlightBg); border-left:6px solid var(--verde); border-radius:8px; }
+.db-toolbar button{ background:var(--verde); color:white; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:14px; }
+.db-toolbar button:hover{ background:var(--verde2); }
+.db-toolbar button:disabled{ opacity:.5; cursor:wait; }
+.db-toolbar button.secundario{ background:transparent; color:var(--verde); border:2px solid var(--verde); }
+.db-estado{ font-size:14px; opacity:.85; }
+
+/* Bloqueo de copiar/pegar en los editores: flash de aviso + toast global */
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>Taller Ventanas</span></div>
+<p>SQL en vivo con PostgreSQL real</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#zona-pruebas">Zona de pruebas libres</a>
+<a href="#preparar">Prepara tu base de datos</a>
+<a href="#rownumber-vivo">1. ROW_NUMBER y PARTITION BY</a>
+<a href="#rank-vivo">2. RANK y DENSE_RANK</a>
+<a href="#lag-vivo">3. LAG y LEAD</a>
+<a href="#sum-vivo">4. Totales acumulados</a>
+<a href="#indices-vivo">5. Índices y EXPLAIN</a>
+<a href="#reto">Reto final</a>
+<a href="#repaso">Repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Taller de Laboratorio</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Funciones de Ventana e Índices: Cada Fila con su <span>Contexto</span></h1>
+<p>Otra vez PostgreSQL de verdad, compilado a WebAssembly, corriendo enteramente en tu navegador. Esta vez cada venta va a mantener su fila propia mientras le agregás un ranking, la venta anterior o un total que se acumula — y después vas a crear una tabla de <strong>50.000 filas</strong> para ver con tus propios ojos cómo un índice cambia el plan real que arma Postgres.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Este taller es la práctica de laboratorio de <strong>funciones de ventana (OVER, PARTITION BY, RANK/DENSE_RANK, LAG/LEAD) e índices con EXPLAIN</strong> en PostgreSQL. No vuelve a explicar la teoría desde cero —asume que ya viste <a href="funciones-ventana-indices.html">la guía</a>— y en cambio te da un PostgreSQL real para escribir cada consulta, viendo exactamente qué columna calcula cada función de ventana y qué plan de ejecución elige Postgres antes y después de crear un índice.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Si todavía no viste la teoría, repasa primero <a href="funciones-ventana-indices.html">Funciones de Ventana, Índices y EXPLAIN</a> antes de continuar. Este taller usa dos tablas: una chica (<code>ventas</code>, 14 filas) para las funciones de ventana, y una grande (<code>ventas_grande</code>, 50.000 filas generadas en el momento) para que un índice tenga algo real que acelerar.</p>
+</div>
+<div class="highlight">
+<strong>⚠️ Todo vive en la memoria de esta pestaña</strong>
+<p>Esta página corre su <strong>propia</strong> base de datos, independiente de cualquier otro taller que hayas abierto antes. Existe solo mientras esta pestaña siga abierta: si <strong>recargas la página, la cierras, o navegas a otra guía, se pierde todo</strong> y hay que empezar de nuevo desde "Prepara tu base de datos". Si te equivocás y querés reiniciar sin recargar, usa el botón "Reiniciar base de datos" de abajo.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>✍️ Lo escribís vos</h3><p>Cada bloque parte vacío. El enunciado te dice qué tenés que lograr — el código SQL lo escribís de cero.</p></div>
+<div class="info"><h3>🩻 Planes reales</h3><p>Los planes de EXPLAIN que vas a ver salen de Postgres de verdad decidiendo sobre tus propios datos — no son ilustrativos como en la guía teórica.</p></div>
+<div class="info"><h3>🎲 Datos al azar en la tabla grande</h3><p><code>ventas_grande</code> se genera con valores aleatorios: tu tabla no va a tener las mismas filas que la de un compañero, pero el comportamiento de EXPLAIN que vas a observar es el mismo para todos.</p></div>
+</div>
+
+<div class="db-toolbar">
+<button type="button" id="resetDbBtn">🔄 Reiniciar base de datos</button>
+<span class="db-estado" id="dbEstado">La base de datos está vacía. Baja a "Prepara tu base de datos" para empezar.</span>
+</div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Este bloque queda disponible durante toda la guía. Usalo en cualquier momento para probar una idea propia, revisar el estado de una tabla con <code>SELECT * FROM tabla;</code>, o experimentar con algo que se te ocurra a mitad de un ejercicio — sin desordenar los bloques guiados.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🧪 Escribe cualquier sentencia SQL</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Zona de pruebas libres" placeholder="Por ejemplo: SELECT * FROM ventas;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="preparar">
+<div class="card">
+<h2 class="section-title">Prepara tu base de datos</h2>
+<p class="lead">Este bloque <strong>no es un ejercicio</strong> — ya viene resuelto. Crea una tabla, <code>ventas</code>, con 14 filas de ejemplo. Ejecútalo tal cual, una sola vez, antes de seguir.</p>
+<div class="highlight">
+<strong>Qué hace este bloque</strong>
+<p>Crea <code>ventas</code> con columnas <code>vendedor</code>, <code>categoria</code>, <code>monto</code> y <code>fecha</code>: 4 vendedores (Marisol, Iván, Daniela, Esteban) con ventas en fechas distintas, para que LAG/LEAD y los totales acumulados tengan un orden real sobre el cual avanzar. Hay un empate a propósito (Bs 640, entre Iván y Daniela) para que RANK() y DENSE_RANK() tengan algo interesante que resolver.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🏗️ Ejecuta esta preparación tal cual</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:440px" aria-label="Script de preparación de la base de datos">CREATE TABLE IF NOT EXISTS ventas (
+    id SERIAL PRIMARY KEY,
+    vendedor VARCHAR(60) NOT NULL,
+    categoria VARCHAR(60) NOT NULL,
+    monto NUMERIC(10,2) NOT NULL,
+    fecha DATE NOT NULL
+);
+
+INSERT INTO ventas (vendedor, categoria, monto, fecha) VALUES
+    ('Marisol', 'Electrónica', 320.00, '2026-01-05'),
+    ('Iván', 'Ropa', 150.00, '2026-01-06'),
+    ('Marisol', 'Electrónica', 890.00, '2026-01-08'),
+    ('Daniela', 'Ropa', 60.00, '2026-01-09'),
+    ('Iván', 'Electrónica', 640.00, '2026-01-11'),
+    ('Marisol', 'Hogar', 95.00, '2026-01-12'),
+    ('Daniela', 'Electrónica', 640.00, '2026-01-14'),
+    ('Iván', 'Hogar', 210.00, '2026-01-15'),
+    ('Marisol', 'Ropa', 180.00, '2026-01-17'),
+    ('Daniela', 'Hogar', 310.00, '2026-01-19'),
+    ('Iván', 'Deportes', 420.00, '2026-01-20'),
+    ('Esteban', 'Deportes', 275.00, '2026-01-21'),
+    ('Esteban', 'Electrónica', 560.00, '2026-01-22'),
+    ('Esteban', 'Ropa', 90.00, '2026-01-23');
+
+SELECT * FROM ventas ORDER BY id;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight">
+<strong>Confirma los datos</strong>
+<p>El resultado final debería mostrarte <strong>14 filas</strong>. Si contás menos o más, usa "🔄 Reiniciar base de datos" y vuelve a ejecutar este bloque — el resto del taller (hasta la sección de índices) asume exactamente estos datos.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="rownumber-vivo">
+<div class="card">
+<h2 class="section-title">1. ROW_NUMBER y PARTITION BY</h2>
+<p class="lead">Numerar cada fila sin perder ninguna — y reiniciar esa numeración por grupo cuando hace falta.</p>
+
+<div class="highlight">
+<strong>Enunciado — 1.1</strong>
+<p>Escribe un <code>SELECT</code> sobre <code>ventas</code> que traiga <code>vendedor</code>, <code>categoria</code>, <code>monto</code> y una columna <code>posicion</code> con <code>ROW_NUMBER() OVER (ORDER BY monto DESC)</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.1 — ROW_NUMBER() OVER (ORDER BY monto DESC)</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:80px" aria-label="Editor SQL: ROW_NUMBER sin partición" placeholder="-- Escribe el SELECT con ROW_NUMBER() OVER (ORDER BY monto DESC) AS posicion."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Contá las filas</strong>
+<p>Deberían salir <strong>14</strong> filas, numeradas de 1 a 14 según el monto — ni una fila de menos ni una de más. A diferencia de GROUP BY, una función de ventana nunca colapsa nada.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.2</strong>
+<p>Ahora agrega <code>PARTITION BY vendedor</code> dentro del <code>OVER</code>, para que la numeración reinicie en 1 en cada vendedor. Trae <code>vendedor</code>, <code>monto</code> y <code>posicion</code>, ordenado por <code>vendedor, posicion</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.2 — ROW_NUMBER() con PARTITION BY vendedor</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: ROW_NUMBER con PARTITION BY" placeholder="-- Escribe el SELECT con ROW_NUMBER() OVER (PARTITION BY vendedor ORDER BY monto DESC) AS posicion.
+-- No olvides el ORDER BY vendedor, posicion al final."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>La numeración reinicia por grupo</strong>
+<p>Siguen siendo <strong>14</strong> filas en total, pero ahora la columna <code>posicion</code> vuelve a empezar en 1 con cada vendedor: Marisol y Iván llegan hasta 4, Daniela y Esteban hasta 3.</p>
+</div>
+
+<p style="margin-top:25px;"><strong>1.3 — Antes de ejecutar, predice:</strong> ¿cuántas filas devuelve <code>SELECT vendedor, COUNT(*) FROM ventas GROUP BY vendedor</code>? ¿Y cuántas devuelve <code>SELECT vendedor, ROW_NUMBER() OVER (PARTITION BY vendedor ORDER BY monto DESC) FROM ventas</code>? Escribe las dos consultas en este mismo editor, una debajo de otra, para comprobarlo.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.3 — Predice y comprueba con dos consultas</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: comparar GROUP BY contra ROW_NUMBER" placeholder="-- 1. SELECT vendedor, COUNT(*) FROM ventas GROUP BY vendedor;
+-- 2. SELECT vendedor, ROW_NUMBER() OVER (PARTITION BY vendedor ORDER BY monto DESC) FROM ventas;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="rank-vivo">
+<div class="card">
+<h2 class="section-title">2. RANK y DENSE_RANK</h2>
+<p class="lead">Dos formas distintas de resolver un empate al numerar filas.</p>
+
+<div class="highlight">
+<strong>Enunciado — 2.1</strong>
+<p>Filtra <code>ventas</code> por <code>categoria = 'Electrónica'</code> y trae <code>vendedor</code>, <code>monto</code>, <code>RANK() OVER (ORDER BY monto DESC) AS posicion_rank</code> y <code>DENSE_RANK() OVER (ORDER BY monto DESC) AS posicion_dense</code>, ordenado por <code>monto DESC</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.1 — RANK() y DENSE_RANK() sobre Electrónica</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:100px" aria-label="Editor SQL: RANK y DENSE_RANK sobre Electrónica" placeholder="-- Escribe el SELECT con WHERE categoria = 'Electrónica', RANK() y DENSE_RANK(), ordenado por monto DESC."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>El empate en Bs 640</strong>
+<p>Deberían salir <strong>5</strong> filas de Electrónica. Iván y Daniela empatan en Bs 640 y comparten la posición <strong>2</strong> en las dos columnas. Después del empate, <code>posicion_rank</code> salta directo a <strong>4</strong> (Esteban, Bs 560) mientras que <code>posicion_dense</code> sigue de corrido en <strong>3</strong> — esa es toda la diferencia entre las dos funciones.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.2</strong>
+<p>Repite la misma idea pero sobre <strong>toda</strong> la tabla <code>ventas</code> (sin el <code>WHERE</code>), trayendo también <code>categoria</code>. El mismo empate en Bs 640 sigue ahí, ahora en medio de las 14 filas.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.2 — RANK() y DENSE_RANK() sobre toda la tabla</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: RANK y DENSE_RANK sobre toda la tabla" placeholder="-- Escribe el SELECT con vendedor, categoria, monto, RANK() y DENSE_RANK() sobre las 14 filas, ordenado por monto DESC."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="lag-vivo">
+<div class="card">
+<h2 class="section-title">3. LAG y LEAD</h2>
+<p class="lead">Mirar la fila anterior o siguiente de la misma partición, sin escribir ningún JOIN.</p>
+
+<div class="highlight">
+<strong>Enunciado — 3.1</strong>
+<p>Trae <code>vendedor</code>, <code>fecha</code>, <code>monto</code> y <code>LAG(monto) OVER (PARTITION BY vendedor ORDER BY fecha) AS venta_anterior</code>, ordenado por <code>vendedor, fecha</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.1 — LAG() por vendedor</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: LAG por vendedor" placeholder="-- Escribe el SELECT con LAG(monto) OVER (PARTITION BY vendedor ORDER BY fecha) AS venta_anterior."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>La primera venta de cada uno da NULL</strong>
+<p>Fíjate en <code>venta_anterior</code>: la primera fila de cada vendedor (según fecha) no tiene ninguna venta antes en su propia partición, así que Postgres devuelve <code>NULL</code> ahí — no un error ni un 0.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.2</strong>
+<p>Agrega también <code>LEAD(monto) OVER (PARTITION BY vendedor ORDER BY fecha) AS venta_siguiente</code> a la misma consulta, para ver hacia atrás y hacia adelante en la misma fila.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.2 — LAG() y LEAD() juntos</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: LAG y LEAD juntos" placeholder="-- Agrega LEAD(monto) OVER (PARTITION BY vendedor ORDER BY fecha) AS venta_siguiente a la consulta anterior."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Los dos extremos dan NULL</strong>
+<p>Ahora cada vendedor tiene un <code>NULL</code> en <code>venta_anterior</code> en su primera fila, y un <code>NULL</code> en <code>venta_siguiente</code> en su última — el resto de las filas trae ambos valores.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="sum-vivo">
+<div class="card">
+<h2 class="section-title">4. Totales acumulados con SUM() OVER</h2>
+<p class="lead">Un SUM() que en vez de sumar toda la partición de una, va sumando fila a fila según el ORDER BY.</p>
+
+<div class="highlight">
+<strong>Enunciado — 4.1</strong>
+<p>Trae <code>vendedor</code>, <code>fecha</code>, <code>monto</code> y <code>SUM(monto) OVER (PARTITION BY vendedor ORDER BY fecha) AS acumulado</code>, ordenado por <code>vendedor, fecha</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.1 — Total acumulado por vendedor</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: SUM acumulado por vendedor" placeholder="-- Escribe el SELECT con SUM(monto) OVER (PARTITION BY vendedor ORDER BY fecha) AS acumulado."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Crece fila a fila, no de golpe</strong>
+<p>En cada vendedor, <code>acumulado</code> empieza igual al primer <code>monto</code> y va sumando de a una venta. El último valor de cada vendedor coincide con el total real de sus ventas — por ejemplo, el de Marisol termina en <strong>Bs 1485</strong> (320 + 890 + 95 + 180).</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.2</strong>
+<p>Ahora quita el <code>PARTITION BY</code>: trae <code>fecha</code>, <code>vendedor</code>, <code>monto</code> y <code>SUM(monto) OVER (ORDER BY fecha) AS acumulado_general</code>, ordenado por <code>fecha</code>. Sin partición, toda la tabla es una única ventana.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.2 — Total acumulado general, sin PARTITION BY</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: SUM acumulado general sin partición" placeholder="-- Escribe el SELECT con SUM(monto) OVER (ORDER BY fecha) AS acumulado_general, sin PARTITION BY."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Un solo acumulado para las 14 filas</strong>
+<p>Esta vez el acumulado no reinicia nunca: crece de venta en venta a lo largo de toda la tabla, sin importar quién la vendió, hasta terminar en <strong>Bs 4840</strong> — la suma total de las 14 ventas.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="indices-vivo">
+<div class="card">
+<h2 class="section-title">5. Índices y EXPLAIN</h2>
+<p class="lead">Con 14 filas, Postgres siempre va a elegir recorrer la tabla entera — es más rápido que buscar un atajo. Para ver un índice cambiar algo de verdad, hace falta una tabla grande.</p>
+
+<div class="highlight">
+<strong>Prepara la tabla grande</strong>
+<p>Este bloque crea <code>ventas_grande</code> y la llena con <strong>50.000 filas</strong> usando <code>generate_series</code>, con vendedor, categoría, monto y fecha aleatorios. Puede tardar unos segundos — es una tabla de verdad, no una simulación.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🏗️ Ejecuta esta preparación tal cual</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:280px" aria-label="Script de preparación de ventas_grande">CREATE TABLE ventas_grande (
+    id SERIAL PRIMARY KEY,
+    vendedor VARCHAR(60) NOT NULL,
+    categoria VARCHAR(60) NOT NULL,
+    monto NUMERIC(10,2) NOT NULL,
+    fecha DATE NOT NULL
+);
+
+INSERT INTO ventas_grande (vendedor, categoria, monto, fecha)
+SELECT
+    (ARRAY['Marisol','Iván','Daniela','Esteban','Rodrigo','Valeria','Nicolás','Camila',
+           'Sergio','Paola','Marcos','Andrea','Felipe','Lorena','Hugo','Cecilia',
+           'Rubén','Tamara','Diego','Silvia'])[1 + floor(random()*20)],
+    (ARRAY['Electrónica','Ropa','Hogar','Deportes'])[1 + floor(random()*4)],
+    round((random()*900 + 10)::numeric, 2),
+    DATE '2026-01-01' + (random()*300)::int
+FROM generate_series(1, 50000);
+
+ANALYZE ventas_grande;
+
+SELECT COUNT(*) FROM ventas_grande;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight">
+<strong>Confirma el tamaño</strong>
+<p>El <code>COUNT(*)</code> final debería mostrarte <strong>50000</strong>. El <code>ANALYZE</code> del final no es cosmético: sin él, Postgres todavía no tiene estadísticas actualizadas de la tabla nueva, y los planes de EXPLAIN de abajo saldrían con estimaciones menos precisas.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 5.1</strong>
+<p>Escribe <code>EXPLAIN SELECT * FROM ventas_grande WHERE vendedor = 'Marisol';</code> — todavía sin ningún índice sobre <code>vendedor</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.1 — EXPLAIN sin índice</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: EXPLAIN sin índice" placeholder="-- Escribe EXPLAIN SELECT * FROM ventas_grande WHERE vendedor = 'Marisol';"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Seq Scan sobre las 50.000 filas</strong>
+<p>El plan debería mostrar <strong>Seq Scan on ventas_grande</strong>: Postgres recorre la tabla entera para encontrar las filas de Marisol. Fíjate en <code>rows</code> — con 20 vendedores repartidos parejo, debería rondar el 5% de 50.000 (unas 2.500 filas), aunque tu número exacto va a variar un poco porque los datos se generaron al azar.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 5.2</strong>
+<p>Crea un índice sobre esa columna: <code>CREATE INDEX idx_ventas_grande_vendedor ON ventas_grande(vendedor);</code>, y después <code>ANALYZE ventas_grande;</code> para que Postgres actualice sus estadísticas con el índice nuevo.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.2 — CREATE INDEX sobre vendedor</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: CREATE INDEX sobre vendedor" placeholder="-- 1. CREATE INDEX idx_ventas_grande_vendedor ON ventas_grande(vendedor);
+-- 2. ANALYZE ventas_grande;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 5.3</strong>
+<p>Vuelve a ejecutar exactamente el mismo <code>EXPLAIN</code> del ejercicio 5.1.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.3 — El mismo EXPLAIN, con el índice ya creado</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: EXPLAIN con índice" placeholder="-- Escribe otra vez EXPLAIN SELECT * FROM ventas_grande WHERE vendedor = 'Marisol';"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>De Seq Scan a Bitmap Heap Scan</strong>
+<p>El plan cambió a <strong>Bitmap Heap Scan</strong>, apoyado en un <strong>Bitmap Index Scan</strong> sobre tu índice nuevo. Fíjate que <code>rows</code> sigue siendo prácticamente el mismo número que en el ejercicio 5.1 — Postgres sigue esperando encontrar la misma cantidad de filas. Lo que bajó fue el <code>cost</code>: ahora tiene un atajo para llegar a ellas en vez de recorrer la tabla entera.</p>
+<p style="margin-top:10px;">🔍 <strong>¿Por qué "Bitmap Heap Scan" y no "Index Scan"?</strong> Cuando el filtro selecciona una porción moderada de la tabla (ni una sola fila, ni casi todas), Postgres arma primero un mapa de bits con las posiciones que coinciden (Bitmap Index Scan) y después va a buscarlas de forma ordenada. El "Index Scan" puro y simple —fila por fila del índice— lo vas a ver más abajo, en el Reto final, con un filtro mucho más selectivo.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 5.4</strong>
+<p>Repite el mismo <code>EXPLAIN</code>, pero esta vez con <code>EXPLAIN ANALYZE</code> en vez de <code>EXPLAIN</code> solo.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.4 — EXPLAIN ANALYZE</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: EXPLAIN ANALYZE con índice" placeholder="-- Escribe EXPLAIN ANALYZE SELECT * FROM ventas_grande WHERE vendedor = 'Marisol';"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Ahora hay tiempos reales</strong>
+<p>Además de todo lo de antes, ahora aparecen líneas nuevas: <code>actual time=...</code> con la cantidad real de filas encontradas, y al final <code>Planning Time</code> y <code>Execution Time</code> en milisegundos. Esta consulta se ejecutó de verdad — <code>EXPLAIN</code> solo la había estimado.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 5.5</strong>
+<p>Escribe <code>EXPLAIN SELECT * FROM ventas_grande WHERE categoria = 'Electrónica';</code> — filtrando por una columna que <strong>no</strong> tiene su propio índice.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.5 — EXPLAIN sobre una columna sin índice propio</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: EXPLAIN sobre categoria sin índice" placeholder="-- Escribe EXPLAIN SELECT * FROM ventas_grande WHERE categoria = 'Electrónica';"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Otra vez Seq Scan</strong>
+<p>El índice de <code>vendedor</code> no sirve para nada acá: el plan vuelve a mostrar <strong>Seq Scan</strong>. Cada índice cubre solo la columna para la que se creó — filtrar por <code>categoria</code> necesitaría su propio índice.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="reto">
+<div class="card">
+<h2 class="section-title">Reto final: ranking por grupo y un segundo índice</h2>
+<p class="lead">Sin reiniciar la base de datos, resuelve estos tres desafíos combinando funciones de ventana e índices.</p>
+<div class="highlight">
+<strong>Requisitos</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><strong>1.</strong> Sobre <code>ventas</code> (la tabla chica), encuentra <strong>la venta más alta de cada vendedor</strong>: usa <code>RANK() OVER (PARTITION BY vendedor ORDER BY monto DESC)</code> en una subconsulta, y filtra afuera solo las filas con posición 1. Debería darte <strong>4</strong> filas, una por vendedor.</li>
+<li><strong>2.</strong> Sobre <code>ventas_grande</code>, crea un índice sobre <code>categoria</code> (<code>idx_ventas_grande_categoria</code>), corre <code>ANALYZE</code>, y repite el <code>EXPLAIN</code> del ejercicio 5.5 para confirmar que el plan ya no es un Seq Scan simple.</li>
+<li><strong>3. Bonus:</strong> sin crear ningún índice nuevo, ejecuta <code>EXPLAIN SELECT * FROM ventas_grande WHERE id = 25000;</code> — la tabla ya tiene un índice automático sobre <code>id</code> por ser su clave primaria. Compará el tipo de plan con el de los pasos anteriores.</li>
+</ul>
+</div>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>🏆 Resuelve aquí el reto</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu solución al reto final" placeholder="-- 1. SELECT * FROM (SELECT vendedor, categoria, monto, RANK() OVER (PARTITION BY vendedor ORDER BY monto DESC) AS posicion FROM ventas) sub WHERE posicion = 1;
+-- 2. CREATE INDEX idx_ventas_grande_categoria ON ventas_grande(categoria); ANALYZE ventas_grande; EXPLAIN SELECT * FROM ventas_grande WHERE categoria = 'Electrónica';
+-- 3. EXPLAIN SELECT * FROM ventas_grande WHERE id = 25000;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Un Index Scan puro, por fin</strong>
+<p>El punto 3 debería mostrarte <strong>Index Scan using ventas_grande_pkey</strong> con <code>rows=1</code> — a diferencia del Bitmap Heap Scan de la sección anterior, acá el filtro es tan selectivo (una sola fila entre 50.000) que Postgres va directo al índice de la clave primaria, sin pasar por el mapa de bits intermedio.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="repaso">
+<div class="card">
+<h2 class="section-title">Repaso</h2>
+<p class="lead">Ocho preguntas cortas sobre lo que acabas de observar en vivo. Tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 1.1 numeraste las 14 filas de ventas con ROW_NUMBER() OVER (ORDER BY monto DESC). Si en cambio hubieras usado GROUP BY vendedor con COUNT(*), ¿qué diferencia real habría en el resultado?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ninguna diferencia real: ambas formas devuelven las mismas 14 filas.</button>
+<button class="quiz-opt" data-correct>GROUP BY colapsa el resultado a 4 filas; ROW_NUMBER mantiene las 14.</button>
+<button class="quiz-opt">ROW_NUMBER() exige un HAVING para funcionar; GROUP BY no lo necesita.</button>
+<button class="quiz-opt">GROUP BY numeraría cada fila en vez de agruparlas en 4 categorías.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: GROUP BY vendedor colapsa las 14 ventas en 4 filas (una por vendedor); ROW_NUMBER() OVER, en cambio, agrega una columna calculada sin tocar la cantidad de filas original." data-ko="No es que sean iguales, ni que falte un HAVING, ni que GROUP BY numere filas: GROUP BY colapsa el resultado a 4 filas (una por vendedor), mientras que ROW_NUMBER() mantiene las 14 filas originales." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">PARTITION BY reduce la cantidad de filas del resultado, igual que GROUP BY.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: PARTITION BY solo divide la tabla en ventanas separadas para calcular sobre cada una — nunca colapsa filas. Todas siguen presentes en el resultado, a diferencia de GROUP BY." data-ko="Es falso: PARTITION BY define grupos solo para el cálculo de la función de ventana, pero cada fila individual se mantiene en el resultado. GROUP BY sí colapsa; PARTITION BY no." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-idx1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Creaste un índice sobre vendedor en ventas_grande y volviste a correr EXPLAIN sobre el mismo WHERE vendedor = 'Marisol'. El plan cambió de Seq Scan a Bitmap Heap Scan. ¿Qué NO cambió entre ambos planes?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>La cantidad de filas estimadas (rows) que matchean el filtro, que sigue siendo similar.</button>
+<button class="quiz-opt">El costo estimado (cost) del plan, que se mantiene exactamente igual en los dos casos.</button>
+<button class="quiz-opt">El tipo de nodo del plan (Scan), que sigue llamándose exactamente igual en ambos casos.</button>
+<button class="quiz-opt">La columna usada en el filtro, que en el segundo plan pasó de vendedor a categoria.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el índice no cambia cuántas filas matchean el filtro, solo cómo Postgres llega hasta ellas. Por eso rows queda prácticamente igual mientras que cost baja, y el nombre del nodo del plan cambia de Seq Scan a Bitmap Heap Scan." data-ko="El costo sí baja, el nombre del nodo sí cambia (de Seq Scan a Bitmap Heap Scan), y la columna del filtro sigue siendo vendedor en los dos planes. Lo que NO cambia es rows: la cantidad de filas esperadas es prácticamente la misma." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-idx2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 5.5 filtraste ventas_grande por categoria, aun teniendo ya el índice sobre vendedor creado. El plan volvió a mostrar Seq Scan. ¿Por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque un índice deja de tener efecto después de usarse una sola vez en una consulta.</button>
+<button class="quiz-opt">Porque EXPLAIN, a diferencia de EXPLAIN ANALYZE, nunca llega a usar ningún índice real.</button>
+<button class="quiz-opt" data-correct>Porque el índice cubre vendedor, no categoria: cada índice sirve solo para su columna.</button>
+<button class="quiz-opt">Porque hace falta reiniciar la base de datos para que un índice nuevo tenga efecto.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un índice solo acelera las consultas que filtran por la columna sobre la que se creó. Como categoria no tenía su propio índice todavía, Postgres vuelve a recorrer la tabla entera con Seq Scan." data-ko="No es un tema de uso único, de EXPLAIN sin ANALYZE, ni de reiniciar la base de datos: el índice que creaste cubre vendedor, no categoria — por eso esa columna sigue sin acelerarse hasta que tenga su propio índice." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 5.4 corriste EXPLAIN ANALYZE sobre la misma consulta ya optimizada con índice. ¿Qué información nueva aparece ahí que EXPLAIN (sin ANALYZE) no mostraba?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Nada distinto: EXPLAIN y EXPLAIN ANALYZE muestran siempre la misma información exacta.</button>
+<button class="quiz-opt">Solo el nombre exacto del índice usado, algo que EXPLAIN jamás llega a mostrar.</button>
+<button class="quiz-opt">Una advertencia de sintaxis, por si la consulta tuviera algún error de escritura.</button>
+<button class="quiz-opt" data-correct>Los tiempos reales y las filas que encontró, porque esta vez sí ejecuta la consulta.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: EXPLAIN ANALYZE ejecuta la consulta de verdad y le suma al plan los tiempos reales (actual time, Planning Time, Execution Time) y la cantidad de filas que realmente encontró — datos que EXPLAIN solo no puede mostrar porque nunca corre nada." data-ko="No son iguales, no es solo el nombre del índice, ni una advertencia de sintaxis: la diferencia real es que EXPLAIN ANALYZE ejecuta la consulta de verdad y agrega los tiempos reales y las filas realmente encontradas." hidden></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada función de ventana según qué tipo de cálculo hace.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">ROW_NUMBER()</span>
+<div class="quiz-classify-btns">
+<button>Acumulado</button>
+<button data-correct>Numeración / ranking</button>
+<button>Desplazamiento (fila vecina)</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">LAG()</span>
+<div class="quiz-classify-btns">
+<button data-correct>Desplazamiento (fila vecina)</button>
+<button>Acumulado</button>
+<button>Numeración / ranking</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">SUM(monto) OVER (ORDER BY fecha)</span>
+<div class="quiz-classify-btns">
+<button>Numeración / ranking</button>
+<button>Desplazamiento (fila vecina)</button>
+<button data-correct>Acumulado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">RANK()</span>
+<div class="quiz-classify-btns">
+<button data-correct>Numeración / ranking</button>
+<button>Acumulado</button>
+<button>Desplazamiento (fila vecina)</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">LEAD()</span>
+<div class="quiz-classify-btns">
+<button>Acumulado</button>
+<button data-correct>Desplazamiento (fila vecina)</button>
+<button>Numeración / ranking</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="repaso-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre el ejercicio 2.1: Iván y Daniela empataron en Bs 640 dentro de Electrónica, compartiendo la posición 2. El siguiente en la lista es Esteban, con Bs 560.</p>
+<p>1. RANK() le asigna a Esteban la posición
+<select class="quiz-blank" data-correct="4">
+<option value="">— elige —</option>
+<option value="3">3</option>
+<option value="4">4</option>
+</select>.</p>
+<p>2. DENSE_RANK() en cambio le asigna a Esteban la posición
+<select class="quiz-blank" data-correct="3">
+<option value="">— elige —</option>
+<option value="3">3</option>
+<option value="4">4</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-lag">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 3.1, la primera venta de cada vendedor (según fecha) mostró NULL en la columna venta_anterior. ¿Por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque esa fila tiene un error de datos y no se pudo calcular el monto correctamente.</button>
+<button class="quiz-opt">Porque LAG() siempre devuelve NULL en la primera fila de toda la tabla entera.</button>
+<button class="quiz-opt" data-correct>Porque en su propia partición no hay ninguna fila anterior de la cual traer el monto.</button>
+<button class="quiz-opt">Porque hace falta agregar LEAD() a la consulta para que LAG() pueda funcionar bien.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: LAG() busca el valor de la fila anterior dentro de la misma partición (PARTITION BY vendedor). La primera venta de cada vendedor no tiene ninguna fila anterior en su propia partición, así que el resultado es NULL." data-ko="No es un error de datos, ni depende de LEAD(), y NULL no aparece en la primera fila de toda la tabla sino en la primera fila de cada partición: como esa venta no tiene ninguna fila anterior dentro de su propio vendedor, LAG() devuelve NULL." hidden></p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="repaso-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada elemento con lo que hace dentro de una función de ventana.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="rownumber">ROW_NUMBER()</button>
+<button class="quiz-match-item" data-pair="partition">PARTITION BY</button>
+<button class="quiz-match-item" data-pair="lag">LAG() / LEAD()</button>
+<button class="quiz-match-item" data-pair="sumover">SUM() OVER (...ORDER BY...)</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="rownumber">Numera cada fila de forma única, sin repetir números aunque haya empates.</button>
+<button class="quiz-match-item" data-pair="partition">Reinicia el cálculo de la función de ventana en cada grupo, sin colapsar filas.</button>
+<button class="quiz-match-item" data-pair="lag">Trae el valor de la fila anterior o siguiente dentro de la misma partición.</button>
+<button class="quiz-match-item" data-pair="sumover">Calcula un total que se acumula fila a fila, en vez de sumar toda la partición de una vez.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet del taller</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Forma</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>funcion() OVER (PARTITION BY col ORDER BY col2)</code></td><td>Sintaxis general de una función de ventana.</td></tr>
+<tr><td><code>ROW_NUMBER()</code></td><td>Numera 1, 2, 3... sin importar los empates.</td></tr>
+<tr><td><code>RANK() / DENSE_RANK()</code></td><td>Numeran con hueco tras un empate, o sin hueco.</td></tr>
+<tr><td><code>LAG(columna) / LEAD(columna)</code></td><td>Valor de la fila anterior o siguiente en la partición.</td></tr>
+<tr><td><code>SUM(columna) OVER (...ORDER BY...)</code></td><td>Total acumulado (running total), fila a fila.</td></tr>
+<tr><td><code>CREATE INDEX nombre ON tabla(columna);</code></td><td>Crea un índice B-tree sobre esa columna.</td></tr>
+<tr><td><code>EXPLAIN consulta;</code></td><td>Muestra el plan estimado, sin ejecutar la consulta.</td></tr>
+<tr><td><code>EXPLAIN ANALYZE consulta;</code></td><td>Ejecuta la consulta de verdad y suma los tiempos reales.</td></tr>
+<tr><td><code>Seq Scan → Bitmap Heap Scan / Index Scan</code></td><td>Recorrido completo vs. uso de un índice para llegar directo.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🎲 Tus datos, distintos a los de un compañero</h3><p>ventas_grande se llenó con random() — cada estudiante generó una tabla con vendedores, montos y fechas distintos. Los números exactos de cost y rows que viste no van a coincidir con los de nadie más, pero el comportamiento (Seq Scan antes, Bitmap Heap Scan después) sí es el mismo para todos.</p></div>
+<div class="info"><h3>🧮 ANALYZE, sin EXPLAIN, también existe solo</h3><p>El comando ANALYZE que corriste después de cada CREATE INDEX es, en realidad, un comando aparte de EXPLAIN: actualiza las estadísticas internas de la tabla. Postgres también lo corre automáticamente de fondo (autovacuum), pero en una tabla recién creada conviene forzarlo a mano.</p></div>
+<div class="info"><h3>🔑 Toda clave primaria ya trae su propio índice</h3><p>Por eso el ejercicio bonus del Reto final (WHERE id = 25000) mostró un Index Scan sin que crearas ningún índice nuevo: PRIMARY KEY crea automáticamente un índice único apenas se declara la tabla.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller: Funciones de Ventana e Índices en Vivo — PostgreSQL Real en tu Navegador</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* =======================================================================
+   PGlite: PostgreSQL real compilado a WebAssembly, corriendo en el navegador.
+   Mismo patrón de carga perezosa que Pyodide en las guías de POO.
+   ======================================================================= */
+const PGLITE_CDN = "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.5.4/dist/index.js";
+let pgliteReadyPromise = null;
+
+function cargarPGlite(){
+  if (!pgliteReadyPromise) {
+    pgliteReadyPromise = (async () => {
+      const { PGlite } = await import(PGLITE_CDN);
+      return new PGlite();
+    })();
+  }
+  return pgliteReadyPromise;
+}
+
+function reiniciarPGlite(){
+  pgliteReadyPromise = null;
+}
+
+async function ejecutarSQL(codigo){
+  try {
+    const db = await cargarPGlite();
+    const resultados = await db.exec(codigo);
+    return { resultados, error: null };
+  } catch (e) {
+    return { resultados: null, error: (e && e.message) ? e.message : String(e) };
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* ===== Toast de aviso al bloquear copiar/pegar en los editores ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  if (!clipboardToast) return;
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
+function formatearValor(v){
+  if (v === null || v === undefined) return "<em>NULL</em>";
+  return escapeHtml(v);
+}
+
+function renderizarResultados(resultados){
+  if (!resultados || !resultados.length) {
+    return '<p class="sql-status">✅ Ejecutado. No se generó ningún resultado.</p>';
+  }
+  return resultados.map(r => {
+    const columnas = (r.fields || []).map(f => f.name);
+    if (columnas.length) {
+      let html = '<table class="sql-result-table"><thead><tr>' +
+        columnas.map(c => `<th scope="col">${escapeHtml(c)}</th>`).join("") +
+        "</tr></thead><tbody>";
+      if (!r.rows || !r.rows.length) {
+        html += `<tr><td colspan="${columnas.length}"><em>(0 filas)</em></td></tr>`;
+      } else {
+        r.rows.forEach(fila => {
+          html += "<tr>" + columnas.map(c => `<td>${formatearValor(fila[c])}</td>`).join("") + "</tr>";
+        });
+      }
+      html += "</tbody></table>";
+      return html;
+    }
+    const n = typeof r.affectedRows === "number" ? r.affectedRows : null;
+    const msg = n !== null
+      ? `✅ Sentencia ejecutada (${n} fila${n === 1 ? "" : "s"} afectada${n === 1 ? "" : "s"}).`
+      : "✅ Sentencia ejecutada correctamente.";
+    return `<p class="sql-status">${msg}</p>`;
+  }).join("");
+}
+
+function conectarSqlLab(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  /* En este taller el código se escribe, no se copia ni se pega: bloqueamos
+     copiar/cortar/pegar/arrastrar y avisamos brevemente por qué. */
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En este taller el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  ["copy", "cut", "paste", "drop"].forEach(evt => {
+    textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); });
+  });
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart;
+      const fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (teclaCtrl && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      avisarBloqueo();
+    }
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe alguna sentencia SQL antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando PostgreSQL real (WebAssembly)… la primera vez puede tardar varios segundos.";
+    runBtn.disabled = true;
+    try {
+      const { resultados, error } = await ejecutarSQL(codigo);
+      if (error) {
+        outputBody.textContent = "❌ Error de PostgreSQL: " + error;
+        output.classList.add("error");
+      } else {
+        outputBody.innerHTML = renderizarResultados(resultados);
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el motor de PostgreSQL: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+document.querySelectorAll(".editor-panel").forEach(conectarSqlLab);
+
+/* ===== Botón "Reiniciar base de datos" ===== */
+const resetBtn = document.getElementById("resetDbBtn");
+const dbEstado = document.getElementById("dbEstado");
+resetBtn.addEventListener("click", () => {
+  reiniciarPGlite();
+  document.querySelectorAll(".editor-panel .output").forEach(o => { o.hidden = true; });
+  dbEstado.textContent = "🔄 Base de datos reiniciada — todo lo creado antes se perdió. Vuelve a ejecutar 'Prepara tu base de datos'.";
+});
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=...
+     en la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedida directo, como siempre, no dispara nada nuevo. No toca el
+     motor de quizzes de arriba (repaso) ni la parte de PGlite/editores: se
+     engancha a marcarResuelto() y actualizarProgreso(), que ya existen
+     (ver DEPLOY-GUIAS-SNIPPET.md en el repo de atenza para el detalle de
+     cada endpoint). Los ejercicios sueltos con editor SQL no reportan nada
+     acá — solo cuentan las preguntas de la sección "Repaso" (data-quiz-id),
+     igual que en taller-agregacion-vistas.html. Copiado de ese bloque ya
+     probado. Esta guía todavía no está vinculada como Clase en el panel
+     de ATENZA — falta ese paso aparte. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  var params = new URLSearchParams(location.search);
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
