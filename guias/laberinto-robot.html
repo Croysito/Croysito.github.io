@@ -6,515 +6,247 @@
 <title>El Laberinto del Robot | Roy Carrasco</title>
 
 <script>
-(function(){
-  var saved = localStorage.getItem('guia-theme');
-  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  document.documentElement.setAttribute('data-theme', theme);
-})();
+/* Pantalla de juego: tema forzado a oscuro (decisión con Roy, 08/09
+   — la maqueta aprobada es exclusivamente oscura). No se lee ni se
+   escribe la preferencia guardada del sitio (guia-theme): así el
+   resto de las guías no se ven afectadas por esta página. */
+document.documentElement.setAttribute('data-theme', 'dark');
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/guia.css">
 </head>
 
-<body>
+<body class="juego-mode">
 
-<div class="progress" id="progress"></div>
-
-<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
-<div id="backdrop" class="sidebar-backdrop"></div>
-
-<aside class="sidebar">
-
-<div class="logo">Python <span>Laberinto</span></div>
-<p>Programá un robot de verdad con Python y guialo por 8 laberintos</p>
-
-<div class="buscador">
-<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
-<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+<header class="jg-topbar">
+<div class="jg-brand">LABERINTO <span>// ROBOT</span><span class="jg-brand-vistas">👁 <span id="viewCount">—</span></span></div>
+<div class="jg-spacer"></div>
+<div class="jg-progress-wrap">
+<div class="jg-progress-track"><div class="jg-progress-fill" id="jgProgressFill"></div></div>
+<div class="jg-progress-label" id="jgProgressLabel">0/8 niveles</div>
 </div>
+<div class="jg-stars-total" id="jgStarsTotal">★ 0/24</div>
+<button type="button" class="jg-manual-btn" id="jgManualBtn">MANUAL</button>
+</header>
 
-<nav class="menu">
-<a href="#intro">Introducción</a>
-<a href="#api-robot">La clase Robot</a>
-<a href="#nivel-1">Nivel 1 — Avanzar</a>
-<a href="#nivel-2">Nivel 2 — Un giro</a>
-<a href="#nivel-3">Nivel 3 — Varios giros</a>
-<a href="#nivel-4">Nivel 4 — Bucle for</a>
-<a href="#nivel-5">Nivel 5 — Escalera</a>
-<a href="#nivel-6">Nivel 6 — Sensor e if</a>
-<a href="#nivel-7">Nivel 7 — Bucle while</a>
-<a href="#nivel-8">Nivel 8 — Reto final</a>
-<a href="#cheatsheet">Cheat Sheet</a>
-<a href="#sabias-que">¿Sabías que...?</a>
+<div class="jg-body">
+
+<nav class="jg-rail" aria-label="Niveles del laberinto">
+<div class="jg-rail-label">NIVELES</div>
+<div class="jg-rail-list" id="jgRailList"></div>
 </nav>
 
-<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+<main class="jg-stage">
+
+<div class="jg-stage-head">
+<div class="jg-stage-head-row">
+<span class="jg-nivel-tag" id="jgNivelTag">NIVEL 01</span>
+<h1 class="jg-nivel-titulo" id="jgNivelTitulo">…</h1>
+</div>
+<p class="jg-nivel-lead" id="jgNivelLead"></p>
+</div>
+
+<div class="jg-stage-body">
+<div class="jg-board-wrap" id="jgBoardWrap">
+<div class="jg-board-box">
+<div class="jg-board" id="jgBoard"></div>
+</div>
+</div>
+
+<div class="jg-hud">
+<div class="jg-chip"><span class="jg-chip-label">PASOS</span><span class="jg-chip-val" id="jgPasos">0</span></div>
+<div class="jg-chip"><span class="jg-chip-label">LÍNEAS</span><span class="jg-chip-val" id="jgLineas">0</span><span class="jg-chip-sub" id="jgLineasPar">/ 5 para ★★★</span></div>
+<div class="jg-chip jg-chip-stars" id="jgHudStars"><span>★</span><span>★</span><span>★</span></div>
+<div class="jg-spacer"></div>
+<div class="jg-hint">meta = casilla amarilla</div>
+</div>
+</div>
+
+<div class="jg-win" id="jgWin" hidden>
+<div class="jg-win-card">
+<div class="jg-win-tag" id="jgWinTag">NIVEL 01 COMPLETADO</div>
+<div class="jg-win-stars" id="jgWinStars"><span>★</span><span>★</span><span>★</span></div>
+<p class="jg-win-text" id="jgWinText"></p>
+<div class="jg-win-actions">
+<button type="button" class="jg-win-next" id="jgWinNext">Siguiente nivel →</button>
+<button type="button" class="jg-win-retry" id="jgWinRetry">Mejorar mi solución</button>
+</div>
+</div>
+</div>
+
+</main>
+
+<aside class="jg-panel">
+
+<div class="jg-panel-obj">
+<div class="jg-panel-label">TU OBJETIVO</div>
+<p id="jgObjetivo"></p>
+</div>
+
+<div class="jg-panel-icono">
+<div class="jg-panel-label dim">ÍCONO DEL ROBOT</div>
+<div class="jg-icono-opts" id="jgIconoOpts">
+<button type="button" class="jg-icono-opt" data-icono="cubo">Cubo 3D</button>
+<button type="button" class="jg-icono-opt" data-icono="flecha">Flecha</button>
+<button type="button" class="jg-icono-opt" data-icono="capsula">Cápsula</button>
+<button type="button" class="jg-icono-opt" data-icono="emoji">Emoji</button>
+</div>
+</div>
+
+<div class="jg-controles">
+<button type="button" class="jg-btn-run" id="jgRun">▶ Ejecutar</button>
+<button type="button" class="jg-btn-stop" id="jgStop" hidden aria-label="Detener la ejecución">⏹ Detener</button>
+<button type="button" class="jg-btn-reset" id="jgReset" aria-label="Reiniciar el laberinto sin borrar el código">↺</button>
+</div>
+
+<div class="jg-editor-wrap">
+<textarea class="jg-editor" id="jgEditor" spellcheck="false" aria-label="Escribí tu código Python"></textarea>
+</div>
+
+<div class="jg-consola">
+<div class="jg-consola-head" id="jgConsolaHead"><span>CONSOLA</span><span class="jg-consola-hint">Ctrl + Enter para ejecutar</span></div>
+<pre class="jg-consola-body" id="jgConsola">Escribí tu código y presioná ▶ Ejecutar.</pre>
+</div>
 
 </aside>
 
-<div class="main">
+</div>
 
-<header class="hero">
-<div class="hero-content">
-<div class="badge">🐍 Guía de Aula Invertida</div>
-<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
-<h1>El Laberinto <span>del Robot</span></h1>
-<p>Ya sabés instanciar objetos, llamar sus métodos, repetir con bucles y decidir con condicionales. Ahora vas a usar todo eso junto para algo distinto: en vez de escribir código que imprime texto, vas a escribir código que <strong>mueve a alguien de verdad</strong>. Cada laberinto de esta guía se resuelve programando un objeto <code>Robot</code> — sin bloques arrastrables, con Python real corriendo en tu navegador.</p>
-<div class="author">
-<div class="avatar">RC</div>
-<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+<div class="jg-manual-overlay" id="jgManualOverlay" hidden>
+<div class="jg-manual-card" role="dialog" aria-modal="true" aria-label="Manual: la clase Robot">
+<div class="jg-manual-head">
+<span class="jg-manual-tag">MANUAL</span>
+<span class="jg-manual-title">La clase Robot</span>
+<div class="jg-spacer"></div>
+<button type="button" class="jg-manual-close" id="jgManualClose" aria-label="Cerrar el manual">✕</button>
 </div>
-</div>
-</header>
-
-<section class="container" id="intro">
-<div class="card">
-<h2 class="section-title">Bienvenido</h2>
-<p class="lead">Esta guía funciona distinto a las anteriores: no hay preguntas de opción múltiple ni ejercicios que revise un docente. Cada nivel es un laberinto con un objetivo (📍) y tu código se auto-verifica solo — si el robot llega a la meta, el nivel queda resuelto de verdad, al instante.</p>
-<div class="highlight">
-<strong>💻 Código en vivo, con un objeto que responde</strong>
-<p>Escribís Python en el editor de cada nivel y presionás <strong>▶ Ejecutar</strong>. Tu código corre de verdad (Pyodide, un Python real compilado a WebAssembly) y cada vez que llamás a un método del robot, lo ves moverse en el laberinto, paso a paso, en vivo. Si el robot choca contra una pared, tu programa termina con un error — igual que cualquier otro error de Python — y podés corregir el código y reintentar las veces que quieras.</p>
-</div>
-<p>La progresión de los 8 niveles no enseña ningún concepto nuevo de programación orientada a objetos: es un repaso, cada vez más exigente, de instanciar objetos, llamar métodos, y combinarlos con <code>for</code>, <code>while</code> e <code>if</code>.</p>
-<div class="quiz-tracker">
-<div>
-<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
-<div class="quiz-tracker-label">niveles resueltos</div>
-</div>
-<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
-</div>
-<div class="info-grid">
-<div class="info"><h3>🧍 Instanciar</h3><p>Crear el robot con <code>Robot()</code> lo hace aparecer parado en la casilla de inicio.</p></div>
-<div class="info"><h3>🕹️ Llamar métodos</h3><p><code>avanzar()</code>, <code>girar_izquierda()</code> y <code>girar_derecha()</code> lo mueven de verdad.</p></div>
-<div class="info"><h3>🔁 Combinar</h3><p><code>for</code>, <code>while</code> e <code>if</code> junto con dos sensores para resolver laberintos más grandes.</p></div>
-</div>
-</div>
-</section>
-
-<section class="container" id="api-robot">
-<div class="card">
-<h2 class="section-title">La clase Robot</h2>
-<p class="lead">Todos los niveles usan la misma clase, ya definida — no hace falta escribirla ni importarla, ya está disponible en cada editor. Solo se instancia una vez por nivel.</p>
-<table class="tabla">
+<div class="jg-manual-body">
+<p>Todos los niveles usan la misma clase, ya definida — no hace falta escribirla ni importarla, ya está disponible en cada editor. Solo se instancia una vez por nivel.</p>
+<table class="jg-manual-tabla">
 <thead><tr><th>Miembro</th><th>Qué hace</th></tr></thead>
 <tbody>
-<tr><td><code>robot = Robot()</code></td><td>Crea el robot. Recién en este momento aparece parado en la casilla de inicio del laberinto.</td></tr>
-<tr><td><code>robot.avanzar()</code></td><td>Avanza una casilla en la dirección a la que está mirando. Si adelante hay una pared, el programa termina con un error.</td></tr>
-<tr><td><code>robot.girar_izquierda()</code></td><td>Gira 90° hacia la izquierda, sin cambiar de casilla.</td></tr>
-<tr><td><code>robot.girar_derecha()</code></td><td>Gira 90° hacia la derecha, sin cambiar de casilla.</td></tr>
-<tr><td><code>robot.hay_pared_adelante()</code></td><td>Devuelve <code>True</code> o <code>False</code>: ¿la casilla de adelante es una pared?</td></tr>
-<tr><td><code>robot.en_la_meta()</code></td><td>Devuelve <code>True</code> o <code>False</code>: ¿el robot ya está parado sobre la meta (📍)?</td></tr>
+<tr><td class="jg-code">robot = Robot()</td><td class="jg-texto">Crea el robot. Recién en este momento aparece parado en la casilla de inicio del laberinto.</td></tr>
+<tr><td class="jg-code">robot.avanzar()</td><td class="jg-texto">Avanza una casilla en la dirección a la que está mirando. Si adelante hay una pared, el programa termina con un error.</td></tr>
+<tr><td class="jg-code">robot.girar_izquierda()</td><td class="jg-texto">Gira 90° hacia la izquierda, sin cambiar de casilla.</td></tr>
+<tr><td class="jg-code">robot.girar_derecha()</td><td class="jg-texto">Gira 90° hacia la derecha, sin cambiar de casilla.</td></tr>
+<tr><td class="jg-code">robot.hay_pared_adelante()</td><td class="jg-texto">Devuelve True o False: ¿la casilla de adelante es una pared?</td></tr>
+<tr><td class="jg-code">robot.en_la_meta()</td><td class="jg-texto">Devuelve True o False: ¿el robot ya está parado sobre la meta?</td></tr>
 </tbody>
 </table>
-<div class="code">
-<div class="code-header"><span>Python</span></div>
-<pre><code class="src">robot = Robot()
-robot.avanzar()
-robot.avanzar()
-robot.girar_derecha()
-robot.avanzar()</code></pre>
-</div>
-<div class="highlight">
-<strong>Un solo robot por nivel</strong>
+
+<div class="jg-manual-nota">
+<div class="jg-manual-nota-tag">Un solo robot por nivel</div>
 <p>Cada laberinto tiene un único robot. No hace falta (ni tiene sentido) instanciar más de uno en el mismo nivel.</p>
 </div>
-</div>
-</section>
 
-<!-- ============ NIVEL 1 ============ -->
-<section class="container" id="nivel-1">
-<div class="card">
-<div class="lab-nivel" data-quiz-id="nivel-1" data-nivel="nivel-1">
-<div class="lab-titulo-row">
-<h2 class="section-title" style="margin:0">Nivel 1 — Instanciar y avanzar</h2>
-<span class="lab-estado" data-lab-estado>Pendiente</span>
-</div>
-<p class="lead">El camino es una línea recta. Creá el robot y hacelo avanzar hasta la meta.</p>
-<div class="highlight"><strong>Tu objetivo</strong><p>Instanciar el robot con <code>Robot()</code> y llamar <code>avanzar()</code> las veces que hagan falta para llegar a la casilla amarilla.</p></div>
-<div class="lab-grid-wrap" data-lab-grid></div>
-<div class="editor-panel lab-editor">
-<div class="editor-header">
-<span>✍️ Programá al robot</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-</div>
-<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="robot = Robot()
-robot.avanzar()"></textarea>
-<div class="output" hidden>
-<div class="output-head">Salida</div>
-<pre class="output-body"></pre>
-</div>
-<div class="lab-mensaje" data-lab-mensaje hidden></div>
-</div>
-</div>
-</div>
-</section>
-
-<!-- ============ NIVEL 2 ============ -->
-<section class="container" id="nivel-2">
-<div class="card">
-<div class="lab-nivel" data-quiz-id="nivel-2" data-nivel="nivel-2">
-<div class="lab-titulo-row">
-<h2 class="section-title" style="margin:0">Nivel 2 — Un giro</h2>
-<span class="lab-estado" data-lab-estado>Pendiente</span>
-</div>
-<p class="lead">Esta vez el camino dobla una vez. Necesitás girar en el momento justo, ni antes ni después.</p>
-<div class="highlight"><strong>Tu objetivo</strong><p>Usar <code>girar_derecha()</code> cuando el robot llegue a la esquina, y seguir avanzando hacia la meta.</p></div>
-<div class="lab-grid-wrap" data-lab-grid></div>
-<div class="editor-panel lab-editor">
-<div class="editor-header">
-<span>✍️ Programá al robot</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-</div>
-<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="robot = Robot()
-robot.avanzar()
-robot.girar_derecha()"></textarea>
-<div class="output" hidden>
-<div class="output-head">Salida</div>
-<pre class="output-body"></pre>
-</div>
-<div class="lab-mensaje" data-lab-mensaje hidden></div>
-</div>
-</div>
-</div>
-</section>
-
-<!-- ============ NIVEL 3 ============ -->
-<section class="container" id="nivel-3">
-<div class="card">
-<div class="lab-nivel" data-quiz-id="nivel-3" data-nivel="nivel-3">
-<div class="lab-titulo-row">
-<h2 class="section-title" style="margin:0">Nivel 3 — Varios giros</h2>
-<span class="lab-estado" data-lab-estado>Pendiente</span>
-</div>
-<p class="lead">Ahora el camino dobla dos veces: primero hacia un lado, después hacia el otro. Todavía sin bucles — solo encadenar las llamadas en el orden correcto.</p>
-<div class="highlight"><strong>Tu objetivo</strong><p>Vas a necesitar tanto <code>girar_derecha()</code> como <code>girar_izquierda()</code> en algún momento del recorrido.</p></div>
-<div class="lab-grid-wrap" data-lab-grid></div>
-<div class="editor-panel lab-editor">
-<div class="editor-header">
-<span>✍️ Programá al robot</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-</div>
-<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="robot = Robot()
-robot.avanzar()"></textarea>
-<div class="output" hidden>
-<div class="output-head">Salida</div>
-<pre class="output-body"></pre>
-</div>
-<div class="lab-mensaje" data-lab-mensaje hidden></div>
-</div>
-</div>
-</div>
-</section>
-
-<!-- ============ NIVEL 4 ============ -->
-<section class="container" id="nivel-4">
-<div class="card">
-<div class="lab-nivel" data-quiz-id="nivel-4" data-nivel="nivel-4">
-<div class="lab-titulo-row">
-<h2 class="section-title" style="margin:0">Nivel 4 — Bucle <code>for</code>: pasillo largo</h2>
-<span class="lab-estado" data-lab-estado>Pendiente</span>
-</div>
-<p class="lead">El pasillo es mucho más largo que los anteriores. Escribir <code>robot.avanzar()</code> nueve veces seguidas funciona, pero ya sabés una forma mejor de repetir una instrucción.</p>
-<div class="highlight"><strong>Tu objetivo</strong><p>Resolvé el nivel usando un <code>for</code> en vez de repetir la línea a mano: <code>for _ in range(9): robot.avanzar()</code>.</p></div>
-<div class="lab-grid-wrap" data-lab-grid></div>
-<div class="editor-panel lab-editor">
-<div class="editor-header">
-<span>✍️ Programá al robot</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-</div>
-<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="robot = Robot()
-for _ in range(9):
-    robot.avanzar()"></textarea>
-<div class="output" hidden>
-<div class="output-head">Salida</div>
-<pre class="output-body"></pre>
-</div>
-<div class="lab-mensaje" data-lab-mensaje hidden></div>
-</div>
-</div>
-</div>
-</section>
-
-<!-- ============ NIVEL 5 ============ -->
-<section class="container" id="nivel-5">
-<div class="card">
-<div class="lab-nivel" data-quiz-id="nivel-5" data-nivel="nivel-5">
-<div class="lab-titulo-row">
-<h2 class="section-title" style="margin:0">Nivel 5 — Bucle <code>for</code> con varios pasos</h2>
-<span class="lab-estado" data-lab-estado>Pendiente</span>
-</div>
-<p class="lead">El camino tiene forma de escalera: el mismo patrón de movimientos se repite tres veces seguidas.</p>
-<div class="highlight"><strong>Tu objetivo</strong><p>El cuerpo del <code>for</code> no tiene por qué ser una sola línea — podés repetir un bloque de varias instrucciones juntas (avanzar, avanzar, girar, avanzar, girar) tantas veces como se repita el patrón.</p></div>
-<div class="lab-grid-wrap" data-lab-grid></div>
-<div class="editor-panel lab-editor">
-<div class="editor-header">
-<span>✍️ Programá al robot</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-</div>
-<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="robot = Robot()
-for _ in range(3):
-    robot.avanzar()
-    robot.avanzar()
-    robot.girar_derecha()
-    robot.avanzar()
-    robot.girar_izquierda()"></textarea>
-<div class="output" hidden>
-<div class="output-head">Salida</div>
-<pre class="output-body"></pre>
-</div>
-<div class="lab-mensaje" data-lab-mensaje hidden></div>
-</div>
-</div>
-</div>
-</section>
-
-<!-- ============ NIVEL 6 ============ -->
-<section class="container" id="nivel-6">
-<div class="card">
-<div class="lab-nivel" data-quiz-id="nivel-6" data-nivel="nivel-6">
-<div class="lab-titulo-row">
-<h2 class="section-title" style="margin:0">Nivel 6 — Sensor y decisión: <code>if</code> / <code>else</code></h2>
-<span class="lab-estado" data-lab-estado>Pendiente</span>
-</div>
-<p class="lead">El robot camina recto hasta encontrarse con una pared — pero en vez de contar a mano cuántas casillas hay antes de doblar, esta vez usá el sensor para que el propio robot lo detecte.</p>
-<div class="highlight"><strong>Tu objetivo</strong><p>Avanzá hasta la pared y, con <code>if robot.hay_pared_adelante():</code>, decidí hacia qué lado girar. Para <em>este</em> laberinto en particular también podrías resolverlo contando pasos a mano — la idea es practicar el patrón del sensor, que sí hace falta cuando el laberinto no lo conocés de antemano (niveles 7 y 8).</p></div>
-<div class="lab-grid-wrap" data-lab-grid></div>
-<div class="editor-panel lab-editor">
-<div class="editor-header">
-<span>✍️ Programá al robot</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-</div>
-<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="robot = Robot()
-for _ in range(6):
-    robot.avanzar()
-
-if robot.hay_pared_adelante():
-    robot.girar_derecha()
-else:
-    robot.girar_izquierda()
-
-robot.avanzar()
-robot.avanzar()"></textarea>
-<div class="output" hidden>
-<div class="output-head">Salida</div>
-<pre class="output-body"></pre>
-</div>
-<div class="lab-mensaje" data-lab-mensaje hidden></div>
-</div>
-</div>
-</div>
-</section>
-
-<!-- ============ NIVEL 7 ============ -->
-<section class="container" id="nivel-7">
-<div class="card">
-<div class="lab-nivel" data-quiz-id="nivel-7" data-nivel="nivel-7">
-<div class="lab-titulo-row">
-<h2 class="section-title" style="margin:0">Nivel 7 — Bucle <code>while</code>: avanzar hasta la meta</h2>
-<span class="lab-estado" data-lab-estado>Pendiente</span>
-</div>
-<p class="lead">Otro pasillo recto — pero esta vez ni siquiera hace falta saber cuántas casillas mide.</p>
-<div class="highlight"><strong>Tu objetivo</strong><p>Usá <code>while not robot.en_la_meta(): robot.avanzar()</code> en vez de contar casillas. Esta idea — "repetí hasta que se cumpla la condición", sin saber de antemano cuántas veces — es exactamente lo que hace un <code>while</code>.</p></div>
-<div class="lab-grid-wrap" data-lab-grid></div>
-<div class="editor-panel lab-editor">
-<div class="editor-header">
-<span>✍️ Programá al robot</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-</div>
-<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="robot = Robot()
-while not robot.en_la_meta():
-    robot.avanzar()"></textarea>
-<div class="output" hidden>
-<div class="output-head">Salida</div>
-<pre class="output-body"></pre>
-</div>
-<div class="lab-mensaje" data-lab-mensaje hidden></div>
-</div>
-</div>
-</div>
-</section>
-
-<!-- ============ NIVEL 8 ============ -->
-<section class="container" id="nivel-8">
-<div class="card">
-<div class="lab-nivel" data-quiz-id="nivel-8" data-nivel="nivel-8">
-<div class="lab-titulo-row">
-<h2 class="section-title" style="margin:0">Nivel 8 — Reto final: recorrido con decisiones</h2>
-<span class="lab-estado" data-lab-estado>Pendiente</span>
-</div>
-<p class="lead">El último laberinto combina todo lo anterior: hay que caminar, doblar dos veces, y el robot tiene que descubrir solo cuándo doblar.</p>
-<div class="highlight"><strong>Tu objetivo</strong><p>Una sola regla, repetida con <code>while</code>, alcanza para resolver este laberinto (y cualquier otro parecido, sin importar cuántos giros tenga): <em>"si hay pared adelante, girar a la derecha; si no, avanzar"</em> — hasta llegar a la meta.</p></div>
-<div class="lab-grid-wrap" data-lab-grid></div>
-<div class="editor-panel lab-editor">
-<div class="editor-header">
-<span>✍️ Programá al robot</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
-</div>
-<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="robot = Robot()
-while not robot.en_la_meta():
-    if robot.hay_pared_adelante():
-        robot.girar_derecha()
-    else:
-        robot.avanzar()"></textarea>
-<div class="output" hidden>
-<div class="output-head">Salida</div>
-<pre class="output-body"></pre>
-</div>
-<div class="lab-mensaje" data-lab-mensaje hidden></div>
-</div>
-</div>
-</div>
-</section>
-
-<section class="container" id="cheatsheet">
-<div class="card">
-<h2 class="section-title">🗒️ Cheat Sheet</h2>
-<table class="tabla">
-<thead><tr><th>Necesitás...</th><th>Escribís</th></tr></thead>
+<div class="jg-manual-cheat-tag">CHEAT SHEET</div>
+<table class="jg-manual-tabla jg-manual-cheat">
 <tbody>
-<tr><td>Crear el robot</td><td><code>robot = Robot()</code></td></tr>
-<tr><td>Moverse una casilla</td><td><code>robot.avanzar()</code></td></tr>
-<tr><td>Girar sin moverse</td><td><code>robot.girar_izquierda()</code> / <code>robot.girar_derecha()</code></td></tr>
-<tr><td>Preguntar si hay pared adelante</td><td><code>robot.hay_pared_adelante()</code></td></tr>
-<tr><td>Preguntar si ya llegó</td><td><code>robot.en_la_meta()</code></td></tr>
-<tr><td>Repetir N veces</td><td><code>for _ in range(N): ...</code></td></tr>
-<tr><td>Repetir hasta cumplir una condición</td><td><code>while not robot.en_la_meta(): ...</code></td></tr>
-<tr><td>Decidir según el sensor</td><td><code>if robot.hay_pared_adelante(): ... else: ...</code></td></tr>
+<tr><td>Repetir N veces</td><td>for _ in range(N): ...</td></tr>
+<tr><td>Repetir hasta cumplir una condición</td><td>while not robot.en_la_meta(): ...</td></tr>
+<tr><td>Decidir según el sensor</td><td>if robot.hay_pared_adelante(): ... else: ...</td></tr>
 </tbody>
 </table>
 </div>
-</section>
-
-<section class="container" id="sabias-que">
-<div class="card">
-<h2 class="section-title">¿Sabías que...?</h2>
-<div class="info-grid">
-<div class="info"><h3>🐢 El ancestro real de este ejercicio</h3><p>En 1967, el matemático <strong>Seymour Papert</strong> (MIT) creó <strong>LOGO</strong>, un lenguaje donde se programaba una "tortuga" (al principio un robot físico con ruedas, después un cursor en pantalla) con instrucciones como <code>avanza</code> y <code>gira</code>. La idea de "programar un personaje para que se mueva" que acabás de usar tiene más de 55 años.</p></div>
-<div class="info"><h3>🧩 Blockly Games</h3><p>Google publicó <a href="https://blockly.games/maze" target="_blank" rel="noopener">Blockly Games: Maze</a>, un laberinto casi idéntico a este pero resuelto arrastrando bloques en vez de escribir código — pensado para introducir la programación a quienes todavía no escriben texto. Vos ya sabés Python de verdad, así que esta guía te lo hizo resolver escribiéndolo.</p></div>
-<div class="info"><h3>🤖 Programar robots de verdad</h3><p>El patrón <code>if robot.hay_pared_adelante(): girar() else: avanzar()</code> que usaste en el Reto Final se llama <strong>seguimiento de pared</strong> (wall following) y es un algoritmo real que usan robots físicos simples para explorar laberintos sin tener un mapa previo.</p></div>
 </div>
 </div>
-</section>
-
-<footer>
-<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">El Laberinto del Robot</h2>
-<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
-<br>
-<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
-<p>Universidad Adventista de Bolivia</p>
-<p>2026</p>
-</footer>
-
-</div>
-
-<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
 
 <script>
 
-/* ===== Barra de progreso de scroll ===== */
-const progress = document.getElementById("progress");
-window.addEventListener("scroll", () => {
-  const total = document.documentElement.scrollHeight - window.innerHeight;
-  progress.style.width = (window.pageYOffset / total) * 100 + "%";
-});
-
-/* ===== Botón volver arriba ===== */
-const topBtn = document.getElementById("topBtn");
-window.addEventListener("scroll", () => {
-  topBtn.classList.toggle("show", window.scrollY > 500);
-});
-topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
-
-/* ===== Menú móvil (hamburguesa) ===== */
-const menuBtn = document.getElementById("menuBtn");
-const sidebar = document.querySelector(".sidebar");
-const backdrop = document.getElementById("backdrop");
-const enlacesMenu = document.querySelectorAll(".menu a");
-
-function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
-function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
-menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
-backdrop.addEventListener("click", cerrarMenu);
-enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
-
-/* ===== Buscador del menú ===== */
-const buscador = document.getElementById("buscador");
-const sinResultados = document.getElementById("sinResultados");
-buscador.addEventListener("input", () => {
-  const q = buscador.value.trim().toLowerCase();
-  let visibles = 0;
-  enlacesMenu.forEach(a => {
-    const coincide = a.textContent.toLowerCase().includes(q);
-    a.style.display = coincide ? "" : "none";
-    if (coincide) visibles++;
-  });
-  sinResultados.classList.toggle("show", visibles === 0);
-});
-
-/* ===== Tema claro / oscuro ===== */
-const themeBtn = document.getElementById("themeBtn");
-function actualizarIconoTema(){
-  const actual = document.documentElement.getAttribute("data-theme");
-  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
-}
-actualizarIconoTema();
-themeBtn.addEventListener("click", () => {
-  const actual = document.documentElement.getAttribute("data-theme");
-  const nuevo = actual === "dark" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", nuevo);
-  localStorage.setItem("guia-theme", nuevo);
-  actualizarIconoTema();
-});
-
-/* ===== Resaltar menú según sección visible ===== */
-const secciones = document.querySelectorAll("section[id]");
-window.addEventListener("scroll", () => {
-  let actual = "";
-  secciones.forEach(sec => {
-    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
-  });
-  enlacesMenu.forEach(a => {
-    a.style.background = "";
-    a.style.color = "";
-    if (a.getAttribute("href") === "#" + actual) {
-      a.style.background = "#78b159";
-      a.style.color = "white";
-    }
-  });
-});
-
-/* ===== Barra de progreso de niveles resueltos ===== */
-const QUIZ_PREFIX = "poo-quiz-" + location.pathname + "-";
-
-function marcarResuelto(id, estado) {
-  localStorage.setItem(QUIZ_PREFIX + id, estado);
-  actualizarProgreso();
-}
-
-function actualizarProgreso() {
-  const barra = document.getElementById("quizBarFill");
-  const etiqueta = document.getElementById("quizBarLabel");
-  if (!barra || !etiqueta) return;
-  const ids = new Set();
-  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
-  let correctas = 0;
-  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
-  const total = ids.size;
-  etiqueta.textContent = correctas + " / " + total;
-  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
-}
+/* =========================================================
+   DATOS DE LOS 8 NIVELES — mapas y dirInicial calcados de
+   NIVELES_LABERINTO (la versión Lineal previa de esta guía);
+   titulo/lead/objetivo/par/placeholder calcados de LEVELS en
+   diseno/robot-sim.js del handoff. El motor de laberinto en sí
+   (abajo) no cambia respecto a la versión Lineal.
+   ========================================================= */
+const NIVELES = [
+  {
+    id: "nivel-1", dirInicial: "E",
+    mapa: ["#######", "#S...E#", "#######"],
+    titulo: "Instanciar y avanzar",
+    lead: "El camino es una línea recta. Creá el robot y hacelo avanzar hasta la meta.",
+    objetivo: "Instanciar el robot con Robot() y llamar avanzar() las veces que hagan falta para llegar a la casilla amarilla.",
+    par: 5,
+    placeholder: "robot = Robot()\nrobot.avanzar()",
+  },
+  {
+    id: "nivel-2", dirInicial: "E",
+    mapa: ["#####", "#S.##", "##.##", "##E##", "#####"],
+    titulo: "Un giro",
+    lead: "Esta vez el camino dobla una vez. Necesitás girar en el momento justo, ni antes ni después.",
+    objetivo: "Usar girar_derecha() cuando el robot llegue a la esquina, y seguir avanzando hacia la meta.",
+    par: 5,
+    placeholder: "robot = Robot()\nrobot.avanzar()\nrobot.girar_derecha()",
+  },
+  {
+    id: "nivel-3", dirInicial: "E",
+    mapa: ["#########", "#S...####", "####...E#", "#########"],
+    titulo: "Varios giros",
+    lead: "Ahora el camino dobla dos veces: primero hacia un lado, después hacia el otro. Todavía sin bucles — solo encadenar las llamadas en el orden correcto.",
+    objetivo: "Vas a necesitar tanto girar_derecha() como girar_izquierda() en algún momento del recorrido.",
+    par: 10,
+    placeholder: "robot = Robot()\nrobot.avanzar()",
+  },
+  {
+    id: "nivel-4", dirInicial: "E",
+    mapa: ["############", "#S........E#", "############"],
+    titulo: "Bucle for: pasillo largo",
+    lead: "El pasillo es mucho más largo que los anteriores. Escribir robot.avanzar() nueve veces seguidas funciona, pero ya sabés una forma mejor de repetir una instrucción.",
+    objetivo: "Resolvé el nivel usando un for en vez de repetir la línea a mano: for _ in range(9): robot.avanzar().",
+    par: 3,
+    placeholder: "robot = Robot()\nfor _ in range(9):\n    robot.avanzar()",
+  },
+  {
+    id: "nivel-5", dirInicial: "E",
+    mapa: ["#########", "#S..#####", "###...###", "#####...#", "#######E#", "#########"],
+    titulo: "Bucle for con varios pasos",
+    lead: "El camino tiene forma de escalera: el mismo patrón de movimientos se repite tres veces seguidas.",
+    objetivo: "El cuerpo del for no tiene por qué ser una sola línea — podés repetir un bloque de varias instrucciones juntas (avanzar, avanzar, girar, avanzar, girar) tantas veces como se repita el patrón.",
+    par: 7,
+    placeholder: "robot = Robot()\nfor _ in range(3):\n    robot.avanzar()\n    robot.avanzar()\n    robot.girar_derecha()\n    robot.avanzar()\n    robot.girar_izquierda()",
+  },
+  {
+    id: "nivel-6", dirInicial: "E",
+    mapa: ["#########", "#S......#", "#######.#", "#######E#", "#########"],
+    titulo: "Sensor y decisión: if / else",
+    lead: "El robot camina recto hasta encontrarse con una pared — pero en vez de contar a mano cuántas casillas hay antes de doblar, esta vez usá el sensor para que el propio robot lo detecte.",
+    objetivo: "Avanzá hasta la pared y, con if robot.hay_pared_adelante():, decidí hacia qué lado girar.",
+    par: 9,
+    placeholder: "robot = Robot()\nfor _ in range(6):\n    robot.avanzar()\n\nif robot.hay_pared_adelante():\n    robot.girar_derecha()\nelse:\n    robot.girar_izquierda()\n\nrobot.avanzar()\nrobot.avanzar()",
+  },
+  {
+    id: "nivel-7", dirInicial: "E",
+    mapa: ["############", "#S........E#", "############"],
+    titulo: "Bucle while: avanzar hasta la meta",
+    lead: "Otro pasillo recto — pero esta vez ni siquiera hace falta saber cuántas casillas mide.",
+    objetivo: "Usá while not robot.en_la_meta(): robot.avanzar() en vez de contar casillas.",
+    par: 3,
+    placeholder: "robot = Robot()\nwhile not robot.en_la_meta():\n    robot.avanzar()",
+  },
+  {
+    id: "nivel-8", dirInicial: "E",
+    mapa: ["#######", "#S....#", "#####.#", "#E....#", "#######"],
+    titulo: "Reto final: recorrido con decisiones",
+    lead: "El último laberinto combina todo lo anterior: hay que caminar, doblar dos veces, y el robot tiene que descubrir solo cuándo doblar.",
+    objetivo: "Una sola regla, repetida con while, alcanza para resolver este laberinto: “si hay pared adelante, girar a la derecha; si no, avanzar” — hasta llegar a la meta.",
+    par: 6,
+    placeholder: "robot = Robot()\nwhile not robot.en_la_meta():\n    if robot.hay_pared_adelante():\n        robot.girar_derecha()\n    else:\n        robot.avanzar()",
+  },
+];
 
 /* =========================================================
    MOTOR DEL LABERINTO — mapas, movimiento y verificación
+   (sin cambios respecto a la versión Lineal de esta guía)
    ========================================================= */
 const ORDEN_DIR = ["N", "E", "S", "W"]; // sentido horario
 const DELTAS_DIR = { N: [-1, 0], E: [0, 1], S: [1, 0], W: [0, -1] };
 const ANGULOS_DIR = { N: 0, E: 90, S: 180, W: 270 };
 const LIMITE_ACCIONES = 60;   // tope de avanzar()/girar() por ejecución
-const DURACION_PASO = 200;    // ms que tarda la animación de cada acción
+const DURACION_PASO = 175;    // ms que tarda la animación de cada acción
 const DURACION_CHOQUE = 420;  // ms que tarda la animación de choque (un poco más larga)
 
 function girarDireccion(dir, lado){
@@ -537,231 +269,371 @@ function esPared(mapa, r, c){
   return fila[c] === "#";
 }
 
-const NIVELES_LABERINTO = [
-  {
-    id: "nivel-1",
-    dirInicial: "E",
-    mapa: [
-      "#######",
-      "#S...E#",
-      "#######",
-    ],
-  },
-  {
-    id: "nivel-2",
-    dirInicial: "E",
-    mapa: [
-      "#####",
-      "#S.##",
-      "##.##",
-      "##E##",
-      "#####",
-    ],
-  },
-  {
-    id: "nivel-3",
-    dirInicial: "E",
-    mapa: [
-      "#########",
-      "#S...####",
-      "####...E#",
-      "#########",
-    ],
-  },
-  {
-    id: "nivel-4",
-    dirInicial: "E",
-    mapa: [
-      "############",
-      "#S........E#",
-      "############",
-    ],
-  },
-  {
-    id: "nivel-5",
-    dirInicial: "E",
-    mapa: [
-      "#########",
-      "#S..#####",
-      "###...###",
-      "#####...#",
-      "#######E#",
-      "#########",
-    ],
-  },
-  {
-    id: "nivel-6",
-    dirInicial: "E",
-    mapa: [
-      "#########",
-      "#S......#",
-      "#######.#",
-      "#######E#",
-      "#########",
-    ],
-  },
-  {
-    id: "nivel-7",
-    dirInicial: "E",
-    mapa: [
-      "############",
-      "#S........E#",
-      "############",
-    ],
-  },
-  {
-    id: "nivel-8",
-    dirInicial: "E",
-    mapa: [
-      "#######",
-      "#S....#",
-      "#####.#",
-      "#E....#",
-      "#######",
-    ],
-  },
-];
+/* =========================================================
+   ESTADO DEL JUEGO — un nivel activo a la vez. Cambiar de nivel
+   reconstruye el tablero desde cero (mismo criterio que "cambiar
+   de nivel limpia la consola y reinicia la posición del robot"
+   del handoff); el código de cada nivel se conserva aparte en
+   state.codigos durante la sesión.
+   ========================================================= */
+const state = {
+  idx: 0,                 // nivel activo (0-7)
+  codigos: {},            // idx -> código escrito, en sesión
+  resueltos: {},          // idx -> true (gobierna el desbloqueo)
+  estrellas: {},          // idx -> máximo histórico 1..3
+  icono: "cubo",          // preferencia del alumno, persistida
+};
+let corriendo = false;
+let estadoActivo = null;         // { mapa, startR, startC, metaR, metaC, dirInicial, r, c, dir, pasos, llego }
+let estadoLaberintoActual = null; // apunta a estadoActivo mientras corre una ejecución
+let robotEl = null;
+let cellActual = 40;
+let pasoActual = 42;
 
-const estadosLaberinto = {}; // id de nivel -> estado (uno por nivel, persistente en la página)
-let estadoLaberintoActual = null; // apunta al estado del nivel que se está ejecutando ahora mismo
+const QUIZ_PREFIX = "poo-quiz-" + location.pathname + "-";
+const CLAVE_JUEGO = "laberinto-robot-juego-v1";
 
-function construirNivel(nivelDef){
-  const contenedor = document.querySelector(`.lab-nivel[data-nivel="${nivelDef.id}"]`);
-  if (!contenedor) return;
-  const wrap = contenedor.querySelector("[data-lab-grid]");
-  const filas = nivelDef.mapa.length;
-  const cols = nivelDef.mapa[0].length;
-  const CELL = 38;
-  const svgNS = "http://www.w3.org/2000/svg";
+function cargarProgreso(){
+  NIVELES.forEach((n, i) => {
+    if (localStorage.getItem(QUIZ_PREFIX + n.id) === "ok") state.resueltos[i] = true;
+  });
+  try {
+    const datos = JSON.parse(localStorage.getItem(CLAVE_JUEGO) || "{}");
+    state.estrellas = datos.estrellas || {};
+    state.icono = datos.icono || "cubo";
+    if (typeof datos.idx === "number" && datos.idx >= 0 && datos.idx < NIVELES.length) state.idx = datos.idx;
+  } catch (e) {}
+  if (state.idx !== 0 && !state.resueltos[state.idx - 1]) state.idx = 0;
+}
 
-  const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("class", "lab-svg");
-  svg.setAttribute("viewBox", `0 0 ${cols * CELL} ${filas * CELL}`);
-  wrap.style.maxWidth = Math.min(cols * CELL + 32, 460) + "px";
+function guardarProgreso(){
+  try {
+    localStorage.setItem(CLAVE_JUEGO, JSON.stringify({ estrellas: state.estrellas, icono: state.icono, idx: state.idx }));
+  } catch (e) {}
+}
 
-  const [startR, startC] = encontrarCelda(nivelDef.mapa, "S");
-  const [metaR, metaC] = encontrarCelda(nivelDef.mapa, "E");
+function marcarNivelResuelto(i){
+  localStorage.setItem(QUIZ_PREFIX + NIVELES[i].id, "ok");
+}
+
+function contarLineas(codigo){
+  return codigo.split(/\r?\n/).filter(l => l.replace(/#.*$/, "").trim().length > 0).length;
+}
+function calcularEstrellas(nivel, lineas){
+  if (lineas <= nivel.par) return 3;
+  if (lineas <= nivel.par + 3) return 2;
+  return 1;
+}
+
+/* ===== Ícono del robot: 4 variantes, todas cubos/formas CSS con
+   transform 3D. El transform de cada cara se calcula acá (depende
+   del tamaño de celda) — por eso guia.css no declara transform
+   para estas clases, solo color/posición. ===== */
+function construirIcono(container, cell){
+  container.innerHTML = "";
+  const tipo = state.icono;
+  const iconPx = Math.round(cell * 0.68);
+  const half = Math.round(cell * 0.28);
+
+  const wrap = document.createElement("div");
+  wrap.style.width = iconPx + "px";
+  wrap.style.height = iconPx + "px";
+
+  if (tipo === "flecha") {
+    wrap.className = "jg-icono";
+    wrap.style.transform = "rotateX(-40deg)";
+    const sombra = document.createElement("div");
+    sombra.className = "jg-icono-flecha-sombra";
+    const cara = document.createElement("div");
+    cara.className = "jg-icono-flecha-cara";
+    cara.style.transform = `translateZ(${half}px)`;
+    const luz = document.createElement("div");
+    luz.className = "jg-icono-flecha-luz";
+    luz.style.transform = `translateZ(${half}px)`;
+    wrap.append(sombra, cara, luz);
+  } else if (tipo === "capsula") {
+    wrap.className = "jg-icono";
+    wrap.style.transform = "rotateX(-42deg)";
+    const cuerpo = document.createElement("div");
+    cuerpo.className = "jg-icono-capsula-cuerpo";
+    cuerpo.style.transform = `translateZ(${half}px)`;
+    const luz = document.createElement("div");
+    luz.className = "jg-icono-capsula-luz";
+    luz.style.transform = `translateZ(${half}px)`;
+    const visor = document.createElement("div");
+    visor.className = "jg-icono-capsula-visor";
+    wrap.append(cuerpo, luz, visor);
+  } else if (tipo === "emoji") {
+    wrap.className = "jg-icono-emoji-wrap";
+    const span = document.createElement("span");
+    span.className = "jg-icono-emoji";
+    span.style.fontSize = iconPx + "px";
+    span.textContent = "🤖";
+    const flecha = document.createElement("div");
+    flecha.className = "jg-icono-emoji-flecha";
+    wrap.append(span, flecha);
+  } else {
+    wrap.className = "jg-icono";
+    wrap.style.transform = "rotateX(-46deg)";
+    const top = document.createElement("div");
+    top.className = "jg-icono-cara jg-icono-top";
+    top.style.transform = `translateZ(${half}px)`;
+    const frente = document.createElement("div");
+    frente.className = "jg-icono-cara jg-icono-frente";
+    frente.style.transform = `rotateX(90deg) translateZ(${half}px)`;
+    const ojo1 = document.createElement("div"); ojo1.className = "jg-icono-ojo";
+    const ojo2 = document.createElement("div"); ojo2.className = "jg-icono-ojo";
+    frente.append(ojo1, ojo2);
+    const izq = document.createElement("div");
+    izq.className = "jg-icono-cara jg-icono-izq";
+    izq.style.transform = `rotateY(90deg) translateZ(${half}px)`;
+    const der = document.createElement("div");
+    der.className = "jg-icono-cara jg-icono-der";
+    der.style.transform = `rotateY(-90deg) translateZ(${half}px)`;
+    const abajo = document.createElement("div");
+    abajo.className = "jg-icono-cara jg-icono-abajo";
+    abajo.style.transform = `rotateX(-90deg) translateZ(${half}px)`;
+    wrap.append(top, frente, izq, der, abajo);
+  }
+  container.appendChild(wrap);
+}
+
+/* ===== Tablero: se reconstruye entero al cargar un nivel; el
+   tamaño de celda se mide contra el ancho real del contenedor
+   central (no una constante), y se recalcula en resize. ===== */
+function montarNivelActivo(nivel){
+  const board = document.getElementById("jgBoard");
+  board.innerHTML = "";
+  const filas = nivel.mapa.length;
+  const cols = nivel.mapa[0].length;
+  const [startR, startC] = encontrarCelda(nivel.mapa, "S");
+  const [metaR, metaC] = encontrarCelda(nivel.mapa, "E");
+
+  const wrap = document.getElementById("jgBoardWrap");
+  const ancho = Math.max(wrap.clientWidth - 44, 60);
+  const cell = Math.max(22, Math.min(52, Math.floor(ancho / cols), Math.floor(320 / filas)));
+  cellActual = cell;
+  pasoActual = cell + 2;
+  board.style.gridTemplateColumns = `repeat(${cols}, ${cell}px)`;
 
   for (let r = 0; r < filas; r++) {
     for (let c = 0; c < cols; c++) {
-      const rect = document.createElementNS(svgNS, "rect");
-      rect.setAttribute("x", c * CELL);
-      rect.setAttribute("y", r * CELL);
-      rect.setAttribute("width", CELL);
-      rect.setAttribute("height", CELL);
-      const esMuro = esPared(nivelDef.mapa, r, c);
-      rect.setAttribute("class", esMuro ? "lab-cell-wall" : "lab-cell-path");
-      svg.appendChild(rect);
+      const div = document.createElement("div");
+      let clase = "piso";
+      if (esPared(nivel.mapa, r, c)) clase = "muro";
+      else if (r === metaR && c === metaC) clase = "meta";
+      else if (r === startR && c === startC) clase = "inicio";
+      div.className = "jg-cell " + clase;
+      div.style.width = cell + "px";
+      div.style.height = cell + "px";
+      board.appendChild(div);
     }
   }
 
-  const goalRect = document.createElementNS(svgNS, "rect");
-  goalRect.setAttribute("x", metaC * CELL + 4);
-  goalRect.setAttribute("y", metaR * CELL + 4);
-  goalRect.setAttribute("width", CELL - 8);
-  goalRect.setAttribute("height", CELL - 8);
-  goalRect.setAttribute("class", "lab-cell-goal");
-  svg.appendChild(goalRect);
+  robotEl = document.createElement("div");
+  robotEl.className = "jg-robot";
+  robotEl.style.width = cell + "px";
+  robotEl.style.height = cell + "px";
+  construirIcono(robotEl, cell);
+  board.appendChild(robotEl);
 
-  const startRect = document.createElementNS(svgNS, "rect");
-  startRect.setAttribute("x", startC * CELL + 3);
-  startRect.setAttribute("y", startR * CELL + 3);
-  startRect.setAttribute("width", CELL - 6);
-  startRect.setAttribute("height", CELL - 6);
-  startRect.setAttribute("class", "lab-cell-start");
-  svg.appendChild(startRect);
-
-  // Estructura: gRobot (opacidad: aparece recién al instanciar) >
-  // gInner (posición + orientación — traduce y rota TODO el grupo
-  // como una sola figura, así el muñequito gira de verdad, como el
-  // "pegman" de Blockly Games Maze) > gShake (sacudida de choque,
-  // en un grupo aparte para no pelear con la transform de gInner) >
-  // flecha + emoji + destello de choque.
-  const gRobot = document.createElementNS(svgNS, "g");
-  gRobot.setAttribute("class", "lab-robot");
-  const gInner = document.createElementNS(svgNS, "g");
-  gInner.setAttribute("class", "lab-robot-g");
-  const gShake = document.createElementNS(svgNS, "g");
-  gShake.setAttribute("class", "lab-shake-wrap");
-  const flecha = document.createElementNS(svgNS, "polygon");
-  flecha.setAttribute("class", "lab-robot-dir");
-  flecha.setAttribute("points", "0,-17 -6,-10 6,-10");
-  const emoji = document.createElementNS(svgNS, "text");
-  emoji.setAttribute("class", "lab-robot-emoji");
-  emoji.textContent = "🧍";
-  const destello = document.createElementNS(svgNS, "circle");
-  destello.setAttribute("class", "lab-bump-flash");
-  destello.setAttribute("cx", 0);
-  destello.setAttribute("cy", 0);
-  destello.setAttribute("r", 4);
-  gShake.appendChild(flecha);
-  gShake.appendChild(emoji);
-  gShake.appendChild(destello);
-  gInner.appendChild(gShake);
-  gRobot.appendChild(gInner);
-  svg.appendChild(gRobot);
-
-  wrap.appendChild(svg);
-
-  const estado = {
-    id: nivelDef.id,
-    mapa: nivelDef.mapa,
+  estadoActivo = {
+    mapa: nivel.mapa,
     startR, startC, metaR, metaC,
-    dirInicial: nivelDef.dirInicial,
-    CELL,
-    r: startR, c: startC, dir: nivelDef.dirInicial,
+    dirInicial: nivel.dirInicial,
+    r: startR, c: startC, dir: nivel.dirInicial,
     pasos: 0, llego: false,
-    el: { contenedor, gRobot, gInner, gShake, destello },
   };
-  estadosLaberinto[nivelDef.id] = estado;
-  posicionarRobot(estado, false);
-  conectarNivelLaberinto(estado);
+  posicionarRobot(estadoActivo, false);
 }
 
-function posicionarRobot(estado, animado){
-  const { gInner } = estado.el;
-  gInner.style.transition = animado ? "" : "none";
-  const cx = estado.c * estado.CELL + estado.CELL / 2;
-  const cy = estado.r * estado.CELL + estado.CELL / 2;
-  // Traduce Y rota el grupo completo (flecha + emoji juntos) — es lo
-  // que hace que el muñequito realmente "gire" al llamar girar_*(),
-  // no solo una flechita aparte.
-  gInner.style.transform = `translate(${cx}px, ${cy}px) rotate(${ANGULOS_DIR[estado.dir]}deg)`;
-  if (!animado) {
-    // fuerza reflow para que el próximo cambio sí anime
-    void gInner.offsetWidth;
-    gInner.style.transition = "";
+function ajustarTamañoTablero(){
+  if (!estadoActivo) return;
+  const nivel = NIVELES[state.idx];
+  const filas = nivel.mapa.length, cols = nivel.mapa[0].length;
+  const wrap = document.getElementById("jgBoardWrap");
+  const ancho = Math.max(wrap.clientWidth - 44, 60);
+  const cell = Math.max(22, Math.min(52, Math.floor(ancho / cols), Math.floor(320 / filas)));
+  if (cell === cellActual) return;
+  cellActual = cell;
+  pasoActual = cell + 2;
+  const board = document.getElementById("jgBoard");
+  board.style.gridTemplateColumns = `repeat(${cols}, ${cell}px)`;
+  board.querySelectorAll(".jg-cell").forEach(el => { el.style.width = cell + "px"; el.style.height = cell + "px"; });
+  if (robotEl) {
+    robotEl.style.width = cell + "px";
+    robotEl.style.height = cell + "px";
+    construirIcono(robotEl, cell);
+    posicionarRobot(estadoActivo, false);
   }
 }
 
-function animarChoque(estado){
-  const { gShake, destello } = estado.el;
-  [gShake, destello].forEach(el => el.classList.remove("choque"));
-  void gShake.offsetWidth; // fuerza reflow para poder reiniciar la animación
-  gShake.classList.add("choque");
-  destello.classList.add("choque");
-  setTimeout(() => {
-    gShake.classList.remove("choque");
-    destello.classList.remove("choque");
-  }, DURACION_CHOQUE);
+function posicionarRobot(estado, animado){
+  if (!robotEl) return;
+  robotEl.style.transition = animado ? "" : "none";
+  const x = estado.c * pasoActual;
+  const y = estado.r * pasoActual;
+  robotEl.style.transform = `translate(${x}px, ${y}px) rotate(${ANGULOS_DIR[estado.dir]}deg)`;
+  if (!animado) {
+    void robotEl.offsetWidth; // fuerza reflow para que el próximo cambio sí anime
+    robotEl.style.transition = "";
+  }
 }
 
-function reiniciarNivel(estado){
-  estado.r = estado.startR;
-  estado.c = estado.startC;
-  estado.dir = estado.dirInicial;
-  estado.pasos = 0;
-  estado.llego = false;
-  estado.el.gRobot.classList.remove("visible");
-  estado.el.gShake.classList.remove("choque");
-  estado.el.destello.classList.remove("choque");
-  posicionarRobot(estado, false);
+function animarChoque(){
+  if (!robotEl) return;
+  robotEl.classList.remove("choque");
+  void robotEl.offsetWidth;
+  robotEl.classList.add("choque");
+  setTimeout(() => { if (robotEl) robotEl.classList.remove("choque"); }, DURACION_CHOQUE);
+}
+
+function reiniciarPosicionActiva(){
+  if (!estadoActivo) return;
+  estadoActivo.r = estadoActivo.startR;
+  estadoActivo.c = estadoActivo.startC;
+  estadoActivo.dir = estadoActivo.dirInicial;
+  estadoActivo.pasos = 0;
+  estadoActivo.llego = false;
+  if (robotEl) robotEl.classList.remove("visible", "choque");
+  posicionarRobot(estadoActivo, false);
+  actualizarHudPasos();
+}
+
+/* ===== HUD, rail y topbar ===== */
+function actualizarHudPasos(){
+  document.getElementById("jgPasos").textContent = estadoActivo ? estadoActivo.pasos : 0;
+}
+function actualizarHudLineas(){
+  const codigo = document.getElementById("jgEditor").value;
+  document.getElementById("jgLineas").textContent = contarLineas(codigo);
+}
+function pintarEstrellas(el, cuantas){
+  el.querySelectorAll("span").forEach((s, i) => s.classList.toggle("on", i < cuantas));
+}
+function actualizarHudEstrellas(){
+  pintarEstrellas(document.getElementById("jgHudStars"), state.estrellas[state.idx] || 0);
+}
+
+function totalEstrellas(){
+  return Object.keys(state.estrellas).reduce((a, k) => a + (state.estrellas[k] || 0), 0);
+}
+function totalResueltos(){
+  return Object.keys(state.resueltos).filter(k => state.resueltos[k]).length;
+}
+function actualizarTopbar(){
+  const resueltos = totalResueltos();
+  document.getElementById("jgProgressFill").style.width = (resueltos / NIVELES.length) * 100 + "%";
+  document.getElementById("jgProgressLabel").textContent = resueltos + "/" + NIVELES.length + " niveles";
+  document.getElementById("jgStarsTotal").textContent = "★ " + totalEstrellas() + "/" + (NIVELES.length * 3);
+}
+
+function construirRail(){
+  const cont = document.getElementById("jgRailList");
+  cont.innerHTML = "";
+  NIVELES.forEach((n, i) => {
+    const bloqueado = i !== 0 && !state.resueltos[i - 1];
+    const activo = i === state.idx;
+    const resuelto = !!state.resueltos[i];
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "jg-nivel-btn";
+    if (activo) btn.classList.add("activo");
+    if (resuelto) btn.classList.add("resuelto");
+    if (bloqueado) btn.classList.add("bloqueado");
+    btn.disabled = bloqueado;
+
+    const num = document.createElement("span");
+    num.className = "jg-nivel-num";
+    num.textContent = String(i + 1).padStart(2, "0");
+
+    const info = document.createElement("span");
+    info.className = "jg-nivel-info";
+    const corto = document.createElement("span");
+    corto.className = "jg-nivel-corto";
+    corto.textContent = n.titulo.split(":")[0];
+    const estadoTxt = document.createElement("span");
+    estadoTxt.className = "jg-nivel-estado";
+    if (bloqueado) estadoTxt.textContent = "🔒 bloqueado";
+    else if (resuelto) {
+      const est = state.estrellas[i] || 0;
+      estadoTxt.textContent = "★".repeat(est) + "☆".repeat(3 - est);
+    } else estadoTxt.textContent = "pendiente";
+    info.append(corto, estadoTxt);
+    btn.append(num, info);
+
+    btn.addEventListener("click", () => { if (!bloqueado) irANivel(i); });
+    cont.appendChild(btn);
+  });
+}
+
+/* ===== Consola y overlay de victoria ===== */
+function actualizarConsola(texto, esError){
+  const pre = document.getElementById("jgConsola");
+  const head = document.getElementById("jgConsolaHead");
+  pre.textContent = texto;
+  pre.classList.toggle("error", !!esError);
+  head.classList.toggle("error", !!esError);
+}
+
+function mostrarWin(estrellas, lineas, pasos){
+  const n = NIVELES[state.idx];
+  document.getElementById("jgWinTag").textContent = "NIVEL " + String(state.idx + 1).padStart(2, "0") + " COMPLETADO";
+  pintarEstrellas(document.getElementById("jgWinStars"), estrellas);
+  const texto = estrellas === 3
+    ? `Resuelto en ${lineas} líneas y ${pasos} pasos. No se puede más corto: tres estrellas.`
+    : `Resuelto en ${lineas} líneas y ${pasos} pasos. Con ${n.par} líneas o menos se llevan las tres estrellas.`;
+  document.getElementById("jgWinText").textContent = texto;
+  document.getElementById("jgWinNext").textContent = state.idx + 1 < NIVELES.length ? "Siguiente nivel →" : "Volver al laberinto";
+  document.getElementById("jgWin").hidden = false;
+}
+function ocultarWin(){
+  document.getElementById("jgWin").hidden = true;
+}
+
+/* ===== Cargar/cambiar de nivel ===== */
+function renderNivel(){
+  const n = NIVELES[state.idx];
+  document.getElementById("jgNivelTag").textContent = "NIVEL " + String(state.idx + 1).padStart(2, "0");
+  document.getElementById("jgNivelTitulo").textContent = n.titulo;
+  document.getElementById("jgNivelLead").textContent = n.lead;
+  document.getElementById("jgObjetivo").textContent = n.objetivo;
+  document.getElementById("jgLineasPar").textContent = "/ " + n.par + " para ★★★";
+
+  const editor = document.getElementById("jgEditor");
+  editor.value = state.codigos[state.idx] || "";
+  editor.placeholder = n.placeholder;
+
+  montarNivelActivo(n);
+  actualizarHudLineas();
+  actualizarHudPasos();
+  actualizarHudEstrellas();
+  actualizarConsola("Escribí tu código y presioná ▶ Ejecutar.", false);
+  ocultarWin();
+  construirRail();
+  actualizarTopbar();
+}
+
+function irANivel(i){
+  if (i === state.idx) return;
+  if (corriendo) detenerEjecucion();
+  state.idx = i;
+  renderNivel();
+  guardarProgreso();
+}
+
+function actualizarIconoOpts(){
+  document.querySelectorAll(".jg-icono-opt").forEach(btn => {
+    btn.classList.toggle("selec", btn.dataset.icono === state.icono);
+  });
 }
 
 /* ===== Bridge Pyodide-en-Worker: cada acción de Robot() pausa el
    worker (Atomics.wait) hasta que el hilo principal termina de animar
    y contesta — mismo mecanismo que usa input() en las demás guías de
-   POO (variables.html), aplicado acá a acciones en vez de texto. ===== */
+   POO (variables.html), aplicado acá a acciones en vez de texto.
+   Sin cambios de fondo respecto a la versión Lineal de esta guía. ===== */
 const __CONTROL_SLOTS = 3;
 const __CONTROL_BYTES = __CONTROL_SLOTS * 4;
 const __TAM_BUFFER_PUENTE = 2048;
@@ -791,13 +663,14 @@ function __responderRobotAccion(sab, accion, arg){
   const responderYa = (resultado) => __escribirYNotificar(sab, resultado);
 
   if (accion === "crear") {
-    estado.el.gRobot.classList.add("visible");
+    if (robotEl) robotEl.classList.add("visible");
     responderTrasAnimar({ ok: true });
     return;
   }
 
   if (accion === "avanzar" || accion === "girar") {
     estado.pasos++;
+    actualizarHudPasos();
     if (estado.pasos > LIMITE_ACCIONES) {
       responderYa({ ok: false, error: "El robot dio demasiados pasos sin llegar a la meta (¿un bucle sin condición de corte?)." });
       return;
@@ -808,7 +681,7 @@ function __responderRobotAccion(sab, accion, arg){
     const [dr, dc] = DELTAS_DIR[estado.dir];
     const nr = estado.r + dr, nc = estado.c + dc;
     if (esPared(estado.mapa, nr, nc)) {
-      animarChoque(estado);
+      animarChoque();
       setTimeout(() => __escribirYNotificar(sab, { ok: false, error: "¡Choque! Hay una pared justo adelante." }), DURACION_CHOQUE);
       return;
     }
@@ -1027,82 +900,119 @@ async function ejecutarPython(codigo){
   });
 }
 
-/* ===== Conectar el editor de un nivel con su laberinto ===== */
-function conectarNivelLaberinto(estado){
-  const panel = estado.el.contenedor.querySelector(".lab-editor");
-  const textarea = panel.querySelector(".editor");
-  const runBtn = panel.querySelector(".code-btn.run");
-  const output = panel.querySelector(".output");
-  const outputBody = panel.querySelector(".output-body");
-  const mensajeEl = panel.querySelector("[data-lab-mensaje]");
-  const estadoBadge = estado.el.contenedor.querySelector("[data-lab-estado]");
+/* ===== Conectar el panel de código con el laberinto activo ===== */
+const runBtn = document.getElementById("jgRun");
+const stopBtn = document.getElementById("jgStop");
+const resetBtn = document.getElementById("jgReset");
+const editor = document.getElementById("jgEditor");
 
-  const stopBtn = document.createElement("button");
-  stopBtn.type = "button";
-  stopBtn.className = "code-btn stop";
-  stopBtn.textContent = "⏹ Detener";
-  stopBtn.setAttribute("aria-label", "Detener la ejecución");
-  stopBtn.hidden = true;
-  runBtn.after(stopBtn);
-  stopBtn.onclick = () => detenerEjecucion();
-
-  textarea.addEventListener("paste", e => e.preventDefault());
-  textarea.addEventListener("keydown", e => {
-    if (e.key !== "Tab") return;
-    e.preventDefault();
-    const inicio = textarea.selectionStart;
-    const fin = textarea.selectionEnd;
-    textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
-    textarea.selectionStart = textarea.selectionEnd = inicio + 4;
-  });
-
-  runBtn.onclick = async () => {
-    const codigo = textarea.value.trim();
-    output.hidden = false;
-    output.classList.remove("error");
-    mensajeEl.hidden = true;
-    mensajeEl.className = "lab-mensaje";
-    if (!codigo) {
-      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
-      output.classList.add("error");
-      return;
+async function ejecutar(){
+  const codigo = editor.value.trim();
+  if (!codigo) {
+    actualizarConsola("Escribe algo de código antes de ejecutar.", true);
+    return;
+  }
+  reiniciarPosicionActiva();
+  ocultarWin();
+  estadoLaberintoActual = estadoActivo;
+  actualizarConsola("Cargando Python… (la primera vez puede tardar unos segundos)", false);
+  runBtn.disabled = true;
+  stopBtn.hidden = false;
+  corriendo = true;
+  try {
+    const { salida, error } = await ejecutarPython(codigo);
+    if (error) {
+      actualizarConsola((salida || "") + error, true);
+    } else if (estadoActivo.llego) {
+      const lineas = contarLineas(codigo);
+      const estrellasGanadas = calcularEstrellas(NIVELES[state.idx], lineas);
+      state.resueltos[state.idx] = true;
+      state.estrellas[state.idx] = Math.max(estrellasGanadas, state.estrellas[state.idx] || 0);
+      marcarNivelResuelto(state.idx);
+      guardarProgreso();
+      actualizarConsola("¡Llegaste a la meta! " + estadoActivo.pasos + " pasos, " + lineas + " líneas de código.", false);
+      actualizarHudEstrellas();
+      construirRail();
+      actualizarTopbar();
+      mostrarWin(estrellasGanadas, lineas, estadoActivo.pasos);
+    } else {
+      actualizarConsola("Tu código terminó sin errores, pero el robot no llegó a la meta. Fijate dónde quedó parado y ajustá el recorrido.", false);
     }
-    reiniciarNivel(estado);
-    estadoLaberintoActual = estado;
-    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
-    runBtn.disabled = true;
-    stopBtn.hidden = false;
-    try {
-      const { salida, error } = await ejecutarPython(codigo);
-      if (error) {
-        outputBody.textContent = (salida || "") + error;
-        output.classList.add("error");
-      } else {
-        outputBody.textContent = salida.length ? salida : "(sin salida de texto — este nivel se resuelve moviendo al robot, no imprimiendo)";
-        mensajeEl.hidden = false;
-        if (estado.llego) {
-          mensajeEl.classList.add("exito");
-          mensajeEl.textContent = "✅ ¡Llegaste a la meta! Nivel resuelto.";
-          estadoBadge.textContent = "✅ Resuelto";
-          estadoBadge.classList.add("ok");
-          marcarResuelto(estado.id, "ok");
-        } else {
-          mensajeEl.classList.add("espera");
-          mensajeEl.textContent = "Tu código terminó sin errores, pero el robot no llegó a la meta. Fijate dónde quedó parado y ajustá el recorrido.";
-        }
-      }
-    } catch (e) {
-      outputBody.textContent = e && e.message ? e.message : String(e);
-      output.classList.add("error");
-    } finally {
-      runBtn.disabled = false;
-      stopBtn.hidden = true;
-    }
-  };
+  } catch (e) {
+    actualizarConsola(e && e.message ? e.message : String(e), true);
+  } finally {
+    runBtn.disabled = false;
+    stopBtn.hidden = true;
+    corriendo = false;
+  }
 }
 
-NIVELES_LABERINTO.forEach(construirNivel);
-actualizarProgreso();
+runBtn.addEventListener("click", ejecutar);
+stopBtn.addEventListener("click", () => detenerEjecucion());
+resetBtn.addEventListener("click", () => {
+  if (corriendo) detenerEjecucion();
+  reiniciarPosicionActiva();
+  ocultarWin();
+  actualizarConsola("Laberinto reiniciado.", false);
+});
+
+editor.addEventListener("input", () => {
+  state.codigos[state.idx] = editor.value;
+  actualizarHudLineas();
+});
+editor.addEventListener("paste", e => e.preventDefault());
+editor.addEventListener("keydown", e => {
+  if (e.key === "Tab") {
+    e.preventDefault();
+    const inicio = editor.selectionStart;
+    const fin = editor.selectionEnd;
+    editor.value = editor.value.slice(0, inicio) + "    " + editor.value.slice(fin);
+    editor.selectionStart = editor.selectionEnd = inicio + 4;
+    state.codigos[state.idx] = editor.value;
+    actualizarHudLineas();
+    return;
+  }
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    ejecutar();
+  }
+});
+
+document.querySelectorAll(".jg-icono-opt").forEach(btn => {
+  btn.addEventListener("click", () => {
+    state.icono = btn.dataset.icono;
+    actualizarIconoOpts();
+    guardarProgreso();
+    if (robotEl) construirIcono(robotEl, cellActual);
+  });
+});
+
+document.getElementById("jgWinNext").addEventListener("click", () => {
+  const prox = state.idx + 1;
+  ocultarWin();
+  if (prox < NIVELES.length) irANivel(prox);
+});
+document.getElementById("jgWinRetry").addEventListener("click", () => ocultarWin());
+
+/* ===== Overlay Manual ===== */
+const manualOverlay = document.getElementById("jgManualOverlay");
+document.getElementById("jgManualBtn").addEventListener("click", () => { manualOverlay.hidden = false; });
+document.getElementById("jgManualClose").addEventListener("click", () => { manualOverlay.hidden = true; });
+manualOverlay.addEventListener("click", e => { if (e.target === manualOverlay) manualOverlay.hidden = true; });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !manualOverlay.hidden) manualOverlay.hidden = true; });
+
+/* ===== Resize: recalcula el tamaño de celda contra el ancho medido ===== */
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(ajustarTamañoTablero, 120);
+});
+
+/* ===== Arranque ===== */
+cargarProgreso();
+actualizarIconoOpts();
+renderNivel();
+requestAnimationFrame(ajustarTamañoTablero);
 
 </script>
 
