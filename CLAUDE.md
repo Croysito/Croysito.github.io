@@ -238,6 +238,8 @@ De paso se auditó el sesgo posicional de los quizzes con script (mismo criterio
 
 No se tocó `modelado-sistemas.html` ni sus quizzes existentes — sigue emparejada con la Sesión 6, y `arquetipos-sistemicos.html`/`sistemas-duros-blandos.html` siguen citándola por nombre sin cambios.
 
+**Bloque de ATENZA agregado a `dinamica-sistemas.html` (10/09):** hasta esta fecha la guía no tenía el bloque — es la tercera vez que una guía de TGS lo consigue recién "a posteriori" en vez de al terminar de editarla (mismo patrón que `modelado-sistemas.html` 03/09 y `sistemas-duros-blandos.html` 07/09, ambas mencionadas arriba). Se agregó la variante "engancha sin tocar el motor" con el parche `paramsDeAtenza()` ya incluido desde el vamos (copiado tal cual de `modelado-sistemas.html`: script de limpieza de progreso en el `<head>` + bloque de reporte al final, criterio de finalizar por "contestadas" no "correctas"). Verificado con Playwright headless en los dos casos: sin `?atenza_token=...&guia_intento=...` la guía es idéntica a como estaba (0 cambios de comportamiento); con esos parámetros aparece el botón de pantalla completa y cada quiz resuelto dispara el POST a `/api/guias/intentos/.../respuesta` correcto. Todavía no está vinculada como Clase en el panel de ATENZA (no pedido). **A partir de ahora, agregar este bloque por default al terminar de crear o editar significativamente una guía de TGS, en vez de esperar a que se pida o se note su ausencia después.**
+
 **Al completar una guía:** marcar su fila como "✅ Publicada" con la fecha, actualizar la tarjeta correspondiente en `index.html` (agregarla como "disponible"), y agregar la siguiente fila cuando se defina el próximo tema según el avance real de la materia.
 
 ## Roadmap curricular: Base de Datos II (2026)
