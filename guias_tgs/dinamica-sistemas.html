@@ -65,6 +65,8 @@
 <nav class="menu">
 <a href="#intro">Introducción</a>
 <a href="#stock-flujo">Stock y flujo cuantificados</a>
+<a href="#refuerzo-balance">Bucles de refuerzo y balance</a>
+<a href="#auxiliares">Variables auxiliares</a>
 <a href="#retraso">Retraso y oscilación</a>
 <a href="#efecto-latigo">Bucle cerrado y efecto látigo</a>
 <a href="#ejercicios">Actividades de repaso</a>
@@ -81,7 +83,7 @@
 <div class="badge">🧪 Guía de Aula Invertida · Sandbox interactivo</div>
 <div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
 <h1>Dinámica de Sistemas: de los <span>diagramas a la simulación</span></h1>
-<p>Ya viste qué es un stock, qué es un flujo, y que un retraso puede hacer que un sistema oscile — incluido el efecto látigo, como ejemplo leído. Esta guía es distinta: en vez de más texto, hay un almacén simulado con números reales que vas a manipular vos mismo, sección por sección, hasta generar el efecto látigo con tus propias manos.</p>
+<p>Stock, flujo, variable auxiliar, bucle de refuerzo, bucle de balance: el vocabulario completo de la Dinámica de Sistemas de Jay Forrester, con números reales que vas a manipular vos mismo, sección por sección, hasta generar el efecto látigo con tus propias manos.</p>
 <div class="author">
 <div class="avatar">RC</div>
 <div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
@@ -92,19 +94,19 @@
 <section class="container" id="intro">
 <div class="card">
 <h2 class="section-title">Bienvenido</h2>
-<p class="lead">Los diagramas de bucle causal responden <strong>qué influye en qué, y en qué dirección</strong>. No responden <strong>cuánto</strong>, ni <strong>qué tan rápido</strong>, ni qué pasa exactamente cuando dos efectos compiten en el tiempo. Para eso hace falta pasar de un diagrama a un modelo con números reales — y, una vez que el modelo existe, simularlo: correrlo hacia adelante en el tiempo y ver qué comportamiento produce.</p>
+<p class="lead">Un diagrama de bucle causal responde <strong>qué influye en qué, y en qué dirección</strong>. No responde <strong>cuánto</strong>, ni <strong>qué tan rápido</strong>, ni qué pasa exactamente cuando dos efectos compiten en el tiempo. Para eso hace falta pasar de un diagrama a un modelo con números reales — y, una vez que el modelo existe, simularlo: correrlo hacia adelante en el tiempo y ver qué comportamiento produce. Esta es la disciplina que se conoce como <strong>Dinámica de Sistemas</strong>.</p>
 <div class="highlight">
-<strong>📎 Prerrequisito</strong>
-<p>Esta guía asume que ya viste <a href="modelado-sistemas.html">Modelado de Sistemas: Diagramas Causales</a> — en particular las secciones de <em>stock y flujo</em> y de <em>retardos y oscilación</em>. No vuelve a explicar esos conceptos desde cero: los usa como punto de partida y los convierte en algo que podés manipular con sliders, no solo leer.</p>
+<strong>🏭 Origen: Jay Forrester y el MIT</strong>
+<p>La Dinámica de Sistemas nació a fines de los años 1950, cuando el ingeniero Jay Forrester (MIT) ayudaba a General Electric a entender por qué sus fábricas tenían ciclos de contratación y despido mucho más violentos de lo que explicaba la demanda real de sus productos. Forrester formalizó la idea de representar la empresa como cantidades que se acumulan (stocks) y tasas que las hacen cambiar (flujos), y de simular esa estructura en el tiempo en vez de solo describirla — el mismo método que vas a usar en esta guía.</p>
 </div>
 <div class="highlight">
 <strong>Objetivo del módulo</strong>
-<p>Al finalizar esta guía vas a poder construir la ecuación de un stock con números reales, explicar por qué un retraso en la reposición produce oscilación aunque la política de control sea razonable, y reproducir con tus propios parámetros el efecto látigo (bullwhip effect) — el mismo fenómeno que viste como ejemplo en la guía anterior, ahora generado por vos.</p>
+<p>Al finalizar esta guía vas a poder distinguir los tres tipos de variable de un modelo (stock, flujo y variable auxiliar), clasificar un bucle como de refuerzo o de balance contando sus enlaces negativos, explicar por qué un retraso produce oscilación aunque la política de control sea razonable, y reproducir con tus propios parámetros el efecto látigo (bullwhip effect).</p>
 </div>
 <div class="info-grid">
-<div class="info"><h3>🔢 De cualitativo a cuantitativo</h3><p>La misma idea de stock y flujo, ahora con unidades reales y una ecuación que se puede correr en el tiempo.</p></div>
+<div class="info"><h3>🔢 De cualitativo a cuantitativo</h3><p>Stock, flujo y variable auxiliar, con unidades reales y una ecuación que se puede correr en el tiempo.</p></div>
 <div class="info"><h3>🎛️ Manipulás, no leés</h3><p>Cada sección tiene un sandbox en vivo: movés un slider, el gráfico responde al instante.</p></div>
-<div class="info"><h3>🐍 El efecto látigo, de nuevo</h3><p>Lo viste como ejemplo. Esta vez lo construís vos, ajustando retraso y agresividad hasta que aparezca.</p></div>
+<div class="info"><h3>🐍 El efecto látigo, de nuevo</h3><p>Lo vas a ver primero como ejemplo, y después lo construís vos, ajustando retraso y agresividad hasta que aparezca.</p></div>
 </div>
 </div>
 </section>
@@ -112,7 +114,7 @@
 <section class="container" id="stock-flujo">
 <div class="card">
 <h2 class="section-title">Stock y flujo, con números reales</h2>
-<p class="lead">Recordá la fórmula que ya viste: <strong>Stock(hoy) = Stock(ayer) + entrada − salida</strong>. El caso de esta guía es el almacén central de <strong>Andina Distribuciones</strong>: el stock es el inventario disponible (en cajas), la entrada es la <strong>reposición</strong> que llega de fábrica, y la salida es el <strong>despacho</strong> a los clientes. Todavía no hay ningún control automático — vos fijás ambas tasas directamente y mirás qué le pasa al inventario.</p>
+<p class="lead">Un <strong>stock</strong> es una cantidad acumulada, medible en un instante dado (el agua en un tanque, el saldo de una cuenta, el inventario de un almacén). Un <strong>flujo</strong> es la tasa a la que ese stock cambia por unidad de tiempo — cuánto entra o cuánto sale. Un stock solo puede cambiar a través de sus flujos, nunca directamente, y la fórmula que lo resume es: <strong>Stock(hoy) = Stock(ayer) + entrada − salida</strong>. El caso de esta guía es el almacén central de <strong>Andina Distribuciones</strong>: el stock es el inventario disponible (en cajas), la entrada es la <strong>reposición</strong> que llega de fábrica, y la salida es el <strong>despacho</strong> a los clientes. Todavía no hay ningún control automático — vos fijás ambas tasas directamente y mirás qué le pasa al inventario.</p>
 
 <div class="sandbox">
 <div class="sandbox-header">🎛️ Sandbox — Almacén de Andina Distribuciones (30 días, sin control automático)</div>
@@ -185,10 +187,194 @@
 </div>
 </section>
 
+<section class="container" id="refuerzo-balance">
+<div class="card">
+<h2 class="section-title">Bucles de refuerzo y de balance</h2>
+<p class="lead">Un flujo no siempre lo fijás vos a mano: muchas veces depende del propio stock, y ahí se cierra un <strong>bucle</strong>. Hay una regla simple para saber qué tipo de bucle es: <strong>contá los enlaces negativos de la cadena</strong>. Número par (incluido cero) → <strong>bucle de refuerzo (R)</strong>, amplifica la tendencia. Número impar → <strong>bucle de balance (B)</strong>, corrige hacia un objetivo o un equilibrio.</p>
+
+<div class="code">
+<div class="code-header"><span>Bucle de refuerzo (R): usuarios que traen usuarios</span></div>
+<pre>Usuarios activos  --(+)-->  Referidos por semana
+      ^                              |
+      |                             (+)
+      |                              v
+      Usuarios activos  &lt;--(+)--  Referidos por semana</pre>
+</div>
+<p>0 enlaces negativos (par) → <strong>refuerzo</strong>: más usuarios generan más referidos, que generan todavía más usuarios — nada dentro del bucle lo frena por sí solo.</p>
+
+<div class="code">
+<div class="code-header"><span>Bucle de balance (B): usuarios que se dan de baja</span></div>
+<pre>Usuarios activos  --(+)-->  Bajas por semana
+      ^                              |
+      |                             (−)
+      |                              v
+      Usuarios activos  &lt;--(−)--  Bajas por semana</pre>
+</div>
+<p>1 enlace negativo (impar) → <strong>balance</strong>: más usuarios generan más bajas en términos absolutos, y esas bajas tiran el stock hacia abajo — un bucle que se autolimita, no que se autoamplifica.</p>
+
+<div class="highlight">
+<strong>Los dos bucles conviven en el mismo stock</strong>
+<p>Una app real tiene ambos bucles activos al mismo tiempo, compitiendo: el de referidos empuja los usuarios activos hacia arriba, el de bajas los empuja hacia abajo. Cuál "gana" depende de qué tasa sea más fuerte — probalo en el sandbox.</p>
+</div>
+
+<div class="sandbox">
+<div class="sandbox-header">🎛️ Sandbox — Usuarios activos de una app (20 semanas)</div>
+<div class="sandbox-grid">
+<div class="sandbox-diagram">
+<svg viewBox="0 0 320 165" role="img" aria-label="Diagrama de stock con dos bucles de realimentación: los referidos entran proporcionalmente al stock (bucle de refuerzo) y las bajas salen proporcionalmente al stock (bucle de balance)">
+<defs>
+<marker id="s4a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#9acd7b"></path></marker>
+<marker id="s4b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#f2cc60"></path></marker>
+<marker id="s4c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#9acd7b"></path></marker>
+<marker id="s4d" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#f2cc60"></path></marker>
+</defs>
+<text x="52" y="45" text-anchor="middle" fill="#9acd7b" font-family="JetBrains Mono, monospace" font-size="10.5">Referidos</text>
+<line x1="8" y1="60" x2="98" y2="60" stroke="#9acd7b" stroke-width="2" marker-end="url(#s4a)"></line>
+<rect x="102" y="30" width="116" height="60" rx="6" fill="#182233" stroke="#3a4658"></rect>
+<text x="160" y="55" text-anchor="middle" fill="#e6edf3" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600">USUARIOS</text>
+<text x="160" y="70" text-anchor="middle" fill="#8b949e" font-family="JetBrains Mono, monospace" font-size="9.5">(stock)</text>
+<line x1="222" y1="60" x2="310" y2="60" stroke="#f2cc60" stroke-width="2" marker-end="url(#s4b)"></line>
+<text x="266" y="45" text-anchor="middle" fill="#f2cc60" font-family="JetBrains Mono, monospace" font-size="10.5">Bajas</text>
+<path d="M110,92 C90,130 40,115 20,68" fill="none" stroke="#9acd7b" stroke-width="1.5" stroke-dasharray="3,3" marker-end="url(#s4c)"></path>
+<text x="65" y="140" text-anchor="middle" fill="#9acd7b" font-family="JetBrains Mono, monospace" font-size="8.5">∝ usuarios (R)</text>
+<path d="M210,92 C230,130 280,115 300,68" fill="none" stroke="#f2cc60" stroke-width="1.5" stroke-dasharray="3,3" marker-end="url(#s4d)"></path>
+<text x="255" y="140" text-anchor="middle" fill="#f2cc60" font-family="JetBrains Mono, monospace" font-size="8.5">∝ usuarios (B)</text>
+</svg>
+</div>
+<div class="sandbox-chart">
+<canvas id="chart-s4" aria-label="Gráfico de usuarios activos a lo largo de 20 semanas"></canvas>
+</div>
+</div>
+<div class="controls">
+<div class="control-row">
+<label>Tasa de referidos <span class="valor"><span id="s4-referidos-val">8.0</span>%/semana</span></label>
+<input type="range" id="s4-referidos" min="0" max="15" step="0.5" value="8">
+</div>
+<div class="control-row">
+<label>Tasa de bajas <span class="valor"><span id="s4-bajas-val">4.0</span>%/semana</span></label>
+<input type="range" id="s4-bajas" min="0" max="15" step="0.5" value="4">
+</div>
+</div>
+<div class="readouts">
+<div class="readout"><div class="num" id="s4-final">—</div><div class="lbl">usuarios en la semana 20</div></div>
+<div class="readout"><div class="num" id="s4-dominante">—</div><div class="lbl">bucle dominante</div></div>
+</div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="refuerzo-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">En el bucle "Usuarios activos --(+)--&gt; Referidos por semana --(+)--&gt; Usuarios activos", ¿cuántos enlaces negativos hay y qué tipo de bucle es?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">1 enlace negativo (impar): es un bucle de balance.</button>
+<button class="quiz-opt" data-correct>0 enlaces negativos (par): es un bucle de refuerzo.</button>
+<button class="quiz-opt">2 enlaces negativos (par): es un bucle de balance.</button>
+<button class="quiz-opt">No se puede clasificar sin conocer los valores numéricos.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: los dos enlaces son positivos, así que hay 0 enlaces negativos (par) → bucle de refuerzo. Amplifica la tendencia: más usuarios generan más referidos, que generan más usuarios." data-ko="Contá enlaces NEGATIVOS, no la cantidad total. Acá los dos enlaces son positivos: 0 negativos es un número par, así que es un bucle de refuerzo (R), no de balance." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="refuerzo-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Configurá el sandbox con referidos en 3% y bajas en 9%, y dejalo correr las 20 semanas. ¿Qué les pasa a los usuarios activos y por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Crecen sin freno, porque el bucle de refuerzo siempre termina dominando.</button>
+<button class="quiz-opt">Se mantienen estables, porque ambos bucles se cancelan exactamente.</button>
+<button class="quiz-opt" data-correct>Caen hacia cero de forma acelerada: acá domina el bucle de balance (bajas).</button>
+<button class="quiz-opt">Oscilan, porque hay un retraso entre los referidos y las bajas.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: con bajas (9%) más fuerte que referidos (3%), el bucle de balance domina y el stock cae hacia cero cada vez más rápido — el mismo tipo de bucle que corrige un termostato, aplicado a una tasa que empuja hacia abajo en vez de hacia un punto medio." data-ko="No hay retraso en este sandbox (eso llega en la próxima sección) y las tasas no se cancelan si son distintas. Con bajas más fuerte que referidos, el bucle de balance domina: los usuarios caen hacia cero cada vez más rápido." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="auxiliares">
+<div class="card">
+<h2 class="section-title">Variables auxiliares</h2>
+<p class="lead">Stock y flujo no alcanzan para modelar todo. Muchas veces hace falta una cantidad intermedia que <strong>no acumula nada</strong> (no es un stock) y que <strong>no es en sí misma una tasa que entra o sale de un stock</strong> (no es un flujo) — solo existe para ayudar a calcular un flujo a partir de otras variables. Esa es la <strong>variable auxiliar</strong>, el tercer tipo de variable de un diagrama de stock y flujo. En herramientas como Insight Maker o Vensim se dibuja como un <strong>círculo</strong>, para distinguirla del rectángulo del stock y de la tubería con válvula del flujo.</p>
+
+<div class="highlight">
+<strong>Un ejemplo que ya vas a usar</strong>
+<p>En la próxima sección, el almacén decide cuánto pedir con la fórmula <strong>pedido = demanda + agresividad × (objetivo − stock)</strong>. La cantidad <strong>(objetivo − stock)</strong> — llamémosla <strong>brecha</strong> — no es un stock (no acumula nada de una semana a otra) ni es el flujo en sí (no es lo que entra o sale del inventario): es una variable auxiliar que se recalcula todo el tiempo a partir del stock, y que el flujo "pedido" usa como insumo.</p>
+</div>
+
+<p>Clasificá cada variable, de los dos modelos que ya viste, según su tipo.</p>
+<div class="quiz quiz-classify" data-quiz-id="auxiliares-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Es un stock, un flujo o una variable auxiliar?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Inventario disponible en el almacén.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Stock</button>
+<button>Variable auxiliar</button>
+<button>Flujo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Despacho diario (cajas que salen por día).</span>
+<div class="quiz-classify-btns">
+<button>Variable auxiliar</button>
+<button data-correct>Flujo</button>
+<button>Stock</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Brecha entre el objetivo y el stock actual (objetivo − stock).</span>
+<div class="quiz-classify-btns">
+<button>Flujo</button>
+<button>Stock</button>
+<button data-correct>Variable auxiliar</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Usuarios activos de la app en este momento.</span>
+<div class="quiz-classify-btns">
+<button>Variable auxiliar</button>
+<button data-correct>Stock</button>
+<button>Flujo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Nuevos usuarios que llegan por referidos cada semana.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Flujo</button>
+<button>Stock</button>
+<button>Variable auxiliar</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Porcentaje de ocupación del servidor (usuarios activos ÷ capacidad máxima).</span>
+<div class="quiz-classify-btns">
+<button>Stock</button>
+<button>Flujo</button>
+<button data-correct>Variable auxiliar</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="auxiliares-mc1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de las siguientes describe mejor una variable auxiliar?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La tasa a la que algo entra o sale de un stock por unidad de tiempo.</button>
+<button class="quiz-opt" data-correct>Una cantidad calculada que ayuda a computar una tasa, sin acumular nada por sí misma.</button>
+<button class="quiz-opt">Una cantidad acumulada, medible en un instante dado, como el inventario.</button>
+<button class="quiz-opt">Un tipo de stock que solo puede aumentar, nunca disminuir.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: una variable auxiliar es una cantidad calculada a partir de otras variables (stocks, flujos u otras auxiliares) que sirve de insumo para calcular una tasa, pero que en sí misma no acumula nada." data-ko="La primera describe un flujo y la tercera describe un stock. Una variable auxiliar es distinta de ambas: es una cantidad calculada que ayuda a computar una tasa, pero no acumula nada por sí misma." hidden></p>
+</div>
+</div>
+</section>
+
 <section class="container" id="retraso">
 <div class="card">
 <h2 class="section-title">Retraso: el mismo control, ahora con demora</h2>
-<p class="lead">Desde acá el almacén ya no fija la reposición a mano: pide automáticamente más cuando el stock está por debajo del objetivo, y menos cuando está por arriba — un bucle de balance real, con una fórmula concreta: <strong>pedido = demanda + agresividad × (objetivo − stock)</strong>. Lo único que vas a controlar en esta sección es <strong>cuántos días tarda el proveedor en entregar</strong> ese pedido. La demanda queda fija en 200 cajas/día para que puedas enfocarte solo en el efecto del retraso.</p>
+<p class="lead">Desde acá el almacén ya no fija la reposición a mano: pide automáticamente más cuando el stock está por debajo del objetivo, y menos cuando está por arriba — un bucle de balance real (1 enlace negativo: a más brecha, más pedido; a más pedido, menos brecha), con una fórmula concreta: <strong>pedido = demanda + agresividad × brecha</strong>, donde <strong>brecha = objetivo − stock</strong> es la variable auxiliar que acabás de ver. Lo único que vas a controlar en esta sección es <strong>cuántos días tarda el proveedor en entregar</strong> ese pedido. La demanda queda fija en 200 cajas/día para que puedas enfocarte solo en el efecto del retraso.</p>
 
 <div class="sandbox">
 <div class="sandbox-header">🎛️ Sandbox — mismo almacén, ahora con reposición automática (60 días)</div>
@@ -240,7 +426,7 @@
 <button class="quiz-opt" data-correct>La fórmula del pedido es la misma; solo cambió cuánto tarda en llegar la reposición.</button>
 <button class="quiz-opt">La fórmula del pedido cambió — con más retraso, el almacén deja de reaccionar al stock.</button>
 <button class="quiz-opt">El objetivo de inventario bajó, por eso el stock se comporta distinto.</button>
-<button class="quiz-opt">La demanda empezó a variar con el tiempo.</button>
+<button class="quiz-opt">La demanda diaria de despacho, que estaba fija, empezó a variar con el tiempo.</button>
 
 </div>
 <p class="quiz-fb" data-ok="Correcto: el único slider de esta sección es el retraso. La política de pedido (pedido = demanda + agresividad × (objetivo−stock)) no cambió en absoluto — y aun así, el comportamiento del stock cambia radicalmente. El retraso, por sí solo, es capaz de convertir una corrección suave en oscilación." data-ko="Nada de eso cambió: la fórmula del pedido, el objetivo y la demanda quedaron fijos. El único parámetro que moviste fue el retraso — y ese cambio solo ya alcanza para pasar de una corrección suave a una oscilación." hidden></p>
@@ -436,6 +622,19 @@
 </div>
 <p class="quiz-fb" data-ok="Correcto: 'pedir más cuando falta stock' es una regla razonable, y 'reaccionar rápido' también lo parece en aislamiento. El problema aparece cuando ambas se combinan con un retraso alto — la inestabilidad es una propiedad del bucle completo, no de una regla individual mal diseñada." data-ko="Es verdadero: cada regla por separado (reponer cuando falta stock, reaccionar con fuerza) puede sonar razonable. La inestabilidad surge de la combinación —retraso alto más agresividad alta— no de que una sola regla esté mal pensada." hidden></p>
 </div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-mc3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un bucle tiene 3 enlaces negativos, y la fórmula de su flujo usa una cantidad que se recalcula a partir del stock pero que no acumula nada por sí misma. ¿Qué son, respectivamente, esas dos cosas?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un bucle de refuerzo; un segundo stock.</button>
+<button class="quiz-opt">Un bucle de refuerzo; una variable auxiliar.</button>
+<button class="quiz-opt">Un bucle de balance; un segundo flujo.</button>
+<button class="quiz-opt" data-correct>Un bucle de balance; una variable auxiliar.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: 3 es un número impar de enlaces negativos, así que es un bucle de balance. Y una cantidad que se calcula a partir del stock, sirve de insumo para un flujo, pero no acumula nada por sí misma es, por definición, una variable auxiliar — ni un stock ni un flujo." data-ko="3 enlaces negativos es un número impar → bucle de balance, no de refuerzo. Y esa cantidad calculada que no acumula nada es una variable auxiliar, no un segundo stock ni un segundo flujo." hidden></p>
+</div>
 </div>
 </section>
 
@@ -445,8 +644,13 @@
 <table class="tabla">
 <thead><tr><th scope="col">Concepto</th><th scope="col">Idea clave</th></tr></thead>
 <tbody>
+<tr><td>Stock</td><td>Cantidad acumulada, medible en un instante. Solo cambia a través de sus flujos.</td></tr>
+<tr><td>Flujo</td><td>Tasa de entrada o salida de un stock, por unidad de tiempo.</td></tr>
+<tr><td>Variable auxiliar</td><td>Cantidad calculada a partir de otras variables (ej. la brecha objetivo−stock) que ayuda a computar una tasa, sin acumular nada.</td></tr>
+<tr><td>Bucle de refuerzo (R)</td><td>Número par de enlaces negativos (incl. 0). Amplifica la tendencia, sin freno propio.</td></tr>
+<tr><td>Bucle de balance (B)</td><td>Número impar de enlaces negativos. Corrige hacia un objetivo o hacia un equilibrio.</td></tr>
 <tr><td>Ecuación del stock</td><td>Stock(hoy) = Stock(ayer) + entrada − salida. Solo cambia a través de sus flujos.</td></tr>
-<tr><td>Política de reposición</td><td>pedido = demanda + agresividad × (objetivo − stock).</td></tr>
+<tr><td>Política de reposición</td><td>pedido = demanda + agresividad × brecha, con brecha = objetivo − stock.</td></tr>
 <tr><td>Retraso</td><td>Días entre colocar el pedido y que llegue como reposición real. Por sí solo puede producir oscilación.</td></tr>
 <tr><td>Agresividad</td><td>Qué tan fuerte corrige el pedido la diferencia entre stock y objetivo. Alta + retraso alto = inestabilidad.</td></tr>
 <tr><td>Oscilación amortiguada</td><td>Sobrepasa el objetivo, pero cada vuelta es más chica que la anterior — termina estabilizándose.</td></tr>
@@ -859,14 +1063,46 @@ s3retraso.addEventListener("input", actualizarSandbox3);
 s3agres.addEventListener("input", actualizarSandbox3);
 s3obj.addEventListener("input", actualizarSandbox3);
 
+/* pedido = tasaReferidos*U - tasaBajas*U (dos bucles, cada uno proporcional al propio stock) */
+function simularApp({ semanas, U0, tasaReferidos, tasaBajas }) {
+  const U = [U0];
+  for (let t = 0; t < semanas; t++) {
+    const siguiente = Math.max(0, U[t] + tasaReferidos * U[t] - tasaBajas * U[t]);
+    U.push(siguiente);
+  }
+  return U;
+}
+
+/* ---- Sandbox 4: bucles de refuerzo (referidos) y balance (bajas), usuarios de una app ---- */
+const s4referidos = document.getElementById("s4-referidos");
+const s4bajas = document.getElementById("s4-bajas");
+function actualizarSandbox4() {
+  const tasaReferidos = +s4referidos.value / 100;
+  const tasaBajas = +s4bajas.value / 100;
+  document.getElementById("s4-referidos-val").textContent = (+s4referidos.value).toFixed(1);
+  document.getElementById("s4-bajas-val").textContent = (+s4bajas.value).toFixed(1);
+  const U = simularApp({ semanas: 20, U0: 500, tasaReferidos, tasaBajas });
+  dibujarSerie(document.getElementById("chart-s4"), U, null);
+  const finalEl = document.getElementById("s4-final");
+  finalEl.textContent = Math.round(U[U.length - 1]) + " usuarios";
+  const domEl = document.getElementById("s4-dominante");
+  if (Math.abs(tasaReferidos - tasaBajas) < 0.002) { domEl.textContent = "Equilibrio (R = B)"; domEl.classList.remove("alerta"); }
+  else if (tasaReferidos > tasaBajas) { domEl.textContent = "Refuerzo (crece)"; domEl.classList.remove("alerta"); }
+  else { domEl.textContent = "Balance (cae)"; domEl.classList.add("alerta"); }
+}
+s4referidos.addEventListener("input", actualizarSandbox4);
+s4bajas.addEventListener("input", actualizarSandbox4);
+
 /* Dibujo inicial y recálculo al cambiar el tamaño de ventana */
 actualizarSandbox1();
 actualizarSandbox2();
 actualizarSandbox3();
+actualizarSandbox4();
 window.addEventListener("resize", () => {
   actualizarSandbox1();
   actualizarSandbox2();
   actualizarSandbox3();
+  actualizarSandbox4();
 });
 
 </script>
