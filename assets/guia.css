@@ -1067,6 +1067,70 @@ text.scrolly-ghost{ font-family:'JetBrains Mono',monospace; font-size:8px; fill:
 .jer-caption{ font-size:11.5px; color:var(--gris); margin-top:6px; line-height:1.5; }
 
 /* =========================================================
+   DIAGRAMA DE TRANSACCIONES (piloto 1 de scrollytelling en BD II
+   fuera de SQL/consola, guía transacciones.html — mismo motor
+   .flow-* de joins-subconsultas.html, panel con un diagrama propio
+   en vez de consulta.sql o un artefacto de teoría de sistemas. Dos
+   escenas comparten estas mismas clases genéricas (una transacción
+   sola con ACID, después dos transacciones T1/T2 en simultáneo):
+   cajas y flechas por capas según el paso activo, más estados de
+   color para commit (.ok), rollback/error (.bad) y bloqueo en
+   espera (.wait, con pulso). Nadie más usa estas clases, sin
+   prefijo, mismo criterio que .eps-* y .jer-*. */
+.trx-diagram-wrap{ border:1px solid var(--borde); border-radius:10px; padding:14px 12px 10px; margin-bottom:14px; background:var(--blanco); }
+.trx-diagram-wrap svg{ width:100%; height:auto; display:block; }
+.trx-box rect{ fill:var(--blanco); stroke:var(--borde); stroke-width:1.6; opacity:.25; transition:opacity .3s ease,stroke .3s ease,fill .3s ease; }
+.trx-box text{ font-family:'JetBrains Mono',monospace; fill:var(--texto); opacity:.25; transition:opacity .3s ease; }
+.trx-box.show rect{ stroke:var(--verde); opacity:1; }
+.trx-box.show text{ opacity:1; }
+.trx-box.show.ok rect{ stroke:var(--verde); fill:var(--highlightBg); }
+.trx-box.show.bad rect{ stroke:#c0392b; fill:rgba(192,57,43,.08); }
+.trx-box.show.bad text{ fill:#c0392b; }
+.trx-box.show.wait rect{ stroke:var(--amarillo); stroke-dasharray:4 3; animation:trxPulso 1.1s ease-in-out infinite; }
+.trx-arrow{ opacity:0; transition:opacity .3s ease; }
+.trx-arrow line{ stroke:var(--borde); stroke-width:1.8; }
+.trx-arrow polygon{ fill:var(--borde); }
+.trx-arrow.show{ opacity:1; }
+.trx-arrow.show line{ stroke:var(--verde); }
+.trx-arrow.show polygon{ fill:var(--verde); }
+.trx-arrow.show.bad line{ stroke:#c0392b; stroke-dasharray:3 3; }
+.trx-arrow.show.bad polygon{ fill:#c0392b; }
+.trx-dashed{ stroke:var(--gris); stroke-width:1.4; stroke-dasharray:3 3; fill:none; opacity:0; transition:opacity .3s ease; }
+.trx-dashed.show{ opacity:1; }
+.trx-lane{ font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; fill:var(--gris); opacity:0; transition:opacity .3s ease; }
+.trx-lane.show{ opacity:1; fill:var(--azul2); }
+.trx-lock{ opacity:0; transition:opacity .3s ease; }
+.trx-lock.show{ opacity:1; }
+.trx-lock rect{ fill:var(--blanco); stroke:var(--borde); stroke-width:1.4; }
+.trx-lock text{ font-size:12px; }
+.trx-lock.active rect{ stroke:var(--amarillo); stroke-width:2; }
+.trx-note{ font-family:'JetBrains Mono',monospace; font-size:8px; fill:var(--gris); opacity:0; transition:opacity .3s ease; }
+.trx-note.show{ opacity:1; }
+.trx-caption{ font-size:11.5px; color:var(--gris); margin-top:6px; line-height:1.5; }
+@keyframes trxPulso{ 0%,100%{ opacity:1; } 50%{ opacity:.45; } }
+
+/* =========================================================
+   SANDBOX DE AISLAMIENTO — widget exploratorio (Nivel 3, sin
+   calificar, sin data-quiz-id) de transacciones.html: el estudiante
+   elige una anomalía de lectura y un nivel de aislamiento y ve si
+   PostgreSQL real la previene o no. Mismo espíritu que el sandbox de
+   dinamica-sistemas.html en TGS, pero CSS local a esa sección (no
+   genérico entre guías todavía) porque es un selector+resultado, no
+   un gráfico reusable como .eps-*, .jer-* o .trx-*. */
+.aisl-wrap{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:18px 0 6px; }
+.aisl-field label{ display:block; font-size:12px; font-weight:700; color:var(--gris); margin-bottom:6px; text-transform:uppercase; letter-spacing:.03em; }
+.aisl-field select{
+  width:100%; padding:10px 12px; border:1px solid var(--borde); border-radius:8px;
+  background:var(--blanco); color:var(--texto); font:500 14px 'DM Sans',sans-serif;
+}
+.aisl-resultado{ margin-top:14px; border-radius:10px; padding:16px 18px; border:1px solid var(--borde); background:var(--grisClaro); transition:background .2s,border-color .2s; }
+.aisl-resultado.previene{ border-color:var(--verde); background:var(--highlightBg); }
+.aisl-resultado.no-previene{ border-color:#c0392b; background:rgba(192,57,43,.08); }
+.aisl-resultado-titulo{ font-weight:700; margin-bottom:6px; display:block; }
+.aisl-resultado p{ margin:0; font-size:14px; line-height:1.6; }
+@media(max-width:600px){ .aisl-wrap{ grid-template-columns:1fr; } }
+
+/* =========================================================
    LABERINTO DEL ROBOT (.lab-*) — guias/laberinto-robot.html.
    Nuevo tipo de actividad (nivel 3): juego de laberinto resuelto
    escribiendo Python real (no bloques), auto-verificado por

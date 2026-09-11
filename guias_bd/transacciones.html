@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transacciones: ACID y Concurrencia en PostgreSQL | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // eps-retroalimentacion.html/dinamica-sistemas.html, con el parche de
+  // paramsAtenza() que también busca dentro de location.hash (el link
+  // real de ATENZA a veces llega como "...html#seccion?atenza_token=...",
+  // con el "?" después del "#"). El progreso de esta guía vive en
+  // localStorage por navegador, no por intento; si el guia_intento de la
+  // URL cambió, se limpia el progreso previo ANTES de que el motor de
+  // quizzes lo lea (por eso corre acá, en el <head>, antes que el resto
+  // de la página).
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  // Debe coincidir con QUIZ_PREFIX del motor de quizzes, más abajo en la página.
+  var QUIZ_PREFIX = 'bd-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">BD II · <span>Transacciones</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="acid">ACID con una transacción</button>
+<button data-target="concurrencia">Dos transacciones a la vez</button>
+<button data-target="anomalias">Anomalías de lectura</button>
+<button data-target="aislamiento">Niveles de aislamiento</button>
+<button data-target="bloqueos">Bloqueos y deadlocks</button>
+<button data-target="ejercicios">Actividades de repaso</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🔁 Guía de Aula Invertida</span>
+<h1 class="flow-h1">Transacciones: <span>ACID</span> y Concurrencia</h1>
+<p class="flow-lead">Hasta ahora escribiste sentencias SQL sueltas. Pero en un sistema real, varias de esas sentencias tienen que comportarse como una sola unidad — y varios usuarios las ejecutan al mismo tiempo, sobre las mismas filas. Esta guía es sobre esas dos cosas: qué garantiza una transacción, y qué pasa cuando dos ocurren a la vez.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Scrollea para empezar — el diagrama de la transferencia bancaria se arma solo, capa por capa, mientras leés.</p>
+</section>
+
+<section class="flow-section" id="acid">
+<div class="flow-grid">
+<div class="flow-beats">
+
+<div class="flow-beat" data-step="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>Una operación que no puede quedar a medias</h3>
+<p>Ana le transfiere $300 a Beto. Esa transferencia en realidad son <strong>dos</strong> cambios en la base de datos: restarle a Ana y sumarle a Beto. Si el sistema se cae justo entre esos dos cambios, ¿qué pasa?</p>
+<p>Una <strong>transacción</strong> agrupa varias sentencias SQL para que se comporten como una sola unidad. Armemos el diagrama con este mismo caso →</p>
+</div>
+
+<div class="flow-beat" data-step="1">
+<span class="flow-beat-eyebrow">Paso 02 · BEGIN</span>
+<h3>Abrir la transacción</h3>
+<p>Todo empieza con <code>BEGIN</code> (o <code>START TRANSACTION</code>): a partir de acá, ninguna sentencia queda confirmada en la base hasta que llegue un <code>COMMIT</code> explícito.</p>
+</div>
+
+<div class="flow-beat" data-step="2">
+<span class="flow-beat-eyebrow">Paso 03 · Las dos operaciones</span>
+<h3>Ambos cambios, agrupados</h3>
+<p>Dentro de la transacción van las dos sentencias: restarle $300 a Ana, sumarle $300 a Beto. Hasta acá, ninguno de los dos cambios es visible para nadie más — ni siquiera se sabe todavía si van a quedar.</p>
+</div>
+
+<div class="flow-beat" data-step="3">
+<span class="flow-beat-eyebrow">Paso 04 · Atomicidad y Durabilidad</span>
+<h3>Todo o nada</h3>
+<p>Acá se bifurcan dos finales posibles. Si todo sale bien, <strong>COMMIT</strong> confirma los dos cambios juntos y de forma permanente (<strong>Durabilidad</strong>: sobreviven aunque el servidor se apague al segundo siguiente). Si algo falla a mitad de camino, <strong>ROLLBACK</strong> deshace absolutamente todo, incluida la resta que ya se había aplicado a Ana.</p>
+<p>Eso es <strong>Atomicidad</strong>: o se aplican los dos cambios, o ninguno.</p>
+</div>
+
+<div class="flow-beat" data-step="4">
+<span class="flow-beat-eyebrow">Paso 05 · Consistencia</span>
+<h3>Una restricción que nunca se rompe</h3>
+<p>¿Y si alguien intenta restarle $2000 a Ana, que solo tiene $400? Una restricción <code>CHECK (saldo &gt;= 0)</code> rechaza esa sentencia de inmediato, antes de que se aplique. Eso es <strong>Consistencia</strong>: ninguna transacción puede dejar la base en un estado que rompa sus propias reglas.</p>
+<p>Detalle real de Postgres: apenas una sentencia falla dentro de una transacción, esa transacción entera queda "abortada" — cualquier otra sentencia que intentes en ella da error, hasta que hagas <code>ROLLBACK</code>.</p>
+</div>
+
+<div class="flow-beat" data-step="5">
+<span class="flow-beat-eyebrow">Paso 06 · ¿Y el cuarto?</span>
+<h3>Aislamiento: hace falta una segunda transacción</h3>
+<p>Ya viste Atomicidad, Consistencia y Durabilidad con una sola transacción. Pero <strong>Aislamiento</strong> — qué ve una transacción de los cambios de otra mientras ambas corren al mismo tiempo — recién se entiende con dos transacciones a la vez.</p>
+<p>Sigamos scrolleando →</p>
+</div>
+
+</div>
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="acidPanel">
+<div class="flow-panel-head"><span>Diagrama en vivo</span><span class="flow-panel-step" id="acidPanelStep">Paso 1 / 6</span></div>
+
+<div class="trx-diagram-wrap">
+<svg viewBox="0 0 340 210" aria-hidden="true">
+
+<g class="trx-box" id="trxBegin">
+<rect x="8" y="20" width="58" height="26" rx="5"/>
+<text x="37" y="37" text-anchor="middle" font-size="9" font-weight="700">BEGIN</text>
+</g>
+
+<rect class="trx-dashed" id="trxBoundary" x="80" y="10" width="150" height="70" rx="8"/>
+
+<g class="trx-box" id="trxUpdateA">
+<rect x="88" y="18" width="134" height="24" rx="5"/>
+<text x="155" y="34" text-anchor="middle" font-size="8" font-weight="700">UPDATE Ana −300</text>
+</g>
+
+<g class="trx-box" id="trxUpdateB">
+<rect x="88" y="50" width="134" height="24" rx="5"/>
+<text x="155" y="66" text-anchor="middle" font-size="8" font-weight="700">UPDATE Beto +300</text>
+</g>
+
+<g class="trx-arrow" id="trxArrowBegin">
+<line x1="66" y1="33" x2="80" y2="33"/>
+<polygon points="80,33 72,29 72,37"/>
+</g>
+
+<g class="trx-arrow bad" id="trxArrowRollback">
+<line x1="110" y1="80" x2="65" y2="112"/>
+<polygon points="65,112 76,110 71,101"/>
+</g>
+
+<g class="trx-arrow ok" id="trxArrowCommit">
+<line x1="205" y1="80" x2="270" y2="112"/>
+<polygon points="270,112 259,114 264,105"/>
+</g>
+
+<g class="trx-box bad" id="trxRollback">
+<rect x="16" y="112" width="98" height="26" rx="5"/>
+<text x="65" y="130" text-anchor="middle" font-size="8" font-weight="700">❌ ROLLBACK</text>
+</g>
+
+<g class="trx-box ok" id="trxCommit">
+<rect x="222" y="112" width="98" height="26" rx="5"/>
+<text x="271" y="130" text-anchor="middle" font-size="8" font-weight="700">✅ COMMIT</text>
+</g>
+
+<text class="trx-note" id="trxNoteRollback" x="65" y="150" text-anchor="middle" font-size="7">Ana y Beto vuelven a su saldo original</text>
+<text class="trx-note" id="trxNoteDisk" x="271" y="150" text-anchor="middle" font-size="7">💾 ya es permanente</text>
+
+<g class="trx-box bad" id="trxCheck">
+<rect x="95" y="168" width="150" height="26" rx="5"/>
+<text x="170" y="186" text-anchor="middle" font-size="8" font-weight="700">CHECK saldo &gt;= 0 ❌</text>
+</g>
+<text class="trx-note" id="trxNoteCheck" x="170" y="206" text-anchor="middle" font-size="7">intento de −2000 rechazado de inmediato</text>
+
+</svg>
+</div>
+
+<div class="trx-caption" id="acidCaption">Sin diagrama todavía — vamos a transferir $300 de la cuenta de Ana a la de Beto.</div>
+
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat" id="acid-classify-wrap">
+<h2>Practicá: ¿qué propiedad ACID es cada caso?</h2>
+<p class="lead">Cuatro situaciones, cuatro garantías distintas. Clasifica cada una.</p>
+
+<div class="quiz quiz-classify" data-quiz-id="acid-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada situación según la propiedad ACID que ilustra.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Si falla la mitad de una transferencia, se deshacen TODOS los cambios, no solo algunos.</span>
+<div class="quiz-classify-btns">
+<button>Consistencia</button>
+<button data-correct>Atomicidad</button>
+<button>Aislamiento</button>
+<button>Durabilidad</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una restricción impide que el saldo de una cuenta quede en negativo después de cualquier operación.</span>
+<div class="quiz-classify-btns">
+<button>Atomicidad</button>
+<button>Aislamiento</button>
+<button>Durabilidad</button>
+<button data-correct>Consistencia</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Mientras una transacción está a mitad de camino, ninguna otra puede ver sus cambios todavía sin confirmar.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Aislamiento</button>
+<button>Durabilidad</button>
+<button>Consistencia</button>
+<button>Atomicidad</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una vez que el sistema confirma una compra, la información sobrevive incluso si el servidor se reinicia enseguida.</span>
+<div class="quiz-classify-btns">
+<button>Aislamiento</button>
+<button>Atomicidad</button>
+<button data-correct>Durabilidad</button>
+<button>Consistencia</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-section" id="concurrencia">
+<div class="flow-grid">
+<div class="flow-beats">
+
+<div class="flow-beat" data-step="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>Dos cajeros, la misma cuenta</h3>
+<p>La cuenta de Ana tiene $400. Dos cajeros automáticos distintos intentan retirar $300 cada uno, casi al mismo tiempo. Si los dos creen que hay $400 disponibles, algo va a salir mal.</p>
+</div>
+
+<div class="flow-beat" data-step="1">
+<span class="flow-beat-eyebrow">Paso 02 · BEGIN en paralelo</span>
+<h3>T1 y T2 arrancan</h3>
+<p>Cada cajero abre su propia transacción — Postgres no sabe (todavía) que están por tocar la misma fila.</p>
+</div>
+
+<div class="flow-beat" data-step="2">
+<span class="flow-beat-eyebrow">Paso 03 · Ambos leen lo mismo</span>
+<h3>Los dos ven $400</h3>
+<p>T1 y T2 leen el saldo de Ana por separado. Los dos ven $400, porque ninguno de los dos hizo ningún cambio todavía.</p>
+</div>
+
+<div class="flow-beat" data-step="3">
+<span class="flow-beat-eyebrow">Paso 04 · T1 actualiza (sin confirmar)</span>
+<h3>Un cambio que todavía nadie más ve</h3>
+<p>T1 calcula 400 − 300 = 100 y hace el <code>UPDATE</code>, pero no hizo <code>COMMIT</code>. Si T2 volviera a consultar ahora mismo, seguiría viendo $400 — eso sería una <strong>lectura sucia (dirty read)</strong> si Postgres se lo dejara ver. No se lo deja: ninguna transacción ve cambios no confirmados de otra, en ningún nivel de aislamiento de Postgres.</p>
+</div>
+
+<div class="flow-beat" data-step="4">
+<span class="flow-beat-eyebrow">Paso 05 · COMMIT de T1</span>
+<h3>Ahora sí es real</h3>
+<p>T1 confirma. Recién en este momento el saldo de Ana es realmente $100 para cualquiera que lo consulte de nuevo.</p>
+</div>
+
+<div class="flow-beat" data-step="5">
+<span class="flow-beat-eyebrow">Paso 06 · El problema de T2</span>
+<h3>Decidir con un dato viejo</h3>
+<p>T2 sigue con la transacción abierta desde el Paso 03, y calculó su resta con el $400 que leyó entonces — no con el $100 real de ahora. Si T2 aplica su <code>UPDATE</code> tal cual, Beto termina recibiendo $300 que en realidad ya no estaban: un <strong>lost update</strong>.</p>
+<p>Esto puede pasar en <strong>Read Committed</strong> (el nivel por defecto de Postgres) cuando la aplicación lee y escribe en dos pasos separados.</p>
+</div>
+
+<div class="flow-beat" data-step="6">
+<span class="flow-beat-eyebrow">Paso 07 · La prevención: candados</span>
+<h3>SELECT ... FOR UPDATE</h3>
+<p>Para evitar justo esto, T1 puede pedir el candado de la fila al leerla: <code>SELECT saldo FROM cuentas WHERE id=1 FOR UPDATE</code>. Nadie más puede modificar (ni bloquear para modificar) esa fila hasta que T1 termine.</p>
+</div>
+
+<div class="flow-beat" data-step="7">
+<span class="flow-beat-eyebrow">Paso 08 · T2 espera</span>
+<h3>Bloqueada, no rota</h3>
+<p>Ahora T2 intenta tocar la misma fila y queda <strong>esperando</strong>: no falla, no avanza con datos viejos, simplemente espera. Cuando T1 hace <code>COMMIT</code> y libera el candado, T2 recién ahí lee el saldo real ($100), se da cuenta de que no alcanza para retirar $300, y hace <code>ROLLBACK</code>. La condición de carrera ya no puede pasar.</p>
+</div>
+
+<div class="flow-beat" data-step="8">
+<span class="flow-beat-eyebrow">Paso 09 · Cuando los candados chocan entre sí</span>
+<h3>Deadlock</h3>
+<p>Ahora imaginá que T1 transfiere de la cuenta A a la B (bloquea A, después pide B) mientras T2 transfiere de B a A (bloquea B, después pide A) al mismo tiempo. Cada una espera un candado que tiene la otra: un <strong>deadlock</strong>.</p>
+<p>Postgres detecta el ciclo (por defecto, revisa cada 1 segundo) y aborta una de las dos transacciones con un error, dejando que la otra siga.</p>
+</div>
+
+</div>
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="concurrenciaPanel">
+<div class="flow-panel-head"><span>Diagrama en vivo</span><span class="flow-panel-step" id="trxcPanelStep">Paso 1 / 9</span></div>
+
+<div class="trx-diagram-wrap">
+<svg viewBox="0 0 340 220" aria-hidden="true">
+
+<g class="trx-box" id="trxShared">
+<rect x="115" y="10" width="110" height="34" rx="6"/>
+<text x="170" y="24" text-anchor="middle" font-size="8" font-weight="700">CUENTA DE ANA</text>
+<text id="trxSaldoValor" x="170" y="38" text-anchor="middle" font-size="11" font-weight="700">—</text>
+</g>
+
+<g class="trx-lock" id="trxLock">
+<rect x="234" y="10" width="30" height="34" rx="6"/>
+<text x="249" y="32" text-anchor="middle" font-size="14">🔒</text>
+</g>
+
+<text class="trx-note" id="trxPendingNote" x="170" y="54" text-anchor="middle" font-size="7"></text>
+
+<g class="trx-arrow" id="trxArrowT1">
+<line x1="150" y1="44" x2="83" y2="90"/>
+<polygon points="83,90 92,86 88,96"/>
+</g>
+<g class="trx-arrow" id="trxArrowT2">
+<line x1="190" y1="44" x2="257" y2="90"/>
+<polygon points="257,90 248,96 252,86"/>
+</g>
+
+<g class="trx-box" id="trxT1">
+<rect x="8" y="90" width="150" height="64" rx="8"/>
+<text x="83" y="106" text-anchor="middle" font-size="8" font-weight="700">T1 · Cajero 1</text>
+<text id="trxT1Stmt" x="83" y="124" text-anchor="middle" font-size="7.5"></text>
+<text id="trxT1Status" x="83" y="140" text-anchor="middle" font-size="7.5" font-weight="700"></text>
+</g>
+
+<g class="trx-box" id="trxT2">
+<rect x="182" y="90" width="150" height="64" rx="8"/>
+<text x="257" y="106" text-anchor="middle" font-size="8" font-weight="700">T2 · Cajero 2</text>
+<text id="trxT2Stmt" x="257" y="124" text-anchor="middle" font-size="7.5"></text>
+<text id="trxT2Status" x="257" y="140" text-anchor="middle" font-size="7.5" font-weight="700"></text>
+</g>
+
+<g class="trx-box bad" id="trxDeadlockBox">
+<rect x="8" y="168" width="324" height="40" rx="8"/>
+<text x="170" y="184" text-anchor="middle" font-size="8" font-weight="700">⚠ DEADLOCK</text>
+<text x="170" y="198" text-anchor="middle" font-size="7">T1 espera el candado de T2, T2 espera el de T1 → Postgres aborta una</text>
+</g>
+
+</svg>
+</div>
+
+<div class="trx-caption" id="trxcCaption">Cuenta de Ana: $400. Dos cajeros van a retirar $300 cada uno, casi al mismo tiempo.</div>
+
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat" id="anomalias">
+<h2>Anomalías de lectura</h2>
+<p class="lead">Tres formas concretas en que una transacción puede ver datos "raros" por culpa de otra que corre al mismo tiempo.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Anomalía</th><th scope="col">Qué pasa</th></tr></thead>
+<tbody>
+<tr><td><strong>Lectura sucia</strong><br>(dirty read)</td><td>Ver datos de otra transacción que todavía no hizo <code>COMMIT</code> — y que podría hacer <code>ROLLBACK</code> después.</td></tr>
+<tr><td><strong>Lectura no repetible</strong><br>(non-repeatable read)</td><td>Leer la misma fila dos veces en la misma transacción y obtener valores distintos, porque otra transacción confirmó un cambio en el medio.</td></tr>
+<tr><td><strong>Lectura fantasma</strong><br>(phantom read)</td><td>Repetir una consulta con condición (<code>WHERE</code>) y que aparezcan o desaparezcan filas enteras, por un <code>INSERT</code>/<code>DELETE</code> de otra transacción en el medio.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>PostgreSQL nunca permite la lectura sucia</strong>
+<p>Aunque el estándar SQL lo permite en el nivel más bajo (Read Uncommitted), PostgreSQL ni siquiera implementa ese nivel de verdad: si lo pedís, internamente te da Read Committed. Nunca vas a ver, en Postgres, datos de una transacción que no hizo commit todavía.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="anomalias-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada anomalía con su definición.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="sucia">Lectura sucia</button>
+<button class="quiz-match-item" data-pair="norepetible">Lectura no repetible</button>
+<button class="quiz-match-item" data-pair="fantasma">Lectura fantasma</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="fantasma">Repetir una consulta con condición y que aparezcan filas nuevas que antes no estaban.</button>
+<button class="quiz-match-item" data-pair="sucia">Ver un cambio de otra transacción que todavía no hizo COMMIT.</button>
+<button class="quiz-match-item" data-pair="norepetible">Releer la misma fila dos veces y obtener un valor distinto la segunda vez.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="aislamiento">
+<h2>Niveles de aislamiento</h2>
+<p class="lead">El estándar SQL define cuatro niveles, de menos a más estricto. PostgreSQL implementa tres realmente distintos — y uno de ellos se comporta más estricto de lo que pide el estándar.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Nivel</th><th scope="col">Lectura sucia</th><th scope="col">No repetible</th><th scope="col">Fantasma</th></tr></thead>
+<tbody>
+<tr><td>Read Uncommitted</td><td>Permite (estándar) / <strong>previene</strong> (Postgres)</td><td>Permite</td><td>Permite</td></tr>
+<tr><td>Read Committed <em>(default)</em></td><td>Previene</td><td>Permite</td><td>Permite</td></tr>
+<tr><td>Repeatable Read</td><td>Previene</td><td>Previene</td><td>Permite (estándar) / <strong>previene</strong> (Postgres)</td></tr>
+<tr><td>Serializable</td><td>Previene</td><td>Previene</td><td>Previene</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Postgres es más estricto que el papel</strong>
+<p>En PostgreSQL, <code>Repeatable Read</code> se implementa tomando una única foto (snapshot) de toda la base al empezar la transacción — no solo de las filas ya leídas. Por eso, a diferencia del estándar SQL, en Postgres ese nivel también previene la lectura fantasma. Es una de esas veces en que el motor real es más generoso que la especificación mínima.</p>
+</div>
+
+<div class="highlight">
+<strong>probalo vos mismo</strong>
+<p>Elegí una anomalía y un nivel de aislamiento, y mirá si PostgreSQL real la previene o no. Es exploratorio: no suma a tu progreso.</p>
+<div class="aisl-wrap">
+<div class="aisl-field">
+<label for="aislAnomalia">Anomalía</label>
+<select id="aislAnomalia">
+<option value="sucia">Lectura sucia (dirty read)</option>
+<option value="norepetible">Lectura no repetible</option>
+<option value="fantasma">Lectura fantasma</option>
+</select>
+</div>
+<div class="aisl-field">
+<label for="aislNivel">Nivel de aislamiento</label>
+<select id="aislNivel">
+<option value="read-committed">Read Committed</option>
+<option value="repeatable-read">Repeatable Read</option>
+<option value="serializable">Serializable</option>
+</select>
+</div>
+</div>
+<div class="aisl-resultado" id="aislResultado">
+<span class="aisl-resultado-titulo" id="aislTitulo">—</span>
+<p id="aislTexto">—</p>
+</div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="aislamiento-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estos niveles de aislamiento de PostgreSQL previene la lectura fantasma, a diferencia de lo que exige el estándar SQL para ese mismo nombre de nivel?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Read Uncommitted, el nivel más permisivo de todos.</button>
+<button class="quiz-opt" data-correct>Repeatable Read, gracias a su snapshot completo.</button>
+<button class="quiz-opt">Ninguno: los fantasmas solo se evitan a mano, con locks.</button>
+<button class="quiz-opt">Read Committed, que ya es el nivel por defecto.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: PostgreSQL implementa Repeatable Read con una foto completa de toda la base, no solo de las filas leídas — por eso también evita fantasmas, algo que el estándar SQL no exige a ese nivel." data-ko="Read Uncommitted y Read Committed permiten fantasmas en Postgres, y sí existe un nivel que los previene sin usar locks manuales: Repeatable Read, por cómo Postgres implementa su snapshot." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="aislamiento-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Una transacción en nivel SERIALIZABLE falla con un error de serialización (código 40001) aunque su SQL sea perfectamente válido. ¿Qué corresponde hacer?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Bajar el nivel a Read Uncommitted y reintentar igual.</button>
+<button class="quiz-opt">Ignorarlo: el COMMIT ya se aplicó de todas formas.</button>
+<button class="quiz-opt">Esperar sin hacer nada a que Postgres reintente solo.</button>
+<button class="quiz-opt" data-correct>Volver a ejecutar toda la transacción desde el principio.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un error de serialización significa que Postgres detectó un conflicto real con otra transacción y abortó la tuya para mantener las garantías de Serializable — la aplicación debe reintentarla completa, no solo el COMMIT." data-ko="El COMMIT no se aplicó (la transacción se abortó) y Postgres no reintenta nada por su cuenta. La forma correcta de manejar un error de serialización es que la aplicación vuelva a ejecutar toda la transacción desde el principio." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="bloqueos">
+<h2>Bloqueos y deadlocks</h2>
+<p class="lead">Los niveles de aislamiento definen qué ve una transacción. Los bloqueos (locks) son la herramienta para decidir, de forma explícita, quién puede tocar una fila mientras otra la está usando.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Herramienta</th><th scope="col">Qué hace</th></tr></thead>
+<tbody>
+<tr><td><code>SELECT ... FOR UPDATE</code></td><td>Lee una fila y además adquiere un candado sobre ella: ninguna otra transacción puede modificarla (ni bloquearla para modificar) hasta que la primera termine.</td></tr>
+<tr><td><code>UPDATE</code> / <code>DELETE</code></td><td>En Postgres, siempre adquieren un candado de fila automáticamente — por eso dos <code>UPDATE</code> sobre la misma fila nunca corren a ciegas al mismo tiempo.</td></tr>
+<tr><td>Deadlock</td><td>Dos transacciones se bloquean mutuamente, cada una esperando un candado que tiene la otra. Postgres lo detecta y aborta una con error.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-mc" data-quiz-id="locks-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">T1 ejecuta <code>SELECT saldo FROM cuentas WHERE id=1 FOR UPDATE</code> dentro de una transacción, sin hacer COMMIT todavía. Si T2 intenta un UPDATE sobre esa misma fila, ¿qué pasa?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Postgres cancela automáticamente la transacción de T1.</button>
+<button class="quiz-opt">T2 falla de inmediato con un error de bloqueo.</button>
+<button class="quiz-opt" data-correct>T2 queda esperando hasta que T1 termine (COMMIT o ROLLBACK).</button>
+<button class="quiz-opt">T2 se ejecuta igual: FOR UPDATE no bloquea nada de verdad.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: FOR UPDATE adquiere un candado real sobre la fila. T2 no falla ni se cancela sola: simplemente espera a que T1 confirme o revierta, y recién ahí puede continuar." data-ko="Ni T1 se cancela sola ni T2 falla de inmediato: FOR UPDATE sí bloquea de verdad. Lo que pasa es que T2 queda esperando el candado hasta que T1 termine, sin fallar y sin avanzar con datos viejos." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="deadlock-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">T1 tiene bloqueada la fila A y espera la fila B; T2 tiene bloqueada la fila B y espera la fila A. ¿Qué hace PostgreSQL en este caso?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Bloquea la base de datos completa hasta reiniciar el servidor.</button>
+<button class="quiz-opt">Deja a ambas transacciones esperando para siempre.</button>
+<button class="quiz-opt">Aborta las dos transacciones, sin excepción.</button>
+<button class="quiz-opt" data-correct>Detecta el ciclo y aborta una con error, dejando seguir a la otra.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Postgres corre un detector de deadlocks (por defecto, cada 1 segundo) que encuentra el ciclo de espera y aborta una de las dos transacciones con un error, permitiendo que la otra continúe normalmente." data-ko="Postgres no deja esperando para siempre, no aborta ambas, ni bloquea el servidor entero. Su detector de deadlocks encuentra el ciclo y aborta solo una de las dos, dejando seguir a la otra." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="ejercicios">
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un cajero automático descuenta $300 de una cuenta, pero el sistema se cae justo antes de acreditárselo a la cuenta destino, dentro de la misma transacción. Al reiniciar, ¿qué debería haber pasado con la cuenta origen?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Nunca se descontó nada, como si no hubiera pasado nada.</button>
+<button class="quiz-opt">Quedó con el descuento aplicado de forma permanente.</button>
+<button class="quiz-opt">Se descontó la mitad de los $300, sin acreditar nada.</button>
+<button class="quiz-opt">Hay que esperar a que un operador lo corrija a mano.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: si la transacción nunca llegó a hacer COMMIT, Atomicidad garantiza que ninguno de sus cambios queda aplicado — ni siquiera el descuento que ya se había ejecutado en memoria." data-ko="No queda ni con el descuento completo ni con la mitad, y no hace falta ninguna corrección manual: si la transacción no llegó a COMMIT, Atomicidad revierte todo, como si nunca hubiera pasado nada." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas NO es una de las cuatro propiedades ACID?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Aislamiento</button>
+<button class="quiz-opt" data-correct>Escalabilidad</button>
+<button class="quiz-opt">Durabilidad</button>
+<button class="quiz-opt">Atomicidad</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: las cuatro propiedades ACID son Atomicidad, Consistencia, Aislamiento y Durabilidad. Escalabilidad es una cualidad deseable de un sistema, pero no forma parte de la sigla." data-ko="Aislamiento, Durabilidad y Atomicidad sí son tres de las cuatro letras de ACID (falta Consistencia). La que no pertenece a esta sigla es Escalabilidad." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Una tienda en línea vende la última unidad de un producto a dos clientes distintos, porque ambas transacciones leyeron el mismo stock antes de que ninguna hiciera commit. ¿Qué evita este problema de forma confiable?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Agregar un índice a la tabla de productos.</button>
+<button class="quiz-opt">Bajar el nivel de aislamiento a Read Uncommitted.</button>
+<button class="quiz-opt">Aumentar el tiempo de espera de la conexión a la base.</button>
+<button class="quiz-opt" data-correct>Bloquear la fila con FOR UPDATE antes de decidir el stock.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un índice o un timeout más largo no evitan la carrera, y bajar el aislamiento la empeora. Bloquear la fila del producto con FOR UPDATE antes de decidir si hay stock obliga a la segunda transacción a esperar y ver el stock ya actualizado." data-ko="Ni el índice ni el timeout evitan la carrera, y bajar el aislamiento la haría peor, no mejor. La forma confiable es bloquear la fila con FOR UPDATE antes de decidir si hay stock disponible." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="repaso-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Repasemos el vocabulario de esta guía.</p>
+<p>1. En PostgreSQL, el nivel de aislamiento por defecto es
+<select class="quiz-blank" data-correct="read-committed">
+<option value="">— elige —</option>
+<option value="read-committed">Read Committed</option>
+<option value="repeatable-read">Repeatable Read</option>
+<option value="serializable">Serializable</option>
+</select>.</p>
+<p>2. La propiedad ACID que garantiza que una transacción confirmada sobrevive a una caída del servidor es la
+<select class="quiz-blank" data-correct="durabilidad">
+<option value="">— elige —</option>
+<option value="atomicidad">atomicidad</option>
+<option value="consistencia">consistencia</option>
+<option value="durabilidad">durabilidad</option>
+</select>.</p>
+<p>3. Cuando dos transacciones se bloquean mutuamente esperando la fila que tiene la otra, eso se llama
+<select class="quiz-blank" data-correct="deadlock">
+<option value="">— elige —</option>
+<option value="rollback">rollback</option>
+<option value="deadlock">deadlock</option>
+<option value="commit">commit</option>
+</select>.</p>
+<p>4. <code>SELECT ... </code>
+<select class="quiz-blank" data-correct="for-update">
+<option value="">— elige —</option>
+<option value="for-update">FOR UPDATE</option>
+<option value="limit">LIMIT 1</option>
+<option value="distinct">DISTINCT</option>
+</select>
+<code> </code>adquiere un candado sobre la fila leída, evitando que otra transacción la modifique hasta el commit.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet">
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td><code>BEGIN</code> / <code>COMMIT</code> / <code>ROLLBACK</code></td><td>Abrir, confirmar o deshacer una transacción.</td></tr>
+<tr><td>Atomicidad</td><td>Todo o nada: no hay resultados a medias.</td></tr>
+<tr><td>Consistencia</td><td>Ninguna transacción rompe las reglas/restricciones de la base.</td></tr>
+<tr><td>Aislamiento</td><td>Qué ve una transacción de otra que corre al mismo tiempo.</td></tr>
+<tr><td>Durabilidad</td><td>Lo confirmado sobrevive a una caída del sistema.</td></tr>
+<tr><td>Read Committed</td><td>Default de Postgres. Sin lecturas sucias; permite no repetibles y fantasmas.</td></tr>
+<tr><td>Repeatable Read</td><td>Snapshot fijo de toda la transacción. En Postgres, previene también fantasmas.</td></tr>
+<tr><td>Serializable</td><td>Sin ninguna anomalía; puede exigir reintentar por error de serialización.</td></tr>
+<tr><td>Lectura sucia</td><td>Ver datos no confirmados de otra transacción. Imposible en Postgres.</td></tr>
+<tr><td>Lectura no repetible</td><td>La misma fila cambia de valor entre dos lecturas.</td></tr>
+<tr><td>Lectura fantasma</td><td>Aparecen o desaparecen filas entre dos consultas iguales.</td></tr>
+<tr><td><code>FOR UPDATE</code></td><td>Bloquea la fila leída para que nadie más la modifique hasta el commit.</td></tr>
+<tr><td>Deadlock</td><td>Dos transacciones esperándose mutuamente. Postgres aborta una.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat">
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🔤 ACID no siempre existió como sigla</h3><p>El término lo acuñaron Andreas Reuter y Theo Härder en 1983, para nombrar formalmente algo que los sistemas de bases de datos ya intentaban garantizar desde antes, sin un acrónimo que lo resumiera.</p></div>
+<div class="info"><h3>📸 El Serializable de Postgres es más nuevo de lo que parece</h3><p>PostgreSQL implementa Serializable con una técnica llamada Serializable Snapshot Isolation (SSI), publicada en un paper académico de 2008 — bastante más reciente que el resto del motor de transacciones.</p></div>
+<div class="info"><h3>⏱️ Detectar un deadlock no es instantáneo</h3><p>Postgres no revisa deadlocks todo el tiempo: por defecto, espera 1 segundo (<code>deadlock_timeout</code>) antes de buscar el ciclo. Es una decisión a propósito: revisar todo el tiempo sería carísimo, y los deadlocks reales son poco frecuentes.</p></div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Transacciones: ACID y Concurrencia</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Nivel 1, acto 1: diagrama ACID (transferencia bancaria) — una
+   sola transacción. Prosa a la izquierda (.flow-beat) + panel fijo a la
+   derecha (#acidPanel). Reveal monotónico por capas, como
+   eps-retroalimentacion.html: cada elemento aparece a partir de un paso
+   mínimo y ya no se oculta. No es una actividad calificada. ===== */
+(function(){
+  var acidSteps = document.querySelectorAll('#acid .flow-beat');
+  if (!acidSteps.length) return;
+
+  var ACID_CAPTIONS = [
+    'Sin diagrama todavía — vamos a transferir $300 de la cuenta de Ana a la de Beto.',
+    'BEGIN: se abre la transacción.',
+    'Dos cambios agrupados: restar a Ana, sumar a Beto. Ninguno es visible todavía.',
+    'ATOMICIDAD: o se confirman los dos juntos (COMMIT, ya DURABLE) o se deshacen los dos juntos (ROLLBACK).',
+    'CONSISTENCIA: una restricción como CHECK (saldo >= 0) rechaza un cambio que rompería las reglas, antes de aplicarse.',
+    'AISLAMIENTO queda pendiente: hace falta una segunda transacción para verlo — seguí scrolleando.'
+  ];
+
+  var acidCurrentStep = -1;
+
+  function acidRender(step){
+    if (step === acidCurrentStep) return;
+    acidCurrentStep = step;
+
+    document.getElementById('trxBegin').classList.toggle('show', step >= 1);
+    ['trxBoundary','trxUpdateA','trxUpdateB','trxArrowBegin'].forEach(function(id){
+      document.getElementById(id).classList.toggle('show', step >= 2);
+    });
+    ['trxArrowRollback','trxArrowCommit','trxRollback','trxCommit','trxNoteRollback','trxNoteDisk'].forEach(function(id){
+      document.getElementById(id).classList.toggle('show', step >= 3);
+    });
+    ['trxCheck','trxNoteCheck'].forEach(function(id){
+      document.getElementById(id).classList.toggle('show', step >= 4);
+    });
+
+    document.getElementById('acidCaption').textContent = ACID_CAPTIONS[step] || '';
+    document.getElementById('acidPanelStep').textContent = 'Paso ' + (step + 1) + ' / 6';
+    acidSteps.forEach(function(el){
+      el.classList.toggle('is-active', Number(el.dataset.step) === step);
+    });
+  }
+
+  var acidObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) acidRender(Number(e.target.dataset.step));
+    });
+  }, { rootMargin: '-35% 0px -55% 0px', threshold: 0 });
+  acidSteps.forEach(function(s){ acidObserver.observe(s); });
+  acidRender(0);
+})();
+
+/* ===== Nivel 1, acto 2: diagrama de concurrencia (dos cajeros, misma
+   cuenta) — dos transacciones T1/T2. A diferencia del acto 1, acá el
+   texto de cada sentencia y el valor del saldo cambian según el paso
+   (no solo aparecen capas nuevas), así que se resuelve con una tabla de
+   estados completos por paso (TRXC_STATES) y una función que aplica el
+   estado entero en cada render, en vez de umbrales acumulativos. No es
+   una actividad calificada. ===== */
+(function(){
+  var trxcSteps = document.querySelectorAll('#concurrencia .flow-beat');
+  if (!trxcSteps.length) return;
+
+  var TRXC_STATES = [
+    { lanes:false, saldo:'—', pend:'', t1:'', t1s:'', t1c:'', t2:'', t2s:'', t2c:'', lock:false, lockA:false, deadlock:false,
+      caption:'Cuenta de Ana: $400. Dos cajeros van a retirar $300 cada uno, casi al mismo tiempo.' },
+    { lanes:true, saldo:'$400', pend:'', t1:'BEGIN;', t1s:'ACTIVA', t1c:'', t2:'BEGIN;', t2s:'ACTIVA', t2c:'', lock:false, lockA:false, deadlock:false,
+      caption:'Cada cajero abre su propia transacción.' },
+    { lanes:true, saldo:'$400', pend:'', t1:'SELECT saldo → 400', t1s:'ACTIVA', t1c:'', t2:'SELECT saldo → 400', t2s:'ACTIVA', t2c:'', lock:false, lockA:false, deadlock:false,
+      caption:'Los dos leen el mismo saldo: $400.' },
+    { lanes:true, saldo:'$400', pend:'(100 sin confirmar)', t1:'UPDATE saldo=100', t1s:'ACTIVA', t1c:'wait', t2:'SELECT saldo → 400', t2s:'ACTIVA', t2c:'', lock:false, lockA:false, deadlock:false,
+      caption:'T1 actualiza a 100 pero no confirmó. T2 sigue viendo 400: Postgres no deja ver cambios sin COMMIT (no hay dirty read).' },
+    { lanes:true, saldo:'$100', pend:'', t1:'COMMIT;', t1s:'CONFIRMADA', t1c:'ok', t2:'SELECT saldo → 400', t2s:'ACTIVA', t2c:'', lock:false, lockA:false, deadlock:false,
+      caption:'T1 confirma: recién ahora el saldo real es $100.' },
+    { lanes:true, saldo:'$100', pend:'', t1:'COMMIT;', t1s:'CONFIRMADA', t1c:'ok', t2:'UPDATE saldo=100 ❌', t2s:'usó el 400 viejo', t2c:'bad', lock:false, lockA:false, deadlock:false,
+      caption:'T2 calculó su resta con el 400 viejo. Aplicar esto perdería el cambio de T1: un lost update.' },
+    { lanes:true, saldo:'$100', pend:'', t1:'SELECT...FOR UPDATE', t1s:'ACTIVA (con lock)', t1c:'', t2:'SELECT saldo → 400', t2s:'ACTIVA', t2c:'', lock:true, lockA:true, deadlock:false,
+      caption:'Para prevenir esto, T1 pide el candado de la fila con FOR UPDATE.' },
+    { lanes:true, saldo:'$100', pend:'', t1:'COMMIT;', t1s:'CONFIRMADA', t1c:'ok', t2:'UPDATE... ⏳ → ROLLBACK', t2s:'ESPERÓ → ABORTADA', t2c:'bad', lock:false, lockA:false, deadlock:false,
+      caption:'T2 queda esperando el candado. Al liberarse, lee el saldo real (100), no alcanza, y hace ROLLBACK.' },
+    { lanes:true, saldo:'$100', pend:'', t1:'A→B: lockea A, pide B', t1s:'ESPERANDO', t1c:'wait', t2:'B→A: lockea B, pide A', t2s:'ESPERANDO', t2c:'wait', lock:false, lockA:false, deadlock:true,
+      caption:'Deadlock: cada una espera un candado que tiene la otra. Postgres detecta el ciclo y aborta una con error.' }
+  ];
+
+  var trxcCurrentStep = -1;
+
+  function setBoxClass(el, cls){
+    el.classList.remove('ok', 'bad', 'wait');
+    if (cls) el.classList.add(cls);
+  }
+
+  function trxcRender(step){
+    if (step === trxcCurrentStep) return;
+    trxcCurrentStep = step;
+    var s = TRXC_STATES[step];
+
+    document.getElementById('trxShared').classList.toggle('show', s.lanes);
+    document.getElementById('trxSaldoValor').textContent = s.saldo;
+
+    var pend = document.getElementById('trxPendingNote');
+    pend.textContent = s.pend;
+    pend.classList.toggle('show', !!s.pend);
+
+    document.getElementById('trxLock').classList.toggle('show', s.lock);
+    document.getElementById('trxLock').classList.toggle('active', s.lockA);
+
+    document.getElementById('trxArrowT1').classList.toggle('show', s.lanes);
+    document.getElementById('trxArrowT2').classList.toggle('show', s.lanes);
+
+    var t1 = document.getElementById('trxT1');
+    t1.classList.toggle('show', s.lanes);
+    setBoxClass(t1, s.t1c);
+    document.getElementById('trxT1Stmt').textContent = s.t1;
+    document.getElementById('trxT1Status').textContent = s.t1s;
+
+    var t2 = document.getElementById('trxT2');
+    t2.classList.toggle('show', s.lanes);
+    setBoxClass(t2, s.t2c);
+    document.getElementById('trxT2Stmt').textContent = s.t2;
+    document.getElementById('trxT2Status').textContent = s.t2s;
+
+    document.getElementById('trxDeadlockBox').classList.toggle('show', s.deadlock);
+
+    document.getElementById('trxcCaption').textContent = s.caption;
+    document.getElementById('trxcPanelStep').textContent = 'Paso ' + (step + 1) + ' / ' + TRXC_STATES.length;
+    trxcSteps.forEach(function(el){
+      el.classList.toggle('is-active', Number(el.dataset.step) === step);
+    });
+  }
+
+  var trxcObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) trxcRender(Number(e.target.dataset.step));
+    });
+  }, { rootMargin: '-35% 0px -55% 0px', threshold: 0 });
+  trxcSteps.forEach(function(s){ trxcObserver.observe(s); });
+  trxcRender(0);
+})();
+
+/* ===== Sandbox exploratorio: niveles de aislamiento (Nivel 3, sin
+   calificar, sin data-quiz-id). Tabla de resultados basada en el
+   comportamiento REAL de PostgreSQL (no la tabla genérica del estándar
+   SQL) — misma fuente que la tabla y el highlight de la sección
+   #aislamiento. ===== */
+(function(){
+  var selAnomalia = document.getElementById('aislAnomalia');
+  var selNivel = document.getElementById('aislNivel');
+  if (!selAnomalia || !selNivel) return;
+
+  var RESULTADOS = {
+    sucia: {
+      'read-committed': [true, 'PostgreSQL nunca implementa un verdadero Read Uncommitted: aunque lo pidas, internamente se comporta como Read Committed. Ninguna transacción ve cambios de otra que todavía no hizo COMMIT.'],
+      'repeatable-read': [true, 'Más estricto todavía que Read Committed: en ningún nivel de Postgres una transacción ve datos no confirmados de otra.'],
+      'serializable': [true, 'Serializable hereda esta misma garantía: nunca hay lecturas sucias en PostgreSQL, en ningún nivel.']
+    },
+    norepetible: {
+      'read-committed': [false, 'Este es el nivel por defecto de Postgres. Cada sentencia ve una foto nueva de la base al momento de ejecutarse: si releés la misma fila dos veces y otra transacción hizo COMMIT en el medio, vas a ver el valor cambiado.'],
+      'repeatable-read': [true, 'Repeatable Read toma una única foto de toda la base al empezar la transacción y la mantiene fija hasta el commit: releer la misma fila siempre da el mismo valor, pase lo que pase afuera.'],
+      'serializable': [true, 'Serializable hereda la misma foto fija de Repeatable Read (y agrega más control todavía), así que tampoco puede pasar.']
+    },
+    fantasma: {
+      'read-committed': [false, 'Cada sentencia ve el estado más reciente confirmado, así que una fila nueva insertada por otra transacción puede aparecer entre dos ejecuciones de la misma consulta.'],
+      'repeatable-read': [true, 'A diferencia del estándar SQL (donde Repeatable Read sí permite fantasmas), PostgreSQL usa una foto completa de toda la base, no solo de las filas ya leídas — así que una fila nueva de otra transacción tampoco aparece.'],
+      'serializable': [true, 'Serializable no deja pasar ninguna anomalía, fantasmas incluidos.']
+    }
+  };
+
+  var titulo = document.getElementById('aislTitulo');
+  var texto = document.getElementById('aislTexto');
+  var caja = document.getElementById('aislResultado');
+
+  function recalcular(){
+    var r = RESULTADOS[selAnomalia.value][selNivel.value];
+    var previene = r[0];
+    caja.classList.toggle('previene', previene);
+    caja.classList.toggle('no-previene', !previene);
+    titulo.textContent = previene ? '✅ Se previene' : '⚠️ Puede pasar';
+    texto.textContent = r[1];
+  }
+  selAnomalia.addEventListener('change', recalcular);
+  selNivel.addEventListener('change', recalcular);
+  recalcular();
+})();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedida directo, como siempre, no dispara nada nuevo. No toca el
+     motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen (ver DEPLOY-GUIAS-SNIPPET.md en
+     el repo de atenza para el detalle de cada endpoint). -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  // El link real que arma ATENZA a veces llega como
+  // "...html#seccion?atenza_token=...", con el "?" después del "#" — ahí
+  // location.search por sí solo da vacío, por eso se busca también
+  // dentro de location.hash (mismo parche que el script de limpieza del
+  // <head>, autocontenido acá para no tocar el motor de quizzes).
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  // ── Progreso limpio por intento (redundante con el script del <head>,
+  // pero si por lo que sea ese no corrió a tiempo, esto es la segunda
+  // red): QUIZ_PREFIX guarda el progreso por PÁGINA, sin saber nada de
+  // "intentos" de ATENZA. Si guia_intento cambió, se limpia todo antes
+  // de que el estudiante toque nada.
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  // ── Aviso flotante — la única señal visible de "ya terminaste, podés
+  // cerrar la pestaña" o "no se pudo enviar, tocá para reintentar".
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  // ── Pantalla completa: se pide en un click real del usuario, no solo.
+  // Estilos en línea porque esta página (flow) no tiene una clase para
+  // esto — fixed y con z-index por encima de .flow-topbar (800) y
+  // .flow-menu-panel (891) para que no quede tapado por ninguno.
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  // ── Reportar cada pregunta resuelta — engancha marcarResuelto(), que
+  // ya usan los tipos de actividad de esta guía (mc/match/classify/fill)
+  // sin tocar ninguno de sus call-sites.
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+      referencia: id,
+      correcta: estado === 'ok',
+    }).catch(function () {});
+  };
+
+  // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder foco.
+  // terminado evita seguir reportando incidencias (y el aviso de "¿seguro
+  // que salís?") después de que /finalizar ya respondió ok.
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ── Finalizar al completar el 100% — cuenta CONTESTADAS (ok o ko,
+  // cualquier valor guardado), no solo correctas: con un solo intento
+  // por actividad, exigir 100% de correctas dejaría la guía "en curso"
+  // para siempre apenas alguien se equivoque una vez.
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
