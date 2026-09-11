@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller: Transacciones en Vivo — PostgreSQL Real en tu Navegador | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* Estilos propios de este taller: tabla de resultados y barra de la base de datos, con la
+   misma estética "consola oscura" que ya usa .output-body en guia.css. No toca el CSS compartido. */
+.sql-result-table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+.sql-result-table th,.sql-result-table td{ padding:8px 10px; text-align:left; border:1px solid rgba(255,255,255,.15); }
+.sql-result-table thead th{ background:rgba(255,255,255,.08); color:#8fd48a; }
+.sql-result-table td em{ color:#7d8899; font-style:italic; }
+.sql-status{ margin:4px 0 10px; color:#8fd48a; }
+.sql-meta{ margin:0 0 10px; color:#7d8899; font-size:12px; }
+.db-toolbar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:18px 0 8px; padding:16px 20px; background:var(--highlightBg); border-left:6px solid var(--verde); border-radius:8px; }
+.db-toolbar button{ background:var(--verde); color:white; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:14px; }
+.db-toolbar button:hover{ background:var(--verde2); }
+.db-toolbar button:disabled{ opacity:.5; cursor:wait; }
+.db-toolbar button.secundario{ background:transparent; color:var(--verde); border:2px solid var(--verde); }
+.db-estado{ font-size:14px; opacity:.85; }
+
+/* Bloqueo de copiar/pegar en los editores: flash de aviso + toast global */
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>Taller Transacciones</span></div>
+<p>SQL en vivo con PostgreSQL real</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#zona-pruebas">Zona de pruebas libres</a>
+<a href="#preparar">Prepara tu base de datos</a>
+<a href="#begin-commit">1. BEGIN y COMMIT</a>
+<a href="#rollback">2. ROLLBACK y transacciones abortadas</a>
+<a href="#lost-update">3. Simulando un lost update</a>
+<a href="#for-update">4. FOR UPDATE en la práctica</a>
+<a href="#reto">Reto final</a>
+<a href="#repaso">Repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Taller de Laboratorio</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Transacciones: <span>Atomicidad</span> y Concurrencia en Código Real</h1>
+<p>Otra vez PostgreSQL de verdad, compilado a WebAssembly, corriendo enteramente en tu navegador. Vas a abrir, confirmar y deshacer transacciones reales con <code>BEGIN</code>/<code>COMMIT</code>/<code>ROLLBACK</code>, provocar en vivo el error real de Postgres cuando una transacción queda "abortada", y reproducir con tus propias manos el problema del <em>lost update</em> — antes de resolverlo con <code>FOR UPDATE</code>.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Este taller es la práctica de laboratorio de <strong>transacciones (BEGIN/COMMIT/ROLLBACK), atomicidad y concurrencia</strong> en PostgreSQL. No vuelve a explicar la teoría desde cero —asume que ya viste <a href="transacciones.html">la guía</a>— y en cambio te da un PostgreSQL real para ejecutar cada paso con tus propias manos.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Si todavía no viste la teoría, repasa primero <a href="transacciones.html">Transacciones: ACID y Concurrencia</a> antes de continuar. Este taller usa una tabla <code>cuentas</code> (con Ana y Beto, el mismo ejemplo de la guía) y, en el Reto final, una tabla <code>productos</code> para reproducir el escenario de la última unidad vendida dos veces.</p>
+</div>
+<div class="highlight">
+<strong>⚠️ Todo vive en la memoria de esta pestaña — y en una única sesión compartida</strong>
+<p>Esta página corre su <strong>propia</strong> base de datos, independiente de cualquier otro taller que hayas abierto antes, y se pierde si recargás, cerrás la pestaña o navegás a otra guía. Hay un detalle extra que en este taller importa más que en los demás: <strong>todos los bloques de código comparten la misma sesión de Postgres</strong> (la misma conexión). Si un bloque abre una transacción con <code>BEGIN</code> y no la cierra con <code>COMMIT</code> o <code>ROLLBACK</code>, esa transacción sigue abierta y afecta a todos los bloques siguientes — vas a comprobarlo a propósito en la sección 2. Si en algún momento algo se comporta raro (por ejemplo, un error de "current transaction is aborted"), escribe <code>ROLLBACK;</code> en la Zona de pruebas libres para destrabar la sesión.</p>
+</div>
+<div class="highlight">
+<strong>🔍 Qué SÍ y qué NO se puede probar con una sola conexión</strong>
+<p>PGlite (el Postgres que corre esta página) es <strong>una sola conexión</strong>, así que dos transacciones nunca están activas de verdad al mismo tiempo acá. Todo lo que es real de una sola transacción (BEGIN/COMMIT/ROLLBACK, la restricción CHECK abortando una transacción, FOR UPDATE como sintaxis) lo vas a ejecutar tal cual contra Postgres real. Lo que necesita <strong>dos conexiones reales bloqueándose entre sí</strong> (que T2 quede esperando el candado de T1, o un deadlock) no se puede reproducir acá — para eso ya viste el diagrama animado de la guía teórica. En la sección 3 vas a <strong>simular</strong> el intercalado escribiendo, en orden, la misma secuencia de sentencias que producirían el problema si dos cajeros la ejecutaran en paralelo: el enunciado te va a avisar cada vez que estés simulando algo en vez de ejecutando concurrencia real.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>✍️ Lo escribís vos</h3><p>Cada bloque parte vacío. El enunciado te dice qué tenés que lograr — el código SQL lo escribís de cero.</p></div>
+<div class="info"><h3>🔓 Una sesión, de punta a punta</h3><p>Esa misma sesión compartida es lo que te permite comprobar, con Postgres real, qué pasa si una transacción queda abierta o abortada — algo que en una app normal casi nunca se ve tan de cerca.</p></div>
+<div class="info"><h3>🧪 Simulaciones, avisadas</h3><p>Cada vez que un ejercicio simule concurrencia en vez de ejecutarla de verdad, el enunciado te lo va a decir explícitamente.</p></div>
+</div>
+
+<div class="db-toolbar">
+<button type="button" id="resetDbBtn">🔄 Reiniciar base de datos</button>
+<span class="db-estado" id="dbEstado">La base de datos está vacía. Baja a "Prepara tu base de datos" para empezar.</span>
+</div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Este bloque queda disponible durante toda la guía. Usalo en cualquier momento para probar una idea propia, revisar el estado de una tabla con <code>SELECT * FROM tabla;</code>, o escribir un <code>ROLLBACK;</code> suelto si necesitás destrabar la sesión — sin desordenar los bloques guiados.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🧪 Escribe cualquier sentencia SQL</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Zona de pruebas libres" placeholder="Por ejemplo: SELECT * FROM cuentas;  -- o ROLLBACK; si la sesión quedó trabada"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="preparar">
+<div class="card">
+<h2 class="section-title">Prepara tu base de datos</h2>
+<p class="lead">Este bloque <strong>no es un ejercicio</strong> — ya viene resuelto. Crea una tabla, <code>cuentas</code>, con dos filas: Ana y Beto. Ejecútalo tal cual, una sola vez, antes de seguir.</p>
+<div class="highlight">
+<strong>Qué hace este bloque</strong>
+<p>Crea <code>cuentas</code> con columnas <code>id</code>, <code>titular</code> y <code>saldo</code>, con una restricción <code>CHECK (saldo &gt;= 0)</code> — ninguna cuenta puede quedar en negativo, sin importar qué UPDATE se intente. Ana arranca con Bs 400 y Beto con Bs 100, el mismo punto de partida que usa la guía teórica.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🏗️ Ejecuta esta preparación tal cual</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:260px" aria-label="Script de preparación de la base de datos">CREATE TABLE cuentas (
+    id SERIAL PRIMARY KEY,
+    titular VARCHAR(60) UNIQUE NOT NULL,
+    saldo NUMERIC(10,2) NOT NULL CHECK (saldo >= 0)
+);
+
+INSERT INTO cuentas (titular, saldo) VALUES
+    ('Ana', 400.00),
+    ('Beto', 100.00);
+
+SELECT * FROM cuentas ORDER BY id;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight">
+<strong>Confirma los datos</strong>
+<p>El resultado final debería mostrarte <strong>2 filas</strong>: Ana con 400.00 y Beto con 100.00. Si ves otra cosa, usa "🔄 Reiniciar base de datos" y vuelve a ejecutar este bloque.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="begin-commit">
+<div class="card">
+<h2 class="section-title">1. BEGIN y COMMIT</h2>
+<p class="lead">Agrupar dos cambios para que se confirmen juntos, de forma permanente.</p>
+
+<div class="highlight">
+<strong>Enunciado — 1.1</strong>
+<p>Escribe una transacción completa que transfiera <strong>Bs 300 de Ana a Beto</strong>: abre con <code>BEGIN</code>, resta 300 al saldo de Ana, suma 300 al saldo de Beto, y confirma con <code>COMMIT</code>. Termina con un <code>SELECT * FROM cuentas ORDER BY id;</code> para comprobarlo.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.1 — Transferencia con BEGIN...COMMIT</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:130px" aria-label="Editor SQL: transferencia con BEGIN y COMMIT" placeholder="-- BEGIN;
+-- UPDATE cuentas SET saldo = saldo - 300 WHERE titular = 'Ana';
+-- UPDATE cuentas SET saldo = saldo + 300 WHERE titular = 'Beto';
+-- COMMIT;
+-- SELECT * FROM cuentas ORDER BY id;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Los dos cambios, confirmados juntos</strong>
+<p>El SELECT final debería mostrar a <strong>Ana con Bs 100</strong> y <strong>Beto con Bs 400</strong>. Nada de esto fue visible para ningún otro bloque mientras la transacción seguía abierta — recién quedó aplicado con el <code>COMMIT</code>.</p>
+</div>
+
+<p style="margin-top:25px;"><strong>1.2 — Antes de ejecutar, predice:</strong> ¿qué mostraría el SELECT si en vez de correr todo este bloque de una, hubieras dejado la transacción abierta (sin COMMIT) y hubieras corrido el SELECT en la Zona de pruebas libres? Escribe tu predicción como comentario en el editor, y después comprobalo de verdad: abre una transacción nueva, resta Bs 50 a Beto sin confirmar todavía, y ejecuta este mismo bloque.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.2 — Abre una transacción y no la cierres todavía</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:80px" aria-label="Editor SQL: transacción abierta sin confirmar" placeholder="-- BEGIN;
+-- UPDATE cuentas SET saldo = saldo - 50 WHERE titular = 'Beto';
+-- (no escribas COMMIT todavía)"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Ahora ve a la Zona de pruebas libres</strong>
+<p>Escribe ahí <code>SELECT * FROM cuentas;</code>. Como estás en la <strong>misma sesión</strong>, vas a ver el saldo de Beto ya rebajado a Bs 350 — no porque otra transacción lo vea (Postgres nunca deja ver cambios sin confirmar de otra transacción), sino porque técnicamente seguís <strong>dentro</strong> de la misma transacción que abriste en 1.2. Cuando termines de mirar, volvé acá y ejecutá el siguiente bloque para confirmarla.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.3 — Confirma la transacción que dejaste abierta</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: confirmar la transacción pendiente" placeholder="-- COMMIT;
+-- SELECT * FROM cuentas ORDER BY id;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="rollback">
+<div class="card">
+<h2 class="section-title">2. ROLLBACK y transacciones abortadas</h2>
+<p class="lead">Deshacer a propósito, y lo que pasa cuando Postgres deshace un error por vos.</p>
+
+<div class="highlight">
+<strong>Enunciado — 2.1</strong>
+<p>Abre una transacción, resta Bs 30 al saldo de Ana, pero en vez de confirmar, <strong>deshazla con ROLLBACK</strong>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.1 — Arrepentirse con ROLLBACK</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: ROLLBACK deliberado" placeholder="-- BEGIN;
+-- UPDATE cuentas SET saldo = saldo - 30 WHERE titular = 'Ana';
+-- ROLLBACK;
+-- SELECT * FROM cuentas ORDER BY id;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Como si nunca hubiera pasado</strong>
+<p>El saldo de Ana sigue en <strong>Bs 100</strong>, sin ningún rastro de la resta. <code>ROLLBACK</code> deshace absolutamente todo lo hecho desde el <code>BEGIN</code> — no solo lo último.</p>
+</div>
+
+<p style="margin-top:25px;"><strong>Ahora un caso distinto: un ROLLBACK que Postgres te obliga a hacer.</strong></p>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.2</strong>
+<p>Ana tiene Bs 100. Abre una transacción e intenta restarle <strong>Bs 500</strong> — más de lo que tiene. La restricción <code>CHECK (saldo &gt;= 0)</code> debería rechazar el UPDATE. <strong>No escribas ROLLBACK todavía</strong>, dejá la transacción tal como quede después del error.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.2 — Provoca la violación del CHECK</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:80px" aria-label="Editor SQL: violación de CHECK dentro de una transacción" placeholder="-- BEGIN;
+-- UPDATE cuentas SET saldo = saldo - 500 WHERE titular = 'Ana';"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>El error esperado</strong>
+<p>Debería aparecer un error que menciona <code>violates check constraint</code>. Hasta acá, ningún cambio se aplicó — pero la transacción sigue <strong>abierta</strong>, porque nunca llegaste a un COMMIT ni a un ROLLBACK.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.3</strong>
+<p>Sin haber cerrado esa transacción, intenta algo completamente inocente: <code>SELECT * FROM cuentas;</code> — una consulta que ni siquiera toca la fila que falló.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.3 — Intenta seguir usando la transacción abortada</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:60px" aria-label="Editor SQL: SELECT dentro de una transacción abortada" placeholder="-- SELECT * FROM cuentas;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>"current transaction is aborted"</strong>
+<p>Este SELECT también falla, con un mensaje del estilo <code>current transaction is aborted, commands ignored until end of transaction block</code> — exactamente el detalle real de Postgres que menciona la guía teórica: apenas <strong>una</strong> sentencia falla dentro de una transacción, <strong>toda</strong> la transacción queda abortada, y cualquier otra sentencia que intentes en ella (aunque sea válida) va a fallar de la misma forma hasta que hagas <code>ROLLBACK</code>.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>⚠️ No sigas sin ejecutar este bloque</strong>
+<p>Mientras esta transacción siga abierta y abortada, <strong>cualquier</strong> sentencia que intentes en el resto del taller (incluida la Zona de pruebas libres) va a fallar con el mismo error. Ejecuta <code>ROLLBACK;</code> para destrabar la sesión.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.4 — Destraba la sesión con ROLLBACK</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Editor SQL: ROLLBACK para recuperar la sesión" placeholder="-- ROLLBACK;
+-- SELECT * FROM cuentas ORDER BY id;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Ana sigue con Bs 100</strong>
+<p>El intento de resta de Bs 500 nunca llegó a aplicarse — Atomicidad y Consistencia trabajando juntas: la restricción impidió un estado inválido, y el ROLLBACK dejó la base exactamente como estaba antes del intento.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="lost-update">
+<div class="card">
+<h2 class="section-title">3. Simulando un lost update</h2>
+<p class="lead"><strong>Esto es una simulación, no concurrencia real:</strong> vas a escribir, en un solo bloque y en orden, la misma secuencia de sentencias que producirían el problema si dos cajeros la ejecutaran al mismo tiempo contra la cuenta de Ana.</p>
+
+<div class="highlight">
+<strong>El escenario</strong>
+<p>Ana tiene Bs 100. Dos cajeros distintos, casi al mismo tiempo, leen ese saldo (ven Bs 100 los dos) y cada uno decide retirarle Bs 80. Cada cajero calcula su propia resta <strong>en base al valor que leyó</strong> (100 − 80 = 20) y la aplica con un UPDATE que escribe ese número ya calculado — así es como muchas aplicaciones reales arman este tipo de operación, sin bloquear nada.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.1</strong>
+<p>Escribe, en este orden, dentro de un mismo bloque: una transacción que simula al "Cajero 1" (calculó 100 − 80 = 20 y confirma), seguida de otra transacción que simula al "Cajero 2" (calculó el mismo 100 − 80 = 20, porque leyó el saldo <strong>antes</strong> de que el Cajero 1 confirmara, y también confirma). Termina con un SELECT del saldo de Ana.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.1 — Dos retiros simulados, el mismo dato viejo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:170px" aria-label="Editor SQL: simulación de lost update" placeholder="-- BEGIN; -- Cajero 1: ya leyó 100, calculó 100-80=20
+-- UPDATE cuentas SET saldo = 20 WHERE titular = 'Ana';
+-- COMMIT;
+
+-- BEGIN; -- Cajero 2: también había leído 100 (antes del COMMIT de arriba), calculó 100-80=20
+-- UPDATE cuentas SET saldo = 20 WHERE titular = 'Ana';
+-- COMMIT;
+
+-- SELECT saldo FROM cuentas WHERE titular = 'Ana';"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Bs 20, como si solo hubiera pasado un retiro</strong>
+<p>El saldo final es <strong>Bs 20</strong> — el mismo resultado que si Ana hubiera retirado Bs 80 <strong>una sola vez</strong>. En realidad se confirmaron <strong>dos</strong> retiros de Bs 80 (Bs 160 en total), pero el segundo UPDATE pisó por completo el resultado del primero sin enterarse de que ya había cambiado. El retiro del Cajero 1 quedó <strong>perdido</strong> — de ahí el nombre <em>lost update</em>. Ninguna restricción CHECK lo detecta, porque Bs 20 sigue siendo un número válido (≥ 0): el problema no es un valor imposible, es un valor <strong>incorrecto</strong>.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="for-update">
+<div class="card">
+<h2 class="section-title">4. FOR UPDATE en la práctica</h2>
+<p class="lead">La sintaxis que, con dos conexiones reales, evita justo el problema anterior.</p>
+
+<div class="highlight">
+<strong>Por qué esto no se puede demostrar del todo acá</strong>
+<p>Con una sola conexión no hay ningún "Cajero 2" real esperando un candado — así que este ejercicio practica la <strong>sintaxis y el patrón correcto</strong>, no el bloqueo en sí. En un escenario real con dos conexiones, <code>FOR UPDATE</code> obliga a la segunda transacción a esperar a que la primera confirme, y recién ahí le deja leer el saldo <strong>ya actualizado</strong> — nunca el valor viejo que causó el lost update de la sección anterior. Eso es exactamente lo que anima el diagrama de la guía teórica.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.1</strong>
+<p>Primero, reiniciá el saldo de Ana a Bs 100 (para partir de un número limpio). Después, dentro de una transacción, usa <code>SELECT saldo FROM cuentas WHERE titular = 'Ana' FOR UPDATE;</code> para leer y bloquear la fila, calcula el nuevo saldo restando Bs 80 <strong>a partir de ese resultado</strong>, y confirma.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.1 — Leer con candado, calcular, confirmar</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:140px" aria-label="Editor SQL: patrón seguro con FOR UPDATE" placeholder="-- UPDATE cuentas SET saldo = 100 WHERE titular = 'Ana'; -- reinicia el saldo
+
+-- BEGIN;
+-- SELECT saldo FROM cuentas WHERE titular = 'Ana' FOR UPDATE; -- mirá el resultado: 100
+-- UPDATE cuentas SET saldo = 100 - 80 WHERE titular = 'Ana';
+-- COMMIT;
+-- SELECT saldo FROM cuentas WHERE titular = 'Ana';"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>El patrón, no solo el resultado</strong>
+<p>El resultado (Bs 20) es el mismo que ya viste — lo que cambia es <strong>cómo</strong> se llegó ahí: el valor restado salió de una lectura hecha <strong>dentro</strong> de la misma transacción que hizo el bloqueo, no de un número calculado antes y guardado aparte. Esa diferencia es exactamente lo que, con dos conexiones reales, cierra la puerta al lost update de la sección 3.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="reto">
+<div class="card">
+<h2 class="section-title">Reto final: la última unidad, vendida dos veces</h2>
+<p class="lead">El mismo problema de la sección 3, ahora con inventario — y resuelto con el patrón de la sección 4.</p>
+
+<div class="highlight">
+<strong>Prepara la tabla <code>productos</code></strong>
+<p>Este bloque ya viene resuelto. Crea <code>productos</code> con un <code>CHECK (stock &gt;= 0)</code> y una sola fila: un póster con <strong>stock = 1</strong>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🏗️ Ejecuta esta preparación tal cual</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Script de preparación de productos">CREATE TABLE productos (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(80) NOT NULL,
+    stock INTEGER NOT NULL CHECK (stock >= 0)
+);
+
+INSERT INTO productos (nombre, stock) VALUES
+    ('Póster edición limitada', 1);
+
+SELECT * FROM productos;</textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Requisito 1 — Reproduce el problema (simulado)</strong>
+<p>Igual que en la sección 3: simula a dos clientes que leyeron <strong>stock = 1</strong> casi al mismo tiempo y ambos confirman su compra calculando <code>stock = 0</code>. Un solo bloque, dos transacciones secuenciales (Cliente A y Cliente B), terminando con un SELECT del stock.</p>
+</div>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>🏆 Requisito 1 — Dos compras confirmadas, una sola unidad</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí el Requisito 1 del reto final" placeholder="-- BEGIN; -- Cliente A: leyó stock=1, calculó stock=0
+-- UPDATE productos SET stock = 0 WHERE nombre = 'Póster edición limitada';
+-- COMMIT;
+
+-- BEGIN; -- Cliente B: también había leído stock=1 antes del COMMIT de A
+-- UPDATE productos SET stock = 0 WHERE nombre = 'Póster edición limitada';
+-- COMMIT;
+
+-- SELECT stock FROM productos;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Dos ventas confirmadas, un solo poster</strong>
+<p>El stock queda en <strong>0</strong>, pero se confirmaron <strong>dos</strong> compras: el sistema le cobró a dos clientes distintos la misma unidad. Esto es exactamente el escenario que ya viste en la pregunta de la guía teórica sobre la tienda en línea.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Requisito 2 — Resuélvelo con el patrón seguro</strong>
+<p>Reinicia el stock a 1. Después, escribe <strong>dos</strong> intentos de compra, uno después del otro, usando siempre <code>SELECT ... FOR UPDATE</code> antes de decidir: el <strong>primer</strong> intento debe descontar el stock (queda en 0). El <strong>segundo</strong> intento debe leer el stock ya en 0 y, como no queda unidad disponible, terminar en <code>ROLLBACK</code> en vez de vender.</p>
+</div>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>🏆 Requisito 2 — Dos intentos, uno vende y el otro se frena solo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí el Requisito 2 del reto final" placeholder="-- UPDATE productos SET stock = 1 WHERE nombre = 'Póster edición limitada';
+
+-- BEGIN; -- Intento 1
+-- SELECT stock FROM productos WHERE nombre = 'Póster edición limitada' FOR UPDATE; -- da 1
+-- UPDATE productos SET stock = 1 - 1 WHERE nombre = 'Póster edición limitada';
+-- COMMIT;
+
+-- BEGIN; -- Intento 2
+-- SELECT stock FROM productos WHERE nombre = 'Póster edición limitada' FOR UPDATE; -- da 0: no hay que vender
+-- ROLLBACK;
+
+-- SELECT stock FROM productos;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Bonus — deja que el CHECK sea la última red de seguridad</strong>
+<p>Sin usar ROLLBACK esta vez: con el stock otra vez en 0, intenta directamente <code>UPDATE productos SET stock = stock - 1 WHERE nombre = 'Póster edición limitada';</code>. Debería fallar con <code>violates check constraint</code> — aunque el patrón con FOR UPDATE ya evita llegar a este punto, la restricción sigue ahí por si algún código en algún lugar se olvida de chequear antes de escribir.</p>
+</div>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>🏆 Bonus — La red de seguridad del CHECK</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí el bonus del reto final" placeholder="-- UPDATE productos SET stock = stock - 1 WHERE nombre = 'Póster edición limitada';"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="repaso">
+<div class="card">
+<h2 class="section-title">Repaso</h2>
+<p class="lead">Preguntas cortas sobre lo que acabas de observar en vivo. Tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 1.1, si el sistema se hubiera caído justo después de restarle a Ana y antes de sumarle a Beto (sin COMMIT), ¿qué garantiza que ninguno de los dos cambios queda aplicado?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Aislamiento</button>
+<button class="quiz-opt" data-correct>Atomicidad</button>
+<button class="quiz-opt">Consistencia</button>
+<button class="quiz-opt">Durabilidad</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Atomicidad garantiza que una transacción se aplica entera o no se aplica nada — si el sistema se cae a mitad de camino sin COMMIT, ni siquiera el primer cambio queda confirmado." data-ko="No es Aislamiento, Consistencia ni Durabilidad: la propiedad que asegura que los dos cambios quedan como una sola unidad (todo o nada) es la Atomicidad." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">En este taller, si un bloque deja una transacción abierta (BEGIN sin COMMIT ni ROLLBACK), el siguiente bloque que ejecutes corre dentro de esa misma transacción, porque todos comparten la misma sesión de Postgres.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: a diferencia de una app real con un pool de conexiones, esta página usa una única sesión compartida — por eso una transacción sin cerrar en un bloque afecta de verdad a los bloques que siguen, como comprobaste en la sección 1." data-ko="Es verdadero: esta página usa una única sesión compartida para todos sus bloques, así que una transacción que no cerraste con COMMIT o ROLLBACK sigue activa cuando ejecutás el siguiente bloque." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En la sección 2, el UPDATE del ejercicio 2.2 falló por la restricción CHECK. El SELECT del ejercicio 2.3, que ni siquiera tocaba esa fila, también dio error. ¿Por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque ese SELECT tenía un error de sintaxis propio.</button>
+<button class="quiz-opt">Porque la tabla cuentas quedó bloqueada de forma permanente.</button>
+<button class="quiz-opt" data-correct>Porque una sentencia fallida deja abortada toda la transacción, hasta un ROLLBACK.</button>
+<button class="quiz-opt">Porque PGlite no permite ningún SELECT dentro de una transacción.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: en Postgres, apenas una sentencia falla dentro de una transacción, esa transacción entera queda abortada — cualquier otra sentencia que intentes ahí, aunque sea válida, va a fallar hasta que hagas ROLLBACK." data-ko="No es un error de sintaxis, ni un bloqueo permanente de la tabla, ni una limitación de PGlite con los SELECT: el motivo real es que una sentencia fallida deja abortada toda la transacción hasta el ROLLBACK." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En la simulación de la sección 3, el Cajero 1 y el Cajero 2 calcularon el mismo saldo final (Bs 20) para la cuenta de Ana. ¿Qué reveló exactamente ese resultado?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Que la restricción CHECK impidió que se aplicara el segundo UPDATE.</button>
+<button class="quiz-opt">Que Postgres bloqueó al Cajero 2 hasta que el Cajero 1 confirmara.</button>
+<button class="quiz-opt">Que las dos transacciones terminaron en un deadlock real.</button>
+<button class="quiz-opt" data-correct>Que el segundo retiro sobrescribió el resultado del primero, sin enterarse del cambio.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: los dos retiros de Bs 80 se confirmaron, pero el UPDATE del Cajero 2 pisó por completo el resultado del Cajero 1 sin enterarse de que ya había cambiado — el saldo final quedó como si solo hubiera pasado un retiro. Eso es un lost update." data-ko="Acá no hubo ninguna violación de CHECK (Bs 20 es un valor válido), ningún bloqueo real ni ningún deadlock — sin FOR UPDATE, nada impidió que el Cajero 2 sobrescribiera el resultado del Cajero 1, perdiendo ese primer retiro." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Con dos conexiones reales (no en esta demo de una sola sesión), ¿por qué agregar FOR UPDATE al SELECT inicial evita el lost update de la sección 3?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque hace que el UPDATE se ejecute más rápido que sin el candado.</button>
+<button class="quiz-opt">Porque convierte automáticamente la transacción a nivel Serializable.</button>
+<button class="quiz-opt" data-correct>Porque bloquea la fila leída, obligando a la otra transacción a esperar y leer el valor ya actualizado.</button>
+<button class="quiz-opt">Porque impide que cualquier otra transacción lea esa fila, incluso sin escribir nada.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: FOR UPDATE bloquea la fila para escritura. La segunda transacción puede seguir leyendo, pero si intenta modificar la misma fila queda esperando hasta el COMMIT de la primera — y ahí sí lee el valor ya actualizado, no el viejo." data-ko="No es una cuestión de velocidad, ni cambia el nivel de aislamiento, ni bloquea la lectura de otras transacciones: FOR UPDATE bloquea la fila para escritura, obligando a la otra transacción a esperar y leer el saldo ya actualizado antes de calcular el suyo." hidden></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada situación observada en este taller según el concepto que ilustra.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El UPDATE violó el CHECK y todas las sentencias siguientes fallaron hasta el ROLLBACK.</span>
+<div class="quiz-classify-btns">
+<button>Lost update</button>
+<button data-correct>Transacción abortada</button>
+<button>FOR UPDATE</button>
+<button>Atomicidad</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Dos transacciones leyeron el mismo saldo, y la segunda sobrescribió el resultado de la primera.</span>
+<div class="quiz-classify-btns">
+<button>FOR UPDATE</button>
+<button>Atomicidad</button>
+<button data-correct>Lost update</button>
+<button>Transacción abortada</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un ROLLBACK deshizo por completo un cambio a mitad de camino, sin dejar ningún rastro.</span>
+<div class="quiz-classify-btns">
+<button>Transacción abortada</button>
+<button>Lost update</button>
+<button>FOR UPDATE</button>
+<button data-correct>Atomicidad</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Bloquear la fila leída para que nadie más la modifique hasta el commit.</span>
+<div class="quiz-classify-btns">
+<button>Atomicidad</button>
+<button>Transacción abortada</button>
+<button data-correct>FOR UPDATE</button>
+<button>Lost update</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="repaso-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Completa según lo que ejecutaste en este taller.</p>
+<p>1. Para abrir una transacción se usa
+<select class="quiz-blank" data-correct="begin">
+<option value="">— elige —</option>
+<option value="begin">BEGIN</option>
+<option value="commit">COMMIT</option>
+</select>.</p>
+<p>2. Para confirmar sus cambios de forma permanente se usa
+<select class="quiz-blank" data-correct="commit">
+<option value="">— elige —</option>
+<option value="begin">BEGIN</option>
+<option value="commit">COMMIT</option>
+</select>.</p>
+<p>3. Para deshacer todo lo hecho desde el BEGIN se usa
+<select class="quiz-blank" data-correct="rollback">
+<option value="">— elige —</option>
+<option value="rollback">ROLLBACK</option>
+<option value="for-update">FOR UPDATE</option>
+</select>.</p>
+<p>4. Para leer una fila y además bloquearla contra escritura de otras transacciones se agrega
+<select class="quiz-blank" data-correct="for-update">
+<option value="">— elige —</option>
+<option value="rollback">ROLLBACK</option>
+<option value="for-update">FOR UPDATE</option>
+</select>
+al SELECT.</p>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="repaso-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada término con lo que hace.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="begin">BEGIN</button>
+<button class="quiz-match-item" data-pair="check">CHECK</button>
+<button class="quiz-match-item" data-pair="forupdate">FOR UPDATE</button>
+<button class="quiz-match-item" data-pair="lostupdate">Lost update</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="begin">Abre una transacción: nada queda confirmado hasta un COMMIT explícito.</button>
+<button class="quiz-match-item" data-pair="check">Restricción que rechaza un cambio y, si falla dentro de una transacción, la aborta entera.</button>
+<button class="quiz-match-item" data-pair="forupdate">Lee una fila y además la bloquea contra escritura hasta que la transacción termine.</button>
+<button class="quiz-match-item" data-pair="lostupdate">Un cambio confirmado que otro UPDATE, con datos viejos, sobrescribe sin darse cuenta.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet del taller</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Forma</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>BEGIN;</code></td><td>Abre una transacción. Nada queda confirmado hasta el COMMIT.</td></tr>
+<tr><td><code>COMMIT;</code></td><td>Confirma todos los cambios de la transacción, de forma permanente.</td></tr>
+<tr><td><code>ROLLBACK;</code></td><td>Deshace todos los cambios hechos desde el BEGIN.</td></tr>
+<tr><td><code>CHECK (columna &gt;= valor)</code></td><td>Restricción que rechaza un cambio inválido y, si falla en plena transacción, la aborta entera.</td></tr>
+<tr><td><code>current transaction is aborted</code></td><td>Aviso de Postgres: una sentencia anterior falló en esta transacción — hace falta ROLLBACK.</td></tr>
+<tr><td><code>SELECT ... FOR UPDATE</code></td><td>Lee una fila y la bloquea contra escritura hasta que la transacción termine.</td></tr>
+<tr><td>Lost update</td><td>Un UPDATE con datos viejos sobrescribe, sin saberlo, un cambio ya confirmado.</td></tr>
+<tr><td>Sesión compartida (de este taller)</td><td>Todos los bloques usan la misma conexión: una transacción sin cerrar afecta a los siguientes.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🔓 Una sola sesión, a propósito</h3><p>A diferencia de una app real (que usa un pool de varias conexiones), este taller corre todo en una única sesión de Postgres — por eso pudiste comprobar en vivo qué pasa cuando una transacción queda abierta o abortada, algo que en producción casi nunca se ve tan de cerca.</p></div>
+<div class="info"><h3>🏦 El lost update pasa todos los días</h3><p>El patrón "leer un valor en el código de la app, calcular el nuevo valor ahí, y recién después escribirlo" es extremadamente común — y es exactamente el que produce un lost update si nadie bloquea la fila entre la lectura y la escritura.</p></div>
+<div class="info"><h3>🧪 Con dos pestañas reales, sí se ve el bloqueo</h3><p>Si esta misma base de datos viviera en un servidor Postgres real (no en la memoria de una pestaña), abrir dos conexiones distintas y repetir el ejercicio de la sección 4 sí mostraría a la segunda conexión quedando literalmente esperando el candado de la primera — la limitación de hoy es solo de esta demo en memoria, no de PostgreSQL.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller: Transacciones en Vivo — PostgreSQL Real en tu Navegador</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* =======================================================================
+   PGlite: PostgreSQL real compilado a WebAssembly, corriendo en el navegador.
+   Mismo patrón de carga perezosa que Pyodide en las guías de POO.
+   ======================================================================= */
+const PGLITE_CDN = "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.5.4/dist/index.js";
+let pgliteReadyPromise = null;
+
+function cargarPGlite(){
+  if (!pgliteReadyPromise) {
+    pgliteReadyPromise = (async () => {
+      const { PGlite } = await import(PGLITE_CDN);
+      return new PGlite();
+    })();
+  }
+  return pgliteReadyPromise;
+}
+
+function reiniciarPGlite(){
+  pgliteReadyPromise = null;
+}
+
+async function ejecutarSQL(codigo){
+  try {
+    const db = await cargarPGlite();
+    const resultados = await db.exec(codigo);
+    return { resultados, error: null };
+  } catch (e) {
+    return { resultados: null, error: (e && e.message) ? e.message : String(e) };
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* ===== Toast de aviso al bloquear copiar/pegar en los editores ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  if (!clipboardToast) return;
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
+function formatearValor(v){
+  if (v === null || v === undefined) return "<em>NULL</em>";
+  return escapeHtml(v);
+}
+
+function renderizarResultados(resultados){
+  if (!resultados || !resultados.length) {
+    return '<p class="sql-status">✅ Ejecutado. No se generó ningún resultado.</p>';
+  }
+  return resultados.map(r => {
+    const columnas = (r.fields || []).map(f => f.name);
+    if (columnas.length) {
+      let html = '<table class="sql-result-table"><thead><tr>' +
+        columnas.map(c => `<th scope="col">${escapeHtml(c)}</th>`).join("") +
+        "</tr></thead><tbody>";
+      if (!r.rows || !r.rows.length) {
+        html += `<tr><td colspan="${columnas.length}"><em>(0 filas)</em></td></tr>`;
+      } else {
+        r.rows.forEach(fila => {
+          html += "<tr>" + columnas.map(c => `<td>${formatearValor(fila[c])}</td>`).join("") + "</tr>";
+        });
+      }
+      html += "</tbody></table>";
+      return html;
+    }
+    const n = typeof r.affectedRows === "number" ? r.affectedRows : null;
+    const msg = n !== null
+      ? `✅ Sentencia ejecutada (${n} fila${n === 1 ? "" : "s"} afectada${n === 1 ? "" : "s"}).`
+      : "✅ Sentencia ejecutada correctamente.";
+    return `<p class="sql-status">${msg}</p>`;
+  }).join("");
+}
+
+function conectarSqlLab(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  /* En este taller el código se escribe, no se copia ni se pega: bloqueamos
+     copiar/cortar/pegar/arrastrar y avisamos brevemente por qué. */
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En este taller el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  ["copy", "cut", "paste", "drop"].forEach(evt => {
+    textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); });
+  });
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart;
+      const fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (teclaCtrl && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      avisarBloqueo();
+    }
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe alguna sentencia SQL antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando PostgreSQL real (WebAssembly)… la primera vez puede tardar varios segundos.";
+    runBtn.disabled = true;
+    try {
+      const { resultados, error } = await ejecutarSQL(codigo);
+      if (error) {
+        outputBody.textContent = "❌ Error de PostgreSQL: " + error;
+        output.classList.add("error");
+      } else {
+        outputBody.innerHTML = renderizarResultados(resultados);
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el motor de PostgreSQL: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+document.querySelectorAll(".editor-panel").forEach(conectarSqlLab);
+
+/* ===== Botón "Reiniciar base de datos" ===== */
+const resetBtn = document.getElementById("resetDbBtn");
+const dbEstado = document.getElementById("dbEstado");
+resetBtn.addEventListener("click", () => {
+  reiniciarPGlite();
+  document.querySelectorAll(".editor-panel .output").forEach(o => { o.hidden = true; });
+  dbEstado.textContent = "🔄 Base de datos reiniciada — todo lo creado antes se perdió. Vuelve a ejecutar 'Prepara tu base de datos'.";
+});
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=...
+     en la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedida directo, como siempre, no dispara nada nuevo. No toca el
+     motor de quizzes de arriba (repaso) ni la parte de PGlite/editores: se
+     engancha a marcarResuelto() y actualizarProgreso(), que ya existen
+     (ver DEPLOY-GUIAS-SNIPPET.md en el repo de atenza para el detalle de
+     cada endpoint). Los ejercicios sueltos con editor SQL no reportan nada
+     acá — solo cuentan las preguntas de la sección "Repaso" (data-quiz-id),
+     igual que en taller-funciones-ventana-indices.html. Copiado de ese
+     bloque ya probado. Esta guía todavía no está vinculada como Clase en
+     el panel de ATENZA — falta ese paso aparte. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  var params = new URLSearchParams(location.search);
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
