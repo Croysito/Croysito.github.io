@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller de Herramientas de Modelado: Tutorial de Insight Maker | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // dinamica-sistemas.html/eps-retroalimentacion.html/jerarquia-organizacional.html,
+  // con el parche de paramsAtenza() que también busca dentro de location.hash
+  // (el link real de ATENZA a veces llega como "...html#seccion?atenza_token=...",
+  // con el "?" después del "#"). El progreso de esta guía vive en
+  // localStorage por navegador, no por intento; si el guia_intento de la
+  // URL cambió, se limpia el progreso previo ANTES de que el motor de
+  // quizzes lo lea (por eso corre acá, en el <head>, antes que el resto
+  // de la página).
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  // Debe coincidir con QUIZ_PREFIX del motor de quizzes, más abajo en la página.
+  var QUIZ_PREFIX = 'tgs-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* ===== Capturas de pantalla del tutorial (específico de esta guía) ===== */
+.captura{ margin:20px 0; border:1px solid var(--borde); border-radius:12px; overflow:hidden; background:var(--blanco); box-shadow:0 3px 10px rgba(0,0,0,.08); }
+.captura img{ width:100%; display:block; }
+.captura figcaption{ padding:10px 16px; font-size:13px; line-height:1.5; color:var(--texto); opacity:.8; border-top:1px solid var(--borde); background:var(--grisClaro); }
+.paso-badge{ display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:50%; background:var(--verde); color:#fff; font-weight:700; font-family:'JetBrains Mono',monospace; font-size:14px; margin-right:10px; flex-shrink:0; vertical-align:middle; }
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">TGS <span>TM</span></div>
+<p>Taller: tutorial de Insight Maker</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#antes-de-empezar">Antes de empezar</a>
+<a href="#paso1">Paso 1: el lienzo</a>
+<a href="#paso2">Paso 2: el stock</a>
+<a href="#paso3">Paso 3: los flujos</a>
+<a href="#paso4">Paso 4: primera simulación</a>
+<a href="#paso5">Paso 5: un slider</a>
+<a href="#paso6">Paso 6: comparar escenarios</a>
+<a href="#reto-final">Reto: tu propia comparación</a>
+<a href="#repaso">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Guía de Aula Invertida · Tutorial paso a paso</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Taller de Herramientas de Modelado: tutorial real de <span>Insight Maker</span></h1>
+<p>Nada de simulación casera esta vez: vas a abrir <strong>Insight Maker</strong>, la herramienta profesional y gratuita, y armar con tus propias manos el mismo modelo de usuarios de una app de la guía anterior — con capturas de pantalla reales, paso a paso, hasta llegar a comparar dos escenarios ("¿qué pasa si...?") en un solo gráfico.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<div class="highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Esta guía es la continuación directa de <a href="dinamica-sistemas.html">Dinámica de Sistemas: Simulación de Stocks y Flujos</a>. Vas a reconstruir el mismo modelo que ya viste ahí — un stock de <strong>usuarios activos</strong>, con un flujo de <strong>referidos</strong> entrando y uno de <strong>bajas</strong> saliendo — pero esta vez en una herramienta profesional de verdad, no en un sandbox armado a mano dentro de la página.</p>
+</div>
+<p class="lead">La sesión de hoy es un laboratorio guiado: vas a crear una cuenta gratuita en <strong>Insight Maker</strong>, armar el diagrama de stock y flujo con sus herramientas reales, correr tu primera simulación, y aprender el mecanismo real que usa la herramienta para <strong>comparar dos escenarios en el mismo gráfico</strong> — la pregunta "¿qué pasa si..." respondida con números, no con intuición.</p>
+<div class="info-grid">
+<div class="info"><h3>🖱️ Clic a clic</h3><p>Cada paso trae una captura real de la herramienta — vas siguiendo el mismo camino, botón por botón.</p></div>
+<div class="info"><h3>🔁 El mismo modelo de siempre</h3><p>Usuarios activos, referidos, bajas — nada nuevo que aprender de sistemas, solo la herramienta es distinta.</p></div>
+<div class="info"><h3>🔀 El objetivo: comparar</h3><p>El tutorial no termina en "correr una simulación" — termina en tener dos corridas distintas, superpuestas en un mismo gráfico.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="antes-de-empezar">
+<div class="card">
+<h2 class="section-title">Antes de empezar</h2>
+<p class="lead">Insight Maker es 100% gratuito y corre en el navegador — no hay que instalar nada ni pagar nada. Si preferís una alternativa de escritorio, existe también <a href="https://vensim.com/vensim-personal-learning-edition/" target="_blank" rel="noopener">Vensim PLE</a>, la versión gratuita para estudiantes de otro software profesional del mismo tipo — pero este tutorial sigue Insight Maker paso a paso.</p>
+
+<ol style="margin:0 0 20px 22px;line-height:1.9;">
+<li>Entrá a <a href="https://insightmaker.com" target="_blank" rel="noopener">insightmaker.com</a>.</li>
+<li>Arriba a la derecha, hacé clic en <strong>"Sign Up for a Free Account"</strong> (o "Log In" si ya tenés cuenta). Podés crear la cuenta con Google o con un email y contraseña.</li>
+</ol>
+
+<figure class="captura">
+<img src="img/taller-modelado/01-home.png" alt="Página de inicio de insightmaker.com, con los botones Sign Up for a Free Account y Log In arriba a la derecha" loading="lazy">
+<figcaption>La página de inicio de Insight Maker.</figcaption>
+</figure>
+
+<figure class="captura">
+<img src="img/taller-modelado/02-login.png" alt="Formulario de inicio de sesión de Insight Maker, con la opción Log in with Google o email y contraseña" loading="lazy">
+<figcaption>El formulario de inicio de sesión (o registro, si es tu primera vez).</figcaption>
+</figure>
+
+<p>Una vez adentro, vas a ver tu panel — todavía vacío la primera vez — con un botón para crear tu primer modelo.</p>
+
+<figure class="captura">
+<img src="img/taller-modelado/03-panel-nuevo-insight.png" alt="Panel de Insight Maker ya con la sesión iniciada, mostrando el mensaje 'You don't have any insights yet' y los botones Create New Insight / Create Your First Insight" loading="lazy">
+<figcaption>Ya logueado: hacé clic en "Create New Insight" (o "Create Your First Insight").</figcaption>
+</figure>
+</div>
+</section>
+
+<section class="container" id="paso1">
+<div class="card">
+<h2 class="section-title"><span class="paso-badge">1</span>El lienzo y las herramientas</h2>
+<p class="lead">Al crear un modelo nuevo, Insight Maker abre un editor con un <strong>diagrama de ejemplo</strong> ya armado (un modelo simple de adopción de un producto) — es solo para que veas la pinta de las cosas, no lo vas a usar.</p>
+
+<figure class="captura">
+<img src="img/taller-modelado/04-editor-demo.png" alt="Editor de Insight Maker recién abierto, mostrando el modelo de ejemplo 'Product Adoption' y la barra de herramientas superior con los botones PRIMITIVE, FLOWS/TRANSITIONS, LINKS, SETTINGS, SAVE y SIMULATE" loading="lazy">
+<figcaption>El editor recién abierto, con el modelo de ejemplo y la barra de herramientas de arriba.</figcaption>
+</figure>
+
+<p>Fijate en la barra de arriba — son las herramientas que vas a usar todo el tutorial:</p>
+<div class="info-grid">
+<div class="info"><h3>➕ PRIMITIVE</h3><p>Agrega un elemento nuevo al lienzo: un Stock, una Variable, etc.</p></div>
+<div class="info"><h3>🔀 FLOWS/TRANSITIONS y LINKS</h3><p>Herramientas para dibujar flujos (entre stocks) y links (conexiones causales) entre elementos.</p></div>
+<div class="info"><h3>▶️ SIMULATE</h3><p>Corre el modelo en el tiempo y muestra los resultados en un gráfico.</p></div>
+</div>
+
+<p>Borrá el modelo de ejemplo para empezar de cero: hacé clic en el botón amarillo <strong>"Click Me to Clear This Demo Canvas"</strong>.</p>
+
+<figure class="captura">
+<img src="img/taller-modelado/05-lienzo-vacio.png" alt="Lienzo de Insight Maker completamente vacío, después de borrar el modelo de ejemplo" loading="lazy">
+<figcaption>Lienzo en blanco, listo para empezar.</figcaption>
+</figure>
+</div>
+</section>
+
+<section class="container" id="paso2">
+<div class="card">
+<h2 class="section-title"><span class="paso-badge">2</span>El stock: Usuarios Activos</h2>
+<p class="lead">Hacé clic en <strong>"+ PRIMITIVE"</strong> — se despliega un menú con la sección "System Dynamics": <strong>Add Stock</strong>, <strong>Add Variable</strong>, <strong>Add Converter</strong>. Elegí <strong>Add Stock</strong>.</p>
+
+<figure class="captura">
+<img src="img/taller-modelado/06-menu-primitive.png" alt="Menú desplegado del botón + PRIMITIVE, con la sección System Dynamics mostrando Add Stock, Add Variable y Add Converter" loading="lazy">
+<figcaption>El menú de "+ PRIMITIVE" con las opciones de System Dynamics.</figcaption>
+</figure>
+
+<p>Aparece un rectángulo azul en el lienzo, con el nombre "New Stock" por defecto.</p>
+
+<figure class="captura">
+<img src="img/taller-modelado/07-stock-nuevo.png" alt="Un rectángulo azul llamado 'New Stock' recién agregado al lienzo" loading="lazy">
+<figcaption>El stock recién creado, todavía sin configurar.</figcaption>
+</figure>
+
+<p>Hacé clic en el stock para seleccionarlo: se abre un panel a la derecha. Cambiá el nombre a <strong>"Usuarios Activos"</strong> (escribiendo directo sobre el texto del rectángulo, o en el panel) y poné <strong>500</strong> en "Initial Value".</p>
+
+<figure class="captura">
+<img src="img/taller-modelado/08-stock-configurado.png" alt="Panel de configuración del stock, ya renombrado a 'Usuarios Activos', con Initial Value = 500" loading="lazy">
+<figcaption>El stock configurado: "Usuarios Activos", valor inicial 500.</figcaption>
+</figure>
+
+<div class="quiz quiz-mc" data-quiz-id="paso2-mc1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En este modelo, ¿qué representa el rectángulo "Usuarios Activos" que acabás de crear?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un Flujo: la tasa a la que cambia una cantidad, por unidad de tiempo.</button>
+<button class="quiz-opt">Una Variable: un valor fijo que no cambia durante la simulación.</button>
+<button class="quiz-opt" data-correct>Un Stock: una cantidad acumulada que solo cambia a través de sus flujos.</button>
+<button class="quiz-opt">Un Converter: una fórmula auxiliar que no guarda ningún valor propio.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: elegiste 'Add Stock' en el menú de System Dynamics — el mismo concepto de stock que ya viste en la guía anterior, ahora como un primitivo real de Insight Maker." data-ko="Lo creaste con 'Add Stock' en el menú de System Dynamics: es un Stock, la misma idea de cantidad acumulada que ya viste en la guía anterior, ahora representada como un primitivo de Insight Maker." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="paso3">
+<div class="card">
+<h2 class="section-title"><span class="paso-badge">3</span>Los dos flujos: Referidos y Bajas</h2>
+<p class="lead">Un stock solo no hace nada — necesita flujos que lo alimenten o lo vacíen. Con la herramienta <strong>"FLOWS/TRANSITIONS"</strong> activada, hacé clic afuera del stock y arrastrá una flecha hacia adentro de "Usuarios Activos": Insight Maker agrega automáticamente una <strong>nube</strong> como origen del flujo. Nombralo <strong>"Referidos"</strong> y, en "Flow Rate", escribí:</p>
+
+<div class="code">
+<div class="code-header"><span>Flow Rate — Referidos</span></div>
+<pre>[Usuarios Activos]*0.08</pre>
+</div>
+
+<figure class="captura">
+<img src="img/taller-modelado/09-flujo-referidos.png" alt="Flujo 'Referidos' dibujado desde una nube hacia el stock 'Usuarios Activos', con el panel de la derecha mostrando Flow Rate = [Usuarios Activos]*0.08" loading="lazy">
+<figcaption>El flujo "Referidos", entrando al stock desde una nube.</figcaption>
+</figure>
+
+<p>Repetí el mismo mecanismo, pero ahora arrastrando <strong>desde</strong> el stock <strong>hacia afuera</strong> (aparece otra nube, del lado de salida). Nombralo <strong>"Bajas"</strong>, con:</p>
+
+<div class="code">
+<div class="code-header"><span>Flow Rate — Bajas</span></div>
+<pre>[Usuarios Activos]*0.04</pre>
+</div>
+
+<figure class="captura">
+<img src="img/taller-modelado/10-flujo-bajas.png" alt="Diagrama completo: nube, flujo Referidos, stock Usuarios Activos, flujo Bajas, nube — con el panel de la derecha mostrando Flow Rate = [Usuarios Activos]*0.04 para Bajas" loading="lazy">
+<figcaption>El diagrama completo: nube → Referidos → Usuarios Activos → Bajas → nube.</figcaption>
+</figure>
+
+<div class="highlight">
+<strong>¿Qué son esas nubes?</strong>
+<p>No son ningún stock del modelo — son el símbolo estándar de Dinámica de Sistemas para una <strong>fuente o un sumidero infinitos</strong>: de donde "vienen" los referidos y hacia donde "van" los que se dan de baja, sin que a este modelo le importe de dónde exactamente. Es la misma idea de "afuera del sistema" que ya viste con el concepto de entorno.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="paso3-mc1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Las nubes en los extremos del diagrama no son ningún stock del modelo. ¿Qué representan?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un error del editor — hay que borrarlas para que la simulación funcione.</button>
+<button class="quiz-opt" data-correct>Una fuente y un sumidero infinitos, fuera del alcance del modelo.</button>
+<button class="quiz-opt">Dos stocks adicionales, con capacidad ilimitada de usuarios.</button>
+<button class="quiz-opt">Una variable auxiliar que representa el mercado total posible.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: las nubes son el símbolo estándar de Dinámica de Sistemas para una fuente o un sumidero infinitos — de donde entran o hacia donde salen las unidades sin que el modelo necesite modelar ese 'afuera' con más detalle." data-ko="No son ni un error ni un stock: son el símbolo estándar de una fuente/sumidero infinito, el 'afuera' del modelo del que entran o hacia el que salen las unidades, sin necesidad de modelarlo con más detalle." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="paso4">
+<div class="card">
+<h2 class="section-title"><span class="paso-badge">4</span>Primera simulación</h2>
+<p class="lead">Con el diagrama completo, hacé clic en <strong>"SIMULATE"</strong> (arriba a la derecha). Se abre una ventana de resultados con el gráfico de "Usuarios Activos" a lo largo del tiempo.</p>
+
+<figure class="captura">
+<img src="img/taller-modelado/11-primera-simulacion.png" alt="Ventana de Simulation Results mostrando el gráfico de Usuarios Activos creciendo de 500 a aproximadamente 1100 en 20 años" loading="lazy">
+<figcaption>Tu primera simulación: de 500 a ~1.100 usuarios en 20 años — el mismo resultado que viste en el sandbox de la guía anterior.</figcaption>
+</figure>
+
+<div class="highlight">
+<strong>El eje de tiempo por defecto es en años</strong>
+<p>Insight Maker corre, por defecto, una simulación de 20 unidades de tiempo llamadas "Years". Para este tutorial no hace falta cambiar nada — pero si más adelante querés ajustar cuánto dura la simulación o qué unidad de tiempo usa, esas opciones están en el botón <strong>"SETTINGS"</strong> de la barra de arriba.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="paso5">
+<div class="card">
+<h2 class="section-title"><span class="paso-badge">5</span>Un valor fijo se vuelve un slider</h2>
+<p class="lead">Ahora mismo, el 0.08 de la tasa de referidos está escrito directo adentro de la fórmula del flujo — para compararlo contra otro valor tendrías que editar esa fórmula a mano cada vez. La forma correcta es sacarlo a una <strong>Variable</strong> aparte, y convertir esa Variable en un slider.</p>
+
+<ol style="margin:0 0 20px 22px;line-height:1.9;">
+<li>"+ PRIMITIVE" → <strong>Add Variable</strong>. Nombrala <strong>"Tasa de Referidos"</strong>, con Value = <strong>0.08</strong>.</li>
+<li>Con la herramienta <strong>"LINKS"</strong> activada, hacé clic en la Variable y arrastrá hasta el flujo "Referidos" — aparece una flecha punteada conectando ambos.</li>
+<li>Editá la fórmula del flujo "Referidos": reemplazá <code>[Usuarios Activos]*0.08</code> por <code>[Usuarios Activos]*[Tasa de Referidos]</code>.</li>
+<li>Seleccioná la Variable de nuevo y, en su panel, desplegá <strong>"Interface (optional)"</strong>. Activá <strong>"Show value slider"</strong>.</li>
+</ol>
+
+<figure class="captura">
+<img src="img/taller-modelado/12-variable-slider.png" alt="Panel de configuración de la Variable, con la sección Interface (optional) desplegada, el interruptor Show value slider activado, y los campos Min=0, Max=100" loading="lazy">
+<figcaption>La sección "Interface (optional)" desplegada, con el slider ya activado.</figcaption>
+</figure>
+
+<div class="highlight">
+<strong>Ajustá el rango del slider</strong>
+<p>Por defecto, Min queda en 0 y Max en 100 — un rango enorme para un valor como 0.08, que hace el slider poco preciso. Te conviene achicar <strong>Max a algo como 0.3</strong> y poner <strong>Step en 0.01</strong>, para poder moverlo en pasos chicos y precisos.</p>
+</div>
+
+<p>Hacé clic en un espacio vacío del lienzo para deseleccionar la Variable. El panel de la derecha cambia: ahora muestra el slider en vivo, con un botón <strong>"+ SCENARIO"</strong> debajo — esa es la pieza que estábamos buscando.</p>
+
+<figure class="captura">
+<img src="img/taller-modelado/13-slider-y-escenario.png" alt="Panel derecho de Insight Maker mostrando el slider 'Tasa de referidos' en 0.08 y, debajo, el botón + SCENARIO" loading="lazy">
+<figcaption>El slider en vivo, con el botón "+ SCENARIO" — el mecanismo para guardar y comparar corridas.</figcaption>
+</figure>
+
+<div class="quiz quiz-mc" data-quiz-id="paso5-mc1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Antes tenías <code>[Usuarios Activos]*0.08</code> escrito directo en la fórmula del flujo. ¿Por qué convino sacar el 0.08 a una Variable aparte?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque Insight Maker no permite escribir números directamente en una fórmula de flujo.</button>
+<button class="quiz-opt">Para que la simulación corra más rápido, usando menos cálculos en cada paso.</button>
+<button class="quiz-opt">Porque un flujo solo puede tener una nube como origen, nunca un número fijo.</button>
+<button class="quiz-opt" data-correct>Para poder moverlo con un slider y guardarlo como escenario, sin tocar la fórmula.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: Insight Maker sí permite números fijos en una fórmula — el problema era otro. Sacar el valor a una Variable con slider es lo que permite moverlo en vivo y guardar cada posición como un escenario distinto, sin editar la fórmula del flujo cada vez." data-ko="Insight Maker sí acepta números fijos en una fórmula, y la velocidad no cambia. La razón real es poder mover el valor con un slider y guardarlo como escenario, sin tener que editar la fórmula del flujo cada vez que querés probar un valor distinto." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="paso6">
+<div class="card">
+<h2 class="section-title"><span class="paso-badge">6</span>Comparar dos escenarios</h2>
+<p class="lead">Con el slider y el botón "+ SCENARIO" ya armados, este es el mecanismo completo para comparar dos corridas:</p>
+
+<ol style="margin:0 0 20px 22px;line-height:1.9;">
+<li>Con el slider en <strong>0.08</strong>, hacé clic en <strong>"+ SCENARIO"</strong> y nombralo <strong>"Sin Campaña"</strong>.</li>
+<li>Subí el slider a <strong>0.15</strong> y hacé clic en <strong>"+ SCENARIO"</strong> de nuevo — nombralo <strong>"Con Campaña"</strong>.</li>
+<li>Volvé a poner el slider en <strong>0.08</strong> y tocá <strong>"SIMULATE"</strong> — se abre una ventana de resultados.</li>
+<li><strong>Sin cerrar esa ventana</strong>, subí el slider a <strong>0.15</strong> y tocá <strong>"SIMULATE"</strong> otra vez — se abre una segunda ventana. Insight Maker necesita las dos simulaciones abiertas <strong>al mismo tiempo</strong> para poder compararlas.</li>
+</ol>
+
+<figure class="captura">
+<img src="img/taller-modelado/14-primera-corrida.png" alt="Ventana de Simulation Results con el panel Live Explore a la derecha mostrando 'Selected Scenario: Sin Campaña' y el slider de Tasa de referidos" loading="lazy">
+<figcaption>Una de las dos corridas ya simulada, con el escenario seleccionado en el panel "Live Explore".</figcaption>
+</figure>
+
+<p>Con las dos ventanas de resultados abiertas, andá a <strong>EDIT</strong> (arriba a la derecha, al lado del ícono de paleta) y elegí <strong>"Compare Results..."</strong>.</p>
+
+<figure class="captura">
+<img src="img/taller-modelado/15-menu-compare-results.png" alt="Menú desplegado del botón EDIT, con las opciones Sketch, Identify Loops, Compare Results, Sensitivity Testing, Optimization and Goal Seek, y Macros and Globals" loading="lazy">
+<figcaption>El menú "EDIT", con "Compare Results..." — la herramienta que superpone dos simulaciones ya corridas.</figcaption>
+</figure>
+
+<p>Se abre una ventana <strong>"Simulation Results Comparison"</strong>, con una pestaña por cada primitivo — elegí <strong>"USUARIOS ACTIVOS CHART"</strong> para ver las dos curvas juntas:</p>
+
+<figure class="captura">
+<img src="img/taller-modelado/16-comparacion-usuarios-activos.png" alt="Gráfico de comparación mostrando dos curvas de Usuarios Activos: una azul que llega a aproximadamente 4050 usuarios y otra verde que llega a aproximadamente 1110 usuarios, ambas empezando en 500" loading="lazy">
+<figcaption>Las dos corridas superpuestas: ~4.05k usuarios (0.15) contra ~1.10k (0.08), ambas arrancando en 500.</figcaption>
+</figure>
+
+<div class="highlight">
+<strong>La leyenda no dice el nombre del escenario</strong>
+<p>Vas a notar que la leyenda del gráfico dice "Simulation Results" dos veces, sin aclarar cuál es "Sin Campaña" y cuál "Con Campaña". Andate anotando vos mismo el orden en que corriste cada una (o abrí la pestaña "TABLE" al lado de "CHART", para ver los valores exactos de cada corrida) — ninguna herramienta reemplaza del todo llevar tu propio registro.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="paso6-mc1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">En el gráfico final, la curva de 0.15 termina en ~4.05k usuarios y la de 0.08 en ~1.10k, ambas arrancando en 500. ¿Qué te dice eso sobre las dos tasas?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Que la diferencia entre ambas se amplifica con el tiempo — no es el doble, es casi cuatro veces más.</button>
+<button class="quiz-opt">Que ambas tasas producen prácticamente el mismo resultado a 20 años.</button>
+<button class="quiz-opt">Que la tasa de 0.08 es la que termina generando más usuarios a largo plazo.</button>
+<button class="quiz-opt">Que el resultado final no depende de la tasa, solo del valor inicial de 500.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: 0.15 no es 'el doble' de 0.08 en el resultado final — es casi cuatro veces más, porque el crecimiento compone semana a semana sobre una base cada vez mayor. Es la misma lección de composición que ya viste en el Laboratorio 1 de esta guía, ahora confirmada con la herramienta profesional." data-ko="Las dos curvas terminan bien distintas (4.05k contra 1.10k), y 0.15 es la tasa mayor, no la menor. La diferencia se amplifica con el tiempo por el mismo efecto de composición que ya viste antes: un crecimiento porcentual se calcula sobre una base cada vez más grande." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="reto-final">
+<div class="card">
+<h2 class="section-title">Reto final — Tu propia comparación</h2>
+<p class="lead">Ahora te toca a vos, sin capturas de guía. Elegí una de las dos opciones y armala en tu propio Insight Maker:</p>
+<div class="info-grid">
+<div class="info"><h3>🏭 El almacén con retraso</h3><p>Reconstruí el modelo del almacén de Andina Distribuciones de la guía anterior (un stock "Inventario", con "Reposición" y "Despacho"), y compará dos proveedores con distinto tiempo de entrega.</p></div>
+<div class="info"><h3>📱 Otra tasa de la app</h3><p>En el mismo modelo de hoy, agregá un slider para la <strong>tasa de bajas</strong> (no solo la de referidos) y comparalos con "Compare Results...".</p></div>
+</div>
+<p>Cuando tengas tus dos escenarios comparados, contá en un par de líneas qué comparaste y qué aprendiste (no se corrige automáticamente — es para que ordenes tu propia conclusión):</p>
+<textarea id="reto-reflexion" class="quiz-open-input" placeholder="Ej.: comparé un proveedor con 2 días de entrega contra uno con 9, y el inventario del segundo oscilaba mucho más, porque..."></textarea>
+<div class="highlight">
+<strong>Guardá tu Insight</strong>
+<p>No te olvides de tocar <strong>"SAVE"</strong> antes de cerrar la pestaña. Con el ícono de compartir 🔗 de la barra de arriba podés generar un link para mostrarle tu modelo a alguien más — útil para cuando llegue el proyecto final.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="repaso">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso del vocabulario y el mecanismo de esta guía. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="repaso-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada término de Insight Maker con su definición.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="stock">Stock</button>
+<button class="quiz-match-item" data-pair="flow">Flow</button>
+<button class="quiz-match-item" data-pair="variable">Variable</button>
+<button class="quiz-match-item" data-pair="scenario">Scenario</button>
+<button class="quiz-match-item" data-pair="compare">Compare Results</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="stock">Cantidad acumulada, medible en un instante; solo cambia a través de sus flujos.</button>
+<button class="quiz-match-item" data-pair="flow">Tasa de entrada o salida de un stock, por unidad de tiempo.</button>
+<button class="quiz-match-item" data-pair="variable">Un valor que podés fijar o mover con un slider, sin acumular nada por sí mismo.</button>
+<button class="quiz-match-item" data-pair="scenario">Una combinación guardada de valores de sliders, para compararla contra otra corrida.</button>
+<button class="quiz-match-item" data-pair="compare">La herramienta que superpone dos simulaciones ya corridas en un mismo gráfico.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-mc1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál es la diferencia entre un Stock y una Variable en Insight Maker?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ninguna: son dos nombres distintos para el mismo tipo de primitivo en Insight Maker.</button>
+<button class="quiz-opt">La Variable solo sirve para conectar dos stocks entre sí, nunca puede ir sola.</button>
+<button class="quiz-opt" data-correct>El Stock acumula un valor con sus flujos; la Variable la controlás vos, por ejemplo con un slider.</button>
+<button class="quiz-opt">El Stock siempre arranca en cero; la Variable siempre arranca en un valor fijo.</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: el Stock es la cantidad que se acumula con el tiempo (como 'Usuarios Activos'); la Variable es un valor que vos controlás desde afuera (como 'Tasa de Referidos'), sin acumular nada por sí misma." data-ko="No son lo mismo, ni la diferencia es sobre el valor inicial. El Stock acumula un valor que cambia con sus flujos; la Variable es un valor que controlás vos directamente, como hiciste con el slider de la Tasa de Referidos." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-mc2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Para comparar dos escenarios con "Compare Results...", hace falta correr dos simulaciones sin cerrar la primera antes de correr la segunda.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+
+</div>
+<p class="quiz-fb" data-ok="Correcto: es exactamente lo que hiciste en el Paso 6 — simulaste con 0.08, dejaste esa ventana abierta, y simulaste de nuevo con 0.15. 'Compare Results...' necesita las dos simulaciones corriendo al mismo tiempo para poder superponerlas." data-ko="Es verdadero — lo hiciste en el Paso 6: simulaste con 0.08 sin cerrar esa ventana, y simulaste de nuevo con 0.15. Compare Results necesita ambas simulaciones abiertas a la vez para poder superponerlas en un gráfico." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Insight Maker</th><th scope="col">Qué es</th></tr></thead>
+<tbody>
+<tr><td>Stock</td><td>Rectángulo — cantidad acumulada, solo cambia a través de sus flujos.</td></tr>
+<tr><td>Flow</td><td>Tubería con válvula — tasa de entrada o salida de un stock.</td></tr>
+<tr><td>Variable</td><td>Óvalo — un valor que fijás vos, candidato a convertirse en slider.</td></tr>
+<tr><td>Cloud (nube)</td><td>Fuente o sumidero infinito, fuera del alcance del modelo.</td></tr>
+<tr><td>Link</td><td>Flecha punteada — conecta una Variable con la fórmula que la usa.</td></tr>
+<tr><td>Interface / slider</td><td>Convierte una Variable en un control que se mueve en vivo.</td></tr>
+<tr><td>Scenario</td><td>Una combinación de valores de sliders, guardada con un nombre.</td></tr>
+<tr><td>Compare Results</td><td>Superpone dos o más simulaciones ya corridas, primitivo por primitivo.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🛢️ Shell y la crisis del petróleo de 1973</h3><p>En los años 70, la petrolera Shell fue de las primeras grandes empresas en usar planificación de escenarios en serio: el equipo de Pierre Wack armó varios "qué pasa si..." sobre el precio del petróleo. Cuando la crisis de 1973 golpeó a toda la industria, Shell ya había "corrido" ese escenario mentalmente y reaccionó mucho más rápido que sus competidores.</p></div>
+<div class="info"><h3>🌍 El modelo que inspiró "Los límites del crecimiento"</h3><p>El informe "Los límites del crecimiento" (1972) se construyó simulando un modelo mundial (World3) con un lenguaje ancestro de herramientas como Vensim, creado por el mismo Jay Forrester que fundó la Dinámica de Sistemas.</p></div>
+<div class="info"><h3>⚡ "Compare Results" tiene un hermano mayor</h3><p>En el mismo menú "EDIT" donde encontraste "Compare Results...", está "Sensitivity Testing..." — para cuando no alcanza con comparar 2 escenarios a mano, y querés que la herramienta corra automáticamente cientos de variaciones de un parámetro y te muestre el rango completo de resultados posibles.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller de Herramientas de Modelado: Tutorial de Insight Maker</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedida directo, como siempre, no dispara nada nuevo. No toca el
+     motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen (ver DEPLOY-GUIAS-SNIPPET.md en
+     el repo de atenza para el detalle de cada endpoint). -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  // El link real que arma ATENZA a veces llega como
+  // "...html#seccion?atenza_token=...", con el "?" después del "#" — ahí
+  // location.search por sí solo da vacío, por eso se busca también
+  // dentro de location.hash (mismo parche que el script de limpieza del
+  // <head>, autocontenido acá para no tocar el motor de quizzes).
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  // ── Progreso limpio por intento (redundante con el script del <head>,
+  // pero si por lo que sea ese no corrió a tiempo, esto es la segunda
+  // red): QUIZ_PREFIX guarda el progreso por PÁGINA, sin saber nada de
+  // "intentos" de ATENZA. Si guia_intento cambió, se limpia todo antes
+  // de que el estudiante toque nada.
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  // ── Aviso flotante — la única señal visible de "ya terminaste, podés
+  // cerrar la pestaña" o "no se pudo enviar, tocá para reintentar".
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  // ── Pantalla completa: se pide en un click real del usuario, no solo.
+  // Estilos en línea porque esta página (sidebar+scroll) no tiene una
+  // clase para esto — fixed y con z-index por encima del sidebar/menú.
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  // ── Reportar cada pregunta resuelta — engancha marcarResuelto(), que
+  // ya usan los tipos de actividad de esta guía (mc/match) sin tocar
+  // ninguno de sus call-sites.
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+      referencia: id,
+      correcta: estado === 'ok',
+    }).catch(function () {});
+  };
+
+  // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder foco.
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ── Finalizar al completar el 100% — cuenta CONTESTADAS (ok o ko,
+  // cualquier valor guardado), no solo correctas: con un solo intento
+  // por actividad, exigir 100% de correctas dejaría la guía "en curso"
+  // para siempre apenas alguien se equivoque una vez.
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
