@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagrama de Contexto y DFD Nivel 0 | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // eps-retroalimentacion.html/ciclo-vida-software.html, con el parche
+  // de paramsAtenza() que también busca dentro de location.hash.
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  var QUIZ_PREFIX = 'tgs-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">TGS · <span>DFD</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="contexto-dfd">Diagrama de Contexto y DFD</button>
+<button data-target="relacion-uml">Relación con UML</button>
+<button data-target="niveles-dfd">Del Contexto al Nivel 0</button>
+<button data-target="ejercicios">Actividades de repaso</button>
+<button data-target="evidencia">Evidencia: Contexto + DFD</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🔁 Guía de Aula Invertida</span>
+<h1 class="flow-h1">Diagrama de Contexto <span>y DFD Nivel 0</span></h1>
+<p class="flow-lead">Ya sabés separar un sistema de su entorno y describir sus ciclos internos de control. Ahora falta un lenguaje más preciso para dibujarlo: el Diagrama de Flujo de Datos (DFD), que empieza viendo al sistema entero como una sola caja negra —el Diagrama de Contexto— y después la abre para mostrar sus procesos principales.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Scrollea para empezar — el diagrama del proceso de ventas de un almacén de barrio se arma solo, capa por capa, mientras leés.</p>
+</section>
+
+<section class="flow-section" id="contexto-dfd">
+<div class="flow-grid">
+<div class="flow-beats">
+
+<div class="flow-beat" data-step="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>Ver el sistema desde afuera, antes de abrirlo</h3>
+<p>Hasta ahora modelaste sistemas con cajas de Entrada-Proceso-Salida, jerarquías y bucles de retroalimentación. Para el sistema real de tu proyecto final —una organización, un proceso de negocio, un servicio, con o sin software de por medio— hace falta un lenguaje más preciso para decir exactamente qué entra, qué sale y quién está afuera. Ese lenguaje es el Diagrama de Flujo de Datos (DFD), y empieza con una sola caja.</p>
+<p>Armemos el diagrama en vivo, capa por capa, con el proceso de ventas de un almacén de barrio →</p>
+</div>
+
+<div class="flow-beat" data-step="1">
+<span class="flow-beat-eyebrow">Paso 02 · Frontera</span>
+<h3>La frontera del sistema</h3>
+<p>Todo sistema tiene un límite que separa lo que está adentro (lo que vas a modelar) de lo que está afuera (el entorno). En un DFD, esa frontera se dibuja explícitamente alrededor de una única caja que representa, por ahora, todo el sistema como una sola unidad — sin abrir todavía cómo funciona por dentro.</p>
+</div>
+
+<div class="flow-beat" data-step="2">
+<span class="flow-beat-eyebrow">Paso 03 · Actor externo</span>
+<h3>Primer actor: el Cliente</h3>
+<p>Un <strong>actor externo</strong> (o entidad externa) es cualquier persona, sistema u organización que está fuera de la frontera pero intercambia información con el sistema. El Cliente manda datos de pedido hacia adentro — sin ser parte del sistema que estás modelando.</p>
+</div>
+
+<div class="flow-beat" data-step="3">
+<span class="flow-beat-eyebrow">Paso 04 · Actor externo</span>
+<h3>Segundo actor: el Administrador</h3>
+<p>El Administrador (el dueño o encargado del almacén) también está afuera de la frontera, aunque trabaje todos los días con el sistema: actualiza precios y consulta reportes de ventas. Estar "afuera" no significa estar lejos — significa que no es una parte interna del sistema, sino alguien que lo usa desde su entorno.</p>
+</div>
+
+<div class="flow-beat" data-step="4">
+<span class="flow-beat-eyebrow">Paso 05 · Actor externo</span>
+<h3>Tercer actor: otra organización</h3>
+<p>No todos los actores externos son personas. El Proveedor es otra organización, con su propia frontera, que intercambia información con la tuya: le mandás una solicitud de reposición de mercadería y te devuelve la confirmación de la entrega — todo esto puede pasar por teléfono o papel, sin una sola línea de código de por medio, y sigue siendo perfectamente modelable en un DFD. Con estos tres actores y sus flujos, ya tenés un <strong>Diagrama de Contexto</strong> completo.</p>
+</div>
+
+<div class="flow-beat" data-step="5">
+<span class="flow-beat-eyebrow">Paso 06 · Relación con UML</span>
+<h3>Lo mismo que ya conocías, con otro nombre</h3>
+<p>Si ya viste diagramas UML, esto te va a sonar conocido: un actor externo del DFD es prácticamente lo mismo que un actor en un diagrama de casos de uso, y la frontera del sistema es el mismo rectángulo que UML dibuja alrededor de los casos de uso. La TGS y UML llegan al mismo concepto —qué es el sistema y qué es su entorno— desde dos vocabularios distintos.</p>
+</div>
+
+<div class="flow-beat" data-step="6">
+<span class="flow-beat-eyebrow">Paso 07 · Abrir el sistema</span>
+<h3>Abrimos la caja: DFD Nivel 0</h3>
+<p>El Diagrama de Contexto trata al sistema como una sola caja opaca — una caja negra. El siguiente paso es abrirla y mostrar sus procesos principales por dentro: <strong>1 Registrar Pedido</strong>, <strong>2 Reponer Stock</strong> y <strong>3 Generar Reporte</strong>. Cada uno es un proceso más chico, numerado, que transforma parte de los datos que entran — y no tiene por qué estar automatizado: "Reponer Stock" puede ser, en la práctica, el encargado llamando por teléfono al Proveedor.</p>
+</div>
+
+<div class="flow-beat" data-step="7">
+<span class="flow-beat-eyebrow">Paso 08 · Flujos internos</span>
+<h3>Los procesos no viven aislados</h3>
+<p>Adentro de la frontera, los procesos se conectan entre sí y con un <strong>almacén de datos</strong> —acá, <strong>D1: Pedidos</strong>— donde queda guardado lo que Registrar Pedido creó, para que Reponer Stock y Generar Reporte lo lean después. Ese almacén tampoco tiene que ser una base de datos: puede ser un cuaderno de pedidos o una planilla de cálculo — lo que importa es el rol que cumple, no la tecnología. Los actores externos siguen mandando y recibiendo los mismos flujos que en el Diagrama de Contexto; lo único que cambió es que ahora ves el mecanismo interno.</p>
+</div>
+
+</div>
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="ctxPanel">
+<div class="flow-panel-head"><span>Diagrama en vivo</span><span class="flow-panel-step" id="ctxPanelStep">Paso 1 / 8</span></div>
+
+<div class="ctx-diagram-wrap">
+<svg viewBox="0 0 340 300" aria-hidden="true">
+
+<rect class="ctx-frontera" id="ctxFrontera" x="110" y="103" width="120" height="84" rx="14" fill="none"/>
+<text class="ctx-frontera-label" id="ctxFronteraLabel" x="234" y="146" text-anchor="middle" font-size="6.5" font-weight="700" transform="rotate(-90 234 146)">FRONTERA DEL SISTEMA</text>
+
+<g class="ctx-box" id="ctxActorCliente">
+<rect x="8" y="15" width="100" height="42" rx="6"/>
+<text x="58" y="33" text-anchor="middle" font-size="9" font-weight="700">CLIENTE</text>
+<text x="58" y="46" text-anchor="middle" font-size="7">entidad externa</text>
+</g>
+
+<g class="ctx-box" id="ctxActorAdmin">
+<rect x="232" y="15" width="100" height="42" rx="6"/>
+<text x="282" y="33" text-anchor="middle" font-size="9" font-weight="700">ADMINISTRADOR</text>
+<text x="282" y="46" text-anchor="middle" font-size="7">entidad externa</text>
+</g>
+
+<g class="ctx-box" id="ctxActorPagos">
+<rect x="122" y="245" width="96" height="40" rx="6"/>
+<text x="170" y="263" text-anchor="middle" font-size="9" font-weight="700">PROVEEDOR</text>
+<text x="170" y="276" text-anchor="middle" font-size="7">entidad externa</text>
+</g>
+
+<g class="ctx-flow" id="ctxFlowCliente">
+<path d="M58,57 L58,98 L145,98 L145,115"/>
+<polygon points="145,115 139,104 151,104"/>
+</g>
+<text class="ctx-flow-label" id="ctxFlowClienteLabel" x="100" y="93" text-anchor="middle">datos del cliente</text>
+
+<g class="ctx-flow" id="ctxFlowAdmin">
+<path d="M282,57 L282,98 L195,98 L195,115"/>
+<polygon points="195,115 189,104 201,104"/>
+</g>
+<text class="ctx-flow-label" id="ctxFlowAdminLabel" x="240" y="93" text-anchor="middle">config. y consultas</text>
+
+<g class="ctx-flow" id="ctxFlowPagosOut">
+<path d="M155,175 L155,245"/>
+<polygon points="155,245 149,234 161,234"/>
+</g>
+<text class="ctx-flow-label" id="ctxFlowPagosOutLabel" x="60" y="209" text-anchor="start">solicitud de reposición</text>
+
+<g class="ctx-flow" id="ctxFlowPagosIn">
+<path d="M185,245 L185,175"/>
+<polygon points="185,175 179,186 191,186"/>
+</g>
+<text class="ctx-flow-label" id="ctxFlowPagosInLabel" x="200" y="222" text-anchor="start">confirmación de entrega</text>
+
+<g class="ctx-box" id="ctxBoxSistema">
+<rect x="122" y="115" width="96" height="60" rx="8"/>
+<text x="170" y="142" text-anchor="middle" font-size="10" font-weight="700">SISTEMA</text>
+<text x="170" y="156" text-anchor="middle" font-size="7">proyecto final</text>
+</g>
+
+<line class="ctx-link" id="ctxLink1" x1="150" y1="136" x2="158" y2="142"/>
+<line class="ctx-link" id="ctxLink2" x1="190" y1="136" x2="182" y2="142"/>
+<line class="ctx-link" id="ctxLink3" x1="170" y1="150" x2="170" y2="155"/>
+
+<g class="ctx-proc" id="ctxProc1">
+<circle cx="140" cy="128" r="12"/>
+<text x="140" y="132" text-anchor="middle" font-size="10">1</text>
+</g>
+<g class="ctx-proc" id="ctxProc3">
+<circle cx="200" cy="128" r="12"/>
+<text x="200" y="132" text-anchor="middle" font-size="10">3</text>
+</g>
+<g class="ctx-proc" id="ctxProc2">
+<circle cx="170" cy="165" r="10"/>
+<text x="170" y="169" text-anchor="middle" font-size="9">2</text>
+</g>
+
+<g class="ctx-store" id="ctxStore">
+<line x1="153" y1="140" x2="187" y2="140"/>
+<line x1="153" y1="150" x2="187" y2="150"/>
+<text x="170" y="148" text-anchor="middle" font-size="7">D1</text>
+</g>
+
+</svg>
+</div>
+
+<div class="ctx-caption" id="ctxCaption">Sin diagrama todavía — el proceso de ventas de un almacén, visto desde afuera.</div>
+
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat" id="relacion-uml">
+<h2>El mismo concepto, otro vocabulario: DFD y UML</h2>
+<p class="lead">Si ya trabajaste con diagramas de casos de uso o de actividades en UML, no estás aprendiendo algo nuevo desde cero — estás viendo los mismos conceptos sistémicos (sistema, entorno, frontera) con otro vocabulario.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Diagrama de Contexto / DFD</th><th scope="col">UML (Casos de Uso / Actividades)</th></tr></thead>
+<tbody>
+<tr><td>Actor externo / entidad externa</td><td>Actor</td></tr>
+<tr><td>Frontera del sistema</td><td>Rectángulo del sistema (límite de los casos de uso)</td></tr>
+<tr><td>Proceso</td><td>Caso de uso (qué hace) o actividad (cómo lo hace, paso a paso)</td></tr>
+<tr><td>Flujo de datos</td><td>Asociación actor–caso de uso, con qué información viaja</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>No son dos técnicas rivales</strong>
+<p>El DFD viene de la TGS aplicada al análisis estructurado de los años 70; UML llegó después, desde el mundo orientado a objetos. Pero ambos resuelven el mismo problema sistémico: distinguir con claridad qué es el sistema, quién está afuera, y qué información cruza esa frontera.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="uml-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En un diagrama de casos de uso UML, un actor "Cliente" está dibujado fuera del rectángulo que contiene los casos de uso del sistema. ¿Qué representa ese rectángulo, en términos de teoría de sistemas?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>La frontera del sistema.</button>
+<button class="quiz-opt">Un actuador de control.</button>
+<button class="quiz-opt">Un proceso interno del sistema.</button>
+<button class="quiz-opt">Un almacén de datos compartido.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el rectángulo que separa los casos de uso (adentro) del actor (afuera) es exactamente la frontera del sistema, el mismo concepto que en un Diagrama de Contexto." data-ko="No es un proceso ni un almacén ni un actuador: ese rectángulo delimita qué está adentro del sistema y qué está afuera — es la frontera del sistema, el mismo concepto que en un Diagrama de Contexto." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="uml-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un caso de uso "Reponer Stock" recibe datos desde un actor "Proveedor". En un DFD, ¿qué sería equivalente al caso de uso?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Una entidad externa del sistema.</button>
+<button class="quiz-opt">La frontera que separa al sistema.</button>
+<button class="quiz-opt" data-correct>Un proceso que transforma datos.</button>
+<button class="quiz-opt">Un flujo de datos con nombre.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un caso de uso describe qué hace el sistema con una entrada — exactamente el rol de un proceso en un DFD." data-ko="El Proveedor ya es la entidad externa, y el rectángulo del sistema es la frontera — ninguno de esos es el caso de uso. Un caso de uso, que describe qué hace el sistema, equivale a un proceso en un DFD." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="niveles-dfd">
+<h2>Del Diagrama de Contexto al DFD Nivel 0</h2>
+<p class="lead">El Diagrama de Contexto es la vista más externa posible: todo el sistema como una sola caja. El siguiente nivel abre esa caja y muestra sus procesos principales, numerados.</p>
+
+<div class="highlight">
+<strong>Ojo con los nombres</strong>
+<p>Distintos libros de texto no siempre coinciden en cómo numerar esto: algunos llaman "Nivel 0" al propio Diagrama de Contexto, y "Nivel 1" a la primera apertura en procesos; otros —como en esta guía— llaman "Diagrama de Contexto" a la caja única y "DFD Nivel 0" a la primera apertura. No te pelees con el número: lo que importa es la idea, siempre en el mismo orden: primero una vista de afuera con una sola caja, después se abre esa caja en sus procesos principales.</p>
+</div>
+
+<div class="highlight">
+<strong>Un DFD no es (solo) de software</strong>
+<p>Nada en esta notación obliga a que el sistema sea una aplicación o que los procesos estén programados. Un "proceso" puede ser una persona armando un pedido a mano; un "almacén de datos" puede ser un cuaderno, una carpeta de papel o una planilla de cálculo, no necesariamente una base de datos. El DFD describe <strong>el sistema</strong> —una organización, un proceso de negocio, un servicio— tenga o no tecnología de por medio. Por eso el proyecto final pide modelar un sistema real (organización, proceso o servicio), no necesariamente un programa.</p>
+</div>
+
+<table class="tabla">
+<thead><tr><th scope="col">Elemento</th><th scope="col">Qué representa</th></tr></thead>
+<tbody>
+<tr><td>Proceso (círculo numerado)</td><td>Una transformación de datos: recibe algo, hace algo con eso, entrega algo distinto.</td></tr>
+<tr><td>Almacén de datos (D1, D2...)</td><td>Un lugar donde los datos quedan guardados entre un proceso y otro — no transforma nada por sí solo.</td></tr>
+<tr><td>Flujo de datos</td><td>La información concreta que viaja: no es "una conexión", es un dato con nombre.</td></tr>
+</tbody>
+</table>
+
+<p class="lead" style="margin-top:26px;">Practiquemos con el proceso de ventas que armamos arriba. Clasifica cada elemento.</p>
+
+<div class="quiz quiz-classify" data-quiz-id="dfd-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Proceso de ventas del almacén: clasifica cada elemento del DFD.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Generar Reporte</span>
+<div class="quiz-classify-btns">
+<button>Entidad externa</button>
+<button data-correct>Proceso</button>
+<button>Almacén de datos</button>
+<button>Flujo de datos</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Proveedor</span>
+<div class="quiz-classify-btns">
+<button>Proceso</button>
+<button>Almacén de datos</button>
+<button>Flujo de datos</button>
+<button data-correct>Entidad externa</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">D1: Pedidos</span>
+<div class="quiz-classify-btns">
+<button data-correct>Almacén de datos</button>
+<button>Flujo de datos</button>
+<button>Proceso</button>
+<button>Entidad externa</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Confirmación de entrega</span>
+<div class="quiz-classify-btns">
+<button>Entidad externa</button>
+<button>Proceso</button>
+<button data-correct>Flujo de datos</button>
+<button>Almacén de datos</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Registrar Pedido</span>
+<div class="quiz-classify-btns">
+<button>Almacén de datos</button>
+<button data-correct>Proceso</button>
+<button>Flujo de datos</button>
+<button>Entidad externa</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cliente</span>
+<div class="quiz-classify-btns">
+<button>Flujo de datos</button>
+<button>Proceso</button>
+<button>Almacén de datos</button>
+<button data-correct>Entidad externa</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="ejercicios">
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál es la diferencia real entre un Diagrama de Contexto y un DFD Nivel 0?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El Contexto no tiene ningún actor externo.</button>
+<button class="quiz-opt">No hay ninguna diferencia real entre ambos.</button>
+<button class="quiz-opt">El Nivel 0 no incluye flujos de datos.</button>
+<button class="quiz-opt" data-correct>El Nivel 0 abre el sistema en varios procesos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el Diagrama de Contexto trata al sistema como una única caja negra; el DFD Nivel 0 abre esa caja y muestra sus procesos internos numerados." data-ko="Ambos tienen actores externos y flujos de datos, así que no es eso. La diferencia real es que el Contexto ve al sistema como una sola caja, mientras que el Nivel 0 ya lo abre en procesos separados." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Un almacén de datos, como D1: Pedidos, transforma la información que pasa por él, igual que un proceso.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un almacén de datos solo guarda información entre procesos, no la transforma. Transformar es exactamente lo que distingue a un proceso." data-ko="Es falso: un almacén de datos solo guarda información para que otros procesos la usen después — no la transforma. La transformación es tarea de los procesos, no de los almacenes." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un profesor pide, en el proyecto integrador, "un actor por fuera de la frontera que reciba una notificación". ¿Qué tipo de elemento del DFD encaja con esa descripción?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un proceso numerado.</button>
+<button class="quiz-opt" data-correct>Una entidad externa.</button>
+<button class="quiz-opt">Un almacén de datos.</button>
+<button class="quiz-opt">Un flujo de datos interno.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: algo que está fuera de la frontera e intercambia información (en este caso, recibe una notificación) es exactamente una entidad externa." data-ko="Un proceso y un almacén están adentro de la frontera, y un flujo de datos no es un 'quién', es la información misma. Lo que está afuera de la frontera intercambiando información es una entidad externa." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué en el proceso de ventas el proceso 2 (Reponer Stock) se conecta con el almacén D1: Pedidos?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Necesita leer datos que Registrar Pedido ya guardó.</button>
+<button class="quiz-opt">Porque D1 es en realidad otra entidad externa.</button>
+<button class="quiz-opt">Porque todos los procesos deben conectarse siempre.</button>
+<button class="quiz-opt">Porque D1 es la frontera del sistema completo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: D1: Pedidos guarda lo que Registrar Pedido creó, y Reponer Stock necesita leer esa información para saber qué reponer." data-ko="D1 no es una entidad externa ni la frontera del sistema, y no todos los procesos se conectan entre sí obligatoriamente. La conexión existe porque Reponer Stock necesita los datos que Registrar Pedido ya guardó en D1." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="repaso-5">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Repasemos el proceso de ventas que armamos en esta guía.</p>
+<p>1. El Cliente, afuera de la frontera, es una
+<select class="quiz-blank" data-correct="entidad-externa">
+<option value="">— elige —</option>
+<option value="entidad-externa">entidad externa</option>
+<option value="proceso">proceso</option>
+<option value="almacen">almacén de datos</option>
+<option value="flujo">flujo de datos</option>
+</select>.</p>
+<p>2. "Registrar Pedido", numerado como 1 dentro de la frontera, es un
+<select class="quiz-blank" data-correct="proceso">
+<option value="">— elige —</option>
+<option value="entidad-externa">entidad externa</option>
+<option value="proceso">proceso</option>
+<option value="almacen">almacén de datos</option>
+<option value="frontera">frontera</option>
+</select>.</p>
+<p>3. "D1: Pedidos" es un
+<select class="quiz-blank" data-correct="almacen">
+<option value="">— elige —</option>
+<option value="proceso">proceso</option>
+<option value="almacen">almacén de datos</option>
+<option value="entidad-externa">entidad externa</option>
+<option value="actor">actor</option>
+</select>.</p>
+<p>4. Ver el sistema entero como una sola caja, antes de abrirla, es el
+<select class="quiz-blank" data-correct="contexto">
+<option value="">— elige —</option>
+<option value="contexto">Diagrama de Contexto</option>
+<option value="nivel0">DFD Nivel 0</option>
+<option value="casodeuso">Caso de uso</option>
+<option value="frontera">Solo la frontera, sin diagrama</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="evidencia">
+<h2>📤 Evidencia de la sesión: Diagrama de Contexto + DFD</h2>
+<p class="lead">Con tu equipo, elabora el Diagrama de Contexto y el DFD Nivel 0 del sistema de tu proyecto final —la organización, proceso o servicio real que ya vienen trabajando desde el rich picture y el modelo E-P-S, tenga o no software de por medio— como segundo avance del proyecto.</p>
+<div class="highlight">
+<strong>Herramienta: Draw.io</strong>
+<p>Arma ambos diagramas en <a href="https://app.diagrams.net" target="_blank" rel="noopener">Draw.io</a> (gratuito, funciona desde el navegador, no necesita instalación).</p>
+</div>
+<p>Como mínimo, tus diagramas deben incluir:</p>
+<ul style="margin:0 0 20px 22px;line-height:1.9;">
+<li><strong>Diagrama de Contexto:</strong> el sistema como una única caja, su frontera marcada, y al menos dos entidades externas con sus flujos de datos rotulados (no flechas sin nombre).</li>
+<li><strong>DFD Nivel 0:</strong> esa misma caja abierta en al menos dos o tres procesos numerados, con al menos un almacén de datos si tu sistema guarda información entre procesos (puede ser una base de datos, pero también una carpeta, un registro en papel o una planilla — lo que use tu sistema real).</li>
+<li>Los flujos que cruzan la frontera en el DFD Nivel 0 deben ser exactamente los mismos que en el Diagrama de Contexto — abrir la caja no puede inventar ni perder conexiones con el entorno.</li>
+</ul>
+<div class="highlight">
+<strong>Entrega</strong>
+<p>Exporta ambos diagramas como imagen (PNG o JPG) desde Draw.io y súbelos a la tarea correspondiente en <strong>Classroom</strong> antes del inicio de la próxima sesión. No se acepta el link editable de Draw.io en lugar de la imagen: sube los archivos directamente.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet">
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Entidad externa</td><td>Persona, sistema u organización afuera de la frontera.</td></tr>
+<tr><td>Frontera del sistema</td><td>Límite que separa el sistema de su entorno.</td></tr>
+<tr><td>Diagrama de Contexto</td><td>El sistema entero como una única caja, sin abrir.</td></tr>
+<tr><td>Proceso</td><td>Círculo numerado que transforma datos.</td></tr>
+<tr><td>DFD Nivel 0</td><td>Esa misma caja, abierta en sus procesos principales.</td></tr>
+<tr><td>Almacén de datos</td><td>Guarda información entre procesos, no la transforma.</td></tr>
+<tr><td>Flujo de datos</td><td>Información concreta y rotulada que viaja por el diagrama.</td></tr>
+<tr><td>Actor (UML)</td><td>Equivalente a una entidad externa en un DFD.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat">
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>⭕ Círculos o rectángulos, según la escuela</h3><p>La notación clásica de Yourdon-DeMarco dibuja los procesos como círculos ("burbujas"), la que usa esta guía; la notación Gane-Sarson, igual de común en la industria, usa rectángulos con esquinas redondeadas para lo mismo.</p></div>
+<div class="info"><h3>🚫 Un DFD nunca dice "cuándo"</h3><p>A propósito, un DFD no muestra orden de ejecución, condiciones ni bucles — solo qué datos se mueven entre qué partes. Para el "cuándo" y el "cómo" paso a paso existen otros diagramas, como los de actividades.</p></div>
+<div class="info"><h3>🪖 El antepasado se llamaba SADT</h3><p>Douglas Ross desarrolló la Structured Analysis and Design Technique (SADT) a fines de los 60, financiada en parte por el Ejército de EE. UU. para especificar sistemas de software complejos — uno de los ancestros directos del DFD.</p></div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía: Diagrama de Contexto y DFD Nivel 0</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Nivel 1: flujo con panel fijo — Diagrama de Contexto que se
+   abre en un DFD Nivel 0, construido en capas. Prosa a la izquierda
+   (.flow-beat) + panel fijo a la derecha (#ctxPanel) que revela
+   frontera, actores externos, flujos, y por último los procesos
+   numerados + almacén de datos, según qué paso cruza el centro del
+   viewport. No es una actividad calificada: no llama a
+   marcarResuelto. ===== */
+(function(){
+  var ctxSteps = document.querySelectorAll('#contexto-dfd .flow-beat');
+  if (!ctxSteps.length) return;
+
+  var CAPTIONS = [
+    'Sin diagrama todavía — el proceso de ventas de un almacén, visto desde afuera.',
+    'FRONTERA: la caja completa representa el sistema, todavía cerrado.',
+    'ACTOR EXTERNO: el Cliente manda datos de pedido hacia el sistema.',
+    'ACTOR EXTERNO: el Administrador configura y consulta reportes.',
+    'ACTOR EXTERNO: el Proveedor intercambia solicitud de reposición y confirmación de entrega.',
+    'Diagrama de Contexto completo — mismo concepto que la frontera de un diagrama de casos de uso en UML.',
+    'DFD NIVEL 0: se abre el sistema en sus procesos principales.',
+    'Los procesos se conectan entre sí y con el almacén de datos D1: Pedidos.'
+  ];
+
+  var ctxCurrentStep = -1;
+
+  function ctxRender(step){
+    if (step === ctxCurrentStep) return;
+    ctxCurrentStep = step;
+
+    document.getElementById('ctxFrontera').classList.toggle('show', step >= 1);
+    document.getElementById('ctxFronteraLabel').classList.toggle('show', step >= 1);
+    document.getElementById('ctxBoxSistema').classList.toggle('show', step >= 1);
+
+    document.getElementById('ctxActorCliente').classList.toggle('show', step >= 2);
+    document.getElementById('ctxFlowCliente').classList.toggle('show', step >= 2);
+    document.getElementById('ctxFlowClienteLabel').classList.toggle('show', step >= 2);
+
+    document.getElementById('ctxActorAdmin').classList.toggle('show', step >= 3);
+    document.getElementById('ctxFlowAdmin').classList.toggle('show', step >= 3);
+    document.getElementById('ctxFlowAdminLabel').classList.toggle('show', step >= 3);
+
+    document.getElementById('ctxActorPagos').classList.toggle('show', step >= 4);
+    document.getElementById('ctxFlowPagosOut').classList.toggle('show', step >= 4);
+    document.getElementById('ctxFlowPagosOutLabel').classList.toggle('show', step >= 4);
+    document.getElementById('ctxFlowPagosIn').classList.toggle('show', step >= 4);
+    document.getElementById('ctxFlowPagosInLabel').classList.toggle('show', step >= 4);
+
+    document.getElementById('ctxBoxSistema').classList.toggle('dim', step >= 6);
+    ['ctxProc1','ctxProc2','ctxProc3','ctxStore'].forEach(function(id){
+      document.getElementById(id).classList.toggle('show', step >= 6);
+    });
+
+    ['ctxLink1','ctxLink2','ctxLink3'].forEach(function(id){
+      document.getElementById(id).classList.toggle('show', step >= 7);
+    });
+
+    document.getElementById('ctxCaption').textContent = CAPTIONS[step] || '';
+    document.getElementById('ctxPanelStep').textContent = 'Paso ' + (step + 1) + ' / 8';
+    ctxSteps.forEach(function(el){
+      el.classList.toggle('is-active', Number(el.dataset.step) === step);
+    });
+  }
+
+  var ctxObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) ctxRender(Number(e.target.dataset.step));
+    });
+  }, { rootMargin: '-35% 0px -55% 0px', threshold: 0 });
+  ctxSteps.forEach(function(s){ ctxObserver.observe(s); });
+  ctxRender(0);
+})();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedida directo, como siempre, no dispara nada nuevo. No toca el
+     motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen (ver DEPLOY-GUIAS-SNIPPET.md en
+     el repo de atenza para el detalle de cada endpoint). -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+      referencia: id,
+      correcta: estado === 'ok',
+    }).catch(function () {});
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

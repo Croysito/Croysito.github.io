@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Ciclo de Vida del Software como Sistema | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // eps-retroalimentacion.html/jerarquia-organizacional.html, con el
+  // parche de paramsAtenza() que también busca dentro de location.hash
+  // (el link real de ATENZA a veces llega como
+  // "...html#seccion?atenza_token=...", con el "?" después del "#").
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  var QUIZ_PREFIX = 'tgs-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">TGS · <span>SDLC</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="sprint-sistema">Un sprint como sistema</button>
+<button data-target="ciclos-agiles">Cascada vs. Ágil</button>
+<button data-target="sociotecnico">Sistemas sociotécnicos</button>
+<button data-target="ejercicios">Actividades de repaso</button>
+<button data-target="evidencia">Evidencia: proceso ágil como sistema</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🔁 Guía de Aula Invertida</span>
+<h1 class="flow-h1">El Ciclo de Vida del Software <span>como Sistema</span></h1>
+<p class="flow-lead">Ya sabés que un sistema recibe algo, lo transforma y entrega un resultado — y que un sistema que se autorregula además mide su propia salida y la usa para ajustarse. El ciclo de vida del software es exactamente eso: un sistema abierto, con sus propios bucles de control, y con personas en el medio, no solo código.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Scrollea para empezar — el diagrama de un sprint de Scrum se arma solo, capa por capa, mientras leés.</p>
+</section>
+
+<section class="flow-section" id="sprint-sistema">
+<div class="flow-grid">
+<div class="flow-beats">
+
+<div class="flow-beat" data-step="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>Un sistema que nunca deja de producir</h3>
+<p>El ciclo de vida del software (SDLC) es, ante todo, un proceso: recibe algo, lo transforma, entrega algo. Pero un proceso que solo entrega una vez —como una cascada clásica, que corre de punta a punta y recién al final se prueba— se comporta muy distinto a uno que entrega en ciclos cortos y ajusta sobre la marcha. Scrum es el ejemplo más usado de esto último: cada sprint es, en sí mismo, un sistema completo.</p>
+<p>Armemos ese sistema en vivo, capa por capa →</p>
+</div>
+
+<div class="flow-beat" data-step="1">
+<span class="flow-beat-eyebrow">Paso 02 · Entrada</span>
+<h3>Lo que entra al sprint</h3>
+<p>La <strong>entrada</strong> de un sprint es el Product Backlog priorizado: la lista de historias de usuario que el Product Owner decidió que son las más valiosas para construir ahora. Nada entra al sprint que no haya pasado antes por esa priorización.</p>
+</div>
+
+<div class="flow-beat" data-step="2">
+<span class="flow-beat-eyebrow">Paso 03 · Proceso</span>
+<h3>Lo que el equipo hace con eso</h3>
+<p>El <strong>proceso</strong> es el sprint mismo: el equipo construye, prueba e integra ese trabajo durante un tiempo fijo (típicamente 1 a 4 semanas). El daily stand-up no agrega nada nuevo al sistema — regula el proceso desde adentro, para que el equipo siga coordinado día a día.</p>
+</div>
+
+<div class="flow-beat" data-step="3">
+<span class="flow-beat-eyebrow">Paso 04 · Salida</span>
+<h3>Lo que el sprint entrega</h3>
+<p>La <strong>salida</strong> es el incremento: una porción de software potencialmente entregable, funcionando de verdad, no un diseño ni una promesa. Con esto ya tenés un E-P-S completo — pero un sprint aislado, sin ningún ajuste, sería tan ciego como una fábrica que nunca revisa lo que produjo.</p>
+</div>
+
+<div class="flow-beat" data-step="4">
+<span class="flow-beat-eyebrow">Paso 05 · Retroalimentación interna</span>
+<h3>La Retrospectiva ajusta el CÓMO</h3>
+<p>Al cerrar el sprint, el equipo se pregunta qué funcionó y qué no en su propia forma de trabajar — no en el producto. Es un bucle que no sale del sistema hacia el entorno: vuelve a entrar al mismo proceso, para cambiar cómo el equipo trabaja el próximo sprint.</p>
+</div>
+
+<div class="flow-beat" data-step="5">
+<span class="flow-beat-eyebrow">Paso 06 · Retroalimentación externa</span>
+<h3>El Sprint Review ajusta el QUÉ</h3>
+<p>El Sprint Review, en cambio, muestra el incremento a los interesados reales — y su reacción (qué sirve, qué falta, qué cambió en el negocio) vuelve a alimentar el Backlog. Es un segundo bucle, distinto del anterior: no corrige cómo trabaja el equipo, corrige qué construye a continuación.</p>
+</div>
+
+<div class="flow-beat" data-step="6">
+<span class="flow-beat-eyebrow">Paso 07 · Sistema abierto</span>
+<h3>El sprint nunca está aislado</h3>
+<p>Un sistema cerrado no intercambia nada con su entorno. Un sprint, en cambio, está constantemente expuesto a lo que pasa afuera: cambios de mercado, nuevas prioridades del negocio, usuarios reales usando el incremento anterior. Eso es lo que hace del ciclo de vida ágil un sistema abierto — justo lo que un modelo en cascada, con sus fases cerradas en secuencia, intenta minimizar.</p>
+</div>
+
+<div class="flow-beat" data-step="7">
+<span class="flow-beat-eyebrow">Paso 08 · Sociotécnico</span>
+<h3>No es solo código</h3>
+<p>El sistema completo no termina en el software: incluye al Product Owner decidiendo prioridades, al equipo negociando cómo trabajar, al Scrum Master facilitando. Un sistema de información real es <strong>sociotécnico</strong> — combina tecnología y personas, y sus fallas casi nunca son solo técnicas.</p>
+</div>
+
+</div>
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="sprPanel">
+<div class="flow-panel-head"><span>Diagrama en vivo</span><span class="flow-panel-step" id="sprPanelStep">Paso 1 / 8</span></div>
+
+<div class="spr-diagram-wrap">
+<svg viewBox="0 0 340 280" aria-hidden="true">
+
+<rect class="spr-caja" id="sprCaja" x="8" y="8" width="324" height="264" rx="10" fill="none"/>
+<text class="spr-caja-label" id="sprCajaLabel" x="18" y="24" font-size="7.5" font-weight="700">SISTEMA SOCIOTÉCNICO</text>
+
+<g class="spr-env" id="sprEnvIn">
+<line x1="57" y1="68" x2="57" y2="90"/>
+<polygon points="57,90 51,80 63,80"/>
+</g>
+<text class="spr-env-label" id="sprEnvInLabel" x="57" y="60" text-anchor="middle">ENTORNO</text>
+
+<g class="spr-env" id="sprEnvOut">
+<line x1="282" y1="90" x2="282" y2="68"/>
+<polygon points="282,68 276,78 288,78"/>
+</g>
+<text class="spr-env-label" id="sprEnvOutLabel" x="282" y="60" text-anchor="middle">ENTORNO</text>
+
+<g class="spr-loop" id="sprRetro">
+<path d="M205,90 C205,35 135,35 135,90"/>
+<polygon points="135,90 127,78 143,78"/>
+</g>
+<text class="spr-loop-label" id="sprRetroLabel" x="170" y="46" text-anchor="middle" font-size="8" font-weight="700">RETROSPECTIVA</text>
+<text class="spr-loop-label" id="sprRetroLabel2" x="170" y="57" text-anchor="middle" font-size="7">ajusta el CÓMO</text>
+
+<g class="spr-box" id="sprBoxBacklog">
+<rect x="15" y="90" width="85" height="50" rx="6"/>
+<text x="57" y="110" text-anchor="middle" font-size="10" font-weight="700">BACKLOG</text>
+<text x="57" y="125" text-anchor="middle" font-size="8">priorizado</text>
+</g>
+
+<g class="spr-box" id="sprBoxSprint">
+<rect x="127" y="90" width="85" height="50" rx="6"/>
+<text x="170" y="110" text-anchor="middle" font-size="10" font-weight="700">SPRINT</text>
+<text x="170" y="125" text-anchor="middle" font-size="8">equipo construye</text>
+</g>
+
+<g class="spr-box" id="sprBoxIncremento">
+<rect x="240" y="90" width="85" height="50" rx="6"/>
+<text x="282" y="110" text-anchor="middle" font-size="10" font-weight="700">INCREMENTO</text>
+<text x="282" y="125" text-anchor="middle" font-size="8">software usable</text>
+</g>
+
+<g class="spr-arrow" id="sprArrowBP">
+<line x1="100" y1="115" x2="127" y2="115"/>
+<polygon points="127,115 118,110 118,120"/>
+</g>
+<g class="spr-arrow" id="sprArrowPI">
+<line x1="212" y1="115" x2="240" y2="115"/>
+<polygon points="240,115 231,110 231,120"/>
+</g>
+
+<g class="spr-feedback" id="sprReview">
+<path d="M282,140 C282,235 57,235 57,140"/>
+<polygon points="57,140 51,151 63,151"/>
+</g>
+<text class="spr-fb-label" id="sprReviewLabel" x="170" y="250" text-anchor="middle" font-size="8" font-weight="700">SPRINT REVIEW</text>
+<text class="spr-fb-label" id="sprReviewLabel2" x="170" y="261" text-anchor="middle" font-size="7">ajusta el QUÉ</text>
+
+</svg>
+</div>
+
+<div class="spr-caption" id="sprCaption">Sin diagrama todavía — un sprint de Scrum, visto como sistema.</div>
+
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat" id="ciclos-agiles">
+<h2>Ciclos de control: Cascada vs. Ágil</h2>
+<p class="lead">La diferencia entre un modelo en cascada y uno ágil no es solo de "orden de las tareas": es de qué tan seguido el sistema se compara contra la realidad y se corrige.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">&nbsp;</th><th scope="col">Cascada (Waterfall)</th><th scope="col">Ágil (Scrum)</th></tr></thead>
+<tbody>
+<tr><td>Frecuencia del bucle de control</td><td>Uno solo, al final del proyecto</td><td>Uno por sprint (1 a 4 semanas)</td></tr>
+<tr><td>Cuándo se detecta un desvío</td><td>Tarde: recién en la entrega final</td><td>Temprano: cada Review/Retro</td></tr>
+<tr><td>Tipo de sistema</td><td>Más cerrado durante cada fase</td><td>Más abierto al entorno</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>No es que uno tenga retroalimentación y el otro no</strong>
+<p>La cascada también se corrige — pero su único comparador está al final, cuando ya se construyó todo. Ágil no inventó la retroalimentación: la acortó y la repitió muchas más veces dentro del mismo proyecto.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="cascada-agil-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un equipo trabaja seis meses en cascada y recién en la última semana el cliente ve el sistema completo por primera vez, pidiendo cambios grandes. ¿Qué le faltó al sistema, en términos de teoría de sistemas?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Retroalimentación más frecuente con su entorno real.</button>
+<button class="quiz-opt">Un límite claro que lo separe de su entorno.</button>
+<button class="quiz-opt">Una entrada bien definida al inicio del proyecto.</button>
+<button class="quiz-opt">Una salida final entregable al cliente potencial.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el sistema sí tenía entrada, límite y salida — lo que le faltó fue comparar el resultado contra el entorno real más seguido, en vez de una sola vez al final." data-ko="El proyecto sí tenía entrada, límite y una salida final — el problema no es ninguno de esos tres. Lo que faltó es comparar el avance contra el entorno real con más frecuencia, no solo al final." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="cascada-agil-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué un sprint corto (1 a 4 semanas) se comporta como un sistema "más abierto" que una fase de cascada de seis meses?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque un sprint no tiene ningún límite definido.</button>
+<button class="quiz-opt">Porque un sprint no necesita un Backlog de entrada.</button>
+<button class="quiz-opt">Porque un sprint nunca entrega una salida real.</button>
+<button class="quiz-opt" data-correct>Porque intercambia con su entorno mucho más seguido.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un sistema es más 'abierto' cuanto más intercambia con su entorno — y un ciclo de control cada 1-4 semanas expone al sistema al entorno real mucho más seguido que uno cada seis meses." data-ko="Un sprint sí tiene límite, sí parte de un Backlog y sí entrega una salida real (el incremento). Lo que lo hace más abierto es que intercambia con su entorno (usuarios, mercado) mucho más seguido que una fase larga de cascada." hidden></p>
+</div>
+
+<p class="lead" style="margin-top:30px;">Practiquemos con otro sistema: un pipeline de integración continua (CI/CD). Clasifica cada elemento como Entrada, Proceso o Salida.</p>
+
+<div class="quiz quiz-classify" data-quiz-id="cicd-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Pipeline de integración continua (CI/CD).</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Empaquetar la aplicación en un artefacto desplegable</span>
+<div class="quiz-classify-btns">
+<button>Salida</button>
+<button>Entrada</button>
+<button data-correct>Proceso</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Commit de código subido por un desarrollador</span>
+<div class="quiz-classify-btns">
+<button data-correct>Entrada</button>
+<button>Salida</button>
+<button>Proceso</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Reporte de build exitoso o fallido</span>
+<div class="quiz-classify-btns">
+<button>Entrada</button>
+<button data-correct>Salida</button>
+<button>Proceso</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Ejecutar los tests automáticos sobre ese commit</span>
+<div class="quiz-classify-btns">
+<button>Entrada</button>
+<button>Salida</button>
+<button data-correct>Proceso</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Configuración del pipeline definida por el equipo</span>
+<div class="quiz-classify-btns">
+<button>Proceso</button>
+<button data-correct>Entrada</button>
+<button>Salida</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Notificación enviada al canal de Slack del equipo</span>
+<div class="quiz-classify-btns">
+<button data-correct>Salida</button>
+<button>Proceso</button>
+<button>Entrada</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="sociotecnico">
+<h2>Sistemas sociotécnicos</h2>
+<p class="lead">Un sistema de información nunca es solo el software. Es la combinación de tecnología (código, servidores, pipelines) y personas (quienes deciden, quienes construyen, quienes usan) — y ambas partes tienen que funcionar juntas.</p>
+
+<div class="highlight">
+<strong>La misma herramienta, dos resultados distintos</strong>
+<p>Dos equipos pueden usar exactamente el mismo Jira, el mismo pipeline de CI/CD y el mismo framework — y a uno le va bien y al otro no. La diferencia casi nunca es técnica: es cómo las personas del equipo se coordinan, priorizan y se comunican alrededor de esa tecnología.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="scrum-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Relaciona cada elemento del sprint con su rol dentro del sistema.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="backlog">Product Backlog</button>
+<button class="quiz-match-item" data-pair="sprint">Sprint (desarrollo)</button>
+<button class="quiz-match-item" data-pair="incremento">Incremento</button>
+<button class="quiz-match-item" data-pair="daily">Daily stand-up</button>
+<button class="quiz-match-item" data-pair="retro">Retrospectiva</button>
+<button class="quiz-match-item" data-pair="review">Sprint Review</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="backlog">Entrada del sistema</button>
+<button class="quiz-match-item" data-pair="sprint">Proceso que transforma</button>
+<button class="quiz-match-item" data-pair="incremento">Salida entregada</button>
+<button class="quiz-match-item" data-pair="daily">Regulación interna del proceso</button>
+<button class="quiz-match-item" data-pair="retro">Retroalimentación que ajusta el CÓMO</button>
+<button class="quiz-match-item" data-pair="review">Retroalimentación que ajusta el QUÉ</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="sociotecnico-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un equipo migra a un framework técnicamente superior, pero el proyecto fracasa porque nadie consultó a los usuarios que dependían del sistema anterior y se negaron a adoptarlo. ¿Qué explica mejor este fracaso?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un error de entropía: el sistema perdió organización.</button>
+<button class="quiz-opt" data-correct>Es sociotécnico: ignorar lo social lo hace fallar igual.</button>
+<button class="quiz-opt">Falta de homeostasis: no logró estabilizarse solo.</button>
+<button class="quiz-opt">Un problema de límites: no tenía frontera definida.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la tecnología funcionaba bien, pero el sistema completo (tecnología + personas) falló porque se ignoró la parte social — exactamente lo que distingue a un sistema sociotécnico." data-ko="No es entropía ni homeostasis ni un problema de límites: la tecnología en sí era correcta. Lo que faltó fue atender el componente social del sistema — las personas que iban a usarlo." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="ejercicios">
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas es la diferencia real entre la Retrospectiva y el Sprint Review?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La Retrospectiva la hacen los stakeholders, no el equipo.</button>
+<button class="quiz-opt">No hay diferencia real: ambas revisan exactamente lo mismo.</button>
+<button class="quiz-opt" data-correct>Retrospectiva ajusta el CÓMO; Review ajusta el QUÉ.</button>
+<button class="quiz-opt">La Retrospectiva ocurre antes del sprint, el Review después.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: son dos bucles distintos. La Retrospectiva es interna (el equipo ajusta su propio proceso) y el Review es externo (los interesados ajustan el producto)." data-ko="Ambas ocurren al cerrar el sprint y son bucles distintos, no iguales. La clave es qué corrige cada una: la Retrospectiva ajusta el CÓMO trabaja el equipo, el Review ajusta el QUÉ se construye." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">El daily stand-up es un bucle de retroalimentación que compara el resultado del sprint contra el entorno real.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el daily no compara nada contra el entorno externo — solo coordina al equipo día a día mientras el sprint sigue en curso." data-ko="Es falso: el daily no mide el resultado contra el entorno externo, solo regula al equipo internamente durante el sprint. Eso lo hacen el Review (entorno) y la Retrospectiva (proceso interno)." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Una empresa de software solo se reúne con sus clientes una vez, al firmar el contrato, y no vuelve a mostrarles nada hasta la entrega final. ¿Cómo describirías ese sistema?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Más cerrado: casi no intercambia con su entorno.</button>
+<button class="quiz-opt">Sociotécnico, porque involucra personas del cliente.</button>
+<button class="quiz-opt">Homeostático, porque mantiene su forma de trabajo.</button>
+<button class="quiz-opt">Recursivo, porque el mismo patrón se repite siempre.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: intercambiar información con el entorno una sola vez, al inicio y al final, es el comportamiento típico de un sistema más cerrado durante todo el proceso intermedio." data-ko="El caso no ilustra homeostasis ni recursividad, y ser sociotécnico no depende de cuánto se comunique con el cliente. Lo que describe es un sistema más cerrado: casi no hay intercambio con el entorno mientras dura el proceso." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué parte del sprint corresponde a la "salida" del sistema?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El Product Backlog ya priorizado por el equipo.</button>
+<button class="quiz-opt">El daily stand-up que coordina al equipo.</button>
+<button class="quiz-opt" data-correct>El incremento entregado al final del sprint.</button>
+<button class="quiz-opt">La reunión de planificación inicial del sprint.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el incremento —software funcionando, potencialmente entregable— es lo que el sistema produce y entrega hacia afuera." data-ko="El Backlog es la entrada, y el daily y la planificación son parte del proceso interno, no una salida. Lo que el sistema entrega al final es el incremento de software." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="repaso-5">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Repasemos el sprint como sistema.</p>
+<p>1. El Product Backlog priorizado es la
+<select class="quiz-blank" data-correct="entrada">
+<option value="">— elige —</option>
+<option value="entrada">entrada</option>
+<option value="proceso">proceso</option>
+<option value="salida">salida</option>
+<option value="actuador">actuador</option>
+</select>.</p>
+<p>2. El equipo construyendo durante el sprint es el
+<select class="quiz-blank" data-correct="proceso">
+<option value="">— elige —</option>
+<option value="entrada">entrada</option>
+<option value="proceso">proceso</option>
+<option value="salida">salida</option>
+<option value="sensor">sensor</option>
+</select>.</p>
+<p>3. Ajustar cómo trabaja el equipo, sin mirar afuera, es un bucle de
+<select class="quiz-blank" data-correct="retroalimentacion-interna">
+<option value="">— elige —</option>
+<option value="retroalimentacion-interna">retroalimentación interna (Retrospectiva)</option>
+<option value="retroalimentacion-externa">retroalimentación externa (Review)</option>
+<option value="entropia">entropía</option>
+<option value="sinergia">sinergia</option>
+</select>.</p>
+<p>4. Un ciclo de vida que intercambia poco con su entorno mientras dura el proceso es un sistema más
+<select class="quiz-blank" data-correct="cerrado">
+<option value="">— elige —</option>
+<option value="abierto">abierto</option>
+<option value="cerrado">cerrado</option>
+<option value="recursivo">recursivo</option>
+<option value="homeostatico">homeostático</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="evidencia">
+<h2>📤 Evidencia de la sesión: diagrama del proceso ágil como sistema</h2>
+<p class="lead">Con tu equipo, mapea un sprint de Scrum (u otro proceso ágil que ya conozcan) como sistema completo, mostrando su ciclo de entrada, proceso, salida y ambos bucles de retroalimentación.</p>
+<div class="highlight">
+<strong>Herramienta: Draw.io</strong>
+<p>Arma el diagrama en <a href="https://app.diagrams.net" target="_blank" rel="noopener">Draw.io</a> (gratuito, funciona desde el navegador, no necesita instalación).</p>
+</div>
+<p>Como mínimo, tu diagrama debe incluir:</p>
+<ul style="margin:0 0 20px 22px;line-height:1.9;">
+<li>Los tres bloques del ciclo (<strong>Backlog → Sprint → Incremento</strong>) conectados en orden.</li>
+<li>El bucle de <strong>Retrospectiva</strong> (interno, ajusta el CÓMO) y el bucle de <strong>Sprint Review</strong> (externo, ajusta el QUÉ), señalados por separado.</li>
+<li>Una anotación de qué hace del sprint un <strong>sistema abierto</strong> (qué entra y sale desde/hacia el entorno) y de su componente <strong>sociotécnico</strong> (qué personas participan).</li>
+</ul>
+<div class="highlight">
+<strong>Entrega</strong>
+<p>Exporta el diagrama como imagen (PNG o JPG) desde Draw.io y súbelo a la tarea correspondiente en <strong>Classroom</strong> antes del inicio de la próxima sesión. No se acepta el link editable de Draw.io en lugar de la imagen: sube el archivo directamente.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet">
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Backlog</td><td>Entrada: lista priorizada de trabajo pendiente.</td></tr>
+<tr><td>Sprint</td><td>Proceso: el equipo construye durante un tiempo fijo.</td></tr>
+<tr><td>Incremento</td><td>Salida: software funcionando, entregable.</td></tr>
+<tr><td>Daily stand-up</td><td>Regulación interna del proceso, día a día.</td></tr>
+<tr><td>Retrospectiva</td><td>Retroalimentación interna: ajusta el CÓMO trabaja el equipo.</td></tr>
+<tr><td>Sprint Review</td><td>Retroalimentación externa: ajusta el QUÉ se construye.</td></tr>
+<tr><td>Sistema abierto</td><td>Intercambia seguido con su entorno.</td></tr>
+<tr><td>Sistema cerrado</td><td>Casi no intercambia con su entorno.</td></tr>
+<tr><td>Sistema sociotécnico</td><td>Combina tecnología y personas; ninguna alcanza sola.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat">
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🏉 "Scrum" viene del rugby</h3><p>Hirotaka Takeuchi e Ikujiro Nonaka usaron esa palabra en 1986, en un artículo sobre desarrollo de productos, para describir equipos que avanzan juntos "como en una melé" en vez de pasarse el trabajo por etapas separadas.</p></div>
+<div class="info"><h3>📄 El propio Royce ya dudaba de la cascada</h3><p>Winston Royce, autor del artículo de 1970 que popularizó el modelo en cascada, en realidad advertía en ese mismo texto que aplicarlo sin iterar era "riesgoso e invita al fracaso" — la crítica es casi tan vieja como el modelo.</p></div>
+<div class="info"><h3>⛏️ Los sistemas sociotécnicos nacieron en una mina</h3><p>El concepto se formuló en los años 50 en el Instituto Tavistock, estudiando minas de carbón británicas: la misma tecnología de extracción rendía muy distinto según cómo se organizaban los equipos de mineros alrededor de ella.</p></div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía: El Ciclo de Vida del Software como Sistema</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Nivel 1: flujo con panel fijo — diagrama de un sprint de Scrum
+   como sistema, construido en capas. Prosa a la izquierda (.flow-beat)
+   + panel fijo a la derecha (#sprPanel) que revela cajas, flechas, los
+   dos bucles de retroalimentación, las flechas de entorno y la caja
+   sociotécnica según qué paso cruza el centro del viewport. No es una
+   actividad calificada: no llama a marcarResuelto. ===== */
+(function(){
+  var sprSteps = document.querySelectorAll('#sprint-sistema .flow-beat');
+  if (!sprSteps.length) return;
+
+  var CAPTIONS = [
+    'Sin diagrama todavía — un sprint de Scrum, visto como sistema.',
+    'ENTRADA: el Product Backlog priorizado entra al sprint.',
+    'PROCESO: el equipo construye durante el sprint (el daily lo regula por dentro).',
+    'SALIDA: un incremento de software potencialmente entregable.',
+    'RETROSPECTIVA: el equipo ajusta su propio proceso de trabajo — el CÓMO.',
+    'SPRINT REVIEW: el feedback de los interesados ajusta el backlog — el QUÉ.',
+    'SISTEMA ABIERTO: el sprint intercambia constantemente con su entorno.',
+    'SISTEMA SOCIOTÉCNICO: no es solo software — incluye personas y su forma de trabajar.'
+  ];
+
+  var sprCurrentStep = -1;
+
+  function sprRender(step){
+    if (step === sprCurrentStep) return;
+    sprCurrentStep = step;
+
+    document.getElementById('sprBoxBacklog').classList.toggle('show', step >= 1);
+    document.getElementById('sprBoxSprint').classList.toggle('show', step >= 2);
+    document.getElementById('sprArrowBP').classList.toggle('show', step >= 2);
+    document.getElementById('sprBoxIncremento').classList.toggle('show', step >= 3);
+    document.getElementById('sprArrowPI').classList.toggle('show', step >= 3);
+
+    document.getElementById('sprRetro').classList.toggle('show', step >= 4);
+    ['sprRetroLabel','sprRetroLabel2'].forEach(function(id){
+      document.getElementById(id).classList.toggle('show', step >= 4);
+    });
+
+    document.getElementById('sprReview').classList.toggle('show', step >= 5);
+    ['sprReviewLabel','sprReviewLabel2'].forEach(function(id){
+      document.getElementById(id).classList.toggle('show', step >= 5);
+    });
+
+    ['sprEnvIn','sprEnvOut'].forEach(function(id){
+      document.getElementById(id).classList.toggle('show', step >= 6);
+    });
+    ['sprEnvInLabel','sprEnvOutLabel'].forEach(function(id){
+      document.getElementById(id).classList.toggle('show', step >= 6);
+    });
+
+    document.getElementById('sprCaja').classList.toggle('show', step >= 7);
+    document.getElementById('sprCajaLabel').classList.toggle('show', step >= 7);
+
+    document.getElementById('sprCaption').textContent = CAPTIONS[step] || '';
+    document.getElementById('sprPanelStep').textContent = 'Paso ' + (step + 1) + ' / 8';
+    sprSteps.forEach(function(el){
+      el.classList.toggle('is-active', Number(el.dataset.step) === step);
+    });
+  }
+
+  var sprObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) sprRender(Number(e.target.dataset.step));
+    });
+  }, { rootMargin: '-35% 0px -55% 0px', threshold: 0 });
+  sprSteps.forEach(function(s){ sprObserver.observe(s); });
+  sprRender(0);
+})();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedida directo, como siempre, no dispara nada nuevo. No toca el
+     motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen (ver DEPLOY-GUIAS-SNIPPET.md en
+     el repo de atenza para el detalle de cada endpoint). -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+      referencia: id,
+      correcta: estado === 'ok',
+    }).catch(function () {});
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

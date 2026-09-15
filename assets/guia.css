@@ -1067,6 +1067,101 @@ text.scrolly-ghost{ font-family:'JetBrains Mono',monospace; font-size:8px; fill:
 .jer-caption{ font-size:11.5px; color:var(--gris); margin-top:6px; line-height:1.5; }
 
 /* =========================================================
+   DIAGRAMA DE SPRINT COMO SISTEMA (piloto 3 de scrollytelling en TGS,
+   guía ciclo-vida-software.html — mismo motor .flow-* de
+   eps-retroalimentacion.html/jerarquia-organizacional.html). El ciclo
+   Backlog→Sprint→Incremento se revela por capas, seguido de dos bucles
+   de retroalimentación distintos (Retrospectiva, un self-loop interno
+   sobre el propio Sprint; Sprint Review, un arco externo grande hacia
+   el Backlog), un par de flechas de entorno (sistema abierto) y una
+   caja punteada final que envuelve todo (sistema sociotécnico). Nadie
+   más usa estas clases, sin prefijo, mismo criterio que .eps-*/.jer-*. */
+.spr-diagram-wrap{ border:1px solid var(--borde); border-radius:10px; padding:14px 12px 10px; margin-bottom:14px; background:var(--blanco); }
+.spr-diagram-wrap svg{ width:100%; height:auto; display:block; }
+.spr-box rect{ fill:var(--blanco); stroke:var(--borde); stroke-width:1.6; opacity:.25; transition:opacity .3s ease,stroke .3s ease; }
+.spr-box text{ font-family:'JetBrains Mono',monospace; fill:var(--texto); opacity:.25; transition:opacity .3s ease; }
+.spr-box.show rect{ stroke:var(--verde); opacity:1; }
+.spr-box.show text{ opacity:1; }
+.spr-arrow{ opacity:0; transition:opacity .3s ease; }
+.spr-arrow line{ stroke:var(--borde); stroke-width:1.8; }
+.spr-arrow polygon{ fill:var(--borde); }
+.spr-arrow.show{ opacity:1; }
+.spr-arrow.show line{ stroke:var(--verde); }
+.spr-arrow.show polygon{ fill:var(--verde); }
+.spr-loop{ opacity:0; transition:opacity .3s ease; }
+.spr-loop path{ stroke:var(--gris); stroke-width:1.8; stroke-dasharray:4 4; fill:none; }
+.spr-loop polygon{ fill:var(--gris); }
+.spr-loop.show{ opacity:1; }
+.spr-loop.show path{ stroke:var(--amarillo); }
+.spr-loop.show polygon{ fill:var(--amarillo); }
+.spr-loop-label{ font-family:'JetBrains Mono',monospace; fill:var(--gris); opacity:0; transition:opacity .3s ease; }
+.spr-loop-label.show{ opacity:1; fill:var(--amarillo); }
+.spr-feedback{ opacity:0; transition:opacity .3s ease; }
+.spr-feedback path{ stroke:var(--gris); stroke-width:1.8; stroke-dasharray:4 4; fill:none; }
+.spr-feedback polygon{ fill:var(--gris); }
+.spr-feedback.show{ opacity:1; }
+.spr-feedback.show path{ stroke:var(--azul2); }
+.spr-feedback.show polygon{ fill:var(--azul2); }
+.spr-fb-label{ font-family:'JetBrains Mono',monospace; fill:var(--gris); opacity:0; transition:opacity .3s ease; }
+.spr-fb-label.show{ opacity:1; fill:var(--azul2); }
+.spr-env{ opacity:0; transition:opacity .3s ease; }
+.spr-env line{ stroke:var(--borde); stroke-width:1.6; }
+.spr-env polygon{ fill:var(--borde); }
+.spr-env.show{ opacity:1; }
+.spr-env.show line{ stroke:var(--verde2); }
+.spr-env.show polygon{ fill:var(--verde2); }
+.spr-env-label{ font-family:'JetBrains Mono',monospace; font-size:7px; fill:var(--gris); opacity:0; transition:opacity .3s ease; }
+.spr-env-label.show{ opacity:1; fill:var(--verde2); }
+.spr-caja{ stroke:var(--gris); stroke-width:1.6; stroke-dasharray:3 3; opacity:0; transition:opacity .3s ease; }
+.spr-caja.show{ stroke:var(--azul2); opacity:1; }
+.spr-caja-label{ font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; fill:var(--azul2); opacity:0; transition:opacity .3s ease; }
+.spr-caja-label.show{ opacity:1; }
+.spr-caption{ font-size:11.5px; color:var(--gris); margin-top:6px; line-height:1.5; }
+
+/* =========================================================
+   DIAGRAMA DE CONTEXTO Y DFD NIVEL 0 (piloto 4 de scrollytelling en
+   TGS, guía diagrama-contexto-dfd.html — mismo motor .flow-* de
+   eps-retroalimentacion.html. Fase 1: Diagrama de Contexto — una sola
+   caja (el sistema) rodeada de actores externos y sus flujos de datos,
+   con la frontera del sistema marcada aparte. Fase 2: esa misma caja
+   se abre (se atenúa con .dim, mismo espíritu que .eps-caja.open) para
+   revelar sus procesos numerados (círculos, no cajas — distingue un
+   proceso de una entidad externa) y un almacén de datos (símbolo
+   abierto de dos líneas, sin relleno), conectados entre sí. Nadie más
+   usa estas clases, sin prefijo, mismo criterio que .eps-*/.jer-*/.spr-*. */
+.ctx-diagram-wrap{ border:1px solid var(--borde); border-radius:10px; padding:14px 12px 10px; margin-bottom:14px; background:var(--blanco); }
+.ctx-diagram-wrap svg{ width:100%; height:auto; display:block; }
+.ctx-frontera{ stroke:var(--gris); stroke-width:1.6; stroke-dasharray:3 3; opacity:0; transition:opacity .3s ease; }
+.ctx-frontera.show{ opacity:1; }
+.ctx-frontera-label{ font-family:'JetBrains Mono',monospace; fill:var(--gris); opacity:0; transition:opacity .3s ease; }
+.ctx-frontera-label.show{ opacity:1; fill:var(--azul2); }
+.ctx-box rect{ fill:var(--blanco); stroke:var(--borde); stroke-width:1.6; opacity:.25; transition:opacity .3s ease,stroke .3s ease,stroke-dasharray .3s ease; }
+.ctx-box text{ font-family:'JetBrains Mono',monospace; fill:var(--texto); opacity:.25; transition:opacity .3s ease; }
+.ctx-box.show rect{ stroke:var(--verde); opacity:1; }
+.ctx-box.show text{ opacity:1; }
+.ctx-box.show.dim rect{ opacity:.15; stroke-dasharray:3 3; }
+.ctx-box.show.dim text{ opacity:.15; }
+.ctx-flow{ opacity:0; transition:opacity .3s ease; }
+.ctx-flow path{ stroke:var(--borde); stroke-width:1.8; fill:none; }
+.ctx-flow polygon{ fill:var(--borde); }
+.ctx-flow.show{ opacity:1; }
+.ctx-flow.show path{ stroke:var(--verde); }
+.ctx-flow.show polygon{ fill:var(--verde); }
+.ctx-flow-label{ font-family:'JetBrains Mono',monospace; font-size:7px; fill:var(--gris); opacity:0; transition:opacity .3s ease; }
+.ctx-flow-label.show{ opacity:1; fill:var(--texto); }
+.ctx-proc circle{ fill:var(--blanco); stroke:var(--borde); stroke-width:1.6; opacity:0; transition:opacity .3s ease,stroke .3s ease; }
+.ctx-proc text{ font-family:'JetBrains Mono',monospace; font-weight:700; fill:var(--texto); opacity:0; transition:opacity .3s ease; }
+.ctx-proc.show circle{ stroke:var(--azul2); opacity:1; }
+.ctx-proc.show text{ opacity:1; }
+.ctx-store line{ stroke:var(--borde); stroke-width:1.6; opacity:0; transition:opacity .3s ease,stroke .3s ease; }
+.ctx-store text{ font-family:'JetBrains Mono',monospace; font-size:7px; font-weight:700; fill:var(--texto); opacity:0; transition:opacity .3s ease; }
+.ctx-store.show line{ stroke:var(--azul2); opacity:1; }
+.ctx-store.show text{ opacity:1; }
+.ctx-link{ stroke:var(--gris); stroke-width:1.4; stroke-dasharray:2 2; opacity:0; transition:opacity .3s ease; }
+.ctx-link.show{ opacity:1; stroke:var(--azul2); }
+.ctx-caption{ font-size:11.5px; color:var(--gris); margin-top:6px; line-height:1.5; }
+
+/* =========================================================
    DIAGRAMA DE TRANSACCIONES (piloto 1 de scrollytelling en BD II
    fuera de SQL/consola, guía transacciones.html — mismo motor
    .flow-* de joins-subconsultas.html, panel con un diagrama propio
