@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Procedimientos Almacenados, Funciones y Triggers en PostgreSQL | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-console-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">BD II · <span>Procedimientos y Triggers</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="funciones">Funciones y procedimientos</button>
+<button data-target="triggers">Triggers</button>
+<button data-target="razonamiento">Ejercicios de razonamiento</button>
+<button data-target="ejercicios">Actividades de repaso</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🗄️ Guía de Aula Invertida</span>
+<h1 class="flow-h1">Procedimientos, Funciones y <span>Triggers</span></h1>
+<p class="flow-lead">Hasta ahora cada consulta SQL vivía sola: si la misma lógica (un cálculo, una validación) se repite en diez consultas distintas, hay que mantenerla en diez lugares. Las <strong>funciones</strong> y <strong>procedimientos almacenados</strong> guardan esa lógica una sola vez, adentro de la propia base de datos. Los <strong>triggers</strong> van un paso más allá: ejecutan código automáticamente cuando algo pasa —un INSERT, un UPDATE— sin que nadie tenga que acordarse de llamarlos.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Scrollea para empezar — a la izquierda vas a ver la consulta y su resultado armarse solos, mientras leés a la derecha.</p>
+</section>
+
+<section class="flow-section" id="funciones">
+<div class="flow-grid">
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="fnPanel">
+<div class="flow-panel-head"><span>bd2 · procedimientos_triggers.sql</span><span class="flow-panel-step" id="fnPanelStep">Paso 1 / 7</span></div>
+
+<div class="scrolly-query">
+<div class="scrolly-query-head">consulta.sql</div>
+<pre class="scrolly-query-pre" id="fnQueryPre"><span class="scrolly-query-placeholder">-- todavía no escribimos nada</span></pre>
+</div>
+
+<div id="fnResultBox" class="scrolly-result-box"></div>
+</div>
+</div>
+
+<div class="flow-beats">
+
+<div class="flow-beat" data-step="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>La misma fórmula, repetida en cada consulta</h3>
+<p>Cada vez que una consulta necesita el precio final con IVA (13%), hay que escribir <code>precio * 1.13</code> de nuevo. Si el porcentaje de IVA cambia algún día, hay que salir a buscar cada consulta que lo usa, una por una.</p>
+</div>
+
+<div class="flow-beat" data-step="1">
+<span class="flow-beat-eyebrow">Paso 02 · CREATE FUNCTION</span>
+<h3>Guardar la fórmula una sola vez</h3>
+<p>Una <strong>función</strong> guarda esa lógica adentro de la base de datos, con un nombre propio. <code>RETURNS NUMERIC</code> dice qué tipo de dato devuelve; el cuerpo entre <code>$$ ... $$</code> está escrito en <strong>PL/pgSQL</strong>, el lenguaje procedural de PostgreSQL.</p>
+</div>
+
+<div class="flow-beat" data-step="2">
+<span class="flow-beat-eyebrow">Paso 03 · Llamarla como cualquier función</span>
+<h3>Se usa igual que ROUND() o LOWER()</h3>
+<p>Una vez creada, <code>calcular_precio_final(precio)</code> se llama exactamente como cualquier función de PostgreSQL —adentro de un <code>SELECT</code>, pasándole el nombre de una columna como argumento.</p>
+</div>
+
+<div class="flow-beat" data-step="3">
+<span class="flow-beat-eyebrow">Paso 04 · IF / ELSIF / ELSE</span>
+<h3>Una función también puede decidir</h3>
+<p>PL/pgSQL soporta las mismas estructuras que ya conocés de otros lenguajes. <code>clasificar_stock(cantidad)</code> devuelve un texto distinto según en qué rango cae el argumento que recibe.</p>
+</div>
+
+<div class="flow-beat" data-step="4">
+<span class="flow-beat-eyebrow">Paso 05 · Usarla en el SELECT</span>
+<h3>Una columna calculada, con lógica adentro</h3>
+<p>Igual que en el paso 03, la función se llama desde el <code>SELECT</code> —solo que esta vez devuelve un texto distinto según el valor de <code>stock</code> de cada fila.</p>
+</div>
+
+<div class="flow-beat" data-step="5">
+<span class="flow-beat-eyebrow">Paso 06 · CREATE PROCEDURE</span>
+<h3>Cuando no hace falta devolver nada</h3>
+<p>Un <strong>procedimiento</strong> no tiene <code>RETURNS</code>: no devuelve un valor para usar en un <code>SELECT</code>, sino que ejecuta una acción —acá, un <code>UPDATE</code>. Se define con <code>CREATE PROCEDURE</code>, no <code>CREATE FUNCTION</code>.</p>
+</div>
+
+<div class="flow-beat" data-step="6">
+<span class="flow-beat-eyebrow">Paso 07 · CALL</span>
+<h3>Se ejecuta con CALL, no con SELECT</h3>
+<p>Un procedimiento se invoca con <code>CALL</code>, nunca adentro de un <code>SELECT</code> —justamente porque no devuelve nada que se pueda leer ahí. Acá actualiza el precio del producto 2 directamente en la tabla.</p>
+</div>
+
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat">
+<h2 data-eyebrow="Práctica · Funciones y procedimientos">Practicá lo que viste</h2>
+<p class="lead">Antes de seguir a triggers, confirmá que la diferencia entre función y procedimiento quedó clara.</p>
+
+<div class="quiz quiz-mc" data-quiz-id="fn-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál es la diferencia real entre una función y un procedimiento almacenado?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Una función siempre corre más rápido que cualquier procedimiento.</button>
+<button class="quiz-opt">Un procedimiento admite un solo parámetro; una función admite varios.</button>
+<button class="quiz-opt" data-correct>La función tiene RETURNS y se usa en un SELECT; el procedimiento no devuelve nada y usa CALL.</button>
+<button class="quiz-opt">CREATE PROCEDURE es simplemente otro nombre para CREATE FUNCTION.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: RETURNS es lo que distingue a una función (devuelve un valor, se llama dentro de un SELECT) de un procedimiento (ejecuta una acción, se invoca aparte con CALL)." data-ko="No es velocidad ni cantidad de parámetros: la función tiene RETURNS y se usa en un SELECT; el procedimiento no devuelve valor y se ejecuta con CALL." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="fn-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre la sintaxis de CREATE FUNCTION y CREATE PROCEDURE.</p>
+<p>1. El cuerpo de una función o procedimiento en PL/pgSQL se escribe entre
+<select class="quiz-blank" data-correct="dolares">
+<option value="">— elige —</option>
+<option value="dolares">$$ ... $$</option>
+<option value="comillas">" ... "</option>
+<option value="parentesis">( ... )</option>
+</select>.</p>
+<p>2. Para invocar un procedimiento (no una función), se usa la instrucción
+<select class="quiz-blank" data-correct="call">
+<option value="">— elige —</option>
+<option value="select">SELECT</option>
+<option value="call">CALL</option>
+<option value="execute">RUN</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="fn-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada elemento según si pertenece a una función o a un procedimiento.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">RETURNS NUMERIC</span>
+<div class="quiz-classify-btns">
+<button>Procedimiento</button>
+<button data-correct>Función</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Se invoca con CALL nombre(...)</span>
+<div class="quiz-classify-btns">
+<button data-correct>Procedimiento</button>
+<button>Función</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Se usa dentro de un SELECT</span>
+<div class="quiz-classify-btns">
+<button>Procedimiento</button>
+<button data-correct>Función</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">CREATE PROCEDURE nombre(...)</span>
+<div class="quiz-classify-btns">
+<button data-correct>Procedimiento</button>
+<button>Función</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-section" id="triggers">
+<div class="flow-grid">
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="trgPanel">
+<div class="flow-panel-head"><span>bd2 · procedimientos_triggers.sql</span><span class="flow-panel-step" id="trgPanelStep">Paso 1 / 7</span></div>
+<div class="scrolly-query">
+<div class="scrolly-query-head">consulta.sql</div>
+<pre class="scrolly-query-pre" id="trgQueryPre"><span class="scrolly-query-placeholder">-- todavía no escribimos nada</span></pre>
+</div>
+<div id="trgResultBox" class="scrolly-result-box"></div>
+</div>
+</div>
+
+<div class="flow-beats">
+
+<div class="flow-beat" data-sub="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>Nadie se acuerda de auditar a mano</h3>
+<p>Cada vez que alguien actualiza el <code>stock</code> de un producto, en teoría también debería insertar una fila en una tabla de auditoría, a mano, en la misma transacción. Tarde o temprano, alguien se va a olvidar.</p>
+</div>
+
+<div class="flow-beat" data-sub="1">
+<span class="flow-beat-eyebrow">Paso 02 · La tabla de auditoría</span>
+<h3>Dónde va a quedar el registro</h3>
+<p>Una tabla normal, sin nada especial todavía: <code>auditoria_stock</code> va a guardar qué producto cambió, cuánto stock tenía antes, cuánto tiene ahora, y cuándo.</p>
+</div>
+
+<div class="flow-beat" data-sub="2">
+<span class="flow-beat-eyebrow">Paso 03 · La función del trigger</span>
+<h3>OLD y NEW: la fila antes y después</h3>
+<p>Una función pensada para un trigger devuelve <code>TRIGGER</code>, no un tipo de dato normal. Adentro tiene acceso a dos filas especiales: <code>OLD</code> (la fila antes del cambio) y <code>NEW</code> (la fila después). Acá inserta ambos valores de <code>stock</code> en la auditoría.</p>
+</div>
+
+<div class="flow-beat" data-sub="3">
+<span class="flow-beat-eyebrow">Paso 04 · CREATE TRIGGER</span>
+<h3>Conectar la función a un evento</h3>
+<p><code>AFTER UPDATE ON productos</code> dice cuándo se dispara: después de un UPDATE en esa tabla. <code>FOR EACH ROW</code> dice que corre una vez por cada fila afectada. <code>WHEN (OLD.stock IS DISTINCT FROM NEW.stock)</code> es un filtro extra: solo si el stock realmente cambió —no en cualquier UPDATE.</p>
+</div>
+
+<div class="flow-beat" data-sub="4">
+<span class="flow-beat-eyebrow">Paso 05 · Mirá esto</span>
+<h3>Nadie llamó a la función. Pasó sola.</h3>
+<p>Este <code>UPDATE</code> no menciona ni <code>registrar_cambio_stock()</code> ni <code>auditoria_stock</code> en ningún lado. Aun así, al consultar la auditoría después, ya hay una fila nueva —el trigger se disparó solo, apenas cambió el stock.</p>
+</div>
+
+<div class="flow-beat" data-sub="5">
+<span class="flow-beat-eyebrow">Paso 06 · BEFORE, no AFTER</span>
+<h3>Un trigger también puede impedir algo</h3>
+<p><code>AFTER</code> reacciona a un cambio que ya pasó. <code>BEFORE INSERT</code> corre <strong>antes</strong> de que la fila se guarde, y con <code>RAISE EXCEPTION</code> puede cancelar la operación por completo si algo no es válido —acá, un precio que no sea mayor a 0.</p>
+</div>
+
+<div class="flow-beat" data-sub="6">
+<span class="flow-beat-eyebrow">Paso 07 · La inserción que no pasa</span>
+<h3>El INSERT nunca llega a guardarse</h3>
+<p>Este intento de insertar un producto con precio negativo no inserta nada: el trigger <code>BEFORE INSERT</code> corre primero, evalúa la condición, y frena la operación entera con el error que definiste en <code>RAISE EXCEPTION</code>.</p>
+</div>
+
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat">
+<h2 data-eyebrow="Práctica · Triggers">Practicá lo que viste</h2>
+<p class="lead">Emparejá cada pieza de un trigger con lo que hace, y confirmá por qué el WHEN importa.</p>
+
+<div class="quiz quiz-match" data-quiz-id="trg-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada término con su descripción.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="old">OLD</button>
+<button class="quiz-match-item" data-pair="new">NEW</button>
+<button class="quiz-match-item" data-pair="before">BEFORE</button>
+<button class="quiz-match-item" data-pair="after">AFTER</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="old">La fila tal como estaba antes del cambio.</button>
+<button class="quiz-match-item" data-pair="new">La fila tal como queda después del cambio.</button>
+<button class="quiz-match-item" data-pair="before">El trigger corre antes de guardar el cambio, y puede cancelarlo.</button>
+<button class="quiz-match-item" data-pair="after">El trigger corre después de que el cambio ya se guardó.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="trg-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">El trigger de auditoría tiene WHEN (OLD.stock IS DISTINCT FROM NEW.stock). Si alguien actualiza solo el precio de un producto (sin tocar el stock), ¿qué pasa?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>El trigger no se dispara: el WHEN filtra los UPDATE donde el stock no cambió.</button>
+<button class="quiz-opt">El trigger igual guarda una fila, con stock_anterior y stock_nuevo idénticos.</button>
+<button class="quiz-opt">Postgres exige que ese UPDATE también modifique el stock, o falla.</button>
+<button class="quiz-opt">El UPDATE del precio queda cancelado por completo por el trigger.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el WHEN es una condición extra que se evalúa antes de ejecutar la función del trigger. Si el stock no cambió, la condición da falso y la función nunca corre." data-ko="El UPDATE del precio se hace sin problema, pero el trigger no se dispara: el WHEN filtra específicamente los casos donde el stock no cambió, así que registrar_cambio_stock() nunca se ejecuta." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="razonamiento">
+<h2 data-eyebrow="Razonamiento">Ejercicios de razonamiento</h2>
+<p class="lead">En estas preguntas no se te pide recordar sintaxis: se te da un escenario, y debés <strong>razonar</strong> cuál sería la respuesta correcta antes de comprobarla.</p>
+
+<div class="highlight">
+<strong>Escenario</strong>
+<p>Necesitás una operación que calcule el promedio de las notas de un estudiante y lo use directamente dentro de un <code>SELECT</code>, junto con otras columnas de la tabla.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razon-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Función o procedimiento almacenado?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Procedimiento, porque hace un cálculo con las notas del estudiante.</button>
+<button class="quiz-opt">Ninguno de los dos: para esto hace falta un trigger sobre la tabla.</button>
+<button class="quiz-opt">Da igual cuál elijas: ambos se comportan exactamente igual acá.</button>
+<button class="quiz-opt" data-correct>Función, porque necesitás un valor de vuelta para usar dentro del SELECT.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: como el resultado se necesita adentro de un SELECT, junto a otras columnas, tiene que ser una función con RETURNS — un procedimiento no devuelve nada que se pueda leer ahí." data-ko="Un procedimiento no devuelve un valor utilizable dentro de un SELECT. Como acá se necesita justamente eso, la respuesta es una función con RETURNS." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Otro escenario</strong>
+<p>Cada vez que se inserta un nuevo pedido, hay que descontar automáticamente esa cantidad del stock del producto correspondiente —sin que la aplicación tenga que acordarse de hacerlo aparte.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razon-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué herramienta encaja mejor?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Una función que la aplicación debe recordar llamar después de cada INSERT.</button>
+<button class="quiz-opt" data-correct>Un trigger AFTER INSERT sobre la tabla de pedidos, que descuente el stock.</button>
+<button class="quiz-opt">Un procedimiento que el docente ejecuta manualmente una vez por semana.</button>
+<button class="quiz-opt">HAVING stock > 0 en cada consulta que liste productos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: como el descuento tiene que pasar siempre, automáticamente, sin que nadie se acuerde de llamarlo, un trigger AFTER INSERT es la herramienta pensada exactamente para eso." data-ko="Una función o un procedimiento dependen de que alguien se acuerde de llamarlos — justo lo que el escenario quiere evitar. Un trigger AFTER INSERT reacciona solo, sin intervención manual." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Un último escenario</strong>
+<p>Un compañero de equipo agregó un trigger BEFORE INSERT que valida datos, pero se queja de que "no anda": los INSERT inválidos se siguen guardando igual.</p>
+</div>
+<div class="quiz quiz-fill" data-quiz-id="razon-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Completá la explicación que le darías:</p>
+<p>Para que un trigger de validación de verdad impida guardar la fila, la función tiene que
+<select class="quiz-blank" data-correct="raise">
+<option value="">— elige —</option>
+<option value="print">imprimir un mensaje con RAISE NOTICE</option>
+<option value="raise">detener la operación con RAISE EXCEPTION</option>
+</select> cuando el dato es inválido — de lo contrario, la fila se guarda igual aunque el trigger haya notado el problema.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="ejercicios">
+<h2 data-eyebrow="Repaso integrador">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿En qué lenguaje se escribe normalmente el cuerpo de una función o procedimiento en PostgreSQL?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>PL/pgSQL, el lenguaje procedural propio de PostgreSQL.</button>
+<button class="quiz-opt">Python, porque Postgres lo ejecuta nativo sin instalar nada aparte.</button>
+<button class="quiz-opt">JavaScript, el mismo lenguaje que usa MongoDB para sus funciones.</button>
+<button class="quiz-opt">Ninguno: solo se admite una única sentencia SQL, sin lógica propia.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: PL/pgSQL es el lenguaje procedural incluido por defecto en PostgreSQL para escribir funciones, procedimientos y triggers con IF, bucles y variables." data-ko="PostgreSQL sí permite lógica con IF y variables adentro de una función o procedimiento — el lenguaje por defecto para eso es PL/pgSQL, no Python ni JavaScript." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Un trigger se puede llamar directamente con SELECT registrar_cambio_stock(), igual que una función normal.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: una función de trigger (RETURNS TRIGGER) solo puede ejecutarse cuando la dispara el evento configurado en su CREATE TRIGGER — no se invoca a mano con SELECT." data-ko="Es falso: una función RETURNS TRIGGER está pensada para dispararse sola desde el evento de su CREATE TRIGGER (INSERT/UPDATE/DELETE), no para llamarse directo con SELECT." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué diferencia hay entre un trigger BEFORE y uno AFTER?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">BEFORE solo admite SELECT como evento; AFTER solo admite INSERT.</button>
+<button class="quiz-opt">No hay ninguna diferencia real entre uno y el otro, solo el nombre.</button>
+<button class="quiz-opt" data-correct>BEFORE corre antes de guardar y puede cancelar el cambio; AFTER corre después de guardarlo.</button>
+<button class="quiz-opt">AFTER se ejecuta más rápido que BEFORE, sin ninguna otra diferencia.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: BEFORE se ejecuta antes de que el cambio quede guardado, lo que le permite cancelarlo con RAISE EXCEPTION. AFTER reacciona a un cambio que ya ocurrió, como registrar algo en una auditoría." data-ko="Ninguno de los dos está limitado a un solo tipo de sentencia, y la diferencia no es de velocidad: BEFORE puede cancelar el cambio antes de que se guarde; AFTER reacciona después de que ya se guardó." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué le pasa a un INSERT si un trigger BEFORE INSERT ejecuta RAISE EXCEPTION dentro de su función?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La fila se guarda igual, solo con un aviso extra en la consola.</button>
+<button class="quiz-opt" data-correct>El INSERT completo se cancela: la fila nunca llega a guardarse.</button>
+<button class="quiz-opt">Se cancela solo la columna problemática; el resto de la fila se guarda.</button>
+<button class="quiz-opt">RAISE EXCEPTION no produce ningún efecto dentro de un trigger BEFORE.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: RAISE EXCEPTION detiene toda la operación en el acto. Como el trigger corre antes de guardar, la fila nunca llega a insertarse." data-ko="No es un mensaje de advertencia ni una cancelación parcial: RAISE EXCEPTION detiene la operación completa, así que la fila entera nunca se guarda." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Para qué sirve específicamente la cláusula WHEN de un CREATE TRIGGER?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Para elegir en qué base de datos en particular se crea el trigger.</button>
+<button class="quiz-opt">Para limitar cuántas veces por segundo puede dispararse el trigger.</button>
+<button class="quiz-opt">Para decidir si el trigger corre en modo BEFORE o en modo AFTER.</button>
+<button class="quiz-opt" data-correct>Para sumar una condición extra: el trigger solo se dispara si es verdadera.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: WHEN agrega un filtro extra sobre OLD/NEW —el trigger solo se ejecuta cuando esa condición se cumple, como cuando el stock realmente cambió." data-ko="WHEN no elige base de datos ni frecuencia, y el modo BEFORE/AFTER se define aparte. Lo que hace WHEN es filtrar: el trigger solo corre si esa condición extra es verdadera." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet">
+<h2 data-eyebrow="Referencia">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Forma</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>CREATE FUNCTION nombre(...) RETURNS tipo AS $$ ... $$ LANGUAGE plpgsql;</code></td><td>Guardar lógica que devuelve un valor, usable en un SELECT.</td></tr>
+<tr><td><code>CREATE PROCEDURE nombre(...) LANGUAGE plpgsql AS $$ ... $$;</code></td><td>Guardar una acción que no devuelve valor, invocada con CALL.</td></tr>
+<tr><td><code>CALL nombre(argumentos);</code></td><td>Ejecutar un procedimiento almacenado.</td></tr>
+<tr><td><code>IF ... THEN ... ELSIF ... ELSE ... END IF;</code></td><td>Decidir qué hacer, adentro de PL/pgSQL.</td></tr>
+<tr><td><code>RETURNS TRIGGER</code></td><td>Marca que una función está pensada para usarse en un trigger, no para llamarse directo.</td></tr>
+<tr><td><code>OLD</code> / <code>NEW</code></td><td>La fila antes y después del cambio, disponibles dentro de la función del trigger.</td></tr>
+<tr><td><code>CREATE TRIGGER nombre BEFORE|AFTER evento ON tabla FOR EACH ROW EXECUTE FUNCTION funcion();</code></td><td>Conectar una función de trigger a un evento de una tabla.</td></tr>
+<tr><td><code>WHEN (condición)</code></td><td>Filtro extra: el trigger solo se dispara si la condición es verdadera.</td></tr>
+<tr><td><code>RAISE EXCEPTION 'mensaje';</code></td><td>Detener la operación completa con un error, típico en un trigger BEFORE de validación.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat">
+<h2 data-eyebrow="Contexto">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🐘 PL/pgSQL no es el único lenguaje posible</h3><p>PostgreSQL permite escribir funciones en otros lenguajes instalados como extensión: PL/Python, PL/Perl e incluso PL/Java. PL/pgSQL es el que viene incluido por defecto y el más usado, pero no es la única opción.</p></div>
+<div class="info"><h3>🔁 Un trigger puede disparar a otro trigger</h3><p>Si el INSERT que hace un trigger dentro de su función activa, a su vez, otro trigger sobre esa segunda tabla, PostgreSQL sigue la cadena. Encadenar demasiados triggers entre sí puede volverse difícil de rastrear —y en un caso extremo, hasta generar una recursión infinita que Postgres corta con un límite de profundidad.</p></div>
+<div class="info"><h3>👁️ También existen los triggers INSTEAD OF</h3><p>Una vista normal no siempre acepta INSERT/UPDATE/DELETE directo. Un trigger INSTEAD OF permite definir manualmente qué hacer cuando alguien intenta modificar una vista, traduciendo esa operación a cambios reales sobre las tablas de base.</p></div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Procedimientos Almacenados, Funciones y Triggers en PostgreSQL</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Nivel 1: flujo con panel fijo (consola) — tramo 1, Funciones y
+   procedimientos. Prosa a la derecha (.flow-beat) + panel de consola fijo
+   a la izquierda (#fnPanel) que se redibuja según qué paso cruza el
+   centro del viewport. Esta guía no ejecuta SQL real (a diferencia de los
+   talleres con PGlite): los resultados se calculan con JS a partir de
+   datos fijos, verificados de antemano contra Postgres real. No es una
+   actividad calificada: no llama a marcarResuelto. ===== */
+(function(){
+  var fnSteps = document.querySelectorAll('#funciones .flow-beat');
+  if (!fnSteps.length) return;
+
+  var productos = [
+    {id:1, nombre:'Mesa', precio:100, stock:15},
+    {id:2, nombre:'Silla', precio:40, stock:5},
+    {id:3, nombre:'Lámpara', precio:25, stock:0},
+    {id:4, nombre:'Estante', precio:80, stock:8}
+  ];
+
+  function clasificarStock(cantidad){
+    if (cantidad === 0) return 'Agotado';
+    if (cantidad < 10) return 'Bajo';
+    return 'Suficiente';
+  }
+
+  var FN_QUERY = {
+    0: [],
+    1: [
+      '<span class="keyword">CREATE OR REPLACE FUNCTION</span> calcular_precio_final(precio <span class="keyword">NUMERIC</span>)',
+      '<span class="keyword">RETURNS NUMERIC AS</span> $$',
+      '<span class="keyword">BEGIN</span>',
+      '&nbsp;&nbsp;<span class="keyword">RETURN</span> precio * <span class="number">1.13</span>;',
+      '<span class="keyword">END</span>;',
+      '$$ <span class="keyword">LANGUAGE plpgsql</span>'
+    ],
+    2: [
+      '<span class="keyword">SELECT</span> nombre, precio, calcular_precio_final(precio) <span class="keyword">AS</span> precio_final',
+      '<span class="keyword">FROM</span> productos'
+    ],
+    3: [
+      '<span class="keyword">CREATE OR REPLACE FUNCTION</span> clasificar_stock(cantidad <span class="keyword">INT</span>)',
+      '<span class="keyword">RETURNS TEXT AS</span> $$',
+      '<span class="keyword">BEGIN</span>',
+      '&nbsp;&nbsp;<span class="keyword">IF</span> cantidad = <span class="number">0</span> <span class="keyword">THEN RETURN</span> \'Agotado\';',
+      '&nbsp;&nbsp;<span class="keyword">ELSIF</span> cantidad &lt; <span class="number">10</span> <span class="keyword">THEN RETURN</span> \'Bajo\';',
+      '&nbsp;&nbsp;<span class="keyword">ELSE RETURN</span> \'Suficiente\';',
+      '&nbsp;&nbsp;<span class="keyword">END IF</span>;',
+      '<span class="keyword">END</span>;',
+      '$$ <span class="keyword">LANGUAGE plpgsql</span>'
+    ],
+    4: [
+      '<span class="keyword">SELECT</span> nombre, stock, clasificar_stock(stock) <span class="keyword">AS</span> estado',
+      '<span class="keyword">FROM</span> productos'
+    ],
+    5: [
+      '<span class="keyword">CREATE OR REPLACE PROCEDURE</span> actualizar_precio(p_id <span class="keyword">INT</span>, p_nuevo_precio <span class="keyword">NUMERIC</span>)',
+      '<span class="keyword">LANGUAGE plpgsql</span>',
+      '<span class="keyword">AS</span> $$',
+      '<span class="keyword">BEGIN</span>',
+      '&nbsp;&nbsp;<span class="keyword">UPDATE</span> productos <span class="keyword">SET</span> precio = p_nuevo_precio <span class="keyword">WHERE</span> id = p_id;',
+      '<span class="keyword">END</span>;',
+      '$$'
+    ],
+    6: [
+      '<span class="keyword">CALL</span> actualizar_precio(<span class="number">2</span>, <span class="number">55</span>);',
+      '<span class="keyword">SELECT</span> nombre, precio <span class="keyword">FROM</span> productos <span class="keyword">WHERE</span> id = <span class="number">2</span>'
+    ]
+  };
+
+  function fnCompute(step){
+    if (step === 0) return null;
+    if (step === 1) return {type:'success', text:'Función calcular_precio_final(NUMERIC) creada.'};
+    if (step === 2) {
+      var rows2 = productos.map(function(p){ return [p.nombre, 'Bs '+p.precio.toFixed(2), 'Bs '+(p.precio*1.13).toFixed(2)]; });
+      return {type:'table', cols:['nombre','precio','precio_final'], rows: rows2};
+    }
+    if (step === 3) return {type:'success', text:'Función clasificar_stock(INT) creada.'};
+    if (step === 4) {
+      var rows4 = productos.map(function(p){ return [p.nombre, String(p.stock), clasificarStock(p.stock)]; });
+      return {type:'table', cols:['nombre','stock','estado'], rows: rows4};
+    }
+    if (step === 5) return {type:'success', text:'Procedimiento actualizar_precio(INT, NUMERIC) creado.'};
+    if (step === 6) return {type:'table', cols:['nombre','precio'], rows: [['Silla', 'Bs 55.00']]};
+    return null;
+  }
+
+  var fnCurrentStep = -1;
+
+  function fnRenderResult(data, box){
+    if (!data) {
+      box.innerHTML = '<div class="scrolly-result-empty">Sin consulta todavía — el resultado aparece en el próximo paso.</div>';
+    } else if (data.type === 'success') {
+      box.innerHTML = '<div class="scrolly-result-success">✅ '+data.text+'</div>';
+    } else {
+      var head = '<tr>'+data.cols.map(function(c){ return '<th>'+c+'</th>'; }).join('')+'</tr>';
+      var body = data.rows.map(function(r){ return '<tr>'+r.map(function(v){ return '<td>'+v+'</td>'; }).join('')+'</tr>'; }).join('');
+      box.innerHTML = '<table class="scrolly-result-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table><div class="scrolly-result-count">'+data.rows.length+' fila'+(data.rows.length===1?'':'s')+'</div>';
+    }
+  }
+
+  function fnRender(step){
+    if (step === fnCurrentStep) return;
+    fnCurrentStep = step;
+
+    var pre = document.getElementById('fnQueryPre');
+    var lines = FN_QUERY[step] || [];
+    if (!lines.length) {
+      pre.innerHTML = '<span class="scrolly-query-placeholder">-- todavía no escribimos nada</span>';
+    } else {
+      pre.innerHTML = lines.map(function(l,i){ return '<div class="scrolly-qline'+(i===lines.length-1?' is-new':'')+'">'+l+(i===lines.length-1?';':'')+'</div>'; }).join('');
+    }
+
+    fnRenderResult(fnCompute(step), document.getElementById('fnResultBox'));
+
+    document.getElementById('fnPanelStep').textContent = 'Paso '+(step+1)+' / 7';
+    fnSteps.forEach(function(el){ el.classList.toggle('is-active', Number(el.dataset.step)===step); });
+  }
+
+  var fnObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) fnRender(Number(e.target.dataset.step));
+    });
+  }, { rootMargin:'-35% 0px -55% 0px', threshold:0 });
+  fnSteps.forEach(function(s){ fnObserver.observe(s); });
+  fnRender(0);
+})();
+
+/* ===== Nivel 1: flujo con panel fijo (consola) — tramo 2, Triggers =====
+   Mismo mecanismo que el tramo anterior, pero el panel ahora también
+   puede mostrar un error en rojo (.scrolly-result-error) cuando el
+   trigger BEFORE INSERT cancela la operación — el único caso del sitio
+   donde el panel de consola necesita representar una excepción real, no
+   solo éxito/tabla/vacío. ===== */
+(function(){
+  var trgSteps = document.querySelectorAll('#triggers .flow-beat');
+  if (!trgSteps.length) return;
+
+  var TRG_QUERY = {
+    0: [],
+    1: [
+      '<span class="keyword">CREATE TABLE</span> auditoria_stock (',
+      '&nbsp;&nbsp;id <span class="keyword">SERIAL PRIMARY KEY</span>,',
+      '&nbsp;&nbsp;producto_id <span class="keyword">INT</span>,',
+      '&nbsp;&nbsp;stock_anterior <span class="keyword">INT</span>,',
+      '&nbsp;&nbsp;stock_nuevo <span class="keyword">INT</span>,',
+      '&nbsp;&nbsp;fecha <span class="keyword">TIMESTAMP DEFAULT now</span>()',
+      ')'
+    ],
+    2: [
+      '<span class="keyword">CREATE OR REPLACE FUNCTION</span> registrar_cambio_stock()',
+      '<span class="keyword">RETURNS TRIGGER AS</span> $$',
+      '<span class="keyword">BEGIN</span>',
+      '&nbsp;&nbsp;<span class="keyword">INSERT INTO</span> auditoria_stock (producto_id, stock_anterior, stock_nuevo)',
+      '&nbsp;&nbsp;<span class="keyword">VALUES</span> (OLD.id, OLD.stock, NEW.stock);',
+      '&nbsp;&nbsp;<span class="keyword">RETURN</span> NEW;',
+      '<span class="keyword">END</span>;',
+      '$$ <span class="keyword">LANGUAGE plpgsql</span>'
+    ],
+    3: [
+      '<span class="keyword">CREATE TRIGGER</span> trg_auditar_stock',
+      '<span class="keyword">AFTER UPDATE ON</span> productos',
+      '<span class="keyword">FOR EACH ROW</span>',
+      '<span class="keyword">WHEN</span> (OLD.stock <span class="keyword">IS DISTINCT FROM</span> NEW.stock)',
+      '<span class="keyword">EXECUTE FUNCTION</span> registrar_cambio_stock()'
+    ],
+    4: [
+      '<span class="keyword">UPDATE</span> productos <span class="keyword">SET</span> stock = <span class="number">3</span> <span class="keyword">WHERE</span> nombre = \'Mesa\';',
+      '<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> auditoria_stock'
+    ],
+    5: [
+      '<span class="keyword">CREATE OR REPLACE FUNCTION</span> validar_precio_positivo()',
+      '<span class="keyword">RETURNS TRIGGER AS</span> $$',
+      '<span class="keyword">BEGIN</span>',
+      '&nbsp;&nbsp;<span class="keyword">IF</span> NEW.precio &lt;= <span class="number">0</span> <span class="keyword">THEN</span>',
+      '&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">RAISE EXCEPTION</span> \'El precio debe ser mayor a 0\';',
+      '&nbsp;&nbsp;<span class="keyword">END IF</span>;',
+      '&nbsp;&nbsp;<span class="keyword">RETURN</span> NEW;',
+      '<span class="keyword">END</span>;',
+      '$$ <span class="keyword">LANGUAGE plpgsql</span>;',
+      '',
+      '<span class="keyword">CREATE TRIGGER</span> trg_validar_precio',
+      '<span class="keyword">BEFORE INSERT ON</span> productos',
+      '<span class="keyword">FOR EACH ROW</span>',
+      '<span class="keyword">EXECUTE FUNCTION</span> validar_precio_positivo()'
+    ],
+    6: [
+      '<span class="keyword">INSERT INTO</span> productos (nombre, precio, stock)',
+      '<span class="keyword">VALUES</span> (\'Silla rota\', <span class="number">-10</span>, <span class="number">2</span>)'
+    ]
+  };
+
+  function trgCompute(step){
+    if (step === 0) return null;
+    if (step === 1) return {type:'success', text:'Tabla auditoria_stock creada.'};
+    if (step === 2) return {type:'success', text:'Función registrar_cambio_stock() creada.'};
+    if (step === 3) return {type:'success', text:'Trigger trg_auditar_stock creado sobre productos.'};
+    if (step === 4) return {type:'table', cols:['id','producto_id','stock_anterior','stock_nuevo'], rows:[['1','1','15','3']]};
+    if (step === 5) return {type:'success', text:'Función validar_precio_positivo() y trigger trg_validar_precio creados.'};
+    if (step === 6) return {type:'error', text:'ERROR:  El precio debe ser mayor a 0'};
+    return null;
+  }
+
+  var trgCurrentStep = -1;
+
+  function trgRenderResult(data, box){
+    if (!data) {
+      box.innerHTML = '<div class="scrolly-result-empty">Sin consulta todavía — el resultado aparece en el próximo paso.</div>';
+    } else if (data.type === 'success') {
+      box.innerHTML = '<div class="scrolly-result-success">✅ '+data.text+'</div>';
+    } else if (data.type === 'error') {
+      box.innerHTML = '<div class="scrolly-result-error">⛔ '+data.text+'</div>';
+    } else {
+      var head = '<tr>'+data.cols.map(function(c){ return '<th>'+c+'</th>'; }).join('')+'</tr>';
+      var body = data.rows.map(function(r){ return '<tr>'+r.map(function(v){ return '<td>'+v+'</td>'; }).join('')+'</tr>'; }).join('');
+      box.innerHTML = '<table class="scrolly-result-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table><div class="scrolly-result-count">'+data.rows.length+' fila'+(data.rows.length===1?'':'s')+'</div>';
+    }
+  }
+
+  function trgRender(step){
+    if (step === trgCurrentStep) return;
+    trgCurrentStep = step;
+
+    var pre = document.getElementById('trgQueryPre');
+    var lines = TRG_QUERY[step] || [];
+    if (!lines.length) {
+      pre.innerHTML = '<span class="scrolly-query-placeholder">-- todavía no escribimos nada</span>';
+    } else {
+      pre.innerHTML = lines.map(function(l,i){
+        if (l === '') return '<div class="scrolly-qline">&nbsp;</div>';
+        var esUltima = i===lines.length-1;
+        var yaTienePuntoYComa = /;\s*$/.test(l.replace(/<[^>]+>/g,''));
+        return '<div class="scrolly-qline'+(esUltima?' is-new':'')+'">'+l+(esUltima && !yaTienePuntoYComa ?';':'')+'</div>';
+      }).join('');
+    }
+
+    trgRenderResult(trgCompute(step), document.getElementById('trgResultBox'));
+
+    document.getElementById('trgPanelStep').textContent = 'Paso '+(step+1)+' / 7';
+    trgSteps.forEach(function(el){ el.classList.toggle('is-active', Number(el.dataset.sub)===step); });
+  }
+
+  var trgObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) trgRender(Number(e.target.dataset.sub));
+    });
+  }, { rootMargin:'-35% 0px -55% 0px', threshold:0 });
+  trgSteps.forEach(function(s){ trgObserver.observe(s); });
+  trgRender(0);
+})();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde un
+     lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en la
+     URL); accedida directo, como siempre, no dispara nada nuevo. No toca
+     el motor de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. Usa paramsDeAtenza() (con
+     fallback a location.hash) desde el vamos, a diferencia de
+     funciones-ventana-indices.html/agregacion-vistas.html, que todavía
+     usan new URLSearchParams(location.search) a secas y quedarían
+     inactivos en silencio si ATENZA arma el link con el "?" después del
+     "#" — ver el bug ya documentado en CLAUDE.md para esas páginas. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf("?");
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get("atenza_token") && p.get("guia_intento")) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return;
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

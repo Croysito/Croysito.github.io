@@ -581,6 +581,7 @@ body.flow-mode{ background:var(--fondo); }
   --con-fila:#dde5ec;      /* borde entre filas de resultado */
   --con-kw:#c0392b;        /* palabras clave SQL */
   --con-hl:rgba(47,125,74,.10);  /* línea nueva de la consulta */
+  --con-bad:#c0392b;       /* error/excepción */
 }
 
 /* Consola — tema oscuro: la terminal original de la maqueta */
@@ -600,6 +601,7 @@ body.flow-mode{ background:var(--fondo); }
   --con-fila:#1a1f27;
   --con-kw:#ff7b72;
   --con-hl:rgba(126,231,135,.12);
+  --con-bad:#ff7b72;
 }
 
 body.flow-console-mode{ background:var(--con-bg2); color:var(--con-texto); }
@@ -731,6 +733,7 @@ body.flow-console-mode .flow-panel .scrolly-null{ color:var(--con-gris); font-st
 body.flow-console-mode .flow-panel .scrolly-result-count{ color:var(--con-acento); font-size:11px; }
 body.flow-console-mode .flow-panel .scrolly-result-empty{ color:var(--con-gris); }
 body.flow-console-mode .flow-panel .scrolly-result-success{ color:var(--con-acento); }
+body.flow-console-mode .flow-panel .scrolly-result-error{ color:var(--con-bad); font-family:'JetBrains Mono',monospace; }
 
 /* Diagrama de enlaces — tira al pie del panel */
 body.flow-console-mode .flow-panel .scrolly-dg-wrap{
@@ -977,6 +980,7 @@ text.scrolly-ghost{ font-family:'JetBrains Mono',monospace; font-size:8px; fill:
 
 .scrolly-result-empty{ font-size:13px; color:var(--gris); padding:10px 4px; }
 .scrolly-result-success{ font-size:13px; color:var(--verde); padding:10px 4px; font-weight:600; }
+.scrolly-result-error{ font-size:13px; color:#ff8a8a; padding:10px 4px; font-weight:600; font-family:'JetBrains Mono',monospace; }
 .scrolly-result-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
 .scrolly-result-table th{ text-align:left; padding:6px 8px; background:var(--grisClaro); font-size:10.5px; letter-spacing:.03em; text-transform:uppercase; color:var(--gris); font-weight:600; }
 .scrolly-result-table td{ padding:7px 8px; border-bottom:1px solid var(--borde); }

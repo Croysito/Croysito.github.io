@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encapsulación en Python: Atributos y Métodos Privados | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>Encapsulación</span></div>
+<p>Guía completa de encapsulación: atributos y métodos "privados" (_ y __), getters/setters y @property en Python</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#problema">El problema: sin encapsulación</a>
+<a href="#protegido">Convención de un guion bajo (_)</a>
+<a href="#privado">Convención de doble guion bajo (__)</a>
+<a href="#getters-setters">Getters y setters clásicos</a>
+<a href="#property">La forma pythonica: @property</a>
+<a href="#validacion">Validar en el setter</a>
+<a href="#errores">Errores comunes</a>
+<a href="#ejercicios">Ejercicios</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🐍 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Encapsulación <span>en Python</span></h1>
+<p>Hasta ahora, cualquier atributo de un objeto se lee y se modifica libremente desde afuera: <code>objeto.atributo = lo-que-sea</code>, sin que nada lo impida. La <strong>encapsulación</strong> es el principio de proteger el estado interno de un objeto, exponiendo solo lo necesario y controlando cómo se lo modifica.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">En <a href="clases-objetos.html">Clases y objetos</a> ya viste que un objeto guarda sus propios atributos y que un método puede leerlos y modificarlos. Lo que no viste todavía es que, en Python, <strong>nada impide por defecto</strong> que alguien de afuera de la clase asigne cualquier valor a esos atributos, tenga sentido o no. Esta guía es sobre cómo prevenir eso.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía vas a saber usar las convenciones <code>_</code> y <code>__</code> para señalar y dificultar el acceso externo a un atributo, entender qué es el <em>name mangling</em>, escribir getters y setters clásicos, y usar <code>@property</code> —la forma pythonica de lograr lo mismo sin cambiar cómo se accede al atributo desde afuera— para validar un valor antes de aceptarlo.</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Todos los bloques con el encabezado <strong>Python</strong> son de solo lectura (para que los escribas a mano en el editor de abajo). El panel <strong>editor-panel</strong> que sigue a cada uno es donde escribes y ejecutas tu propio código —usa Pyodide, un Python real compilado a WebAssembly. La primera ejecución tarda unos segundos porque descarga el intérprete.</p>
+</div>
+<p>Además del código, esta guía tiene 3 preguntas conceptuales cortas para chequear que entendiste bien el porqué de cada herramienta, no solo su sintaxis.</p>
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">preguntas y ejercicios enviados</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📖 Aprende</h3><p>Por qué el acceso directo a un atributo es riesgoso, y las convenciones <code>_</code>/<code>__</code> que usa Python para señalarlo.</p></div>
+<div class="info"><h3>💻 Practica</h3><p>Ejemplos editables y ejecutables en cada sección, construyendo la misma clase paso a paso.</p></div>
+<div class="info"><h3>🎯 Domina</h3><p>Getters/setters clásicos, <code>@property</code>, y validación de datos con <code>raise</code>.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="problema">
+<div class="card">
+<h2 class="section-title">El problema: sin encapsulación</h2>
+<p class="lead">Cualquier atributo creado con <code>self.atributo = valor</code> queda accesible y modificable desde afuera de la clase, sin ninguna restricción. Eso significa que un objeto puede terminar en un estado que no tiene ningún sentido.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class CuentaBancaria:
+    def __init__(self, titular, saldo):
+        self.titular = titular
+        self.saldo = saldo
+
+cuenta = CuentaBancaria("Ana", 100)
+cuenta.saldo = -500
+print(cuenta.saldo)</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-1">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe una clase Producto con __init__(self, nombre, precio). Crea un objeto y asígnale precio = -20. Imprime el precio."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>-500</pre>
+</div>
+<div class="highlight">
+<strong>Python no impide nada por defecto</strong>
+<p>A diferencia de otros lenguajes con una palabra clave <code>private</code> que el compilador hace cumplir, Python confía en quien usa la clase. Un saldo bancario negativo por una simple asignación no tiene sentido en el mundo real —pero <code>cuenta.saldo = -500</code> corre sin ningún error. El resto de esta guía muestra las herramientas que Python sí ofrece para prevenir esto: convenciones, y validación de verdad con <code>@property</code>.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="protegido">
+<div class="card">
+<h2 class="section-title">Convención de un guion bajo (_protegido)</h2>
+<p class="lead">Anteponer un guion bajo al nombre de un atributo (<code>self._atributo</code>) es la señal que usan los programadores de Python para decir "esto es un detalle interno de la clase, no lo toques desde afuera aunque puedas". Sigue siendo perfectamente accesible.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class CuentaBancaria:
+    def __init__(self, titular, saldo):
+        self.titular = titular
+        self._saldo = saldo  # convención: "no tocar desde afuera"
+
+cuenta = CuentaBancaria("Ana", 100)
+print(cuenta._saldo)
+cuenta._saldo = -500
+print(cuenta._saldo)</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-2">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Cambia tu clase Producto para que guarde _precio en vez de precio. Imprímelo, reasígnale un valor negativo desde afuera, e imprímelo de nuevo."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>100
+-500</pre>
+</div>
+<div class="highlight">
+<strong>Convención, no candado</strong>
+<p>Un solo guion bajo no cambia absolutamente nada a nivel técnico: <code>cuenta._saldo</code> se lee y se escribe exactamente igual que <code>cuenta.saldo</code>. Es pura comunicación entre programadores —muchos editores e IDEs incluso marcan en gris o con una advertencia el acceso a un atributo <code>_protegido</code> desde afuera de su clase, pero Python mismo no hace nada para impedirlo.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="privado">
+<div class="card">
+<h2 class="section-title">Convención de doble guion bajo (__privado) y name mangling</h2>
+<p class="lead">Anteponer <strong>dos</strong> guiones bajos (<code>self.__atributo</code>) activa un mecanismo real del lenguaje llamado <strong>name mangling</strong>: Python renombra el atributo por dentro a <code>_NombreDeLaClase__atributo</code>, así que acceder con el nombre original desde afuera ya no funciona.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class CuentaBancaria:
+    def __init__(self, titular, saldo):
+        self.titular = titular
+        self.__saldo = saldo
+
+cuenta = CuentaBancaria("Ana", 100)
+print(cuenta.__saldo)</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-3">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Cambia tu clase Producto para que guarde __precio (doble guion bajo). Intenta imprimir objeto.precio directo y mira el error."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>AttributeError: 'CuentaBancaria' object has no attribute '__saldo'</pre>
+</div>
+<p>El atributo sigue existiendo: solo que su nombre real, guardado adentro del objeto, es <code>_CuentaBancaria__saldo</code>. Se puede acceder así, aunque nadie debería hacerlo en código real:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">print(cuenta._CuentaBancaria__saldo)</code></pre>
+</div>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>100</pre>
+</div>
+<div class="highlight">
+<strong>Lo mismo aplica a métodos</strong>
+<p>La misma convención sirve para métodos: un método <code>def __validar(self):</code> definido dentro de la clase también sufre name mangling, y está pensado como un método auxiliar interno, pensado para ser llamado únicamente desde otros métodos de la misma clase (<code>self.__validar()</code>), no desde afuera.</p>
+</div>
+<div class="highlight">
+<strong>No es un blindaje real</strong>
+<p>El name mangling no existe por seguridad: existe principalmente para evitar que un atributo <code>__algo</code> definido en una clase choque por accidente con otro <code>__algo</code> de una subclase que la hereda (algo que vas a ver con más detalle en la guía de Herencia). Como mecanismo para "ocultar" datos es fácil de sortear, como recién viste.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="concepto-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Si una clase guarda <code>self.__saldo</code> y, desde afuera de la clase, escribís <code>cuenta.__saldo</code>, ¿qué pasa?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ningún error: __saldo es accesible igual que _saldo o saldo</button>
+<button class="quiz-opt">SyntaxError: los nombres no pueden llevar dos guiones bajos</button>
+<button class="quiz-opt" data-correct>AttributeError: Python renombró el atributo por dentro (name mangling)</button>
+<button class="quiz-opt">Ningún error, pero el valor devuelto siempre es None</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: por el name mangling, el atributo real se llama _CuentaBancaria__saldo. Buscar cuenta.__saldo desde afuera busca un nombre que no existe, y Python lanza AttributeError." data-ko="Por el name mangling, __saldo se guarda internamente como _CuentaBancaria__saldo. Buscar cuenta.__saldo desde afuera de la clase busca un nombre que no existe de verdad, así que Python lanza AttributeError." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="getters-setters">
+<div class="card">
+<h2 class="section-title">Getters y setters clásicos</h2>
+<p class="lead">Ya que <code>__saldo</code> es difícil de tocar directamente desde afuera, hace falta una forma controlada de leerlo y modificarlo. El estilo clásico —el mismo que usan lenguajes como Java— es escribir un método para leer (<strong>getter</strong>) y otro para escribir (<strong>setter</strong>), cada uno con su propio nombre.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class CuentaBancaria:
+    def __init__(self, titular, saldo):
+        self.titular = titular
+        self.__saldo = saldo
+
+    def obtener_saldo(self):
+        return self.__saldo
+
+    def establecer_saldo(self, nuevo_saldo):
+        if nuevo_saldo < 0:
+            print("Error: el saldo no puede ser negativo")
+            return
+        self.__saldo = nuevo_saldo
+
+cuenta = CuentaBancaria("Ana", 100)
+print(cuenta.obtener_saldo())
+cuenta.establecer_saldo(-50)
+cuenta.establecer_saldo(300)
+print(cuenta.obtener_saldo())</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-4">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Agrégale a tu clase Producto (con __precio) los métodos obtener_precio() y establecer_precio(nuevo), que rechace con un print() los precios negativos."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>100
+Error: el saldo no puede ser negativo
+300</pre>
+</div>
+<div class="highlight">
+<strong>Funciona, pero cambia cómo se usa el atributo</strong>
+<p>Este código ya protege el saldo de valores inválidos, pero pagó un precio: en vez de leer y escribir con <code>cuenta.saldo</code>, ahora hay que llamar métodos con paréntesis, <code>cuenta.obtener_saldo()</code>. Eso rompe la simetría con el resto de tus clases, donde los atributos se acceden directo. La siguiente sección resuelve exactamente esto.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="property">
+<div class="card">
+<h2 class="section-title">La forma pythonica: @property</h2>
+<p class="lead"><code>@property</code> es un decorador que convierte un método en algo que se lee <strong>como si fuera un atributo</strong>, sin paréntesis. Por dentro sigue siendo un método —con toda su lógica—, pero por fuera se usa exactamente igual que un atributo normal.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class CuentaBancaria:
+    def __init__(self, titular, saldo):
+        self.titular = titular
+        self.__saldo = saldo
+
+    @property
+    def saldo(self):
+        return self.__saldo
+
+cuenta = CuentaBancaria("Ana", 100)
+print(cuenta.saldo)</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-5">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Convierte obtener_precio() de tu clase Producto en una @property llamada precio (sin paréntesis al leerla)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>100</pre>
+</div>
+<div class="highlight">
+<strong>Por ahora, de solo lectura</strong>
+<p>Tal como está, <code>@property</code> solo definió la parte de <em>lectura</em>. Si en este momento intentaras <code>cuenta.saldo = 500</code>, Python lanzaría <code>AttributeError: property 'saldo' of 'CuentaBancaria' object has no setter</code> —todavía falta la parte que permite escribir, con validación incluida. Eso es lo que sigue.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="concepto-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál es la ventaja principal de <code>@property</code> frente a un getter clásico como <code>obtener_saldo()</code>?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Se accede como cuenta.saldo, sin paréntesis y sin cambiar la sintaxis de uso</button>
+<button class="quiz-opt">Un método con @property se ejecuta más rápido que uno normal, sin excepción</button>
+<button class="quiz-opt">Evita por completo tener que usar guiones bajos en cualquier nombre</button>
+<button class="quiz-opt">Hace que ese atributo ya no se pueda leer nunca desde afuera</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la ventaja de @property no es de rendimiento ni de seguridad, es de sintaxis — permite seguir escribiendo cuenta.saldo, como con cualquier atributo, mientras por dentro corre un método que podés validar." data-ko="La ventaja de @property es de sintaxis, no de rendimiento: permite seguir escribiendo cuenta.saldo (sin paréntesis, como un atributo normal) mientras por dentro corre un método que podés controlar." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="validacion">
+<div class="card">
+<h2 class="section-title">Validar en el setter</h2>
+<p class="lead">Con <code>@saldo.setter</code> se agrega la contraparte de escritura: un método con el mismo nombre que se ejecuta automáticamente cada vez que alguien hace <code>cuenta.saldo = valor</code>. Ahí adentro se puede validar antes de aceptar el cambio.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class CuentaBancaria:
+    def __init__(self, titular, saldo):
+        self.titular = titular
+        self.saldo = saldo  # ya pasa por el setter de abajo
+
+    @property
+    def saldo(self):
+        return self.__saldo
+
+    @saldo.setter
+    def saldo(self, nuevo_saldo):
+        if nuevo_saldo < 0:
+            raise ValueError("El saldo no puede ser negativo")
+        self.__saldo = nuevo_saldo
+
+cuenta = CuentaBancaria("Ana", 100)
+cuenta.saldo = 300
+print(cuenta.saldo)
+cuenta.saldo = -50</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-6">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Agrégale a la property precio de tu clase Producto un @precio.setter que lance raise ValueError(...) si el precio es negativo."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>300
+ValueError: El saldo no puede ser negativo</pre>
+</div>
+<div class="highlight">
+<strong>self.saldo = saldo, no self.__saldo, dentro de __init__</strong>
+<p>Fíjate que <code>__init__</code> asigna con <code>self.saldo = saldo</code> (el nombre de la property), no <code>self.__saldo = saldo</code> directo. Así, la validación del setter corre también al <strong>crear</strong> el objeto —si alguien intentara <code>CuentaBancaria("Ana", -100)</code>, fallaría ahí mismo, en vez de crear una cuenta ya inválida desde el arranque.</p>
+</div>
+<div class="highlight reactivo">
+<strong>Probalo vos mismo</strong>
+<p>El setter de arriba solo acepta valores mayores o iguales a 0. Si alguien intentara asignar <code>cuenta.saldo = </code><input type="number" class="reactivo-input" id="reactivoSaldoValor" value="300" min="-1000" max="1000" aria-label="Valor propuesto para saldo">, el setter <span class="reactivo-resultado" id="reactivoSaldoResultado">lo acepta</span>, porque <span id="reactivoSaldoExplicacion">300 no es menor que 0</span>.</p>
+</div>
+<div class="highlight">
+<strong>raise, no print + return</strong>
+<p>Fíjate que el setter usa <code>raise ValueError(...)</code>, no <code>print(...)</code> seguido de <code>return</code> como en los getters/setters clásicos de más arriba. La diferencia importa: <code>raise</code> <strong>detiene</strong> el programa en el acto y obliga a quien llamó al código a enterarse del problema, en vez de dejar pasar un dato inválido en silencio con solo un mensaje impreso.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="concepto-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué conviene usar <code>raise ValueError(...)</code> en vez de imprimir un mensaje y hacer <code>return</code> dentro de un setter, cuando el valor recibido es inválido?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">raise se ejecuta más rápido que un print seguido de un return</button>
+<button class="quiz-opt">Un setter en Python no permite usar la instrucción return en absoluto</button>
+<button class="quiz-opt">No hay ninguna diferencia real entre las dos formas de escribirlo</button>
+<button class="quiz-opt" data-correct>raise interrumpe la ejecución y evita que el dato inválido quede guardado en silencio</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: con print + return, el programa sigue corriendo como si nada, y nadie se entera de que el valor fue rechazado. raise corta la ejecución ahí mismo, obligando a manejar el error." data-ko="Con print + return, el programa sigue como si nada — nadie se entera de que el valor fue rechazado. raise corta la ejecución en el acto, obligando a que el error se maneje en vez de pasar inadvertido." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="errores">
+<div class="card">
+<h2 class="section-title">Errores comunes</h2>
+<div class="info-grid">
+<div class="info"><h3>❌ Confundir _ con __</h3><p>Un guion bajo (<code>_atributo</code>) es solo una convención visual: sigue siendo tan accesible como cualquier otro atributo. Dos guiones bajos (<code>__atributo</code>) sí activan el name mangling —más difícil de acceder por accidente, pero tampoco imposible.</p></div>
+<div class="info"><h3>❌ print() + return en vez de raise</h3><p>Rechazar un valor inválido con solo un mensaje impreso deja el programa corriendo como si nada hubiera pasado. Quien llamó al setter nunca se entera de que su dato fue ignorado, a menos que revise la salida a mano.</p></div>
+<div class="info"><h3>❌ Definir @property sin su @nombre.setter</h3><p>Una property sin setter es de <strong>solo lectura</strong>. Intentar <code>objeto.atributo = valor</code> sobre ella lanza <code>AttributeError: property ... has no setter</code>, incluso si el getter existe y funciona bien.</p></div>
+<div class="info"><h3>❌ Pensar que __atributo es invisible de verdad</h3><p>El name mangling no borra el atributo: solo le cambia el nombre a <code>_Clase__atributo</code>. Alguien que conozca el truco igual puede leerlo o modificarlo desde afuera —no es un mecanismo de seguridad.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Ejercicios Propuestos</h2>
+<p class="lead">Pon en práctica lo aprendido resolviendo los siguientes ejercicios directamente en el bloque editable.</p>
+<ol style="margin-left:25px;line-height:2">
+<li>Escribe una clase <code>Persona</code> con un atributo protegido <code>_nombre</code> (asignado en <code>__init__</code>) y un método <code>mostrar(self)</code> que lo imprima. Después, desde afuera, reasígnale <code>_nombre</code> a otro valor y volvé a llamar <code>mostrar()</code> para comprobar que la convención no impidió nada.</li>
+<li>Escribe una clase <code>Mascota</code> con un atributo privado <code>__edad</code>, más los métodos clásicos <code>obtener_edad(self)</code> y <code>establecer_edad(self, nueva_edad)</code> —este último debe rechazar con un <code>print()</code> cualquier edad negativa.</li>
+<li>Reescribe la clase <code>Mascota</code> del ejercicio anterior usando <code>@property</code> y <code>@edad.setter</code> en vez de los dos métodos, lanzando <code>raise ValueError(...)</code> si la edad es negativa.</li>
+<li>Escribe una clase <code>Estudiante</code> con una property <code>nota</code> (de 0 a 100) que valide el rango completo con <code>@nota.setter</code> (<code>raise ValueError</code> fuera de rango), y un método <code>aprobo(self)</code> que devuelva <code>True</code> si la nota es mayor o igual a 51.</li>
+<li>Escribe una clase <code>Termometro</code> con un atributo privado <code>__celsius</code> y una property de <strong>solo lectura</strong> <code>fahrenheit</code> que calcule <code>celsius * 9 / 5 + 32</code> —sin ningún setter: una property no siempre protege un valor guardado, a veces solo calcula uno nuevo.</li>
+</ol>
+<div class="editor-panel independiente" data-quiz-id="ejercicios-propuestos">
+<div class="editor-header">
+<span>✍️ Resuelve aquí los ejercicios</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu solución a los ejercicios (puedes resolverlos uno por uno)…"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Reto Final</h2>
+<p>Completa una clase <code>CuentaBancaria</code> más realista que la de los ejemplos, combinando todo lo visto:</p>
+<ul style="margin-left:25px;line-height:2">
+<li><code>__init__(self, titular, saldo_inicial)</code> debe guardar <code>titular</code> y asignar <code>saldo_inicial</code> <strong>a través de la property</strong> (<code>self.saldo = saldo_inicial</code>), para que la validación corra desde el arranque.</li>
+<li>Una property <code>saldo</code> (getter) y su <code>@saldo.setter</code>, que rechace con <code>raise ValueError(...)</code> cualquier valor negativo.</li>
+<li>Un método <code>depositar(self, monto)</code>: si <code>monto</code> no es positivo, <code>raise ValueError(...)</code>; si lo es, súmalo al saldo asignando <code>self.saldo = self.saldo + monto</code> (para que también pase por el setter).</li>
+<li>Un método <code>retirar(self, monto)</code>: si <code>monto</code> no es positivo o es mayor al saldo disponible, <code>raise ValueError("Fondos insuficientes")</code>; si no, réstalo del saldo de la misma forma.</li>
+</ul>
+<p>Pruébala con este código:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">cuenta = CuentaBancaria("Beto", 200)
+cuenta.depositar(100)
+print(cuenta.saldo)
+cuenta.retirar(50)
+print(cuenta.saldo)
+cuenta.retirar(1000)</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-reto">
+<div class="editor-header">
+<span>✍️ Resuelve el reto acá</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="class CuentaBancaria:&#10;    def __init__(self, titular, saldo_inicial):&#10;        self.titular = titular&#10;        self.saldo = saldo_inicial&#10;&#10;    @property&#10;    def saldo(self):&#10;        # completa el getter&#10;&#10;    @saldo.setter&#10;    def saldo(self, nuevo_saldo):&#10;        # completa la validación&#10;&#10;    def depositar(self, monto):&#10;        # completa&#10;&#10;    def retirar(self, monto):&#10;        # completa"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<div class="code salida">
+<div class="code-header"><span>Salida esperada</span></div>
+<pre>300
+250
+ValueError: Fondos insuficientes</pre>
+</div>
+<p>La última línea del ejemplo (<code>cuenta.retirar(1000)</code>) debe detener el programa con ese error —no imprimir nada y seguir de largo.</p>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Uso</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Atributo "protegido" (convención)</td><td><code>self._atributo = valor</code></td></tr>
+<tr><td>Atributo "privado" (name mangling)</td><td><code>self.__atributo = valor</code></td></tr>
+<tr><td>Acceder al nombre real desde afuera</td><td><code>objeto._Clase__atributo</code> (no recomendado)</td></tr>
+<tr><td>Getter clásico</td><td><code>def obtener_x(self): return self.__x</code></td></tr>
+<tr><td>Setter clásico</td><td><code>def establecer_x(self, valor): ...</code></td></tr>
+<tr><td>Property (getter)</td><td><code>@property</code><br><code>def x(self): return self.__x</code></td></tr>
+<tr><td>Setter de una property</td><td><code>@x.setter</code><br><code>def x(self, valor): ...</code></td></tr>
+<tr><td>Rechazar un valor inválido</td><td><code>raise ValueError("mensaje")</code></td></tr>
+<tr><td>Property de solo lectura</td><td><code>@property</code> sin <code>@x.setter</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🔓 "private" no existe en Python</h3><p>A diferencia de Java, C++ o C#, que tienen una palabra clave <code>private</code> que el compilador hace cumplir de verdad, Python no tiene nada equivalente. La filosofía de la comunidad se resume en una frase famosa: "we're all consenting adults here" (acá todos somos adultos que dieron su consentimiento) —se confía en que el programador respete las convenciones.</p></div>
+<div class="info"><h3>🧩 El name mangling piensa en la herencia</h3><p>Su propósito principal no es ocultar datos: es evitar que un atributo <code>__algo</code> de una clase choque por accidente con otro <code>__algo</code> del mismo nombre definido en una subclase que la hereda —un problema que vas a entender mejor en la guía de Herencia.</p></div>
+<div class="info"><h3>🗑️ property también tiene un deleter</h3><p>Además de <code>@property</code> (leer) y <code>@x.setter</code> (escribir), existe <code>@x.deleter</code>, que se ejecuta cuando alguien hace <code>del objeto.x</code>. Es poco común usarlo, pero existe para completar el trío.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Encapsulación en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Explicación reactiva (sección Validar en el setter) — exploratoria,
+   sin calificar: solo recalcula texto en la misma oración al tipear.
+   Mismo patrón que clases-objetos.html. ===== */
+(function(){
+  const input = document.getElementById("reactivoSaldoValor");
+  const salidaResultado = document.getElementById("reactivoSaldoResultado");
+  const salidaExplicacion = document.getElementById("reactivoSaldoExplicacion");
+  if (!input) return;
+  function recalcular(){
+    const v = Number(input.value);
+    if (Number.isNaN(v)) return;
+    if (v >= 0) {
+      salidaResultado.textContent = "lo acepta";
+      salidaExplicacion.textContent = v + " no es menor que 0";
+    } else {
+      salidaResultado.textContent = "lo rechaza con ValueError";
+      salidaExplicacion.textContent = v + " es menor que 0, así que viola la validación";
+    }
+  }
+  input.addEventListener("input", recalcular);
+  recalcular();
+})();
+
+/* ===== Motor de preguntas conceptuales (quiz-mc) ===== */
+const QUIZ_PREFIX = "poo-quiz-" + location.pathname + "-";
+
+// El link real que arma ATENZA para "Tomar la guía" puede llegar como
+// ".../encapsulacion.html#seccion?atenza_token=...&guia_intento=..." — el
+// "?" queda DESPUÉS del "#", así que atenza_token y guia_intento caen
+// dentro del fragmento (hash) de la URL, no de la query string. Un
+// navegador nunca manda el fragmento en location.search, así que leerlos
+// de ahí siempre da vacío con ese formato de link. Esta función junta
+// candidatos — la query real primero, y si no aparece nada ahí, la
+// porción después del "?" que pueda venir enganchada dentro del hash — y
+// devuelve el primero que trae los dos parámetros.
+function paramsDeAtenza() {
+  const candidatos = [location.search];
+  const posInterrogante = location.hash.indexOf("?");
+  if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+  for (const c of candidatos) {
+    const p = new URLSearchParams(c);
+    if (p.get("atenza_token") && p.get("guia_intento")) return p;
+  }
+  return new URLSearchParams(candidatos[0]);
+}
+
+const abiertoDesdeAtenza = (() => {
+  const p = paramsDeAtenza();
+  return Boolean(p.get("atenza_token") && p.get("guia_intento"));
+})();
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => {
+    if (q.classList.contains("editor-panel") && !abiertoDesdeAtenza) return;
+    ids.add(q.dataset.quizId);
+  });
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Resaltado de sintaxis (sin librerías externas) ===== */
+const PY_KEYWORDS = ["False","None","True","and","as","assert","async","await","break","class",
+  "continue","def","del","elif","else","except","finally","for","from","global","if","import",
+  "in","is","lambda","nonlocal","not","or","pass","raise","return","try","while","with","yield",
+  "print","len","int","str","float","bool","input","type","isinstance","round","self"];
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function highlightPython(code){
+  const escaped = escapeHtml(code);
+  const tokens = [];
+  const mask = (html) => {
+    const marker = String.fromCharCode(0xE000 + tokens.length);
+    tokens.push(html);
+    return marker;
+  };
+  let out = escaped.replace(
+    /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:[^"\\]|\\.)*"|f?'(?:[^'\\]|\\.)*')/gm,
+    (m, comment, str) => comment !== undefined
+      ? mask(`<span class="comment">${comment}</span>`)
+      : mask(`<span class="string">${str}</span>`)
+  );
+  out = out.replace(/\b\d+\.?\d*\b/g, m => mask(`<span class="number">${m}</span>`));
+  out = out.replace(new RegExp(`\\b(${PY_KEYWORDS.join("|")})\\b`, "g"), m => mask(`<span class="keyword">${m}</span>`));
+  out = out.replace(/\b([A-Za-z_]\w*)(?=\()/g, m => mask(`<span class="func">${m}</span>`));
+  out = out.replace(/[-]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
+  return out;
+}
+
+/* ===== Pyodide en un Web Worker (así un bucle infinito nunca cuelga la pestaña) —
+   copiado tal cual de guias/funciones.html, sin modificar. ===== */
+const __CONTROL_SLOTS = 3;      // [0]=listo, [1]=largo de la respuesta, [2]=cancelado
+const __CONTROL_BYTES = __CONTROL_SLOTS * 4;
+const __TAM_BUFFER_INPUT = 8192; // bytes UTF-8 para la respuesta de input()
+
+function __crearSabInput(){
+  if (typeof SharedArrayBuffer === "undefined") return null;
+  try {
+    return new SharedArrayBuffer(__CONTROL_BYTES + __TAM_BUFFER_INPUT);
+  } catch (e) {
+    return null;
+  }
+}
+
+function __responderInput(sab, mensaje){
+  const control = new Int32Array(sab, 0, __CONTROL_SLOTS);
+  const textBuf = new Uint8Array(sab, __CONTROL_BYTES);
+  const respuesta = prompt(mensaje);
+  if (respuesta === null) {
+    Atomics.store(control, 2, 1);
+    Atomics.store(control, 1, 0);
+  } else {
+    Atomics.store(control, 2, 0);
+    const bytes = new TextEncoder().encode(respuesta);
+    const len = Math.min(bytes.length, textBuf.length);
+    textBuf.set(bytes.subarray(0, len));
+    Atomics.store(control, 1, len);
+  }
+  Atomics.store(control, 0, 1);
+  Atomics.notify(control, 0);
+}
+
+function __codigoWorkerPyodide(){
+  return `
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js");
+
+let __sabInput = null;
+let pyodideReadyPromise = null;
+
+function inputSincrono(mensaje){
+  if (!__sabInput) {
+    throw new Error("input() no está disponible: este navegador no soporta el modo protegido contra bucles infinitos (SharedArrayBuffer). Probá con una versión reciente de Chrome, Edge o Firefox.");
+  }
+  const control = new Int32Array(__sabInput, 0, ${__CONTROL_SLOTS});
+  const textBuf = new Uint8Array(__sabInput, ${__CONTROL_BYTES});
+  Atomics.store(control, 0, 0);
+  self.postMessage({ tipo: "input-request", mensaje: String(mensaje) });
+  Atomics.wait(control, 0, 0);
+  if (Atomics.load(control, 2)) return null;
+  const len = Atomics.load(control, 1);
+  return new TextDecoder().decode(textBuf.slice(0, len));
+}
+
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.tipo === "init") {
+    __sabInput = e.data.sab;
+  }
+});
+
+async function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      const pyodide = await loadPyodide();
+      await pyodide.runPythonAsync(\`
+import sys, io, builtins, time
+from js import inputSincrono as __input_sincrono
+
+__LIMITE_SEGUNDOS = 8
+
+def __custom_input(mensaje=""):
+    respuesta = __input_sincrono(str(mensaje))
+    if respuesta is None:
+        raise EOFError("Entrada cancelada por el usuario")
+    print(mensaje, end="")
+    print(respuesta)
+    return respuesta
+
+def __run_capture(src):
+    buf = io.StringIO()
+    old_stdout = sys.stdout
+    old_input = builtins.input
+    sys.stdout = buf
+    inicio = time.time()
+
+    def __watchdog(frame, event, arg):
+        if time.time() - inicio > __LIMITE_SEGUNDOS:
+            raise TimeoutError(f"El código tardó más de {__LIMITE_SEGUNDOS} segundos en ejecutarse (¿bucle infinito?) y fue detenido.")
+        return __watchdog
+
+    builtins.input = __custom_input
+    err = None
+    sys.settrace(__watchdog)
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.settrace(None)
+        sys.stdout = old_stdout
+        builtins.input = old_input
+    return buf.getvalue(), err
+\`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+self.onmessage = async (e) => {
+  if (e.data && e.data.tipo === "init") return;
+  const { id, codigo } = e.data;
+  try {
+    const pyodide = await cargarPyodide();
+    const funcion = pyodide.globals.get("__run_capture");
+    const resultado = funcion(codigo);
+    const [salida, error] = resultado.toJs();
+    resultado.destroy();
+    self.postMessage({ id, salida, error });
+  } catch (err) {
+    self.postMessage({ id, salida: "", error: "No se pudo ejecutar el código: " + err });
+  }
+};
+`;
+}
+
+let workerPy = null;
+let sabInputActual = null;
+let pedidoIdPy = 0;
+let pedidoActualPy = null;
+
+function __programarTimeoutPy(pedido){
+  pedido.timer = setTimeout(() => {
+    if (pedidoActualPy && pedidoActualPy.id === pedido.id) {
+      reiniciarWorkerPyodide();
+      pedidoActualPy.reject(new Error("El código tardó demasiado y fue detenido automáticamente."));
+      pedidoActualPy = null;
+    }
+  }, 20000);
+}
+
+function crearWorkerPyodide(){
+  const blob = new Blob([__codigoWorkerPyodide()], { type: "application/javascript" });
+  const worker = new Worker(URL.createObjectURL(blob));
+  sabInputActual = __crearSabInput();
+  worker.postMessage({ tipo: "init", sab: sabInputActual });
+  worker.onmessage = (e) => {
+    const msg = e.data;
+    if (msg && msg.tipo === "input-request") {
+      if (pedidoActualPy) clearTimeout(pedidoActualPy.timer);
+      __responderInput(sabInputActual, msg.mensaje);
+      if (pedidoActualPy) __programarTimeoutPy(pedidoActualPy);
+      return;
+    }
+    const { id, salida, error } = msg;
+    if (pedidoActualPy && pedidoActualPy.id === id) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.resolve({ salida, error });
+      pedidoActualPy = null;
+    }
+  };
+  worker.onerror = () => {
+    if (pedidoActualPy) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.reject(new Error("El intérprete de Python se cerró inesperadamente."));
+      pedidoActualPy = null;
+    }
+    reiniciarWorkerPyodide();
+  };
+  return worker;
+}
+
+function obtenerWorkerPyodide(){
+  if (!workerPy) workerPy = crearWorkerPyodide();
+  return workerPy;
+}
+
+function reiniciarWorkerPyodide(){
+  if (workerPy) workerPy.terminate();
+  workerPy = null;
+  sabInputActual = null;
+}
+
+function detenerEjecucion(){
+  reiniciarWorkerPyodide();
+  if (pedidoActualPy) {
+    clearTimeout(pedidoActualPy.timer);
+    pedidoActualPy.reject(new Error("Ejecución detenida."));
+    pedidoActualPy = null;
+  }
+}
+
+async function ejecutarPython(codigo){
+  const worker = obtenerWorkerPyodide();
+  const id = ++pedidoIdPy;
+  return new Promise((resolve, reject) => {
+    pedidoActualPy = { id, resolve, reject, timer: null };
+    __programarTimeoutPy(pedidoActualPy);
+    worker.postMessage({ id, codigo });
+  });
+}
+
+/* ===== Resaltar cada ejemplo de solo lectura ===== */
+function resaltarEjemplo(bloque){
+  const codeEl = bloque.querySelector("pre code.src");
+  if (!codeEl) return;
+  codeEl.innerHTML = highlightPython(codeEl.textContent.trim());
+}
+
+/* ===== Conectar un panel de editor en blanco (ejecutar código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const submitBtn = panel.querySelector(".code-btn.submit");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+  const quizId = panel.dataset.quizId;
+
+  const stopBtn = document.createElement("button");
+  stopBtn.type = "button";
+  stopBtn.className = "code-btn stop";
+  stopBtn.textContent = "⏹ Detener";
+  stopBtn.setAttribute("aria-label", "Detener la ejecución");
+  stopBtn.hidden = true;
+  runBtn.after(stopBtn);
+  stopBtn.onclick = () => detenerEjecucion();
+
+  textarea.addEventListener("paste", e => e.preventDefault());
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key !== "Tab") return;
+    e.preventDefault();
+    const inicio = textarea.selectionStart;
+    const fin = textarea.selectionEnd;
+    textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+    textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "📨 Enviar para revisión"; }
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    stopBtn.hidden = false;
+    try {
+      const { salida, error } = await ejecutarPython(textarea.value);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    } catch (e) {
+      outputBody.textContent = e && e.message ? e.message : String(e);
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+      stopBtn.hidden = true;
+    }
+  };
+
+  if (submitBtn && quizId) {
+    submitBtn.onclick = () => {
+      marcarResuelto(quizId, "ok");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "✅ Enviado";
+    };
+  }
+}
+
+/* ===== Bloquear copiado del ejemplo (para que se escriba a mano) ===== */
+function bloquearCopiado(bloque){
+  const pre = bloque.querySelector("pre");
+  if (!pre) return;
+  const header = bloque.querySelector(".code-header span");
+  const avisar = () => {
+    if (!header) return;
+    const original = header.dataset.original || header.textContent;
+    header.dataset.original = original;
+    header.textContent = "🔒 Escríbelo tú mismo";
+    clearTimeout(header._avisoTimeout);
+    header._avisoTimeout = setTimeout(() => { header.textContent = original; }, 1600);
+  };
+  pre.addEventListener("copy", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("contextmenu", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("dragstart", e => e.preventDefault());
+}
+
+/* ===== Igualar la altura del editor a la del ejemplo ===== */
+function sincronizarAltura(bloque, panel){
+  const pre = bloque.querySelector("pre");
+  const textarea = panel.querySelector(".editor");
+  if (pre && textarea) textarea.style.minHeight = pre.offsetHeight + "px";
+}
+
+if (!abiertoDesdeAtenza) {
+  document.querySelectorAll(".editor-panel .code-btn.submit").forEach(btn => btn.remove());
+}
+
+const parejas = [];
+document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
+  resaltarEjemplo(bloque);
+  bloquearCopiado(bloque);
+  const panel = bloque.nextElementSibling;
+  if (!panel || !panel.classList.contains("editor-panel")) return;
+  conectarEditor(panel);
+  parejas.push([bloque, panel]);
+});
+
+document.querySelectorAll(".editor-panel.independiente").forEach(conectarEditor);
+document.querySelectorAll(".code.salida").forEach(bloquearCopiado);
+
+parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel));
+window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel)));
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde un
+     lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en la
+     URL); accedida directo, como siempre, no dispara nada nuevo. No toca
+     el motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('editor-panel')) {
+      var codigo = quiz.querySelector('.editor');
+      var salida = quiz.querySelector('.output-body');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre:
+          (codigo ? codigo.value : '') +
+          '\n\n--- Salida ---\n' +
+          (salida ? salida.textContent : ''),
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

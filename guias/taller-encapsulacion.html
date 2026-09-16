@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller de Encapsulación: Practica POO en Python | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* Bloqueo de copiar/pegar en los editores: flash de aviso + toast global.
+   Mismo patrón que taller-clases-objetos.html, taller-funciones.html y los
+   talleres de Base de Datos II. */
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>Taller</span></div>
+<p>Repaso integrador: encapsulación, getters/setters y @property en Python</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#zona-pruebas">Zona de pruebas libres</a>
+<a href="#convenciones">1. Convención _ y name mangling (__)</a>
+<a href="#getters-setters">2. Getters y setters clásicos</a>
+<a href="#property-validacion">3. @property y validación con raise</a>
+<a href="#reto">Reto final</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Taller de Repaso</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Encapsulación: <span>Taller Integrador</span></h1>
+<p>Ya viste la teoría de <code>_</code>, <code>__</code>, getters/setters y <code>@property</code> como tema separado. Este taller no enseña nada nuevo: te da <strong>9 problemas cortos más un reto final</strong> para que practiques esas herramientas escribiendo clases de cero, hasta que dejen de sentirse como una receta y se sientan como una costumbre.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Este taller es la práctica integradora de <a href="encapsulacion.html">Encapsulación</a> junto con todo lo anterior: <a href="clases-objetos.html">Clases y Objetos</a>, <a href="funciones.html">Funciones</a> y el resto de guías de POO. No repite la teoría —si algo no te suena (name mangling, <code>@property</code>, <code>raise</code>), es el momento de volver a repasarlo antes de seguir.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito y alcance</strong>
+<p>Este taller asume que ya completaste <a href="encapsulacion.html">Encapsulación</a>. Ningún ejercicio necesita <strong>herencia</strong> ni <strong>polimorfismo</strong> —nada de eso se explicó todavía—, y tampoco necesitás <code>try</code>/<code>except</code> (manejo de excepciones): esta materia todavía no lo vio.</p>
+</div>
+<div class="highlight">
+<strong>⚠️ A veces tu código va a "fallar" a propósito</strong>
+<p>Varios ejercicios te piden provocar un error a propósito (acceder a un atributo privado desde afuera, o asignarle un valor inválido a una property). Ver un <code>AttributeError</code> o un <code>ValueError</code> en rojo en esos casos es el resultado <strong>esperado</strong>, no una señal de que tu código está mal. Como todavía no viste <code>try</code>/<code>except</code>, no hace falta atraparlo: comprobá que aparece, y seguí.</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Cada ejercicio trae un editor <strong>vacío</strong>: el enunciado te dice qué clase tenés que escribir, y vos escribís el código Python de cero. Presiona <strong>▶ Ejecutar</strong> para correrlo de verdad en tu navegador con Pyodide (Python real compilado a WebAssembly). La primera ejecución tarda unos segundos porque descarga el intérprete. Si estás resolviendo el taller desde un lanzamiento de ATENZA, además aparece el botón <strong>📨 Enviar para revisión</strong> una vez que el código corra sin errores, para mandar ese ejercicio al docente (no se autocorrige).</p>
+</div>
+<div class="highlight">
+<strong>✋ Se escribe a mano</strong>
+<p>En este taller, copiar y pegar código en los editores está deshabilitado (incluido arrastrar y soltar). La idea es que practiques escribiendo la sintaxis vos mismo, no que la traigas de otro lado.</p>
+</div>
+<div class="quiz-tracker" id="quizTracker" hidden>
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">ejercicios enviados</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🔒 Convenciones</h3><p>Practicás <code>_protegido</code> y <code>__privado</code> hasta ver de primera mano qué impide cada uno y qué no.</p></div>
+<div class="info"><h3>🛠️ Getters/setters → @property</h3><p>Escribís el mismo control de datos primero a mano y después con la forma pythonica.</p></div>
+<div class="info"><h3>🎯 Reto final</h3><p>Una transferencia entre dos cuentas bancarias, combinando encapsulación con "pasar un objeto como parámetro".</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Este bloque queda disponible durante todo el taller. Usalo en cualquier momento para probar una idea suelta, revisar cómo se comporta una clase, o experimentar algo que se te ocurra a mitad de un ejercicio —sin desordenar los bloques numerados.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🧪 Escribe cualquier código Python</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu código">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Zona de pruebas libres" placeholder="# Por ejemplo: class Caja:&#10;#     def __init__(self, contenido):&#10;#         self.__contenido = contenido"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="convenciones">
+<div class="card">
+<h2 class="section-title">1. Convención _ y name mangling (__)</h2>
+<p class="lead">Tres problemas para comprobar en carne propia la diferencia real entre un guion bajo (convención, sigue accesible) y dos guiones bajos (name mangling, más difícil de tocar por accidente).</p>
+
+<div class="highlight">
+<strong>Enunciado — 1.1: Libro protegido</strong>
+<p>Escribe una clase <code>Libro</code> con <code>__init__(self, titulo)</code> que guarde el atributo como <code>self._titulo</code> (con un solo guion bajo). Agrégale un método <code>mostrar(self)</code> que imprima <code>"Estoy leyendo: " + self._titulo</code>. Crea un objeto, llamá <code>mostrar()</code>, después reasignale <code>_titulo</code> a otro valor <strong>desde afuera de la clase</strong>, y volvé a llamar <code>mostrar()</code> para comprobar que la convención no impidió nada.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-1-1">
+<div class="editor-header">
+<span>✍️ Ejercicio 1.1 — Libro protegido</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: libro protegido" placeholder="# Escribe la clase Libro con __init__(self, titulo) guardando self._titulo, y el método mostrar(self)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.2: Mochila con límite privado</strong>
+<p>Escribe una clase <code>Mochila</code> con <code>__init__(self, peso_max)</code> que guarde el límite como <code>self.__peso_max</code> (name mangling). Agrégale un método <code>cabe(self, peso)</code> que devuelva <code>True</code> si <code>peso</code> es menor o igual a <code>self.__peso_max</code>, o <code>False</code> en caso contrario. Crea un objeto con <code>peso_max=10</code> y probá <code>cabe()</code> con dos valores distintos, imprimiendo el resultado de cada uno. Por último, en una línea aparte, intentá <code>print(mochila.__peso_max)</code> para ver el <code>AttributeError</code> (ver el aviso de arriba: es el resultado esperado).</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-1-2">
+<div class="editor-header">
+<span>✍️ Ejercicio 1.2 — Mochila con límite privado</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: mochila con límite privado" placeholder="# Escribe Mochila con __init__(self, peso_max) guardando self.__peso_max, y el método cabe(self, peso)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.3: Termostato con método privado</strong>
+<p>Escribe una clase <code>Termostato</code> con <code>__init__(self, temperatura)</code> que guarde <code>self.__temperatura</code>. Agrégale un método <strong>privado</strong> <code>__dentro_de_rango(self)</code> que devuelva <code>True</code> si <code>self.__temperatura</code> está entre 15 y 30 (ambos incluidos). Después, un método público <code>ajustar(self, nueva_temperatura)</code> que: guarde el valor viejo en una variable, asigne <code>self.__temperatura = nueva_temperatura</code>, y llame a <code>self.__dentro_de_rango()</code> para comprobar el resultado —si da <code>False</code>, debe volver a dejar <code>self.__temperatura</code> en el valor viejo e imprimir <code>"Fuera de rango permitido"</code>. Prueba <code>ajustar()</code> con un valor válido y con uno inválido.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-1-3">
+<div class="editor-header">
+<span>✍️ Ejercicio 1.3 — Termostato con método privado</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: termostato con método privado" placeholder="# Escribe Termostato con __dentro_de_rango(self) privado, usado por ajustar(self, nueva_temperatura)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="getters-setters">
+<div class="card">
+<h2 class="section-title">2. Getters y setters clásicos</h2>
+<p class="lead">Tres problemas con el estilo clásico: un método para leer, otro para escribir con validación —sin <code>@property</code> todavía.</p>
+
+<div class="highlight">
+<strong>Enunciado — 2.1: Producto con precio protegido</strong>
+<p>Escribe una clase <code>Producto</code> con <code>__init__(self, nombre, precio)</code> que guarde el precio como <code>self.__precio</code>. Agrégale <code>obtener_precio(self)</code> (devuelve el precio) y <code>establecer_precio(self, nuevo_precio)</code>: si <code>nuevo_precio</code> es menor o igual a 0, debe imprimir <code>"Error: el precio debe ser mayor a 0"</code> y no cambiar nada; si no, actualiza <code>self.__precio</code>. Prueba <code>establecer_precio()</code> con un valor inválido y con uno válido, imprimiendo <code>obtener_precio()</code> después de cada intento.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-2-1">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.1 — Producto con precio protegido</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: producto con precio protegido" placeholder="# Escribe Producto con __precio, obtener_precio(self) y establecer_precio(self, nuevo_precio)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.2: Mascota que cumple años</strong>
+<p>Escribe una clase <code>Mascota</code> con <code>__init__(self, nombre, edad)</code> que guarde la edad como <code>self.__edad</code>. Agrégale <code>obtener_edad(self)</code>, <code>establecer_edad(self, nueva_edad)</code> (rechaza con un <code>print()</code> cualquier edad negativa), y un método <code>cumplir_anios(self)</code> que llame a <code>self.establecer_edad(self.obtener_edad() + 1)</code> —reutilizando el propio setter en vez de tocar <code>self.__edad</code> directo. Crea un objeto y llamá <code>cumplir_anios()</code> dos veces seguidas, imprimiendo <code>obtener_edad()</code> después de cada una.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-2-2">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.2 — Mascota que cumple años</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: mascota que cumple años" placeholder="# Escribe Mascota con __edad, obtener_edad(self), establecer_edad(self, nueva_edad) y cumplir_anios(self)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.3: Cuenta de ahorro con depósito</strong>
+<p>Escribe una clase <code>CuentaAhorro</code> con <code>__init__(self, saldo)</code> que guarde <code>self.__saldo</code>. Agrégale <code>obtener_saldo(self)</code>, <code>establecer_saldo(self, nuevo_saldo)</code> (rechaza con un <code>print()</code> cualquier saldo negativo), y un método <code>depositar(self, monto)</code> que llame a <code>self.establecer_saldo(self.obtener_saldo() + monto)</code>. Crea una cuenta con saldo inicial 100, depositá 50 y 30 por separado, imprimiendo el saldo después de cada depósito.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-2-3">
+<div class="editor-header">
+<span>✍️ Ejercicio 2.3 — Cuenta de ahorro con depósito</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: cuenta de ahorro con depósito" placeholder="# Escribe CuentaAhorro con __saldo, obtener_saldo(self), establecer_saldo(self, nuevo_saldo) y depositar(self, monto)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="property-validacion">
+<div class="card">
+<h2 class="section-title">3. @property y validación con raise</h2>
+<p class="lead">Tres problemas para reescribir el mismo control de datos, ahora con la forma pythonica: se accede como un atributo normal, y un valor inválido detiene el programa con <code>raise ValueError(...)</code> en vez de solo avisar con un <code>print()</code>.</p>
+
+<div class="highlight">
+<strong>Enunciado — 3.1: Producto, versión @property</strong>
+<p>Reescribe la clase <code>Producto</code> del ejercicio 2.1 usando <code>@property</code>: una property <code>precio</code> (getter que devuelve <code>self.__precio</code>) y su <code>@precio.setter</code>, que lance <code>raise ValueError("El precio debe ser mayor a 0")</code> si el valor no es positivo. En <code>__init__</code>, asigná el precio con <code>self.precio = precio</code> (a través del setter, no <code>self.__precio</code> directo). Prueba asignando <code>producto.precio = 50</code> y después <code>producto.precio = -10</code> (esto último debe detener el programa con el error).</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-3-1">
+<div class="editor-header">
+<span>✍️ Ejercicio 3.1 — Producto, versión @property</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: producto versión property" placeholder="# Escribe Producto con @property precio y @precio.setter que valide con raise ValueError."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.2: Estudiante con nota validada</strong>
+<p>Escribe una clase <code>Estudiante</code> con <code>__init__(self, nombre, nota)</code>, donde <code>nota</code> se asigna a través de una property <code>nota</code>. Su <code>@nota.setter</code> debe lanzar <code>raise ValueError("La nota debe estar entre 0 y 100")</code> si el valor está fuera de ese rango. Agrégale un método <code>aprobo(self)</code> que devuelva <code>True</code> si <code>self.nota</code> es mayor o igual a 51. Crea un estudiante con una nota válida, imprimí si aprobó, y después probá asignarle <code>estudiante.nota = 150</code> para ver el error.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-3-2">
+<div class="editor-header">
+<span>✍️ Ejercicio 3.2 — Estudiante con nota validada</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: estudiante con nota validada" placeholder="# Escribe Estudiante con property nota (0 a 100 con raise ValueError) y el método aprobo(self)."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.3: Termómetro con conversión de solo lectura</strong>
+<p>Escribe una clase <code>Termometro</code> con <code>__init__(self, celsius)</code>, donde <code>celsius</code> se asigna a través de una property <code>celsius</code>. Su <code>@celsius.setter</code> debe lanzar <code>raise ValueError("La temperatura no puede ser menor al cero absoluto")</code> si el valor es menor a -273.15. Agrégale además una property de <strong>solo lectura</strong> <code>fahrenheit</code> (sin setter) que calcule <code>self.celsius * 9 / 5 + 32</code>. Crea un objeto con una temperatura válida e imprimí ambas properties.</p>
+</div>
+<div class="editor-panel" data-quiz-id="ej-3-3">
+<div class="editor-header">
+<span>✍️ Ejercicio 3.3 — Termómetro con conversión de solo lectura</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Editor: termómetro con conversión de solo lectura" placeholder="# Escribe Termometro con property celsius (con raise ValueError) y la property de solo lectura fahrenheit."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="reto">
+<div class="card">
+<h2 class="section-title">Reto final: Transferencia entre cuentas</h2>
+<p class="lead">Cierra el taller combinando encapsulación con algo que ya sabés de antes: pasar un objeto como parámetro a un método de otro objeto.</p>
+<div class="highlight">
+<strong>Clase que tenés que escribir</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><code>__init__(self, titular, saldo_inicial)</code> — guarda <code>titular</code> y asigna <code>saldo_inicial</code> <strong>a través de la property</strong> (<code>self.saldo = saldo_inicial</code>).</li>
+<li>Una property <code>saldo</code> (getter) y su <code>@saldo.setter</code>, que lance <code>raise ValueError("El saldo no puede ser negativo")</code> si el valor es negativo.</li>
+<li><strong>1.</strong> <code>depositar(self, monto)</code> — si <code>monto</code> no es positivo, <code>raise ValueError("El monto a depositar debe ser positivo")</code>; si lo es, sumalo al saldo asignando <code>self.saldo = self.saldo + monto</code>.</li>
+<li><strong>2.</strong> <code>retirar(self, monto)</code> — si <code>monto</code> no es positivo o es mayor al saldo disponible, <code>raise ValueError("Fondos insuficientes")</code>; si no, restalo de la misma forma.</li>
+<li><strong>3.</strong> <code>transferir(self, otra_cuenta, monto)</code> — recibe <strong>otro objeto</strong> <code>CuentaBancaria</code> como parámetro. Debe llamar a <code>self.retirar(monto)</code> y, si no falló, a <code>otra_cuenta.depositar(monto)</code> —reutilizando los métodos que ya escribiste, sin repetir su lógica.</li>
+</ul>
+</div>
+<p>Pruébala con este código:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">cuenta_ana = CuentaBancaria("Ana", 500)
+cuenta_beto = CuentaBancaria("Beto", 100)
+
+cuenta_ana.transferir(cuenta_beto, 200)
+print(cuenta_ana.saldo)
+print(cuenta_beto.saldo)
+
+cuenta_ana.transferir(cuenta_beto, 10000)</code></pre>
+</div>
+<div class="editor-panel independiente" data-quiz-id="ej-reto-final">
+<div class="editor-header">
+<span>🏆 Resuelve aquí el reto</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu solución al reto final" placeholder="# class CuentaBancaria:
+#     def __init__(self, titular, saldo_inicial):
+#         self.titular = titular
+#         self.saldo = saldo_inicial
+#
+#     @property
+#     def saldo(self):
+#         ...
+#
+#     @saldo.setter
+#     def saldo(self, nuevo_saldo):
+#         ...
+#
+#     def depositar(self, monto):
+#         ...
+#
+#     def retirar(self, monto):
+#         ...
+#
+#     def transferir(self, otra_cuenta, monto):
+#         ...
+#
+# Prueba tu clase con el código de arriba."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<div class="code salida">
+<div class="code-header"><span>Salida esperada</span></div>
+<pre>300
+300
+ValueError: Fondos insuficientes</pre>
+</div>
+<p>La última línea (<code>cuenta_ana.transferir(cuenta_beto, 10000)</code>) debe detener el programa con ese error —Ana no tiene 10.000 para transferir.</p>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet del taller</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Herramienta</th><th scope="col">Para qué la usaste hoy</th></tr></thead>
+<tbody>
+<tr><td><code>self._atributo</code></td><td>Convención: "no tocar desde afuera", pero sigue siendo accesible.</td></tr>
+<tr><td><code>self.__atributo</code></td><td>Name mangling: Python lo renombra por dentro, más difícil de acceder por accidente.</td></tr>
+<tr><td><code>def __metodo(self): ...</code></td><td>Método auxiliar interno, pensado para llamarse solo desde otros métodos de la misma clase.</td></tr>
+<tr><td><code>def obtener_x(self): return self.__x</code></td><td>Getter clásico: leer un atributo privado de forma controlada.</td></tr>
+<tr><td><code>def establecer_x(self, valor): ...</code></td><td>Setter clásico: validar antes de escribir, con <code>print()</code> si el valor es inválido.</td></tr>
+<tr><td><code>@property</code> / <code>@x.setter</code></td><td>La misma idea que un getter/setter, pero se accede como <code>objeto.x</code>, sin paréntesis.</td></tr>
+<tr><td><code>raise ValueError("mensaje")</code></td><td>Rechazar un valor inválido deteniendo el programa, en vez de solo avisar.</td></tr>
+<tr><td>Property sin <code>@x.setter</code></td><td>Solo lectura —útil para un valor calculado, como <code>fahrenheit</code> a partir de <code>celsius</code>.</td></tr>
+<tr><td><code>metodo(self, otro_objeto)</code></td><td>Pasar un objeto como parámetro a un método de otro objeto (la transferencia del reto final).</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🔁 Cada cuenta sigue siendo independiente</h3><p>En el reto final, <code>cuenta_ana</code> y <code>cuenta_beto</code> son dos objetos separados: cuando <code>transferir()</code> modifica el saldo de una a través de <code>self</code> y el de la otra a través del parámetro <code>otra_cuenta</code>, cada una guarda su propio <code>__saldo</code> sin pisar al de la otra.</p></div>
+<div class="info"><h3>🧮 Una property puede no guardar nada</h3><p><code>fahrenheit</code> del ejercicio 3.3 no tiene ningún <code>self.__fahrenheit</code> guardado —se recalcula cada vez que la leés, a partir de <code>celsius</code>. Una property es un método disfrazado de atributo, así que puede calcular en vez de solo devolver algo guardado.</p></div>
+<div class="info"><h3>🏗️ Herencia, la siguiente gran idea</h3><p><code>Producto</code>, <code>Estudiante</code> y <code>CuentaBancaria</code> de este taller repiten el mismo patrón de property + setter validado una y otra vez. La <strong>herencia</strong> va a permitir definir ese patrón una sola vez y que otras clases lo hereden.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller de Encapsulación en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Integración con ATENZA (progreso y envío de ejercicios) =====
+   Este taller no tiene motor de quiz-mc — cada "pregunta" es un
+   ejercicio de código, así que marcarResuelto()/actualizarProgreso()
+   solo las disparan los botones "📨 Enviar para revisión" de los
+   editor-panel con data-quiz-id (la zona de pruebas libres no tiene
+   uno a propósito: no es un ejercicio evaluable). Mismo patrón que
+   taller-clases-objetos.html. */
+const QUIZ_PREFIX = "poo-quiz-" + location.pathname + "-";
+
+function paramsDeAtenza() {
+  const candidatos = [location.search];
+  const posInterrogante = location.hash.indexOf("?");
+  if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+  for (const c of candidatos) {
+    const p = new URLSearchParams(c);
+    if (p.get("atenza_token") && p.get("guia_intento")) return p;
+  }
+  return new URLSearchParams(candidatos[0]);
+}
+
+const abiertoDesdeAtenza = (() => {
+  const p = paramsDeAtenza();
+  return Boolean(p.get("atenza_token") && p.get("guia_intento"));
+})();
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+const quizTracker = document.getElementById("quizTracker");
+if (abiertoDesdeAtenza && quizTracker) quizTracker.hidden = false;
+actualizarProgreso();
+
+/* ===== Pyodide en un Web Worker (así un bucle infinito nunca cuelga la pestaña) ===== */
+const __CONTROL_SLOTS = 3;      // [0]=listo, [1]=largo de la respuesta, [2]=cancelado
+const __CONTROL_BYTES = __CONTROL_SLOTS * 4;
+const __TAM_BUFFER_INPUT = 8192; // bytes UTF-8 para la respuesta de input()
+
+function __crearSabInput(){
+  if (typeof SharedArrayBuffer === "undefined") return null;
+  try {
+    return new SharedArrayBuffer(__CONTROL_BYTES + __TAM_BUFFER_INPUT);
+  } catch (e) {
+    return null;
+  }
+}
+
+function __responderInput(sab, mensaje){
+  const control = new Int32Array(sab, 0, __CONTROL_SLOTS);
+  const textBuf = new Uint8Array(sab, __CONTROL_BYTES);
+  const respuesta = prompt(mensaje);
+  if (respuesta === null) {
+    Atomics.store(control, 2, 1);
+    Atomics.store(control, 1, 0);
+  } else {
+    Atomics.store(control, 2, 0);
+    const bytes = new TextEncoder().encode(respuesta);
+    const len = Math.min(bytes.length, textBuf.length);
+    textBuf.set(bytes.subarray(0, len));
+    Atomics.store(control, 1, len);
+  }
+  Atomics.store(control, 0, 1);
+  Atomics.notify(control, 0);
+}
+
+function __codigoWorkerPyodide(){
+  return `
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js");
+
+let __sabInput = null;
+let pyodideReadyPromise = null;
+
+function inputSincrono(mensaje){
+  if (!__sabInput) {
+    throw new Error("input() no está disponible: este navegador no soporta el modo protegido contra bucles infinitos (SharedArrayBuffer). Probá con una versión reciente de Chrome, Edge o Firefox.");
+  }
+  const control = new Int32Array(__sabInput, 0, ${__CONTROL_SLOTS});
+  const textBuf = new Uint8Array(__sabInput, ${__CONTROL_BYTES});
+  Atomics.store(control, 0, 0);
+  self.postMessage({ tipo: "input-request", mensaje: String(mensaje) });
+  Atomics.wait(control, 0, 0);
+  if (Atomics.load(control, 2)) return null;
+  const len = Atomics.load(control, 1);
+  return new TextDecoder().decode(textBuf.slice(0, len));
+}
+
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.tipo === "init") {
+    __sabInput = e.data.sab;
+  }
+});
+
+async function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      const pyodide = await loadPyodide();
+      await pyodide.runPythonAsync(\`
+import sys, io, builtins, time
+from js import inputSincrono as __input_sincrono
+
+__LIMITE_SEGUNDOS = 8
+
+def __custom_input(mensaje=""):
+    respuesta = __input_sincrono(str(mensaje))
+    if respuesta is None:
+        raise EOFError("Entrada cancelada por el usuario")
+    print(mensaje, end="")
+    print(respuesta)
+    return respuesta
+
+def __run_capture(src):
+    buf = io.StringIO()
+    old_stdout = sys.stdout
+    old_input = builtins.input
+    sys.stdout = buf
+    inicio = time.time()
+
+    def __watchdog(frame, event, arg):
+        if time.time() - inicio > __LIMITE_SEGUNDOS:
+            raise TimeoutError(f"El código tardó más de {__LIMITE_SEGUNDOS} segundos en ejecutarse (¿bucle infinito?) y fue detenido.")
+        return __watchdog
+
+    builtins.input = __custom_input
+    err = None
+    sys.settrace(__watchdog)
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.settrace(None)
+        sys.stdout = old_stdout
+        builtins.input = old_input
+    return buf.getvalue(), err
+\`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+self.onmessage = async (e) => {
+  if (e.data && e.data.tipo === "init") return;
+  const { id, codigo } = e.data;
+  try {
+    const pyodide = await cargarPyodide();
+    const funcion = pyodide.globals.get("__run_capture");
+    const resultado = funcion(codigo);
+    const [salida, error] = resultado.toJs();
+    resultado.destroy();
+    self.postMessage({ id, salida, error });
+  } catch (err) {
+    self.postMessage({ id, salida: "", error: "No se pudo ejecutar el código: " + err });
+  }
+};
+`;
+}
+
+let workerPy = null;
+let sabInputActual = null;
+let pedidoIdPy = 0;
+let pedidoActualPy = null;
+
+function __programarTimeoutPy(pedido){
+  pedido.timer = setTimeout(() => {
+    if (pedidoActualPy && pedidoActualPy.id === pedido.id) {
+      reiniciarWorkerPyodide();
+      pedidoActualPy.reject(new Error("El código tardó demasiado y fue detenido automáticamente."));
+      pedidoActualPy = null;
+    }
+  }, 20000);
+}
+
+function crearWorkerPyodide(){
+  const blob = new Blob([__codigoWorkerPyodide()], { type: "application/javascript" });
+  const worker = new Worker(URL.createObjectURL(blob));
+  sabInputActual = __crearSabInput();
+  worker.postMessage({ tipo: "init", sab: sabInputActual });
+  worker.onmessage = (e) => {
+    const msg = e.data;
+    if (msg && msg.tipo === "input-request") {
+      if (pedidoActualPy) clearTimeout(pedidoActualPy.timer);
+      __responderInput(sabInputActual, msg.mensaje);
+      if (pedidoActualPy) __programarTimeoutPy(pedidoActualPy);
+      return;
+    }
+    const { id, salida, error } = msg;
+    if (pedidoActualPy && pedidoActualPy.id === id) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.resolve({ salida, error });
+      pedidoActualPy = null;
+    }
+  };
+  worker.onerror = () => {
+    if (pedidoActualPy) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.reject(new Error("El intérprete de Python se cerró inesperadamente."));
+      pedidoActualPy = null;
+    }
+    reiniciarWorkerPyodide();
+  };
+  return worker;
+}
+
+function obtenerWorkerPyodide(){
+  if (!workerPy) workerPy = crearWorkerPyodide();
+  return workerPy;
+}
+
+function reiniciarWorkerPyodide(){
+  if (workerPy) workerPy.terminate();
+  workerPy = null;
+  sabInputActual = null;
+}
+
+function detenerEjecucion(){
+  reiniciarWorkerPyodide();
+  if (pedidoActualPy) {
+    clearTimeout(pedidoActualPy.timer);
+    pedidoActualPy.reject(new Error("Ejecución detenida."));
+    pedidoActualPy = null;
+  }
+}
+
+async function ejecutarPython(codigo){
+  const worker = obtenerWorkerPyodide();
+  const id = ++pedidoIdPy;
+  return new Promise((resolve, reject) => {
+    pedidoActualPy = { id, resolve, reject, timer: null };
+    __programarTimeoutPy(pedidoActualPy);
+    worker.postMessage({ id, codigo });
+  });
+}
+
+/* ===== Toast de aviso al bloquear copiar/pegar en los editores ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  if (!clipboardToast) return;
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
+/* ===== Resaltado de sintaxis para el ejemplo de solo lectura del reto final ===== */
+const PY_KEYWORDS = ["False","None","True","and","as","assert","async","await","break","class",
+  "continue","def","del","elif","else","except","finally","for","from","global","if","import",
+  "in","is","lambda","nonlocal","not","or","pass","raise","return","try","while","with","yield",
+  "print","len","int","str","float","bool","input","type","isinstance","round","self"];
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function highlightPython(code){
+  const escaped = escapeHtml(code);
+  const tokens = [];
+  const mask = (html) => {
+    const marker = String.fromCharCode(0xE000 + tokens.length);
+    tokens.push(html);
+    return marker;
+  };
+  let out = escaped.replace(
+    /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:[^"\\]|\\.)*"|f?'(?:[^'\\]|\\.)*')/gm,
+    (m, comment, str) => comment !== undefined
+      ? mask(`<span class="comment">${comment}</span>`)
+      : mask(`<span class="string">${str}</span>`)
+  );
+  out = out.replace(/\b\d+\.?\d*\b/g, m => mask(`<span class="number">${m}</span>`));
+  out = out.replace(new RegExp(`\\b(${PY_KEYWORDS.join("|")})\\b`, "g"), m => mask(`<span class="keyword">${m}</span>`));
+  out = out.replace(/\b([A-Za-z_]\w*)(?=\()/g, m => mask(`<span class="func">${m}</span>`));
+  out = out.replace(/[-]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
+  return out;
+}
+
+function resaltarEjemplo(bloque){
+  const codeEl = bloque.querySelector("pre code.src");
+  if (!codeEl) return;
+  codeEl.innerHTML = highlightPython(codeEl.textContent.trim());
+}
+
+function bloquearCopiadoEjemplo(bloque){
+  const pre = bloque.querySelector("pre");
+  if (!pre) return;
+  const header = bloque.querySelector(".code-header span");
+  const avisar = () => {
+    if (!header) return;
+    const original = header.dataset.original || header.textContent;
+    header.dataset.original = original;
+    header.textContent = "🔒 Escríbelo tú mismo";
+    clearTimeout(header._avisoTimeout);
+    header._avisoTimeout = setTimeout(() => { header.textContent = original; }, 1600);
+  };
+  pre.addEventListener("copy", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("contextmenu", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("dragstart", e => e.preventDefault());
+}
+
+document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
+  resaltarEjemplo(bloque);
+  bloquearCopiadoEjemplo(bloque);
+});
+document.querySelectorAll(".code.salida").forEach(bloquearCopiadoEjemplo);
+
+/* ===== Conectar un panel de editor (bloqueado a copiar/pegar, ejecuta código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const submitBtn = panel.querySelector(".code-btn.submit");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+  const quizId = panel.dataset.quizId;
+
+  const stopBtn = document.createElement("button");
+  stopBtn.type = "button";
+  stopBtn.className = "code-btn stop";
+  stopBtn.textContent = "⏹ Detener";
+  stopBtn.setAttribute("aria-label", "Detener la ejecución");
+  stopBtn.hidden = true;
+  runBtn.after(stopBtn);
+  stopBtn.onclick = () => detenerEjecucion();
+
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En este taller el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  ["copy", "cut", "paste", "drop"].forEach(evt => {
+    textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); });
+  });
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart;
+      const fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (teclaCtrl && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      avisarBloqueo();
+    }
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "📨 Enviar para revisión"; }
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    stopBtn.hidden = false;
+    try {
+      const { salida, error } = await ejecutarPython(codigo);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    } catch (e) {
+      outputBody.textContent = e && e.message ? e.message : String(e);
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+      stopBtn.hidden = true;
+    }
+  };
+
+  if (submitBtn && quizId) {
+    submitBtn.onclick = () => {
+      marcarResuelto(quizId, "ok");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "✅ Enviado";
+    };
+  }
+}
+
+if (!abiertoDesdeAtenza) {
+  document.querySelectorAll(".editor-panel .code-btn.submit").forEach(btn => btn.remove());
+}
+
+document.querySelectorAll(".editor-panel").forEach(conectarEditor);
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si el taller se abrió desde un
+     lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en la
+     URL); accedido directo, como siempre, no dispara nada nuevo. No toca el
+     motor de ejercicios de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. Mismo bloque que
+     taller-clases-objetos.html, adaptado porque este taller no tiene
+     quiz-mc/quiz-open — cada data-quiz-id es siempre un editor-panel. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var panel = document.querySelector('[data-quiz-id="' + id + '"]');
+    var codigo = panel ? panel.querySelector('.editor') : null;
+    var salida = panel ? panel.querySelector('.output-body') : null;
+    post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+      referencia: id,
+      texto_libre:
+        (codigo ? codigo.value : '') +
+        '\n\n--- Salida ---\n' +
+        (salida ? salida.textContent : ''),
+    }).catch(function () {});
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Taller enviado! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu taller — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu taller — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var enviados = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) enviados++; });
+    if (ids.size > 0 && enviados === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
