@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Antecedentes, Situación Problemática y Problema | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // jerarquia-organizacional.html, con el parche de paramsAtenza() que
+  // también busca dentro de location.hash (el link real de ATENZA a
+  // veces llega como "...html#seccion?atenza_token=...", con el "?"
+  // después del "#"). El progreso de esta guía vive en localStorage por
+  // navegador, no por intento; si el guia_intento de la URL cambió, se
+  // limpia el progreso previo ANTES de que el motor de quizzes lo lea
+  // (por eso corre acá, en el <head>, antes que el resto de la página).
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  // Debe coincidir con QUIZ_PREFIX del motor de quizzes, más abajo en la página.
+  var QUIZ_PREFIX = 'tgs-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">TGS · <span>Problema</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🔁 Guía de Aula Invertida</span>
+<h1 class="flow-h1">Del Sistema al <span>Problema</span> de tu Proyecto de Grado</h1>
+<p class="flow-lead">Antes de escribir el Capítulo 1 de tu proyecto de grado hay una pregunta que decide todo lo que sigue: ¿de verdad sabés cuál es el problema, o ya elegiste la solución y la estás llamando "problema"? Esta guía usa las herramientas de TGS que ya conocés — jerarquía y entorno, rich picture y CATWOE, arquetipos, caja negra — para construir Antecedentes, Situación Problemática y Problema de una forma que resista la primera pregunta de un tribunal.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Vas a acompañar a Marisol, estudiante de Ingeniería de Sistemas, mientras decide cómo investigar el problema de su propio proyecto de grado. En cada decisión vas a poder probar primero un camino equivocado — para entender por qué falla — antes de que se desbloquee el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>El punto de partida: la cooperativa "Nueva Esperanza"</h2>
+<p class="lead">Marisol eligió trabajar su proyecto de grado con la Cooperativa de Transporte Interprovincial <strong>"Nueva Esperanza"</strong>, que en los últimos cuatro años creció de 20 a 40 buses. Sabe que algo no funciona bien — pero todavía no sabe qué es "el problema" en términos que un proyecto de grado pueda sostener.</p>
+<div class="highlight">
+<strong>La tentación de siempre</strong>
+<p>Antes de seguir, seguro ya tenés ganas de completar la frase "el problema es que...". Probemos qué pasa si lo hacemos ya mismo.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="antecedentes catwoe decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cuál es la mejor forma de empezar?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Definir de una vez: "el problema es que la cooperativa no tiene un sistema informático."</button>
+<button class="quiz-opt" data-key="b" data-correct>Investigar primero cómo funciona hoy la cooperativa — quién hace qué y dónde aparecen las quejas — antes de nombrar nada.</button>
+<button class="quiz-opt" data-key="c">Buscar una tesis parecida sobre otra cooperativa y adaptar su problema a este caso.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Fijate lo que hiciste: nombraste una <strong>salida</strong> (un sistema informático) sin haber mirado el proceso real de la cooperativa. En términos de Entrada-Proceso-Salida, elegiste la salida de memoria — eso es diseñar la solución antes de diagnosticar el problema. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Los antecedentes (trabajos previos, estudios similares) son apoyo y contexto — nunca un atajo para copiar el problema de otro caso. La situación problemática de Nueva Esperanza es propia: sus actores, su historia y sus tensiones son distintas a las de cualquier otra cooperativa. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. Antes de nombrar un problema hay que entender el sistema tal como es hoy — sus actores, sus reglas no escritas, sus quejas — usando las mismas herramientas de diagnóstico que ya conocés. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="antecedentes" hidden>
+<h2>Antecedentes: contexto con relación causal, no historia bonita</h2>
+<p class="lead">Un antecedente útil conecta al lector con el <strong>origen</strong> del problema — un crecimiento, un cambio de entorno, una decisión pasada — usando las mismas ideas de <a href="jerarquia-organizacional.html">jerarquía, entorno e historia del sistema</a> que ya viste. Un antecedente inútil es un dato suelto que no explica nada de lo que vas a diagnosticar.</p>
+<div class="highlight">
+<strong>Ejemplo de Nueva Esperanza</strong>
+<p><strong>Útil:</strong> "En 2022 la flota pasó de 20 a 40 buses sin cambiar el sistema manual de control de reservas y mantenimiento." — conecta un cambio real del sistema con el problema que vas a investigar.</p>
+<p><strong>Relleno:</strong> "El local administrativo de la cooperativa está pintado de azul y blanco." — verdadero, pero no explica nada del problema.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="antecedentes-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Antecedente útil (con relación causal al problema) o relleno?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">En 2022 la flota pasó de 20 a 40 buses sin cambiar el sistema manual de control de reservas y mantenimiento.</span>
+<div class="quiz-classify-btns">
+<button>Relleno</button>
+<button data-correct>Antecedente útil</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La cooperativa organiza una fiesta de aniversario cada mes de julio.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Relleno</button>
+<button>Antecedente útil</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un estudio de 2021 en una cooperativa similar encontró que la falta de digitalización aumenta 30% los tiempos de mantenimiento no programado.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Antecedente útil</button>
+<button>Relleno</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El actual presidente de la cooperativa lleva cinco años en el cargo.</span>
+<div class="quiz-classify-btns">
+<button>Antecedente útil</button>
+<button data-correct>Relleno</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Desde 2023 cada chofer-propietario anota sus reservas en un cuaderno propio, sin cruce de información con los demás.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Antecedente útil</button>
+<button>Relleno</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El local administrativo de la cooperativa está pintado de azul y blanco.</span>
+<div class="quiz-classify-btns">
+<button>Antecedente útil</button>
+<button data-correct>Relleno</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="catwoe" hidden>
+<h2>Situación problemática: armá el CATWOE de Nueva Esperanza</h2>
+<p class="lead">Ya viste CATWOE en <a href="sistemas-duros-blandos.html">Metodologías de Sistemas: Duros y Blandos</a> — Clientes, Actores, Transformación, Weltanschauung (cosmovisión), Owner (dueño) y Environment (entorno). Completá cada elemento con la situación real de la cooperativa.</p>
+
+<div class="quiz quiz-fill" data-quiz-id="catwoe-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. Los pasajeros y las familias que dependen del transporte para llegar a tiempo son los
+<select class="quiz-blank" data-correct="clientes">
+<option value="">— elige —</option>
+<option value="actores">Actores (A)</option>
+<option value="owner">Owner (O)</option>
+<option value="clientes">Clientes (C)</option>
+<option value="environment">Environment (E)</option>
+</select>.</p>
+<p>2. Los choferes-propietarios y la secretaria que registra pagos son los
+<select class="quiz-blank" data-correct="actores">
+<option value="">— elige —</option>
+<option value="clientes">Clientes (C)</option>
+<option value="actores">Actores (A)</option>
+<option value="weltanschauung">Weltanschauung (W)</option>
+<option value="owner">Owner (O)</option>
+</select>.</p>
+<p>3. El proceso que transforma "reservas dispersas en cuadernos" en "información centralizada y confiable" es la
+<select class="quiz-blank" data-correct="transformacion">
+<option value="">— elige —</option>
+<option value="environment">Environment (E)</option>
+<option value="actores">Actores (A)</option>
+<option value="owner">Owner (O)</option>
+<option value="transformacion">Transformación (T)</option>
+</select>.</p>
+<p>4. Que cada chofer-propietario asuma "mi cuaderno alcanza porque conozco a mis pasajeros", sin cuestionarlo, es la
+<select class="quiz-blank" data-correct="weltanschauung">
+<option value="">— elige —</option>
+<option value="weltanschauung">Weltanschauung (W)</option>
+<option value="clientes">Clientes (C)</option>
+<option value="owner">Owner (O)</option>
+<option value="transformacion">Transformación (T)</option>
+</select>.</p>
+<p>5. El directorio de la cooperativa, que puede autorizar o frenar cualquier cambio de sistema, es el
+<select class="quiz-blank" data-correct="owner">
+<option value="">— elige —</option>
+<option value="actores">Actores (A)</option>
+<option value="environment">Environment (E)</option>
+<option value="owner">Owner (O)</option>
+<option value="clientes">Clientes (C)</option>
+</select>.</p>
+<p>6. La normativa de transporte interprovincial y la competencia de otras cooperativas forman parte del
+<select class="quiz-blank" data-correct="environment">
+<option value="">— elige —</option>
+<option value="transformacion">Transformación (T)</option>
+<option value="environment">Environment (E)</option>
+<option value="weltanschauung">Weltanschauung (W)</option>
+<option value="actores">Actores (A)</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>¿Cómo se redacta la situación problemática?</h2>
+<p class="lead">Ya tenés antecedentes y CATWOE. Ahora hay que ponerlo en palabras — y ahí aparece una segunda versión, más sutil, de la misma trampa inicial.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="causaraiz decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo se redacta la situación problemática?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Describir la tensión que percibe cada actor: dueños que desconfían de sus registros, pasajeros con reservas dobles.</button>
+<button class="quiz-opt" data-key="b">Repetir que la situación problemática es, otra vez, que falta un sistema informático.</button>
+<button class="quiz-opt" data-key="c">Tomar solo la opinión del presidente de la cooperativa, porque es quien firma el proyecto.</button>
+</div>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. La situación problemática junta las tensiones que percibe cada actor (una Weltanschauung distinta para cada uno) sin comprometerse todavía con una causa ni con una solución. Ahora sí podés preguntarte: ¿cuál es, en el fondo, la causa raíz de todo esto? Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="b" hidden>Nombrar "falta de sistema" sigue siendo una solución disfrazada — ya la descartaste en la decisión anterior. La situación problemática necesita describir la tensión real, no la solución que imaginás. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>El SSM de Checkland (el mismo de CATWOE) existe justamente porque una situación problemática rara vez la ve una sola persona de la misma forma. Mirar solo la perspectiva del dueño ignora al resto de los actores del CATWOE que armaste arriba. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="causaraiz" hidden>
+<h2>De la situación al problema: causa raíz, no síntoma</h2>
+<p class="lead">A medida que la cooperativa creció, cada chofer-propietario siguió anotando sus reservas en su propio cuaderno porque "total, así siempre funcionó". Cada vez que aparece un síntoma — una reserva duplicada, un mantenimiento olvidado — la respuesta es siempre la misma: pedirle a la secretaria que "revise a mano" con más cuidado. La carga de trabajo manual crece, pero la causa real nunca se toca.</p>
+
+<div class="quiz quiz-mc" data-quiz-id="arquetipo-mc">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué arquetipo sistémico describe mejor la dinámica de Nueva Esperanza?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Límites del crecimiento: la flota no puede seguir sumando buses porque no hay más choferes disponibles.</button>
+<button class="quiz-opt">Éxito para quien tiene éxito: dos choferes compiten por las mismas rutas rentables.</button>
+<button class="quiz-opt">Tragedia de los comunes: todos comparten el mismo taller de mantenimiento y lo saturan.</button>
+<button class="quiz-opt" data-correct>Desplazar la carga: cada síntoma se resuelve con un parche manual, sin atender la causa de fondo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: cada vez que aparece un síntoma (reserva duplicada, mantenimiento olvidado) la respuesta es un parche manual («revisar con más cuidado») en vez de atender la causa de fondo — la falta de un registro centralizado. Eso es Desplazar la carga: la solución sintomática alivia a corto plazo, pero debilita la capacidad de resolver la causa raíz." data-ko="No es Límites del crecimiento (no hay un límite de capacidad frenando el crecimiento en sí), ni Éxito para quien tiene éxito (no compiten dos opciones por el mismo recurso), ni Tragedia de los comunes (no hay un recurso compartido que se agota). El patrón acá es un parche manual repetido en vez de atacar la causa: Desplazar la carga." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>¿Cómo se formula el problema final?</h2>
+<p class="lead">Última decisión. Con antecedentes, CATWOE y el arquetipo identificado, ¿cómo se redacta el problema del Capítulo 1?</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="sintesis repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo se formula el problema final?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Problema: falta un sistema de información que gestione reservas y mantenimiento.</button>
+<button class="quiz-opt" data-key="b">Problema: los choferes-propietarios no cooperan con los cambios del directorio.</button>
+<button class="quiz-opt" data-key="c" data-correct>Problema: la falta de un registro centralizado impide detectar a tiempo reservas duplicadas y mantenimientos pendientes.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Tercera vez que aparece la misma trampa: nombrar el sistema que falta es proponer una solución, no describir un problema. Un problema se redacta como una carencia o consecuencia observable, nunca como "falta X". Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Culpar a un actor individual ignora que es el sistema completo — no una persona — el que no tiene un mecanismo de retroalimentación para que alguien vea el conjunto a tiempo. TGS pide mirar el sistema, no buscar culpables. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto: el problema queda formulado como una causa raíz sistémica (ausencia de un mecanismo centralizado = falta de retroalimentación), con una consecuencia verificable, y sin nombrar ninguna solución todavía. Esto sí resiste la primera pregunta de un tribunal: "¿cómo sabés que ese es el problema?"</p>
+</div>
+</section>
+
+<section class="flow-flat" id="sintesis" hidden>
+<h2>El pipeline completo</h2>
+<p class="lead">Los tres pasos que acabás de recorrer con Nueva Esperanza, resumidos con la herramienta de TGS detrás de cada uno y la señal de alerta que indica que algo salió mal.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Paso</th><th scope="col">Qué es</th><th scope="col">Herramienta TGS</th><th scope="col">Señal de alerta</th></tr></thead>
+<tbody>
+<tr><td>Antecedentes</td><td>Contexto con relación causal directa al problema.</td><td>Jerarquía, entorno, historia del sistema.</td><td>Dato suelto sin conexión con el problema.</td></tr>
+<tr><td>Situación problemática</td><td>Tensión que percibe cada actor, sin solución implícita.</td><td>Rich picture + CATWOE.</td><td>"Falta X" o solo la visión del dueño.</td></tr>
+<tr><td>Problema</td><td>Causa raíz sistémica, verificable y medible.</td><td>Arquetipos/causal loops, caja negra o E-P-S.</td><td>Nombrar un síntoma o culpar a una persona.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el método. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="repaso-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada herramienta de TGS con su rol en el Capítulo 1.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="catwoe">CATWOE</button>
+<button class="quiz-match-item" data-pair="arquetipo">Arquetipos / causal loops</button>
+<button class="quiz-match-item" data-pair="jerarquia">Jerarquía y entorno</button>
+<button class="quiz-match-item" data-pair="cajanegra">Caja negra / E-P-S</button>
+<button class="quiz-match-item" data-pair="richpicture">Rich picture</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="jerarquia">Da contexto con relación causal para redactar antecedentes.</button>
+<button class="quiz-match-item" data-pair="richpicture">Mapea de un vistazo quiénes participan y qué tensiones hay entre ellos.</button>
+<button class="quiz-match-item" data-pair="catwoe">Junta la perspectiva de cada actor en la situación problemática.</button>
+<button class="quiz-match-item" data-pair="cajanegra">Ayuda a no nombrar la solución antes de tiempo.</button>
+<button class="quiz-match-item" data-pair="arquetipo">Distingue la causa raíz del problema de un simple síntoma.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un estudiante escribe: "El problema es que el consultorio médico no tiene una app para agendar citas." ¿Qué falla en esta redacción?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Nada — ya está lista tal cual para el Capítulo 1 del proyecto.</button>
+<button class="quiz-opt" data-correct>Nombra una solución (una app) en vez de una carencia observable.</button>
+<button class="quiz-opt">Le falta mencionar a los pacientes como actores del sistema.</button>
+<button class="quiz-opt">Es demasiado corta para contar como un problema válido.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: 'no tiene una app' propone directamente una solución. Un problema bien redactado describiría, por ejemplo, la consecuencia observable de agendar citas sin ningún control (pacientes duplicados, horas perdidas), sin nombrar todavía ninguna herramienta." data-ko="El problema real no es la falta de actores ni la extensión del texto: es que nombra una solución (una app) en vez de describir una carencia o consecuencia observable — la misma trampa que viste con Nueva Esperanza." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Un antecedente puede ser un dato real y verificable sobre la organización y, aun así, ser "relleno" en tu proyecto de grado.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: que un dato sea real no lo vuelve útil. Un antecedente es relleno cuando no tiene relación causal con el problema que estás investigando, sin importar si es verificable o no — como el color del local de Nueva Esperanza." data-ko="Es verdadero: un dato puede ser 100% real y aun así no explicar nada del problema. Lo que vuelve útil a un antecedente es su relación causal con el problema, no su veracidad." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: el Capítulo 1 de tu propio proyecto</h2>
+<p class="lead">Ahora te toca con tu tema real, no ficticio. En el cuadro de abajo, en no más de un párrafo por punto, escribí: 1) un antecedente con relación causal directa a tu problema, 2) tu situación problemática sin nombrar ninguna solución, 3) tu problema como causa raíz verificable.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Antecedente, situación problemática y problema de tu proyecto de grado.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>El antecedente tiene relación causal directa con el problema — no es un dato suelto.</li>
+<li>La situación problemática describe tensiones percibidas por distintos actores, no una sola perspectiva.</li>
+<li>Ni la situación problemática ni el problema nombran una solución (nada de "falta un sistema X").</li>
+<li>El problema está redactado como causa raíz, no como síntoma ni como culpa de una persona.</li>
+<li>El problema incluye una consecuencia verificable u observable.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Antecedentes</td><td>Contexto con relación causal directa al problema, no relleno descriptivo.</td></tr>
+<tr><td>Situación problemática</td><td>Tensión percibida por cada actor, sin nombrar todavía una solución.</td></tr>
+<tr><td>Problema</td><td>Causa raíz sistémica, con una consecuencia verificable.</td></tr>
+<tr><td>CATWOE</td><td>Clientes, Actores, Transformación, Weltanschauung, Owner, Environment.</td></tr>
+<tr><td>Rich picture</td><td>Mapa visual de actores, tensiones y entorno de la situación problemática.</td></tr>
+<tr><td>Arquetipo / causal loop</td><td>Distingue un síntoma repetido de la causa raíz real.</td></tr>
+<tr><td>Caja negra / E-P-S</td><td>Mirar entrada y proceso antes de asumir cuál debería ser la salida (la solución).</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📋 CATWOE nació para problemas "sin forma"</h3><p>Peter Checkland desarrolló el SSM en los años 70 precisamente para situaciones donde nadie se pone de acuerdo en cuál es el problema — el mismo tipo de situación "no estructurada" que encontrás al arrancar un proyecto de grado.</p></div>
+<div class="info"><h3>🎯 La objeción más común de un tribunal</h3><p>En la práctica, la objeción que más se repite en la defensa de un Capítulo 1 no es sobre el marco teórico ni la metodología: es "¿esto que describís es el problema, o ya es tu solución?" — exactamente la trampa que recorriste en esta guía.</p></div>
+<div class="info"><h3>🔧 Los 5 Por Qué de Toyota</h3><p>Otra técnica para llegar a la causa raíz, muy usada junto con los arquetipos sistémicos: preguntar "¿por qué?" cinco veces seguidas sobre un síntoma hasta llegar a algo que ya no tiene una causa más profunda detrás.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Antecedentes, Situación Problemática y Problema</h2>
+<p>Material de apoyo para la asignatura de Teoría General de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "tgs-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — primer piloto de "narrativa ramificada" del
+   sitio: reusa el vocabulario visual de quiz-mc (.quiz-opts/.quiz-opt/
+   .quiz-fb) pero con reglas propias. Las opciones incorrectas muestran
+   su propia consecuencia (.quiz-fb[data-key]) y NO se deshabilitan —
+   se puede reintentar cuantas veces haga falta. Solo la opción correcta
+   cierra la decisión, guarda el progreso y desbloquea (quita "hidden" a)
+   el/los siguiente(s) tramo(s) listados en data-unlock (separados por
+   espacio), haciendo scroll suave hacia el primero. Si la decisión ya
+   estaba resuelta en una visita anterior (localStorage), se restaura ese
+   estado al cargar la página en vez de volver a ocultar lo ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedida directo, como siempre, no dispara nada nuevo. No toca el
+     motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen (ver DEPLOY-GUIAS-SNIPPET.md en
+     el repo de atenza para el detalle de cada endpoint). -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  // El link real que arma ATENZA a veces llega como
+  // "...html#seccion?atenza_token=...", con el "?" después del "#" — ahí
+  // location.search por sí solo da vacío, por eso se busca también
+  // dentro de location.hash (mismo parche que el script de limpieza del
+  // <head>, autocontenido acá para no tocar el motor de quizzes).
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  // ── Progreso limpio por intento (redundante con el script del <head>,
+  // pero si por lo que sea ese no corrió a tiempo, esto es la segunda
+  // red): QUIZ_PREFIX guarda el progreso por PÁGINA, sin saber nada de
+  // "intentos" de ATENZA. Si guia_intento cambió, se limpia todo antes
+  // de que el estudiante toque nada.
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  // ── Aviso flotante — la única señal visible de "ya terminaste, podés
+  // cerrar la pestaña" o "no se pudo enviar, tocá para reintentar".
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  // ── Pantalla completa: se pide en un click real del usuario, no solo.
+  // Estilos en línea porque esta página (flow) no tiene una clase para
+  // esto — fixed y con z-index por encima de .flow-topbar (800) y
+  // .flow-menu-panel (891) para que no quede tapado por ninguno.
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  // ── Reportar cada pregunta resuelta — engancha marcarResuelto(), que ya
+  // usan los tipos de actividad de esta guía (mc/decision/match/classify/
+  // fill/open) sin tocar ninguno de sus call-sites. quiz-open (textarea +
+  // ver checklist) se distingue por su propia clase y reporta el texto,
+  // no correcta/incorrecta.
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  // ── Incidencias: salir de pantalla completa, cambiar de pestaña, perder
+  // foco — solo mientras la guía sigue en curso (comenzado && !terminado).
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ── Finalizar al completar el 100% — cuenta CONTESTADAS (ok o ko,
+  // cualquier valor guardado), no solo correctas: con un solo intento
+  // por actividad, exigir 100% de correctas dejaría la guía "en curso"
+  // para siempre apenas alguien se equivoque una vez.
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
