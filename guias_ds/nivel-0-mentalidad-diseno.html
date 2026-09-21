@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nivel 0: Mentalidad del Diseñador de Sistemas | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">Club · <span>DS Nivel 0</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="emergente">Diseñar es decidir lo que cuesta cambiar</button>
+<button data-target="calidad">Qué hace el sistema y qué tan bien</button>
+<button data-target="tradeoffs">No existe el mejor diseño</button>
+<button data-target="spike-adr">Spike y ADR</button>
+<button data-target="ia">Diseñar con IA</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🧩 Club · Ruta Diseñador de Sistemas · Nivel 0</span>
+<h1 class="flow-h1">Tu primer día como <span>diseñador de sistemas</span></h1>
+<p class="flow-lead">Diseñar un sistema no es dibujar cajas con flechas ni elegir la tecnología de moda: es decidir cómo se organizan las piezas de un programa y qué se sacrifica para conseguirlo. Esta guía te da la mentalidad mínima para hacerlo dentro de un equipo Scrum — cuánto diseñar antes de programar, cómo convertir "que sea rápida" en algo medible, qué es un trade-off y cómo dejar registro de lo que se decide — sin memorizar definiciones: vas a tomar las mismas decisiones que toma un diseñador en su primera semana.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Vas a acompañar a Diego, desarrollador de <strong>TurnoYa</strong> — una app ficticia para reservar turno en la fotocopiadora y la cafetería del campus. Lucía es la Product Owner y Tomás el Scrum Master (si hiciste la ruta de Product Owner ya los conocés; si no, no hace falta). En cada decisión podés probar primero un camino equivocado, ver su consecuencia sin ninguna penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>Lunes, 9:00. Un documento en blanco.</h2>
+<p class="lead">Comienza el primer sprint de TurnoYa y su objetivo es claro: <strong>"el estudiante puede reservar turno en la fotocopiadora"</strong>. Diego, el desarrollador con más experiencia, abre un documento en blanco para "dejar diseñado el sistema". Tomás pasa por su escritorio y le pregunta cuánto tiempo necesita antes de que el equipo pueda empezar a programar.</p>
+<div class="highlight">
+<strong>Dos instintos opuestos</strong>
+<p>Algunos desarrolladores quieren diseñarlo todo antes de escribir una línea; otros, no diseñar nada y "ver qué sale". Veamos qué pasa en cada caso.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="emergente decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué le responde Diego a Tomás?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Tres semanas para diseñar todos los módulos de TurnoYa (reservas, pagos, reportes, notificaciones) antes de escribir una línea de código.</button>
+<button class="quiz-opt" data-key="b" data-correct>Solo lo necesario para poder reservar turno: dibujar las piezas principales, pensar lo difícil de revertir y dejar el resto para después.</button>
+<button class="quiz-opt" data-key="c">Nada: empezar ya con la pantalla de reserva y resolver cada problema de estructura cuando aparezca, sin dibujar ni decidir nada antes.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Tres semanas de diseño son tres semanas sin nada que un estudiante pueda probar, y todo ese plan se apoya en suposiciones que nadie validó todavía. El primer contacto con usuarios reales suele cambiar buena parte de lo dibujado, y el equipo habrá gastado un sprint entero en papel. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Empezar sin pensar nada parece rápido el primer día, pero algunas decisiones (cómo se guardan los turnos, cómo se identifica a cada estudiante) son muy caras de deshacer más adelante. Si no se toman a propósito, se toman por accidente, y después cuesta rehacer lo ya construido. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. Esto se llama <strong>diseño emergente</strong>: diseñar lo justo para lo que viene ahora y dedicar más pensamiento a lo que sería caro cambiar. El resto del diseño aparece a medida que el equipo aprende. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="emergente" hidden>
+<h2>Diseñar es decidir lo que cuesta cambiar</h2>
+<p class="lead">Programar es escribir las instrucciones; <strong>diseñar es decidir cómo se organizan las piezas y qué compromisos se aceptan</strong>. La regla práctica que ordena todo lo demás: cuanto más caro sea revertir una decisión, más conviene pensarla ahora; cuanto más barata, más se puede dejar para cuando se sepa más.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Actitud</th><th scope="col">Qué hace</th><th scope="col">Riesgo</th><th scope="col">En TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Diseño total anticipado (<em>Big Design Up Front</em>)</td><td>Diseña todo el sistema antes de programar.</td><td>Se apoya en suposiciones que nadie validó; el primer usuario real cambia el plan.</td><td>Tres semanas de diagramas y ninguna pantalla que probar.</td></tr>
+<tr><td>Sin diseño</td><td>Programa ya y resuelve sobre la marcha.</td><td>Toma por accidente decisiones caras de revertir.</td><td>Cada pantalla guarda los turnos de una forma distinta.</td></tr>
+<tr><td>Diseño emergente (el de Scrum)</td><td>Diseña lo justo para lo próximo y piensa a tiempo lo difícil de deshacer.</td><td>Exige disciplina: ordenar el código y registrar las decisiones.</td><td>Diseña la reserva de turnos y difiere pagos y reportes.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>En Scrum no hay un "Arquitecto"</strong>
+<p>Scrum no define ese rol: el diseño lo hacen los <strong>Developers</strong>, sprint a sprint. Eso no significa que nadie con experiencia lidere, sino que la decisión es del equipo y no de alguien que dibuja diagramas y se los entrega a otros para que los ejecuten.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="reversible-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Es barata o cara de revertir cuando la app ya está en uso?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cambiar el color de los botones de la pantalla de reserva.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Barata de revertir</button>
+<button>Cara de revertir</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Elegir el motor de base de datos cuando ya hay 10.000 turnos guardados.</span>
+<div class="quiz-classify-btns">
+<button>Barata de revertir</button>
+<button data-correct>Cara de revertir</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Renombrar una variable interna que solo usa una función.</span>
+<div class="quiz-classify-btns">
+<button>Cara de revertir</button>
+<button data-correct>Barata de revertir</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cambiar el formato de la API que ya consumen otras apps del campus.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Cara de revertir</button>
+<button>Barata de revertir</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cambiar el orden en que se ordena la lista de turnos en pantalla.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Barata de revertir</button>
+<button>Cara de revertir</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Reescribir todo el backend en otro lenguaje de programación.</span>
+<div class="quiz-classify-btns">
+<button>Barata de revertir</button>
+<button data-correct>Cara de revertir</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>"Que sea rápida y que nunca se caiga"</h2>
+<p class="lead">Ya sabés cuánto diseñar y cuándo. Ahora llega el primer pedido de Lucía, que no habla de pantallas sino de cómo debe comportarse el sistema: <strong>"Necesito que TurnoYa sea rápida y que nunca se caiga"</strong>. Diego lo anota y se queda mirando la pantalla: ¿qué hace con eso?</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="calidad decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Diego con ese pedido?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Anotar «rápida y que nunca se caiga» en el backlog tal cual, porque todos entienden lo mismo cuando leen esas palabras.</button>
+<button class="quiz-opt" data-key="b">Dejarlo para el final: rendimiento y estabilidad son temas de infraestructura que se resuelven cuando la app ya esté construida.</button>
+<button class="quiz-opt" data-key="c" data-correct>Preguntarle qué significan «rápida» y «nunca se cae» para un estudiante en la fila, y convertirlo en números que se puedan medir.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>«Rápida» puede significar 2 segundos para Lucía y 200 milisegundos para Diego, y «nunca se cae» es imposible de cumplir y de comprobar. Un requisito que no se puede medir no se puede probar ni comparar, así que cada persona lo interpretará a su manera. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Estas cualidades no son un extra del último sprint: condicionan el diseño desde el principio. Si el sistema debe atender a 200 estudiantes a la vez, eso cambia cómo se guardan y se leen los datos. Descubrirlo al final significa rehacer lo que ya se construyó. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Exacto. Un buen requisito de calidad dice <em>cuánto</em> y <em>bajo qué condiciones</em>: por ejemplo, «confirmar un turno en menos de 2 segundos con 200 estudiantes conectados». Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="calidad" hidden>
+<h2>Qué hace el sistema... y qué tan bien lo hace</h2>
+<p class="lead">Hay dos tipos de requisitos. El <strong>requisito funcional</strong> dice <em>qué hace</em> el sistema ("el estudiante reserva un turno"). El <strong>atributo de calidad</strong> dice <em>qué tan bien</em> lo hace (rápido, seguro, disponible, barato, fácil de cambiar). Dos sistemas con las mismas funciones pueden tener diseños completamente distintos según qué atributos importen más.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Atributo</th><th scope="col">La pregunta que responde</th><th scope="col">Formulación vaga (evitar)</th></tr></thead>
+<tbody>
+<tr><td>Rendimiento</td><td>¿Qué tan rápido responde y cuánta carga aguanta?</td><td>«Que sea rápida»</td></tr>
+<tr><td>Disponibilidad</td><td>¿Qué parte del tiempo está funcionando?</td><td>«Que nunca se caiga»</td></tr>
+<tr><td>Seguridad</td><td>¿Quién puede ver o hacer qué, y qué pasa con los datos?</td><td>«Que sea segura»</td></tr>
+<tr><td>Costo</td><td>¿Cuánto cuesta operarla y mantenerla?</td><td>«Que sea barata»</td></tr>
+<tr><td>Mantenibilidad</td><td>¿Qué tan fácil es cambiarla o ampliarla?</td><td>«Que sea fácil de modificar»</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>La fórmula para dejar de ser vago</strong>
+<p>Escribí el atributo como <em>«cuánto, medido cómo, bajo qué condiciones»</em>. Si nadie puede escribir una prueba que diga "cumple" o "no cumple", todavía no es un requisito: es un deseo.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="calidad-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada atributo con su formulación medible en TurnoYa.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="rendimiento">Rendimiento</button>
+<button class="quiz-match-item" data-pair="disponibilidad">Disponibilidad</button>
+<button class="quiz-match-item" data-pair="seguridad">Seguridad</button>
+<button class="quiz-match-item" data-pair="costo">Costo</button>
+<button class="quiz-match-item" data-pair="mantenibilidad">Mantenibilidad</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="seguridad">Solo el dueño de un turno puede cancelarlo, y los datos personales viajan cifrados.</button>
+<button class="quiz-match-item" data-pair="mantenibilidad">Un desarrollador nuevo puede sumar un tipo de turno modificando como máximo dos archivos.</button>
+<button class="quiz-match-item" data-pair="rendimiento">Confirmar un turno tarda menos de 2 segundos con 200 estudiantes conectados.</button>
+<button class="quiz-match-item" data-pair="costo">El servidor no supera los 20 dólares al mes mientras haya menos de 1.000 usuarios.</button>
+<button class="quiz-match-item" data-pair="disponibilidad">La app funciona al menos el 99% del tiempo durante el horario de atención del campus.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>"Y también que cueste casi nada"</h2>
+<p class="lead">Ahora que los pedidos son medibles, Lucía agrega algo más: <strong>"Quiero que TurnoYa no falle nunca en horario de fila, y que el servidor cueste casi nada porque no tenemos presupuesto."</strong> Diego sabe que mantener dos servidores para que uno cubra al otro duplica el gasto mensual.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="tradeoffs decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo responde Diego?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Explicarle que más disponibilidad cuesta más dinero, y pedirle que decida qué pesa más en horario pico para acordar un objetivo concreto.</button>
+<button class="quiz-opt" data-key="b">Prometerle las dos cosas, disponibilidad total y costo mínimo, y ver cómo se las arregla el equipo durante el sprint para lograrlo.</button>
+<button class="quiz-opt" data-key="c">Elegir por su cuenta la opción más cara, por si acaso, sin consultarle, porque una app que se cae es peor que una app cara.</button>
+</div>
+<p class="quiz-fb ko" data-key="b" hidden>Prometer todo es no decidir. Esas dos cualidades tiran en sentidos opuestos: para que la app no se caiga hace falta redundancia, y la redundancia cuesta. El equipo terminará incumpliendo una de las dos sin haberlo hablado nunca. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Diego tiene la información técnica, pero cuánto vale la disponibilidad para el producto es una decisión de negocio, y le corresponde a la PO. Si gasta el presupuesto sin preguntar, decide algo que no le toca. Su trabajo es mostrar el precio de cada opción. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="a" hidden>Exacto. Diego pone sobre la mesa el precio de cada opción y Lucía, como PO, decide cuánto vale cada cualidad para el producto. Eso se llama negociar un <strong>trade-off</strong>. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="tradeoffs" hidden>
+<h2>No existe el mejor diseño: solo el mejor para este contexto</h2>
+<p class="lead">Casi toda decisión de diseño mejora una cualidad a costa de otra. A eso se le llama <strong>trade-off</strong> (compromiso, o "cambio de una cosa por otra"). No hay diseños perfectos: hay diseños cuyos sacrificios el equipo eligió a conciencia, y diseños cuyos sacrificios descubrió tarde.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Decisión de diseño</th><th scope="col">Lo que gana</th><th scope="col">Lo que sacrifica</th></tr></thead>
+<tbody>
+<tr><td>Tener un servidor de respaldo</td><td>Disponibilidad</td><td>Costo y complejidad</td></tr>
+<tr><td>Guardar una copia de los datos en memoria (caché)</td><td>Rendimiento</td><td>Consistencia: los datos pueden estar desactualizados</td></tr>
+<tr><td>Exigir un código de verificación en cada operación</td><td>Seguridad</td><td>Comodidad de uso</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-fill" data-quiz-id="tradeoff-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. Contratar un servidor más potente para que la app soporte más estudiantes a la vez mejora el rendimiento, pero sube el
+<select class="quiz-blank" data-correct="costo">
+<option value="">— elige —</option>
+<option value="seguridad">Seguridad</option>
+<option value="mantenibilidad">Mantenibilidad</option>
+<option value="costo">Costo</option>
+<option value="comodidad">Comodidad de uso</option>
+</select>.</p>
+<p>2. Pedir que el estudiante inicie sesión en cada reserva protege sus datos, pero le quita
+<select class="quiz-blank" data-correct="comodidad">
+<option value="">— elige —</option>
+<option value="comodidad">Comodidad de uso</option>
+<option value="costo">Costo</option>
+<option value="disponibilidad">Disponibilidad</option>
+<option value="mantenibilidad">Mantenibilidad</option>
+</select>.</p>
+<p>3. Mostrar una lista de turnos guardada hace un rato responde más rápido, pero puede mostrar un turno que ya se ocupó, así que sacrifica la
+<select class="quiz-blank" data-correct="consistencia">
+<option value="">— elige —</option>
+<option value="costo">Costo</option>
+<option value="seguridad">Seguridad</option>
+<option value="comodidad">Comodidad de uso</option>
+<option value="consistencia">Consistencia</option>
+</select> de los datos.</p>
+<p>4. Copiar y pegar código entre módulos para entregar esta semana gana velocidad hoy, pero sacrifica la
+<select class="quiz-blank" data-correct="mantenibilidad">
+<option value="">— elige —</option>
+<option value="seguridad">Seguridad</option>
+<option value="mantenibilidad">Mantenibilidad</option>
+<option value="disponibilidad">Disponibilidad</option>
+<option value="costo">Costo</option>
+</select> del sistema.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>Dos días de debate sin datos</h2>
+<p class="lead">TurnoYa tiene que mandar un recordatorio por correo una hora antes de cada turno. Diego y otra desarrolladora dudan entre dos servicios de envío. Llevan dos días discutiendo en cada reunión diaria, y ninguno de los dos usó antes ninguna de las dos opciones.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="spike-adr decision5">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo destraban la decisión?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Seguir debatiendo en la reunión diaria hasta que todos queden convencidos, aunque no haya datos para comparar las dos opciones.</button>
+<button class="quiz-opt" data-key="b">Elegir la que más aparece en internet y dejarla como decisión definitiva para todo el proyecto, sin anotar nada por escrito.</button>
+<button class="quiz-opt" data-key="c" data-correct>Hacer una prueba de un día con un caso real y una pregunta concreta, y anotar la decisión y sus motivos en una sola hoja.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Sin datos, la discusión se vuelve una pelea de opiniones que puede durar semanas: lo que falta no es más debate, sino información. Además, la reunión diaria es para sincronizarse en 15 minutos, no para resolver debates técnicos largos. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Popular no es lo mismo que adecuado para este equipo y este presupuesto. Y decidir sin dejar registro hace que en tres meses nadie recuerde por qué se eligió eso ni si conviene cambiarlo. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Exacto. Esa prueba con límite de tiempo se llama <strong>spike</strong>, y la hoja donde queda la decisión, <strong>ADR</strong>. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="spike-adr" hidden>
+<h2>Decidir con datos y dejar registro: spike y ADR</h2>
+<p class="lead">Dos herramientas baratas que resuelven dos problemas típicos del diseño: decidir sin información y olvidar por qué se decidió algo.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Herramienta</th><th scope="col">Qué es</th><th scope="col">Cuándo usarla</th></tr></thead>
+<tbody>
+<tr><td>Spike</td><td>Investigación con límite de tiempo (horas o uno o dos días) que responde una pregunta concreta. No entrega una función terminada.</td><td>Cuando una decisión depende de algo que nadie sabe todavía.</td></tr>
+<tr><td>ADR (<em>Architecture Decision Record</em>)</td><td>Una hoja por decisión: contexto, opciones consideradas, decisión tomada y sus consecuencias.</td><td>Cuando la decisión es cara de revertir o alguien la va a cuestionar más adelante.</td></tr>
+<tr><td>Definition of Done con calidad</td><td>Criterios de "terminado" que incluyen atributos de calidad, como «responde en menos de 300 ms».</td><td>Para verificar los requisitos de calidad en cada incremento, no solo al final.</td></tr>
+<tr><td>Deuda técnica</td><td>Un atajo que se toma a propósito y se paga después con intereses.</td><td>Se registra en el backlog, visible para la PO, para que sea una decisión y no un accidente.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Ejemplo de un ADR de una hoja</strong>
+<p><strong>Título:</strong> ADR-001 · Servicio para enviar recordatorios de turno.</p>
+<p><strong>Contexto:</strong> hay que avisar al estudiante una hora antes de su turno; el presupuesto es de 20 dólares al mes.</p>
+<p><strong>Opciones:</strong> servicio A (gratis hasta 3.000 correos al mes, configuración simple) y servicio B (más funciones, pago desde el primer correo).</p>
+<p><strong>Decisión:</strong> servicio A, tras un spike de un día que confirmó que entrega en menos de 1 minuto.</p>
+<p><strong>Consecuencias:</strong> si se superan los 3.000 correos mensuales hay que reevaluar; migrar a otro servicio implica tocar un solo módulo.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision5" hidden>
+<h2>Diego le pide ayuda a una IA</h2>
+<p class="lead">Con el ADR anotado, a Diego le queda por delante el diseño de la reserva de turnos. Abre un asistente de IA en otra pestaña, y se pregunta qué le conviene pedirle.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-5" data-unlock="ia repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo usa Diego la IA para diseñar?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Escribirle «diseñá la arquitectura completa de TurnoYa» y adoptar la respuesta tal cual, porque una IA sabe más de diseño que el equipo.</button>
+<button class="quiz-opt" data-key="b" data-correct>Pasarle el contexto (qué hace TurnoYa, atributos de calidad medibles, restricciones), pedirle dos alternativas con trade-offs y decidir él.</button>
+<button class="quiz-opt" data-key="c">No usarla para diseñar, porque el diseño debe ser cien por ciento humano, y reservarla solamente para que escriba código ya decidido.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Sin contexto, la IA devuelve una arquitectura genérica pensada para una empresa grande (colas, muchos servicios, réplicas) que no conoce a un equipo de cuatro personas ni un presupuesto de 20 dólares. Sirve como lista de ideas, no como decisión. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>La IA es muy útil para explorar alternativas y descubrir trade-offs en los que uno no había pensado. Lo que no puede es conocer el contexto del equipo ni responder por la decisión. Descartarla del todo es desaprovechar una buena herramienta. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. La IA propone y el equipo decide: cuanto mejor contexto le des, más útil lo que te devuelve. Y como las decisiones caras quedan en un ADR, la responsabilidad sigue siendo de personas. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="ia" hidden>
+<h2>Diseñar con IA: ella propone, el equipo decide</h2>
+<p class="lead">Programar con IA hace que diseñar bien importe más, no menos: una IA escribe rápido casi cualquier cosa que le pidas, incluidas las decisiones equivocadas. La calidad de lo que devuelve depende de la calidad del contexto que le des. Este es el hilo que seguiremos en toda la ruta: en cada nivel vas a aprender qué le tenés que dar a la IA para que trabaje a tu favor.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Lo que le das</th><th scope="col">Lo que suele devolver</th></tr></thead>
+<tbody>
+<tr><td>«Diseñame TurnoYa»</td><td>Una arquitectura genérica, sobredimensionada y sin relación con tus límites reales.</td></tr>
+<tr><td>Funcionalidad del sprint, atributos de calidad medibles, restricciones y decisiones ya tomadas</td><td>Dos o tres alternativas con sus trade-offs, que podés comparar contra tus números.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Lo que sigue siendo tuyo</strong>
+<p>Elegir entre alternativas, decidir qué riesgo se acepta y firmar el ADR. La IA no conoce tu equipo ni tu presupuesto, y no responde por lo que sale mal.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas frases es un atributo de calidad bien formulado?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La app debe ser rápida y bonita para que a los estudiantes les guste usarla todos los días.</button>
+<button class="quiz-opt">La app debe usar la base de datos más moderna que exista en el mercado en este momento.</button>
+<button class="quiz-opt" data-correct>Al elegir un turno, la pantalla muestra la confirmación en menos de 2 segundos.</button>
+<button class="quiz-opt">El sistema tiene que ser escalable y seguro para cualquier cantidad de usuarios que llegue.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: dice cuánto (menos de 2 segundos) y bajo qué condición (al elegir un turno), así que se puede escribir una prueba que diga cumple o no cumple. Las otras son deseos vagos o soluciones disfrazadas de requisito." data-ko="Un atributo de calidad bien formulado se puede medir: dice cuánto y bajo qué condiciones. «Rápida y bonita», «escalable y seguro» o «la base de datos más moderna» no permiten escribir ninguna prueba que diga cumple o no cumple." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">En Scrum no existe un rol de Arquitecto: el diseño lo deciden los Developers de forma incremental, sprint a sprint.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Scrum define solo tres roles (Product Owner, Scrum Master y Developers). El diseño lo hace el equipo de Developers, lo que no impide que alguien con más experiencia lo guíe." data-ko="Es verdadero: Scrum define solo tres roles (Product Owner, Scrum Master y Developers) y ninguno es Arquitecto. El diseño es responsabilidad de los Developers y se va decidiendo sprint a sprint." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué debe registrar un ADR (Architecture Decision Record)?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El código final del módulo elegido, con todas sus funciones y los nombres de cada variable.</button>
+<button class="quiz-opt">La lista de tareas que cada desarrollador hará durante el sprint junto con su tiempo estimado.</button>
+<button class="quiz-opt">Solo el nombre de la tecnología elegida y la fecha en que el equipo tomó la decisión.</button>
+<button class="quiz-opt" data-correct>El contexto, las opciones consideradas y las consecuencias de la que se eligió, en una hoja.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el ADR guarda el porqué de la decisión (contexto, alternativas y consecuencias), no el código ni el nombre de la herramienta. Dentro de tres meses eso es lo que nadie recuerda." data-ko="El ADR no guarda el código ni las tareas del sprint, y tampoco basta con anotar el nombre de la tecnología: registra el contexto, las opciones consideradas y las consecuencias de la elegida, porque es el porqué lo que se olvida con el tiempo." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: la primera foto de un diseño</h2>
+<p class="lead">Elegí una app que uses o un proyecto real de tu club, sin inventar nada raro: pensá en cosas que de verdad podrían pasar. Escribí, en no más de un párrafo por punto: 1) tres atributos de calidad medibles que le pedirías (con número y condición), 2) una decisión barata de revertir y una cara, y qué harías con cada una en el primer sprint, 3) un trade-off real: qué se gana, qué se sacrifica y quién debería decidir si vale la pena.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Atributos de calidad, decisiones y un trade-off de un producto real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>Cada atributo de calidad tiene un número y una condición, no adjetivos como "rápida" o "segura".</li>
+<li>La decisión cara de revertir se piensa antes de programar; la barata se deja para cuando se sepa más.</li>
+<li>El trade-off nombra a la vez lo que se gana y lo que se pierde, sin prometer las dos cosas.</li>
+<li>Queda claro quién decide: el equipo mide el costo de cada opción, y el negocio decide cuánto vale cada cualidad.</li>
+<li>Si usarías una IA, explicás qué contexto le darías, no solo qué le pedirías.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Diseñar</td><td>Decidir cómo se organizan las piezas y qué compromisos se aceptan. No es dibujar por dibujar.</td></tr>
+<tr><td>Diseño emergente</td><td>Diseñar lo justo para lo próximo y pensar a tiempo lo caro de revertir. Es el enfoque de Scrum.</td></tr>
+<tr><td>Big Design Up Front</td><td>Diseñar todo antes de programar. Se apoya en suposiciones que nadie validó.</td></tr>
+<tr><td>Decisión cara de revertir</td><td>Motor de base de datos, formato de una API pública, lenguaje del backend. Se piensa antes.</td></tr>
+<tr><td>Requisito funcional</td><td>Qué hace el sistema ("el estudiante reserva un turno").</td></tr>
+<tr><td>Atributo de calidad</td><td>Qué tan bien lo hace. Se escribe como cuánto, medido cómo y bajo qué condiciones.</td></tr>
+<tr><td>Trade-off</td><td>Toda decisión gana una cualidad a costa de otra. El equipo muestra el precio; el negocio decide.</td></tr>
+<tr><td>Spike</td><td>Investigación con límite de tiempo que responde una pregunta concreta.</td></tr>
+<tr><td>ADR</td><td>Una hoja por decisión: contexto, opciones, decisión y consecuencias.</td></tr>
+<tr><td>Deuda técnica</td><td>Atajo tomado a propósito. Se registra en el backlog para que sea una decisión y no un accidente.</td></tr>
+<tr><td>Diseñar con IA</td><td>La IA propone, el equipo decide. Cuanto mejor el contexto que le das, mejor lo que te devuelve.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🏛️ Scrum no tiene arquitecto</h3><p>La Scrum Guide define a los Developers como quienes se comprometen a crear cualquier aspecto de un incremento usable en cada sprint. Diseñar, programar y probar son parte del mismo trabajo, hecho por el mismo equipo.</p></div>
+<div class="info"><h3>📝 El ADR nació en un blog</h3><p>El formato de "una hoja por decisión" lo popularizó Michael Nygard en un artículo de 2011 titulado "Documenting Architecture Decisions". Hoy equipos de todos los tamaños lo usan porque cuesta cinco minutos y ahorra semanas de discusión.</p></div>
+<div class="info"><h3>🧭 Lo que viene en el Nivel 1</h3><p>Con esta mentalidad, el siguiente paso es modelar el problema con cuatro diagramas: casos de uso y clases (Nivel 1A), secuencia y estados (Nivel 1B). Sirven para que tu equipo, y la IA, entiendan el sistema antes de programarlo.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Nivel 0: Mentalidad del Diseñador de Sistemas</h2>
+<p>Material de apoyo para el Club de Programación · Ruta Diseñador de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "ds-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
