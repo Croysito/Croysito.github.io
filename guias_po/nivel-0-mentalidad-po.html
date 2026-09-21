@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nivel 0: Mentalidad y Vocabulario del Product Owner | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">Club · <span>PO Nivel 0</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="roles">Los tres roles de Scrum</button>
+<button data-target="manifiesto">El Manifiesto Ágil</button>
+<button data-target="scrum">Scrum en 15 minutos</button>
+<button data-target="backlog">Por qué existe el backlog</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🎯 Club · Ruta Product Owner · Nivel 0</span>
+<h1 class="flow-h1">Tu primer día como <span>Product Owner</span></h1>
+<p class="flow-lead">Un Product Owner (PO) no escribe código ni dirige a nadie: decide qué vale la pena construir y en qué orden. Esta guía te da el vocabulario mínimo para hacerlo — quién es quién en un equipo Scrum, qué dice el Manifiesto Ágil, cómo funciona un sprint y por qué existe el backlog — sin memorizar definiciones: vas a tomar las mismas decisiones que toma un PO en su primera semana.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Vas a acompañar a Lucía, nueva PO de <strong>TurnoYa</strong> — una app ficticia para reservar turno en la fotocopiadora y la cafetería del campus. En cada decisión podés probar primero un camino equivocado, ver su consecuencia sin ninguna penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>Lunes, 8:00. Tres pedidos antes del café.</h2>
+<p class="lead">Lucía acaba de ser nombrada PO de TurnoYa. El equipo tiene cuatro desarrolladores y un Scrum Master, Tomás. En su primera mañana ya le llegaron tres pedidos: el dueño de la cafetería quiere <strong>pagos con QR</strong>; la decana quiere un <strong>reporte semanal de uso</strong>; y los estudiantes se quejan en el pasillo de que <strong>la fila de la fotocopiadora sigue igual de larga</strong>. Además, uno de los desarrolladores le pregunta: "¿Y ahora, qué hacemos primero?"</p>
+<div class="highlight">
+<strong>La tentación de siempre</strong>
+<p>Un PO nuevo suele pensar que su trabajo es "dar órdenes" o "cumplir con todos". Veamos qué pasa si lo intenta.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="roles decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cuál es el mejor primer movimiento de Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Repartir los tres pedidos entre los desarrolladores y explicarles paso a paso, con detalle, cómo programar cada uno.</button>
+<button class="quiz-opt" data-key="b" data-correct>Anotar los tres pedidos, elegir el que más valor da a los estudiantes y pedirle al equipo que estime cómo resolverlo.</button>
+<button class="quiz-opt" data-key="c">Preguntarle a Tomás, el Scrum Master, qué pedido conviene atender primero, porque él es quien coordina al equipo.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Lucía se metió en el <strong>cómo</strong> y en el <strong>quién</strong>, que le corresponden a los desarrolladores: son ellos quienes saben cómo construir y cuánto trabajo pueden tomar. Un PO que dicta la solución técnica frena al equipo y, además, se pierde de lo que sí le toca decidir: <em>qué</em> se construye y <em>por qué</em>. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Tomás cuida que el equipo use bien Scrum y remueve obstáculos, pero <strong>no ordena el trabajo</strong>. La decisión de qué se construye primero es de una sola persona: el PO. Si Lucía se la delega, el equipo queda sin dueño del producto. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. El PO decide el <strong>qué</strong> y el <strong>por qué</strong> (valor para el usuario); el equipo decide el <strong>cómo</strong> y <strong>cuánto entra</strong>. Esa división es la esencia del rol. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="roles" hidden>
+<h2>Los tres roles de Scrum (y el que no está)</h2>
+<p class="lead">Un equipo Scrum tiene solo tres roles, y cada uno responde una pregunta distinta. El <strong>Project Manager (PM)</strong> aparece mucho en las ofertas de trabajo, pero <strong>no es un rol de Scrum</strong>: viene de la gestión de proyectos tradicional, donde lo central es cumplir fecha, presupuesto y alcance.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Rol</th><th scope="col">Pregunta que responde</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Product Owner</td><td>¿Qué construimos, y qué va primero?</td><td>Lucía decide que la fila de la fotocopiadora vale más que el reporte de la decana.</td></tr>
+<tr><td>Scrum Master</td><td>¿Estamos trabajando bien como equipo?</td><td>Tomás gestiona el acceso al servidor que lleva tres días trabado.</td></tr>
+<tr><td>Desarrolladores</td><td>¿Cómo lo construimos y cuánto entra en el sprint?</td><td>Diego y su equipo eligen la tecnología y estiman cuántas funciones caben.</td></tr>
+<tr><td>Project Manager (no es de Scrum)</td><td>¿Cuándo, con qué presupuesto y qué alcance?</td><td>Aparece en proyectos con fecha y presupuesto cerrados, no en TurnoYa.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Ojo: el PO es una persona, no un comité</strong>
+<p>Puede escuchar a mil interesados (<em>stakeholders</em>: decana, cafetería, estudiantes), pero el orden final del trabajo lo decide <strong>una sola persona</strong>. Si dos personas ordenan, el equipo recibe pedidos contradictorios.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="roles-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Quién es el responsable principal de cada tarea?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Decidir qué pedido del backlog se construye antes que otro.</span>
+<div class="quiz-classify-btns">
+<button>Scrum Master</button>
+<button data-correct>Product Owner</button>
+<button>Desarrolladores</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Estimar cuánto trabajo cabe en el sprint y cómo lo van a construir.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Desarrolladores</button>
+<button>Product Owner</button>
+<button>Scrum Master</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Ayudar al equipo a quitar un obstáculo, como un acceso al servidor que no llega.</span>
+<div class="quiz-classify-btns">
+<button>Product Owner</button>
+<button>Desarrolladores</button>
+<button data-correct>Scrum Master</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Explicarle a la decana por qué su pedido no entra en este sprint.</span>
+<div class="quiz-classify-btns">
+<button>Desarrolladores</button>
+<button data-correct>Product Owner</button>
+<button>Scrum Master</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Programar y probar el incremento que se entrega al final de cada sprint.</span>
+<div class="quiz-classify-btns">
+<button>Scrum Master</button>
+<button>Product Owner</button>
+<button data-correct>Desarrolladores</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Enseñarle a la organización qué es Scrum y cuidar que el equipo lo practique bien.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Scrum Master</button>
+<button>Desarrolladores</button>
+<button>Product Owner</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>El dueño de la cafetería quiere todo por escrito</h2>
+<p class="lead">Ya sabés quién es quién. Ahora aparece la primera prueba de mentalidad: el dueño de la cafetería le pide a Lucía un documento de <strong>40 páginas</strong> con todas las funciones de la app, firmado hoy, para que el equipo lo construya durante seis meses "sin cambios ni sorpresas".</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="manifiesto scrum decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo responde Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Aceptar el documento firmado y rechazar cualquier cambio posterior para no salirse del plan original.</button>
+<button class="quiz-opt" data-key="b">Rechazar todo documento, porque en ágil no se escribe nada, y dejar que el equipo empiece a programar.</button>
+<button class="quiz-opt" data-key="c" data-correct>Proponer una primera versión pequeña y usable en dos semanas, mostrársela y ajustar el rumbo según lo que él vea.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Seis meses de plan fijo asumen que hoy ya sabemos todo lo que el usuario va a necesitar — y casi nunca es así. Cuando aparezca la primera sorpresa (siempre aparece), el equipo tendrá que elegir entre romper el contrato o entregar algo que ya nadie quiere. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Es una lectura equivocada muy común del Manifiesto Ágil. El manifiesto dice que valora <em>más</em> el software funcionando que la documentación exhaustiva, pero aclara que también valora lo otro: "aunque valoramos los elementos de la derecha…". Se trata de escribir lo justo, no de no escribir nada. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Exacto. Entregar algo pequeño y real, y ajustar con lo que el usuario ve, es la aplicación directa de "colaboración con el cliente" y "respuesta ante el cambio". Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="manifiesto" hidden>
+<h2>El Manifiesto Ágil: cuatro valores, no cuatro prohibiciones</h2>
+<p class="lead">En 2001, diecisiete desarrolladores se reunieron en Utah y firmaron un texto de una página. Su idea central: en desarrollo de software, seguir un plan fijo suele funcionar peor que aprender rápido con el usuario. Los cuatro valores dicen "esto <strong>más que</strong> esto", nunca "esto <strong>en lugar de</strong> esto".</p>
+<table class="tabla">
+<thead><tr><th scope="col">Valoramos más…</th><th scope="col">…que</th><th scope="col">Lo que significa en la práctica</th></tr></thead>
+<tbody>
+<tr><td>Individuos e interacciones</td><td>Procesos y herramientas</td><td>Hablar con el equipo resuelve más que esperar un formulario aprobado.</td></tr>
+<tr><td>Software funcionando</td><td>Documentación exhaustiva</td><td>Mostrar algo que se pueda usar vale más que una presentación de lo que se hará.</td></tr>
+<tr><td>Colaboración con el cliente</td><td>Negociación contractual</td><td>Opinar cada semana sobre lo construido, no solo firmar al inicio.</td></tr>
+<tr><td>Respuesta ante el cambio</td><td>Seguir un plan</td><td>Si aprendimos algo nuevo, se cambia el orden del trabajo sin culpa.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-fill" data-quiz-id="manifiesto-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. Lucía se sienta con el equipo a resolver una duda en vez de esperar un formulario aprobado por correo. Está aplicando
+<select class="quiz-blank" data-correct="individuos">
+<option value="">— elige —</option>
+<option value="software">Software funcionando</option>
+<option value="individuos">Individuos e interacciones</option>
+<option value="cambio">Respuesta ante el cambio</option>
+<option value="colaboracion">Colaboración con el cliente</option>
+</select>.</p>
+<p>2. Al cierre del sprint el equipo muestra una función que ya se puede usar, no una presentación sobre lo que harán. Está aplicando
+<select class="quiz-blank" data-correct="software">
+<option value="">— elige —</option>
+<option value="colaboracion">Colaboración con el cliente</option>
+<option value="individuos">Individuos e interacciones</option>
+<option value="cambio">Respuesta ante el cambio</option>
+<option value="software">Software funcionando</option>
+</select>.</p>
+<p>3. El dueño de la cafetería opina cada semana sobre lo construido, en vez de solo firmar un contrato al inicio. Es
+<select class="quiz-blank" data-correct="colaboracion">
+<option value="">— elige —</option>
+<option value="colaboracion">Colaboración con el cliente</option>
+<option value="software">Software funcionando</option>
+<option value="cambio">Respuesta ante el cambio</option>
+<option value="individuos">Individuos e interacciones</option>
+</select>.</p>
+<p>4. Con lo aprendido en el sprint 3, Lucía cambia el orden del backlog en lugar de seguir el plan del primer mes. Es
+<select class="quiz-blank" data-correct="cambio">
+<option value="">— elige —</option>
+<option value="individuos">Individuos e interacciones</option>
+<option value="software">Software funcionando</option>
+<option value="cambio">Respuesta ante el cambio</option>
+<option value="colaboracion">Colaboración con el cliente</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="scrum" hidden>
+<h2>Scrum en 15 minutos</h2>
+<p class="lead">Scrum es un marco liviano que organiza el trabajo en <strong>sprints</strong>: ciclos cortos (de una a cuatro semanas, en TurnoYa dos) al final de los cuales el equipo entrega algo usable. Todo lo demás son eventos que ocurren dentro del sprint y artefactos que dan transparencia.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Pieza</th><th scope="col">Qué es</th><th scope="col">Rol del PO</th></tr></thead>
+<tbody>
+<tr><td>Sprint Planning</td><td>Se define qué entra en el sprint y cómo se construirá.</td><td>Propone el objetivo del sprint y explica el valor de cada ítem.</td></tr>
+<tr><td>Daily Scrum</td><td>15 minutos diarios del equipo para sincronizarse.</td><td>Puede asistir, pero es el espacio de los desarrolladores.</td></tr>
+<tr><td>Sprint Review</td><td>Se muestra el incremento a los interesados y se recoge feedback.</td><td>Trae a los stakeholders y usa lo escuchado para reordenar el backlog.</td></tr>
+<tr><td>Sprint Retrospective</td><td>El equipo revisa cómo trabajó y qué mejorar.</td><td>Participa como un miembro más del equipo.</td></tr>
+<tr><td>Product Backlog</td><td>Lista ordenada de todo lo que el producto podría necesitar.</td><td>Es su artefacto: lo ordena y lo mantiene.</td></tr>
+<tr><td>Sprint Backlog</td><td>Lo elegido para este sprint, más el plan para lograrlo.</td><td>No lo modifica: pertenece a los desarrolladores.</td></tr>
+<tr><td>Incremento</td><td>Versión usable del producto que cumple la Definition of Done.</td><td>Decide si se libera a los usuarios.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-match" data-quiz-id="scrum-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada pieza de Scrum con su propósito.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="planning">Sprint Planning</button>
+<button class="quiz-match-item" data-pair="daily">Daily Scrum</button>
+<button class="quiz-match-item" data-pair="review">Sprint Review</button>
+<button class="quiz-match-item" data-pair="retro">Sprint Retrospective</button>
+<button class="quiz-match-item" data-pair="backlog">Product Backlog</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="review">Mostrar lo construido a los interesados y recoger su opinión.</button>
+<button class="quiz-match-item" data-pair="backlog">Lista ordenada de todo lo que el producto podría necesitar.</button>
+<button class="quiz-match-item" data-pair="planning">Elegir qué entra en el sprint y cómo se va a construir.</button>
+<button class="quiz-match-item" data-pair="retro">Mejorar la forma de trabajar del equipo de cara al próximo sprint.</button>
+<button class="quiz-match-item" data-pair="daily">Sincronizar al equipo en 15 minutos hacia el objetivo del sprint.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>Los pedidos llegan por todos lados</h2>
+<p class="lead">Pasó una semana. Los pedidos le llegan a Lucía por WhatsApp, por correo, en el pasillo y hasta un desarrollador le pasa ideas propias entre reuniones. Le da miedo olvidarse de alguno, y también que el equipo trabaje en algo que nadie priorizó.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="backlog decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo organiza Lucía todos esos pedidos?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Junta todo en una sola lista visible, ordenada por valor y con ella como única responsable de su orden.</button>
+<button class="quiz-opt" data-key="b">Le pasa cada pedido al equipo apenas llega, para que trabajen en el mismo orden en que van apareciendo.</button>
+<button class="quiz-opt" data-key="c">Guarda los pedidos en su libreta personal y le cuenta al equipo, cada lunes, solo los que ella cree más urgentes.</button>
+</div>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. Esa lista es el <strong>Product Backlog</strong>: una sola fuente de verdad, visible para todos y con un único responsable de su orden. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="b" hidden>El orden de llegada no es el orden de valor: un pedido gritado en el pasillo puede valer menos que otro que nadie reclamó todavía. Sin nadie que ordene, el equipo termina trabajando en lo que llegó último, no en lo que más importa. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Una libreta que solo Lucía ve rompe la <strong>transparencia</strong>: el equipo no sabe qué viene después, los stakeholders no saben dónde quedó su pedido, y si Lucía falta un día, nadie puede seguir. El backlog tiene que estar a la vista de todos. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="backlog" hidden>
+<h2>Por qué existe el Product Backlog</h2>
+<p class="lead">El backlog resuelve un problema muy concreto: hay siempre más ideas que capacidad para construirlas. Por eso no es un depósito de deseos — es una lista <strong>ordenada</strong>, y ordenar es decidir qué no se hace todavía.</p>
+<div class="highlight">
+<strong>Cuatro propiedades de un buen backlog</strong>
+<p><strong>Único:</strong> una sola lista para todo el producto, no una por stakeholder.</p>
+<p><strong>Visible:</strong> el equipo y los interesados pueden verla en cualquier momento.</p>
+<p><strong>Ordenado:</strong> lo de arriba está más claro y es más valioso que lo de abajo.</p>
+<p><strong>Vivo:</strong> cambia cada vez que aprendemos algo nuevo del usuario o del mercado.</p>
+</div>
+<p>Este último punto conecta con lo que viene: si el backlog está vivo, ¿qué pasa cuando llega un pedido urgente en medio de un sprint?</p>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>Día 4 del sprint: "es urgente"</h2>
+<p class="lead">El sprint de dos semanas de TurnoYa tiene un objetivo claro: <strong>"el estudiante puede reservar turno en la fotocopiadora"</strong>. Estamos en el cuarto día cuando llama la decana: "Necesito el reporte de uso para el consejo, ¡es urgente!"</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Le pide al equipo que lo sume al sprint en marcha sin conversarlo, porque la decana tiene mucho peso en la facultad.</button>
+<button class="quiz-opt" data-key="b" data-correct>Lo anota en el backlog, le explica a la decana el objetivo del sprint y propone verlo en la próxima planificación.</button>
+<button class="quiz-opt" data-key="c">Rechaza el pedido sin explicar ni registrarlo, porque nada puede entrar al backlog una vez que el sprint ya empezó.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Meter trabajo nuevo sin conversarlo rompe el compromiso del sprint: el equipo ya estimó lo que cabe, y sumar algo empuja afuera el objetivo que se acordó. Además le enseña a todos los interesados que gritar más fuerte cambia el orden. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>El error es creer que el backlog se cierra con el sprint: el <strong>Product Backlog</strong> siempre puede recibir ideas; lo que se protege es el <strong>Sprint Backlog</strong>. Rechazar en seco, sin explicar ni anotar, además le hace perder confianza a la decana. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto: el pedido queda registrado (transparencia), el objetivo del sprint se protege y la decana sabe cuándo se decide. Solo si el objetivo del sprint perdiera todo sentido, el PO podría cancelarlo — es una decisión excepcional, no un atajo. Hasta acá viste las 4 decisiones básicas de un PO: ahora repasemos.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál es la diferencia más práctica entre un Project Manager tradicional y un Product Owner?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El PM programa junto al equipo y el PO se dedica únicamente a redactar la documentación técnica del producto.</button>
+<button class="quiz-opt">El PO dirige a los desarrolladores y les asigna tareas, mientras que el PM solo se ocupa de atender a los clientes.</button>
+<button class="quiz-opt" data-correct>El PM cuida fecha, presupuesto y alcance de un proyecto; el PO decide qué construir primero para maximizar el valor.</button>
+<button class="quiz-opt">No hay diferencia real: son dos nombres para el mismo puesto en cualquier empresa que use metodologías ágiles.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el PM gestiona un proyecto (fecha, presupuesto, alcance); el PO gestiona el valor de un producto a lo largo del tiempo. En muchas empresas una misma persona hace ambas cosas, pero son responsabilidades distintas." data-ko="La diferencia real no está en programar ni en dirigir personas: el PM gestiona un proyecto con fecha, presupuesto y alcance, mientras el PO decide qué vale más construir para el producto. Además, el PM ni siquiera es un rol de Scrum." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Una vez que empieza el sprint, el Product Backlog queda congelado y ya no se le puede agregar nada.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el Product Backlog está vivo y puede recibir ideas en cualquier momento. Lo que se protege durante el sprint es el Sprint Backlog y su objetivo, no la lista general del producto." data-ko="Es falso: lo que se protege durante el sprint es el Sprint Backlog y su objetivo. El Product Backlog puede recibir y reordenar ideas siempre — de hecho debe hacerlo, porque cada Sprint Review aporta feedback nuevo." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">El equipo cumplió el objetivo del sprint, pero se quejan de que las reuniones diarias duran 40 minutos en vez de 15. ¿Dónde conviene tratar el problema?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Sprint Planning</button>
+<button class="quiz-opt">Sprint Review</button>
+<button class="quiz-opt">Daily Scrum</button>
+<button class="quiz-opt" data-correct>Sprint Retrospective</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la Retrospectiva es el espacio del equipo para revisar cómo trabajó y acordar mejoras. La Review, en cambio, mira el producto (lo construido) con los interesados, no el proceso interno." data-ko="Es un problema de cómo trabaja el equipo, no del producto: eso se trata en la Sprint Retrospective. La Review es para mostrar lo construido a los interesados, y la Planning para elegir el trabajo del siguiente sprint." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: armá tu primera foto de un producto</h2>
+<p class="lead">Ahora con un producto real que conozcas: una app que uses, el sitio de tu facultad, un servicio de tu club. Sin inventar nada raro — pensá en cosas que de verdad podrían pasar. Escribí, en no más de un párrafo por punto: 1) quién sería el PO, el Scrum Master y los desarrolladores, 2) tres pedidos que le llegarían de distintos interesados, 3) en qué orden los pondrías en el Product Backlog y por qué va primero el primero.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Roles, pedidos y primer backlog de un producto real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>El PO es una sola persona, no un comité, y no es también el Scrum Master.</li>
+<li>Los tres pedidos vienen de interesados distintos, no todos de la misma persona.</li>
+<li>El orden del backlog se justifica con valor para el usuario, no con quién pidió más fuerte.</li>
+<li>Ningún pedido dicta cómo programarlo (eso es de los desarrolladores).</li>
+<li>Explicás por qué lo que queda abajo puede esperar, no solo por qué lo de arriba va primero.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Product Owner</td><td>Una persona que decide qué se construye y en qué orden, para maximizar el valor.</td></tr>
+<tr><td>Scrum Master</td><td>Cuida que el equipo use bien Scrum y remueve obstáculos. No ordena el trabajo.</td></tr>
+<tr><td>Desarrolladores</td><td>Deciden el cómo y cuánto entra en el sprint, y entregan un incremento usable.</td></tr>
+<tr><td>Project Manager</td><td>No es un rol de Scrum: gestiona fecha, presupuesto y alcance de un proyecto.</td></tr>
+<tr><td>Stakeholder</td><td>Cualquier interesado en el producto (decana, cafetería, estudiantes). Opina, no ordena.</td></tr>
+<tr><td>Manifiesto Ágil</td><td>Cuatro valores del tipo "esto más que esto", nunca "esto en lugar de esto".</td></tr>
+<tr><td>Sprint</td><td>Ciclo corto (1–4 semanas) que termina con un incremento usable.</td></tr>
+<tr><td>Product Backlog</td><td>Lista única, visible, ordenada y viva de todo lo que el producto podría necesitar.</td></tr>
+<tr><td>Sprint Backlog</td><td>Lo elegido para este sprint. Se protege: no se cambia sin conversarlo.</td></tr>
+<tr><td>Incremento</td><td>Versión usable del producto al final del sprint (cumple la Definition of Done).</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🏉 Scrum viene del rugby</h3><p>El nombre salió de un artículo de 1986 de Takeuchi y Nonaka sobre equipos de desarrollo de producto que avanzaban "como en un scrum": todos empujando juntos, pasándose la pelota, sin una cadena de mando rígida.</p></div>
+<div class="info"><h3>📜 El Manifiesto cabe en una página</h3><p>Los diecisiete firmantes se reunieron en febrero de 2001 en Utah. Casi todo lo que hoy se llama "ágil" (Scrum, Kanban, XP) es una forma de llevar esos cuatro valores a la práctica.</p></div>
+<div class="info"><h3>🧭 Lo que viene en el <a href="nivel-1-descubrimiento-producto.html">Nivel 1</a></h3><p>Ya sabés decidir qué va primero. El próximo paso es saber <em>qué</em> vale la pena construir: visión del producto, entrevistas a usuarios, personas e historias de usuario con sus criterios de aceptación.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Nivel 0: Mentalidad y Vocabulario del Product Owner</h2>
+<p>Material de apoyo para el Club de Programación · Ruta Product Owner.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "po-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

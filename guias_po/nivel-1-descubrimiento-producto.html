@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nivel 1: Descubrimiento de Producto | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">Club · <span>PO Nivel 1</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="vision">La visión en una frase</button>
+<button data-target="entrevistas">Entrevistas livianas</button>
+<button data-target="personas">La persona</button>
+<button data-target="historias">Historias de usuario e INVEST</button>
+<button data-target="criterios">Criterios de aceptación</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🎯 Club · Ruta Product Owner · Nivel 1</span>
+<h1 class="flow-h1">Descubrí <span>qué construir</span> antes de construirlo</h1>
+<p class="flow-lead">En el Nivel 0 aprendiste a decidir <em>qué va primero</em>. Pero ordenar un backlog no sirve de nada si lo que está adentro no resuelve el problema de nadie. Este nivel cubre el trabajo previo de un PO: escribir una visión, entrevistar usuarios sin sesgar sus respuestas, resumir lo aprendido en una persona, y convertirlo en historias de usuario con criterios de aceptación que el equipo pueda verificar.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Volvés a acompañar a Lucía, PO de <strong>TurnoYa</strong>, la app ficticia de turnos para la fotocopiadora y la cafetería del campus. Si todavía no hiciste el <a href="nivel-0-mentalidad-po.html">Nivel 0</a>, conviene empezar por ahí. En cada decisión podés probar un camino equivocado, ver su consecuencia sin penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>Antes de la primera función: ¿para quién y para qué?</h2>
+<p class="lead">TurnoYa ya tiene equipo y backlog, pero Lucía se da cuenta de algo incómodo: el backlog es una colección de pedidos de stakeholders, y nadie escribió nunca <strong>qué problema real</strong> intenta resolver el producto. Lo único claro es lo que vio con sus propios ojos: estudiantes esperando de pie en la fila de la fotocopiadora, mirando el reloj.</p>
+<div class="highlight">
+<strong>Lo que está en juego</strong>
+<p>Sin una visión, cada pedido nuevo parece igual de importante. Con una, el PO tiene un criterio para decir "esto sí, esto todavía no".</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="vision decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo empieza Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Hacer una lista con las treinta funciones que podría tener la app y pedirle al equipo que estime cada una.</button>
+<button class="quiz-opt" data-key="b" data-correct>Escribir en una frase para quién es TurnoYa, qué problema le resuelve y qué cambia en su día a día.</button>
+<button class="quiz-opt" data-key="c">Definir como visión "ser la mejor app del campus", para que todo el equipo comparta una meta ambiciosa.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Una lista de funciones es un inventario de <strong>soluciones</strong>, no un problema. Estimarlas sin saber para quién ni para qué es como cotizar los muebles de una casa que todavía no tiene plano. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>"La mejor app del campus" suena bien, pero no descarta nada: cualquier función, del chat a los memes, cabe dentro de esa frase. Una visión útil es lo bastante concreta como para poder <em>equivocarse</em>. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. Una buena visión nombra al <strong>usuario</strong>, su <strong>problema</strong> y el <strong>cambio</strong> que produce el producto — y con eso ya puede descartar cosas. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="vision" hidden>
+<h2>La visión en una frase</h2>
+<p class="lead">Una plantilla clásica (de Geoffrey Moore) sirve de esqueleto: no hace falta seguirla al pie de la letra, pero obliga a responder cinco preguntas que casi siempre se dejan sin contestar.</p>
+<div class="highlight">
+<strong>Plantilla y ejemplo de TurnoYa</strong>
+<p><strong>Para</strong> estudiantes con poco tiempo entre clases <strong>que</strong> pierden buena parte de ese tiempo esperando en la fila de la fotocopiadora, <strong>TurnoYa es</strong> una app de turnos <strong>que</strong> permite reservar desde el celular y llegar justo a la hora asignada. <strong>A diferencia de</strong> ir y esperar de pie, el estudiante sabe cuándo lo atienden.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="vision-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada parte de la plantilla con la pregunta que responde.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="para">Para [usuario]</button>
+<button class="quiz-match-item" data-pair="que1">…que [problema]</button>
+<button class="quiz-match-item" data-pair="es">…es un [categoría]</button>
+<button class="quiz-match-item" data-pair="que2">…que [beneficio]</button>
+<button class="quiz-match-item" data-pair="difer">A diferencia de [alternativa]</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="que2">¿Qué cambia para el usuario cuando lo usa?</button>
+<button class="quiz-match-item" data-pair="para">¿Quién es la persona a la que le sirve?</button>
+<button class="quiz-match-item" data-pair="difer">¿Qué hace hoy el usuario en lugar de usar el producto?</button>
+<button class="quiz-match-item" data-pair="es">¿Qué tipo de producto es, dicho en pocas palabras?</button>
+<button class="quiz-match-item" data-pair="que1">¿Qué dolor concreto tiene hoy esa persona?</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>Una visión es una hipótesis, no una certeza</h2>
+<p class="lead">Lucía escribió su frase, pero todo lo que dice se basa en lo que <em>ella</em> vio de pie en la fila. Puede estar acertando, o puede estar viendo solo lo que ya esperaba ver. Necesita hablar con usuarios reales — y tiene poco tiempo antes del próximo sprint.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="entrevistas decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo investiga Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Mandar una encuesta a doscientos estudiantes preguntando si les gustaría una app para reservar turno.</button>
+<button class="quiz-opt" data-key="b">Asumir lo que necesitan, porque ella también es estudiante y conoce muy bien lo que pasa en la fila.</button>
+<button class="quiz-opt" data-key="c" data-correct>Conversar con cinco estudiantes y preguntarles cómo fue la última vez que fueron a sacar fotocopias.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Casi todos van a responder "sí, claro" a una app gratis que suena útil — decir que sí no cuesta nada. Las preguntas sobre lo que <em>harían</em> en el futuro son opiniones amables, no evidencia de lo que hacen hoy. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Ser usuario ayuda a tener empatía, pero uno mismo es una sola muestra, y con sesgo: Lucía ya está convencida de la solución. Justo para eso existe la investigación de usuario: para encontrar lo que <em>no</em> se le ocurrió. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Hablar con pocas personas y preguntarles por <strong>lo que ya pasó</strong> revela comportamiento real, no promesas. Con cinco o seis entrevistas los patrones suelen empezar a repetirse. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="entrevistas" hidden>
+<h2>Entrevistas livianas: preguntar por el pasado, no por el futuro</h2>
+<p class="lead">Una entrevista de descubrimiento no es una encuesta ni una venta. La regla útil es simple: <strong>preguntá por hechos pasados y específicos</strong> ("¿cómo fue la última vez?"), no por opiniones sobre el futuro ("¿usarías...?") ni preguntas que ya traen la respuesta ("¿no te parece que...?").</p>
+
+<div class="quiz quiz-classify" data-quiz-id="entrevistas-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Esta pregunta sirve para una entrevista de descubrimiento?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Contame cómo fue la última vez que fuiste a sacar fotocopias.</span>
+<div class="quiz-classify-btns">
+<button>No sirve</button>
+<button data-correct>Sirve</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">¿Usarías una app para reservar turno en la fotocopiadora?</span>
+<div class="quiz-classify-btns">
+<button data-correct>No sirve</button>
+<button>Sirve</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">¿Qué hiciste la última vez que encontraste la fila muy larga?</span>
+<div class="quiz-classify-btns">
+<button data-correct>Sirve</button>
+<button>No sirve</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">¿No te parece que hacer fila es una pérdida de tiempo?</span>
+<div class="quiz-classify-btns">
+<button>Sirve</button>
+<button data-correct>No sirve</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">¿Cuánto pagarías por una app que te evite la fila?</span>
+<div class="quiz-classify-btns">
+<button data-correct>No sirve</button>
+<button>Sirve</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">¿Cuánto tiempo pasó desde que llegaste hasta que te atendieron, la última vez?</span>
+<div class="quiz-classify-btns">
+<button>No sirve</button>
+<button data-correct>Sirve</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="highlight">
+<strong>Lo que encontró Lucía</strong>
+<p>Después de cinco conversaciones (y de mirar un rato a Don Julio, el encargado de la fotocopiadora), aparecen tres patrones: casi todos abandonan la fila si ven más de cinco personas esperando; los picos son a las 10:00 y a las 12:30; y quienes imprimen trabajos largos, como una tesis, no quieren esperar sino saber <em>cuándo</em> estará listo. Ningún estudiante mencionó los pagos con QR ni los reportes.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>De veinte anotaciones a alguien concreto</h2>
+<p class="lead">Lucía tiene páginas de notas: frases sueltas, nombres, horarios. Si las lleva al equipo así, cada persona va a recordar solo lo que le llamó la atención. Necesita resumir lo aprendido en algo que todo el equipo pueda tener presente al decidir. Eso es una <strong>persona</strong>.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="personas decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo arma la persona?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Con los patrones reales de las entrevistas: su contexto, lo que quiere lograr y lo que más le frustra hoy.</button>
+<button class="quiz-opt" data-key="b">Describiendo al usuario promedio: estudiante de 18 a 25 años, con celular, que cursa alguna carrera de la universidad.</button>
+<button class="quiz-opt" data-key="c">Inventando un personaje simpático, con foto, hobbies y frase favorita, para que el equipo lo pueda imaginar bien.</button>
+</div>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. Una persona útil resume un <strong>patrón de comportamiento</strong> observado, no un individuo ni una estadística. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="b" hidden>Ese "promedio" describe a casi toda la universidad y no ayuda a decidir nada: ¿qué función le importa? ¿cuándo la usaría? Los datos demográficos dicen <em>quién es</em>, no <em>qué necesita ni por qué</em>. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Los hobbies y la foto hacen simpático al personaje, pero si no vienen de lo que Lucía escuchó, son adornos que pueden llevar al equipo a decidir por un usuario inventado. Cada detalle de la persona tiene que sostener una decisión de producto. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="personas" hidden>
+<h2>La persona: un patrón, no un individuo</h2>
+<p class="lead">Una persona es corta (media página) y se lee en un minuto. Lo que la hace útil no es el nombre ni la foto, sino cuatro cosas que salen directo de las entrevistas.</p>
+<div class="highlight">
+<strong>Persona de TurnoYa: Camila</strong>
+<p><strong>Contexto:</strong> estudiante de tercer año, con solo 20 minutos entre dos clases.</p>
+<p><strong>Objetivo:</strong> fotocopiar sus apuntes antes de la próxima clase sin llegar tarde.</p>
+<p><strong>Comportamiento:</strong> se rinde y se va sin las copias si ve más de cinco personas esperando.</p>
+<p><strong>Frustración:</strong> no saber cuánto va a tardar la fila antes de decidir si se queda.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="persona-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. "Solo tiene 20 minutos entre dos clases" describe el
+<select class="quiz-blank" data-correct="contexto">
+<option value="">— elige —</option>
+<option value="frustracion">Frustración</option>
+<option value="objetivo">Objetivo</option>
+<option value="contexto">Contexto</option>
+<option value="comportamiento">Comportamiento</option>
+</select> de la persona.</p>
+<p>2. "Quiere fotocopiar sus apuntes sin llegar tarde a clase" es su
+<select class="quiz-blank" data-correct="objetivo">
+<option value="">— elige —</option>
+<option value="objetivo">Objetivo</option>
+<option value="contexto">Contexto</option>
+<option value="frustracion">Frustración</option>
+<option value="comportamiento">Comportamiento</option>
+</select>.</p>
+<p>3. "Se va sin las copias cuando ve a más de cinco personas esperando" es su
+<select class="quiz-blank" data-correct="comportamiento">
+<option value="">— elige —</option>
+<option value="contexto">Contexto</option>
+<option value="objetivo">Objetivo</option>
+<option value="frustracion">Frustración</option>
+<option value="comportamiento">Comportamiento</option>
+</select>.</p>
+<p>4. "No saber cuánto va a tardar la fila" es su principal
+<select class="quiz-blank" data-correct="frustracion">
+<option value="">— elige —</option>
+<option value="comportamiento">Comportamiento</option>
+<option value="frustracion">Frustración</option>
+<option value="objetivo">Objetivo</option>
+<option value="contexto">Contexto</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>De Camila al backlog: la primera historia</h2>
+<p class="lead">Ya se sabe para quién es TurnoYa y qué le duele. Falta convertirlo en un ítem del Product Backlog. Lucía sabe que la frase que escriba va a leerla todo el equipo y que va a guiar lo que se programe en el sprint.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="historias decision5">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo escribe el ítem?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">"Desarrollar el módulo de reservas con su base de datos y una API REST para conectar con la app móvil."</button>
+<button class="quiz-opt" data-key="b">"Como usuario, quiero una app mejor para que todo sea más fácil, más rápido y más cómodo cuando la uso."</button>
+<button class="quiz-opt" data-key="c" data-correct>"Como estudiante con 20 minutos entre clases, quiero reservar turno desde el celular para no perder tiempo."</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Eso es una <strong>tarea técnica</strong>: dice cómo construir, no qué necesita alguien ni para qué. Si la historia ya trae la solución armada, los desarrolladores no pueden proponer una mejor, y nadie sabe cuándo el usuario quedó conforme. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>"Un usuario" y "una app mejor" no dicen nada: no hay persona concreta, ni algo que se pueda construir y probar en un sprint. Nadie sabría cuándo la historia está terminada. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Tiene <strong>quién</strong> (Camila), <strong>qué</strong> (reservar turno) y <strong>para qué</strong> (no perder tiempo) — y deja el cómo técnico abierto para el equipo. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="historias" hidden>
+<h2>Historias de usuario: formato e INVEST</h2>
+<p class="lead">El formato clásico es una sola frase con tres partes: <strong>Como</strong> [quién], <strong>quiero</strong> [qué] <strong>para</strong> [por qué]. La historia es una invitación a conversar, no un contrato: los detalles se acuerdan con el equipo. Para saber si una historia está bien armada existe la regla mnemotécnica <strong>INVEST</strong>.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Letra</th><th scope="col">Significa</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>I · Independent</td><td>Se puede construir sin depender de otra historia.</td><td>Reservar turno no exige tener antes el pago por QR.</td></tr>
+<tr><td>N · Negotiable</td><td>Los detalles se conversan; no está todo cerrado.</td><td>El equipo propone si el turno se elige en una lista o en un calendario.</td></tr>
+<tr><td>V · Valuable</td><td>Le aporta valor a alguien concreto.</td><td>Camila recupera tiempo entre clases.</td></tr>
+<tr><td>E · Estimable</td><td>El equipo puede calcular más o menos cuánto cuesta.</td><td>Reservar un turno es algo que ya saben cómo construir.</td></tr>
+<tr><td>S · Small</td><td>Entra completa dentro de un sprint.</td><td>"Reservar turno" sí; "gestionar toda la fotocopiadora" no.</td></tr>
+<tr><td>T · Testable</td><td>Se puede comprobar si está lista o no.</td><td>Se prueba reservando y viendo el turno confirmado.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-match" data-quiz-id="invest-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada letra de INVEST con lo que exige de la historia.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="i">Independent</button>
+<button class="quiz-match-item" data-pair="n">Negotiable</button>
+<button class="quiz-match-item" data-pair="v">Valuable</button>
+<button class="quiz-match-item" data-pair="e">Estimable</button>
+<button class="quiz-match-item" data-pair="s">Small</button>
+<button class="quiz-match-item" data-pair="t">Testable</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="s">Cabe entera dentro de un solo sprint.</button>
+<button class="quiz-match-item" data-pair="v">Le sirve a una persona real, no solo al equipo.</button>
+<button class="quiz-match-item" data-pair="t">Se puede comprobar con un sí o un no si está lista.</button>
+<button class="quiz-match-item" data-pair="i">Se puede construir sin esperar a otra historia.</button>
+<button class="quiz-match-item" data-pair="e">El equipo puede calcular más o menos su tamaño.</button>
+<button class="quiz-match-item" data-pair="n">Sus detalles se acuerdan hablando con el equipo.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision5" hidden>
+<h2>¿Cuándo está lista la historia?</h2>
+<p class="lead">La historia de Camila entra al Product Backlog. Antes de la Sprint Planning, un desarrollador le hace la pregunta clave: "Lucía, ¿cómo sabemos que terminamos?". Ella necesita anotar la respuesta junto a la historia.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-5" data-unlock="criterios repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué anota Lucía como criterio de aceptación?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Que la reserva sea rápida, intuitiva y se vea moderna en cualquier tipo de celular que use el estudiante.</button>
+<button class="quiz-opt" data-key="b" data-correct>Dado un turno libre, cuando el estudiante lo elige, entonces recibe una confirmación y nadie más puede tomarlo.</button>
+<button class="quiz-opt" data-key="c">Que el equipo decida por su cuenta cuándo considera terminada la historia, según lo que le parezca mejor.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>"Rápida", "intuitiva" y "moderna" son opiniones: cada persona del equipo las mide distinto, y en la Sprint Review se van a discutir en vez de comprobar. Un criterio útil se responde con un sí o un no. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Sin criterios acordados de antemano, "terminado" es lo que cada uno entienda — y las sorpresas llegan en la Sprint Review, cuando ya no hay tiempo de corregir. Los criterios existen justamente para acordar la meta antes de empezar. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto: describe un escenario concreto (dado, cuando, entonces) que cualquiera puede probar con un sí o un no. Cerrás el recorrido del nivel: del problema a una historia lista para el sprint. Ahora repasemos.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="criterios" hidden>
+<h2>Criterios de aceptación: condiciones que se comprueban</h2>
+<p class="lead">Los criterios de aceptación son las condiciones que la historia debe cumplir para darse por terminada. Una forma muy usada de escribirlos es <strong>Dado / Cuando / Entonces</strong>: <em>dado</em> un contexto, <em>cuando</em> pasa algo, <em>entonces</em> se espera un resultado observable. La prueba es simple: ¿se puede responder con un sí o un no?</p>
+<div class="highlight">
+<strong>Ejemplo de la historia de Camila</strong>
+<p><strong>Dado</strong> que hay un turno libre a las 10:30, <strong>cuando</strong> Camila lo elige, <strong>entonces</strong> recibe un mensaje con el día y la hora, y ese turno deja de aparecer libre para los demás.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="criterios-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Es un criterio de aceptación verificable o es vago?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La reserva debe ser rápida y fácil de usar.</span>
+<div class="quiz-classify-btns">
+<button>Verificable</button>
+<button data-correct>Vago</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Al confirmar un turno, el estudiante recibe un mensaje con día y hora.</span>
+<div class="quiz-classify-btns">
+<button>Vago</button>
+<button data-correct>Verificable</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un turno ya reservado no vuelve a aparecer libre para otro estudiante.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Verificable</button>
+<button>Vago</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La pantalla tiene que verse bien.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Vago</button>
+<button>Verificable</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Si no quedan turnos libres, se muestra el mensaje "sin turnos disponibles hoy".</span>
+<div class="quiz-classify-btns">
+<button>Vago</button>
+<button data-correct>Verificable</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El sistema debería ser intuitivo para todos.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Vago</button>
+<button>Verificable</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un stakeholder pide "una app con chat, pagos y reportes". ¿Qué conviene preguntarse antes de tocar el backlog?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">¿Cuántos desarrolladores hacen falta para construir las tres funciones lo antes posible?</button>
+<button class="quiz-opt">¿En qué orden conviene programar el chat, los pagos y los reportes para terminar rápido?</button>
+<button class="quiz-opt">¿Qué tecnología permite que las tres funciones convivan dentro de una sola aplicación?</button>
+<button class="quiz-opt" data-correct>¿Qué problema de qué usuario resolvería esa lista de funciones, y cómo lo sabemos?</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: antes de ordenar o estimar hay que saber qué problema de qué usuario se resuelve y con qué evidencia. Un pedido de funciones es una solución propuesta, no un problema descubierto." data-ko="Las otras opciones dan por hecho que el pedido ya es lo correcto y pasan directo a estimar u ordenar. La pregunta del PO es anterior: qué problema de qué usuario resolvería esa lista, y con qué evidencia lo sabemos." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Una buena historia de usuario describe qué necesita la persona y para qué, y deja abierto el cómo técnico.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la historia dice el quién, el qué y el para qué. El cómo lo propone el equipo de desarrolladores, y por eso el PO no lo dicta." data-ko="Es verdadero: la historia dice quién, qué y para qué. Si ya trae el cómo técnico armado, deja de ser una necesidad y se vuelve una tarea, y el equipo pierde la chance de proponer una solución mejor." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">"Como estudiante quiero gestionar mis turnos, pagos, reportes y notificaciones." ¿Qué letra de INVEST falla con más claridad?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Independent</button>
+<button class="quiz-opt">Negotiable</button>
+<button class="quiz-opt" data-correct>Small</button>
+<button class="quiz-opt">Testable</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: reúne cuatro funciones enormes en una sola frase y no cabe dentro de un sprint. La salida es partirla en historias más chicas, cada una con su propio valor." data-ko="El problema más claro es el tamaño (Small): la frase junta turnos, pagos, reportes y notificaciones, que son varias historias en una y no caben en un solo sprint. Hay que partirla." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: descubrí un problema real</h2>
+<p class="lead">Ahora con un problema real del campus, de tu club o de una app que uses todos los días. Escribí, en no más de dos o tres líneas por punto: 1) una visión con la plantilla (para quién, qué problema, qué cambia), 2) tres preguntas que harías en una entrevista, todas sobre hechos pasados, 3) una persona con contexto, objetivo, comportamiento y frustración, 4) una historia de usuario con al menos dos criterios de aceptación.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Visión, entrevista, persona e historia de un problema real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>La visión nombra un usuario concreto y un problema, no una lista de funciones.</li>
+<li>Ninguna de las tres preguntas es hipotética ("¿usarías...?") ni sugestiva.</li>
+<li>La persona sale de patrones que podrías observar, no de datos demográficos ni adornos.</li>
+<li>La historia tiene quién, qué y para qué, sin dictar cómo programarlo.</li>
+<li>Cada criterio de aceptación se responde con un sí o un no.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Visión</td><td>Una frase con usuario, problema y cambio esperado. Sirve para decir "esto no".</td></tr>
+<tr><td>Hipótesis</td><td>Lo que creemos sobre el usuario y todavía no comprobamos.</td></tr>
+<tr><td>Entrevista de descubrimiento</td><td>Conversación sobre hechos pasados y específicos, no opiniones sobre el futuro.</td></tr>
+<tr><td>Persona</td><td>Resumen de un patrón real: contexto, objetivo, comportamiento y frustración.</td></tr>
+<tr><td>Historia de usuario</td><td>"Como [quién], quiero [qué] para [por qué]". Invita a conversar el cómo.</td></tr>
+<tr><td>INVEST</td><td>Independent, Negotiable, Valuable, Estimable, Small, Testable.</td></tr>
+<tr><td>Criterio de aceptación</td><td>Condición que se responde con sí o no. Formato Dado / Cuando / Entonces.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📖 Un libro entero sobre no preguntar mal</h3><p>"The Mom Test", de Rob Fitzpatrick, parte de una idea: hasta tu mamá te diría que tu idea es buena. Por eso propone preguntar por lo que la gente ya hizo, y no por lo que dice que haría.</p></div>
+<div class="info"><h3>🔤 INVEST tiene autor</h3><p>El acrónimo lo propuso Bill Wake en 2003. Y el formato "Dado / Cuando / Entonces" viene del BDD (desarrollo guiado por comportamiento), popularizado por Dan North.</p></div>
+<div class="info"><h3>🧭 Lo que viene en el Nivel 2</h3><p>Ya tenés historias listas. Ahora hay que ordenarlas: refinamiento del backlog, priorización con MoSCoW, Value vs Effort o RICE, y qué significan Definition of Ready y Definition of Done.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Nivel 1: Descubrimiento de Producto</h2>
+<p>Material de apoyo para el Club de Programación · Ruta Product Owner.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "po-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

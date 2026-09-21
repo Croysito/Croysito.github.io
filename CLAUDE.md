@@ -4,6 +4,7 @@ Sitio estático (HTML/CSS/JS puro, sin build step) con material de "aula inverti
 
 - `index.html` — landing con las 4 materias y el grid de guías (tarjetas "disponible" vs "próximamente"). Al publicar una guía nueva, mover su tarjeta de "próximo" a "disponible" y agregar la siguiente como "próximo".
 - `guias/`, `guias_bd/`, `guias_tgs/` — una página HTML autocontenida por guía.
+- `guias_po/` — ruta de **Product Owner** para el Club de Programación (no es una de las 4 materias, ver "Roadmap: Club — Product Owner" al final). **No se lista en `index.html`**: solo se accede por link directo, igual que `examenes/`.
 - `assets/guia.css` — hoja de estilos compartida por todas las guías (sidebar, quizzes, modo oscuro, bloques `.code`).
 
 ## Patrón de una guía
@@ -283,3 +284,23 @@ No se tocó `modelado-sistemas.html` ni sus quizzes existentes — sigue emparej
 **Proyecto integrador (semana 13):** no es una comparación en paralelo SQL vs Mongo — es un **sistema único con persistencia poliglota**: los datos transaccionales/estructurados (pedidos, pagos, inventario, usuarios) viven en PostgreSQL, y los datos flexibles o de alto volumen (catálogo con atributos variables, logs, comentarios/reseñas, carritos de sesión) viven en MongoDB, y ambos motores se usan juntos desde una misma aplicación. El objetivo es que decidan *qué dato va en cuál motor y por qué*, no solo que sepan usar los dos por separado.
 
 **Al completar una guía:** marcar su fila como "✅ Publicada" con la fecha, actualizar la tarjeta correspondiente en `index.html` (de "próximo" a "disponible", y agregar la siguiente como "próximo"), y avanzar la fila "⏭️ Siguiente a crear" a la guía que sigue en la tabla.
+
+## Roadmap: Club de Programación — Product Owner (0 → experto)
+
+**Contexto y decisiones (21/09/2026, tomadas explícitamente por Roy):** ruta pensada para el club, no para una materia con evaluación. Dos decisiones que fijan todo lo demás:
+
+- **100% práctico, sin certificación.** No se calca el vocabulario ni el orden del Scrum Guide para PSPO/CSPO: se prioriza lo que un club realmente usa (historias de usuario, backlog, priorización, métricas) y se recorta teoría de marco.
+- **Formato: caso/narrativa con decisiones.** Cada guía sigue a un personaje ficticio resolviendo decisiones encadenadas con `quiz-decision` (Nivel 1 "Narrativa ramificada", motor `.flow-mode`/`.flow-flat`, sin CSS nuevo — mismo patrón que `guias_tgs/problema-proyecto-grado.html`, que es la plantilla a copiar). Las decisiones incorrectas muestran su consecuencia y se puede reintentar; el resto de actividades (quiz-classify/fill/match/mc/open) acompañan pero no reemplazan a las decisiones. Un mini sprint simulado donde el estudiante prioriza un backlog y ve la consecuencia es el formato candidato para los niveles 2–3.
+
+**Convenciones propias de esta ruta:** carpeta `guias_po/`, archivos `nivel-N-*.html`, `QUIZ_PREFIX = "po-quiz-"`, marca de topbar "Club · PO Nivel N". El hilo narrativo es un producto ficticio, **TurnoYa** (app de turnos para la fotocopiadora y la cafetería del campus) con Lucía como PO y Tomás como Scrum Master — se reusa en todos los niveles para que el estudiante vea el mismo producto madurar. **No lleva bloque de ATENZA** (no es una materia ni tiene Clase asociada); si algún día se quiere calificar, es el mismo pegado de siempre. No se lista en `index.html` (ver arriba).
+
+| Nivel | Contenido | Estado |
+|---|---|---|
+| 0 | Mentalidad y vocabulario: PO vs PM vs Scrum Master, Manifiesto Ágil, Scrum en 15 minutos (roles/eventos/artefactos), por qué existe el backlog (`nivel-0-mentalidad-po.html`) — 4 decisiones encadenadas (qué hace un PO primero; spec de 40 páginas vs. entrega incremental; cómo ordenar pedidos dispersos → Product Backlog; pedido "urgente" a mitad de sprint), más quiz-classify de roles, quiz-fill del Manifiesto, quiz-match de eventos/artefactos, 3 repasos y un Reto Final abierto. Quizzes auditados con script (posición de `data-correct` + largo de opciones; decisiones con ratio ≤1.22, las únicas >1.6 son Verdadero/Falso y nombres de eventos Scrum, exención documentada). Verificado con Playwright headless: cada decisión muestra su consecuencia sin deshabilitar la opción errónea, desbloquea el tramo correcto y el estado sobrevive a recargar | ✅ Publicada (2026-09-21) |
+| 1 | Descubrimiento de producto: visión y problema, investigación de usuario liviana (entrevistas, personas), historias de usuario (formato + INVEST), criterios de aceptación (`nivel-1-descubrimiento-producto.html`) — 5 decisiones encadenadas sobre TurnoYa (cómo empezar: visión en una frase vs. lista de funciones; cómo investigar: entrevistas sobre el pasado vs. encuesta hipotética; cómo armar la persona: patrones reales vs. promedio demográfico; cómo escribir la historia: Como/quiero/para vs. tarea técnica; cómo escribir el criterio de aceptación: Dado/Cuando/Entonces vs. adjetivos vagos), con quiz-match de la plantilla de visión y de INVEST, quiz-classify de preguntas de entrevista y de criterios verificables, quiz-fill de la anatomía de una persona, 3 repasos y Reto Final abierto. Auditado con script (decisiones con ratio de largo ≤1.11 y la correcta nunca sistemáticamente la más larga; las únicas >1.6 son V/F y el mc de letras INVEST, vocabulario fijo) y verificado con Playwright headless (5 decisiones con consecuencia sin deshabilitar, desbloqueo en cadena, 14/14 tras recargar). Enlazado desde el "¿Sabías que...?" del Nivel 0 | ✅ Publicada (2026-09-21) |
+| 2 | Backlog y sprint: refinamiento, priorización (MoSCoW, Value vs Effort, RICE), Definition of Ready/Done, el PO en Planning/Daily/Review/Retro, velocity y burndown leídos desde el rol de PO | ⏭️ Siguiente a crear |
+| 3 | Estrategia y métricas: OKRs y KPIs, roadmapping (Now-Next-Later, Story Mapping), North Star Metric, experimentación (MVP, hipótesis, A/B básico) | Pendiente |
+| 4 | Stakeholders y trade-offs: negociar alcance, presión de negocio vs. calidad, trabajo con UX e ingeniería (deuda técnica explicada a un PO) | Pendiente |
+| 5 | Avanzado: scaling (SAFe/LeSS a nivel conceptual), Product Ops, y caso integrador de cierre (armar el backlog real de TurnoYa de punta a punta) | Pendiente |
+
+**Al completar una guía de esta ruta:** marcar su fila como "✅ Publicada" con la fecha y avanzar "⏭️ Siguiente a crear". No hay tarjeta en `index.html` que mover.
