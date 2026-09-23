@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seguridad en PostgreSQL: Roles, GRANT y REVOKE | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-console-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">BD II · <span>Seguridad: Roles y Permisos</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="roles">Roles: quién es quién</button>
+<button data-target="permisos">GRANT y REVOKE</button>
+<button data-target="razonamiento">Ejercicios de razonamiento</button>
+<button data-target="ejercicios">Actividades de repaso</button>
+<button data-target="cierre">Cierre del bloque SQL</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🗄️ Guía de Aula Invertida</span>
+<h1 class="flow-h1">Seguridad: Roles, <span>GRANT y REVOKE</span></h1>
+<p class="flow-lead">Hasta ahora cada consulta y cada ejercicio de este curso corrió como <strong>dueño</strong> de la base de datos: acceso total, sin restricciones. En un sistema real eso es un riesgo enorme —cualquiera con esa conexión puede leer, modificar o borrar cualquier cosa—. PostgreSQL resuelve esto con <strong>roles</strong> (quién se conecta) y <strong>privilegios</strong> (qué puede hacer cada uno), aplicando el principio de darle a cada quien <em>exactamente</em> lo que necesita, ni un permiso más.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Scrollea para empezar — a la izquierda vas a ver la consola armarse sola, mientras leés a la derecha.</p>
+</section>
+
+<section class="flow-section" id="roles">
+<div class="flow-grid">
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="rolPanel">
+<div class="flow-panel-head"><span>bd2 · seguridad_roles.sql</span><span class="flow-panel-step" id="rolPanelStep">Paso 1 / 7</span></div>
+
+<div class="scrolly-query">
+<div class="scrolly-query-head">consulta.sql</div>
+<pre class="scrolly-query-pre" id="rolQueryPre"><span class="scrolly-query-placeholder">-- todavía no escribimos nada</span></pre>
+</div>
+
+<div id="rolResultBox" class="scrolly-result-box"></div>
+</div>
+</div>
+
+<div class="flow-beats">
+
+<div class="flow-beat" data-step="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>Todo el mundo entra como el dueño</h3>
+<p>En todos los talleres anteriores te conectaste como el superusuario de la base —acceso total, sin excepción—. En un sistema real con varias personas (aplicaciones, analistas, pasantes) eso significa que cualquiera de ellas podría, por accidente o a propósito, borrar una tabla entera.</p>
+</div>
+
+<div class="flow-beat" data-step="1">
+<span class="flow-beat-eyebrow">Paso 02 · CREATE ROLE</span>
+<h3>Un rol nuevo, sin privilegios todavía</h3>
+<p><code>CREATE ROLE</code> crea una identidad dentro de la base de datos. Por sí sola, no le da ningún permiso: ni siquiera puede conectarse. Es solo un nombre al que después le vamos a otorgar (o quitar) capacidades, una por una.</p>
+</div>
+
+<div class="flow-beat" data-step="2">
+<span class="flow-beat-eyebrow">Paso 03 · LOGIN y PASSWORD</span>
+<h3>Un rol que sí puede conectarse</h3>
+<p>Sin <code>LOGIN</code>, un rol existe pero nadie puede iniciar sesión con él —sirve solo como una "etiqueta" de permisos para agrupar (lo vas a ver en el paso 05). Con <code>WITH LOGIN PASSWORD '...'</code>, en cambio, alguien puede conectarse a la base usando esa identidad.</p>
+</div>
+
+<div class="flow-beat" data-step="3">
+<span class="flow-beat-eyebrow">Paso 04 · pg_roles</span>
+<h3>Consultar quién puede hacer qué</h3>
+<p><code>pg_roles</code> es una vista del sistema: lista todos los roles que existen, con columnas como <code>rolcanlogin</code> (¿puede conectarse?) y <code>rolsuper</code> (¿es superusuario?). <code>lector</code> no puede conectarse todavía; <code>editor</code> sí; <code>postgres</code> es el único superusuario.</p>
+</div>
+
+<div class="flow-beat" data-step="4">
+<span class="flow-beat-eyebrow">Paso 05 · Membresía de roles</span>
+<h3>Un rol puede heredar de otro</h3>
+<p><code>GRANT editor TO admins;</code> no le da una tabla ni una acción —hace que <code>admins</code> se vuelva <strong>miembro</strong> de <code>editor</code>, heredando automáticamente todos los privilegios que <code>editor</code> tenga en este momento, y los que reciba en el futuro.</p>
+</div>
+
+<div class="flow-beat" data-step="5">
+<span class="flow-beat-eyebrow">Paso 06 · SET ROLE</span>
+<h3>Cambiar de identidad dentro de la misma sesión</h3>
+<p><code>SET ROLE lector;</code> hace que, desde este punto, PostgreSQL trate el resto de la sesión como si fueras <code>lector</code> —no el superusuario que abrió la conexión—. <code>current_user</code> confirma el cambio.</p>
+</div>
+
+<div class="flow-beat" data-step="6">
+<span class="flow-beat-eyebrow">Paso 07 · RESET ROLE</span>
+<h3>Volver a ser quien realmente sos</h3>
+<p><code>RESET ROLE;</code> deshace el <code>SET ROLE</code> anterior y devuelve la sesión a su identidad original —acá, de vuelta a <code>postgres</code>. Todavía no le dimos ningún permiso a <code>lector</code> sobre ninguna tabla: eso es lo que sigue.</p>
+</div>
+
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat">
+<h2 data-eyebrow="Práctica · Roles">Practicá lo que viste</h2>
+<p class="lead">Antes de seguir a GRANT y REVOKE, confirmá que la diferencia entre crear un rol y darle permisos quedó clara.</p>
+
+<div class="quiz quiz-mc" data-quiz-id="rol-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Justo después de ejecutar <code>CREATE ROLE lector;</code> y nada más, ¿qué puede hacer ese rol sobre las tablas de la base?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Nada todavía: crear el rol no otorga ningún permiso sobre ninguna tabla.</button>
+<button class="quiz-opt">Leer cualquier tabla, porque todo rol nuevo hereda SELECT por defecto.</button>
+<button class="quiz-opt">Puede conectarse y leer, pero no puede escribir en ninguna tabla.</button>
+<button class="quiz-opt">Solo puede leer las tablas que él mismo haya creado antes.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: CREATE ROLE solo crea el nombre. Ningún privilegio sobre tablas, ni siquiera SELECT, se otorga automáticamente — eso requiere un GRANT explícito." data-ko="CREATE ROLE no otorga ningún privilegio por sí solo, ni de lectura ni de conexión. Hace falta un GRANT explícito para cada permiso, incluido el de leer una tabla." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="rol-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre la creación y consulta de roles.</p>
+<p>1. Para que un rol pueda conectarse directamente a la base de datos, hay que crearlo con la palabra clave
+<select class="quiz-blank" data-correct="login">
+<option value="">— elige —</option>
+<option value="login">LOGIN</option>
+<option value="super">SUPERUSER</option>
+</select>.</p>
+<p>2. La vista del sistema que lista todos los roles existentes, con columnas como <code>rolcanlogin</code>, se llama
+<select class="quiz-blank" data-correct="pgroles">
+<option value="">— elige —</option>
+<option value="pgroles">pg_roles</option>
+<option value="pgtables">pg_tables</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="rol-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada sentencia según si administra el rol en sí, o los permisos que ese rol tiene sobre un objeto.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">CREATE ROLE lector;</span>
+<div class="quiz-classify-btns">
+<button data-correct>Gestión de roles</button>
+<button>Gestión de permisos</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">GRANT SELECT ON productos TO lector;</span>
+<div class="quiz-classify-btns">
+<button>Gestión de roles</button>
+<button data-correct>Gestión de permisos</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">REVOKE SELECT ON productos FROM lector;</span>
+<div class="quiz-classify-btns">
+<button>Gestión de roles</button>
+<button data-correct>Gestión de permisos</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">ALTER ROLE lector WITH LOGIN;</span>
+<div class="quiz-classify-btns">
+<button data-correct>Gestión de roles</button>
+<button>Gestión de permisos</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">GRANT editor TO admins;</span>
+<div class="quiz-classify-btns">
+<button>Gestión de roles</button>
+<button data-correct>Gestión de permisos</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">DROP ROLE lector;</span>
+<div class="quiz-classify-btns">
+<button data-correct>Gestión de roles</button>
+<button>Gestión de permisos</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-section" id="permisos">
+<div class="flow-grid">
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="permPanel">
+<div class="flow-panel-head"><span>bd2 · seguridad_roles.sql</span><span class="flow-panel-step" id="permPanelStep">Paso 1 / 7</span></div>
+<div class="scrolly-query">
+<div class="scrolly-query-head">consulta.sql</div>
+<pre class="scrolly-query-pre" id="permQueryPre"><span class="scrolly-query-placeholder">-- todavía no escribimos nada</span></pre>
+</div>
+<div id="permResultBox" class="scrolly-result-box"></div>
+</div>
+</div>
+
+<div class="flow-beats">
+
+<div class="flow-beat" data-sub="0">
+<span class="flow-beat-eyebrow">Paso 01 · Sin GRANT, no hay nada</span>
+<h3>lector todavía no puede leer nada</h3>
+<p>Ya como <code>lector</code> (con <code>SET ROLE</code>), intentar un simple <code>SELECT</code> sobre <code>productos</code> falla. No es un error de sintaxis: PostgreSQL directamente le niega el acceso a la tabla, porque nadie le otorgó ese permiso todavía.</p>
+</div>
+
+<div class="flow-beat" data-sub="1">
+<span class="flow-beat-eyebrow">Paso 02 · GRANT SELECT</span>
+<h3>Otorgar el permiso de lectura</h3>
+<p><code>GRANT SELECT ON productos TO lector;</code> le da a <code>lector</code> exactamente un permiso: leer esa tabla. Nada de escribir, nada de otras tablas —solo esto.</p>
+</div>
+
+<div class="flow-beat" data-sub="2">
+<span class="flow-beat-eyebrow">Paso 03 · Ahora sí funciona</span>
+<h3>El mismo SELECT, distinto resultado</h3>
+<p>La misma consulta que falló en el paso 01 ahora devuelve filas. El único cambio fue el <code>GRANT</code> del paso anterior —el rol es el mismo, la consulta es la misma.</p>
+</div>
+
+<div class="flow-beat" data-sub="3">
+<span class="flow-beat-eyebrow">Paso 04 · Un permiso no implica los demás</span>
+<h3>SELECT no incluye INSERT</h3>
+<p>Todavía como <code>lector</code>, un <code>INSERT</code> falla —el <code>GRANT SELECT</code> del paso 02 no le dio ningún otro privilegio. Cada acción (SELECT, INSERT, UPDATE, DELETE) se otorga por separado.</p>
+</div>
+
+<div class="flow-beat" data-sub="4">
+<span class="flow-beat-eyebrow">Paso 05 · Varios privilegios de una vez</span>
+<h3>GRANT admite una lista</h3>
+<p>Para <code>editor</code> no hace falta un <code>GRANT</code> por cada permiso: <code>GRANT SELECT, INSERT, UPDATE ON productos TO editor;</code> le otorga los tres de una sola vez.</p>
+</div>
+
+<div class="flow-beat" data-sub="5">
+<span class="flow-beat-eyebrow">Paso 06 · REVOKE</span>
+<h3>Quitar un permiso ya otorgado</h3>
+<p><code>REVOKE SELECT ON productos FROM lector;</code> hace exactamente lo contrario de <code>GRANT</code>: le retira ese permiso puntual a <code>lector</code>, sin tocar los permisos de ningún otro rol.</p>
+</div>
+
+<div class="flow-beat" data-sub="6">
+<span class="flow-beat-eyebrow">Paso 07 · De vuelta al punto de partida</span>
+<h3>lector vuelve a no poder leer</h3>
+<p>El mismo <code>SELECT</code> que funcionaba en el paso 03 vuelve a fallar. <code>REVOKE</code> deshizo el <code>GRANT</code> del paso 02 —los permisos de PostgreSQL no son "todo o nada": se pueden otorgar y retirar en cualquier momento, uno por uno.</p>
+</div>
+
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat">
+<h2 data-eyebrow="Práctica · GRANT y REVOKE">Practicá lo que viste</h2>
+<p class="lead">Emparejá cada instrucción con lo que hace, y confirmá por qué un permiso no arrastra a los demás.</p>
+
+<div class="quiz quiz-match" data-quiz-id="perm-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada término con su descripción.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="grant">GRANT</button>
+<button class="quiz-match-item" data-pair="revoke">REVOKE</button>
+<button class="quiz-match-item" data-pair="setrole">SET ROLE</button>
+<button class="quiz-match-item" data-pair="resetrole">RESET ROLE</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="grant">Otorga uno o varios privilegios a un rol sobre un objeto.</button>
+<button class="quiz-match-item" data-pair="revoke">Retira un privilegio otorgado antes, sin afectar a otros roles.</button>
+<button class="quiz-match-item" data-pair="setrole">Cambia la identidad efectiva de la sesión actual a otro rol.</button>
+<button class="quiz-match-item" data-pair="resetrole">Devuelve la sesión a su identidad original, antes de cualquier SET ROLE.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="perm-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">editor tiene GRANT SELECT, INSERT, UPDATE ON productos. Si intenta DELETE FROM productos WHERE id = 1;, ¿qué pasa?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Funciona, porque UPDATE ya incluye la posibilidad de borrar filas.</button>
+<button class="quiz-opt" data-correct>Falla: DELETE es un privilegio distinto, y nunca se le otorgó a editor.</button>
+<button class="quiz-opt">Funciona, porque tres privilegios ya alcanzan el máximo permitido.</button>
+<button class="quiz-opt">Falla, pero solo porque productos tiene una clave primaria.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: SELECT, INSERT, UPDATE y DELETE son cuatro privilegios independientes. Tener tres de ellos no otorga el cuarto — hay que darlo con su propio GRANT." data-ko="UPDATE no incluye DELETE, y la clave primaria no tiene nada que ver acá. Cada acción sobre una tabla es un privilegio separado: sin un GRANT DELETE explícito, esa sentencia falla." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="razonamiento">
+<h2 data-eyebrow="Razonamiento">Ejercicios de razonamiento</h2>
+<p class="lead">En estas preguntas no se te pide recordar sintaxis: se te da un escenario, y debés <strong>razonar</strong> cuál sería la respuesta correcta antes de comprobarla.</p>
+
+<div class="highlight">
+<strong>Escenario</strong>
+<p>Un nuevo integrante del equipo va a generar reportes leyendo las tablas de ventas todos los días. Nunca necesita modificar ni un solo dato.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razon-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué le das?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Su propio usuario superusuario, para que no tenga limitaciones.</button>
+<button class="quiz-opt">La contraseña del rol postgres, que ya usa todo el equipo.</button>
+<button class="quiz-opt" data-correct>Un rol nuevo, con LOGIN, y GRANT SELECT solo sobre las tablas que necesita.</button>
+<button class="quiz-opt">GRANT ALL PRIVILEGES sobre toda la base, para no tener que revisar tabla por tabla.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el principio de mínimo privilegio dice exactamente esto — un rol propio, con solo el permiso que su tarea necesita (SELECT sobre las tablas de ventas), ni uno más." data-ko="Compartir contraseñas y dar acceso total (superusuario o ALL PRIVILEGES) rompe el principio de mínimo privilegio. Lo correcto es un rol propio con SELECT únicamente sobre lo que necesita." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Otro escenario</strong>
+<p>Alguien del equipo deja el proyecto esta semana. Todavía tiene un rol activo con LOGIN y varios permisos otorgados.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razon-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué es lo mínimo que hay que hacer con su rol?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Nada: como ya no tiene la URL de conexión, no puede volver a entrar.</button>
+<button class="quiz-opt">Avisarle por correo que ya no debería volver a usar su acceso.</button>
+<button class="quiz-opt">Cambiar la contraseña de postgres, el superusuario de toda la base.</button>
+<button class="quiz-opt" data-correct>Quitarle la capacidad de conectarse (ALTER ROLE ... NOLOGIN) o directamente eliminar el rol.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la URL de conexión no es un secreto seguro por sí sola. Hay que quitarle explícitamente la capacidad de conectarse o eliminar su rol — un simple aviso no revoca ningún permiso real." data-ko="No alcanza con que 'ya no tenga la URL' ni con un aviso, y cambiar la contraseña de postgres afecta a todo el equipo por igual. Lo correcto es actuar sobre su rol puntual: quitarle LOGIN o eliminarlo." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Un último escenario</strong>
+<p>Estás decidiendo cuántos permisos otorgarle a cada rol nuevo que creás.</p>
+</div>
+<div class="quiz quiz-fill" data-quiz-id="razon-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Completá la regla general:</p>
+<p>Cada rol debería tener exactamente los permisos que necesita para su tarea, ni uno más — esto se conoce como el principio de
+<select class="quiz-blank" data-correct="minimo">
+<option value="">— elige —</option>
+<option value="minimo">mínimo privilegio</option>
+<option value="maxima">máxima flexibilidad</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="ejercicios">
+<h2 data-eyebrow="Repaso integrador">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué diferencia real hay entre CREATE ROLE lector; y CREATE ROLE editor WITH LOGIN PASSWORD '...';?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>editor puede conectarse a la base con LOGIN; lector, sin esa cláusula, no puede.</button>
+<button class="quiz-opt">No hay ninguna diferencia real, solo cambia el nombre elegido.</button>
+<button class="quiz-opt">editor puede leer cualquier tabla automáticamente; lector no puede leer nada.</button>
+<button class="quiz-opt">lector es un superusuario; editor tiene privilegios limitados.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: LOGIN es lo que habilita a un rol a conectarse directamente a la base. Ninguno de los dos tiene privilegios sobre tablas hasta que se los otorgues con GRANT." data-ko="Ninguno de los dos es superusuario ni tiene permisos de lectura automáticos. La diferencia real es LOGIN: editor puede conectarse a la base, lector no." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Un rol recién creado con CREATE ROLE, sin ningún GRANT posterior, ya puede leer cualquier tabla de la base.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: CREATE ROLE no otorga ningún privilegio sobre ninguna tabla. Sin un GRANT SELECT explícito, ese rol no puede leer nada — ni siquiera una tabla vacía." data-ko="Es falso: un rol recién creado no tiene ningún privilegio sobre tablas hasta que alguien se lo otorgue con GRANT — ni siquiera SELECT se da por defecto." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué hace exactamente SET ROLE lector; dentro de una sesión?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Crea el rol lector si todavía no existía en la base.</button>
+<button class="quiz-opt" data-correct>Cambia la identidad efectiva de la sesión, para aplicar los permisos de lector.</button>
+<button class="quiz-opt">Le otorga a lector el privilegio SELECT sobre todas las tablas.</button>
+<button class="quiz-opt">Cierra la sesión actual y abre una nueva conexión como lector.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: SET ROLE no crea nada ni otorga permisos — cambia qué identidad usa PostgreSQL para decidir qué está permitido, dentro de la misma sesión ya abierta." data-ko="SET ROLE no crea el rol, no otorga privilegios y no abre una conexión nueva: solo cambia la identidad efectiva de la sesión actual, para que se apliquen los permisos de ese rol." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué instrucción se usa para quitarle un permiso ya otorgado a un rol?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">DENY</button>
+<button class="quiz-opt">DROP</button>
+<button class="quiz-opt" data-correct>REVOKE</button>
+<button class="quiz-opt">UNGRANT</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: REVOKE es el opuesto exacto de GRANT — retira un privilegio puntual que se había otorgado antes, sin eliminar el rol ni la tabla." data-ko="DENY y UNGRANT no existen en PostgreSQL, y DROP elimina roles u objetos enteros, no un permiso puntual. La instrucción correcta para retirar un privilegio es REVOKE." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">GRANT editor TO admins; ¿qué significa exactamente?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Le da al rol editor todos los privilegios que tenga admins.</button>
+<button class="quiz-opt">Crea un rol nuevo llamado admins_editor, combinando ambos.</button>
+<button class="quiz-opt">Elimina el rol editor y lo reemplaza por admins.</button>
+<button class="quiz-opt" data-correct>El rol admins se vuelve miembro de editor y hereda todos sus privilegios.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: cuando GRANT se usa entre dos roles (no sobre una tabla), es membresía — admins pasa a heredar automáticamente todos los privilegios que editor tenga, presentes y futuros." data-ko="No es al revés, no crea un rol combinado ni elimina nada: GRANT rol_a TO rol_b hace que rol_b se vuelva miembro de rol_a, heredando sus privilegios." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="cierre">
+<h2 data-eyebrow="Cierre del bloque SQL">De DDL a Seguridad: todo el camino recorrido</h2>
+<p class="lead">Esta guía cierra el bloque de <strong>SQL relacional</strong> del curso. Antes de pasar a NoSQL, un repaso rápido de todo lo que ya sabés hacer con PostgreSQL:</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Bloque</th><th scope="col">Qué aprendiste</th></tr></thead>
+<tbody>
+<tr><td>1. DDL y restricciones</td><td><code>CREATE TABLE</code>, tipos de datos, <code>PRIMARY KEY</code>/<code>FOREIGN KEY</code>/<code>CHECK</code>/<code>NOT NULL</code>/<code>UNIQUE</code> — el esqueleto de una base bien diseñada.</td></tr>
+<tr><td>2. DML y SELECT básico</td><td><code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code>, <code>WHERE</code>/<code>ORDER BY</code>/<code>LIMIT</code> — cargar y consultar datos día a día.</td></tr>
+<tr><td>3. JOINs y subconsultas</td><td>Combinar filas de varias tablas relacionadas, y consultas anidadas dentro de otras.</td></tr>
+<tr><td>4. Agregación y vistas</td><td><code>GROUP BY</code>/<code>HAVING</code> para resumir datos, <code>CREATE VIEW</code> para guardar una consulta reutilizable.</td></tr>
+<tr><td>5. Funciones de ventana e índices</td><td><code>ROW_NUMBER</code>/<code>RANK</code>/<code>LAG</code>/<code>LEAD</code> sin colapsar filas, e índices + <code>EXPLAIN</code> para que las consultas grandes sean rápidas.</td></tr>
+<tr><td>6. Transacciones</td><td>ACID, aislamiento y bloqueos, para que operaciones concurrentes no se pisen entre sí.</td></tr>
+<tr><td>7. Procedimientos, funciones y triggers</td><td>Lógica que vive dentro de la base de datos, a veces disparada automáticamente.</td></tr>
+<tr><td>8. Seguridad: roles y permisos</td><td>Quién puede hacer qué, aplicando el principio de mínimo privilegio.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Lo que sigue: NoSQL</strong>
+<p>Con esto se cierra el bloque de SQL relacional. La próxima guía cambia de mundo: <strong>MongoDB</strong> y las bases de datos de documentos, donde los datos no viven en filas rígidas sino en estructuras flexibles. La meta del curso no es elegir "SQL o NoSQL" —es saber decidir <em>qué dato va en cuál motor y por qué</em>: los datos transaccionales y estructurados (pedidos, pagos, inventario) van a seguir viviendo en PostgreSQL, mientras que los datos flexibles o de alto volumen (catálogos, logs, reseñas) van a pasar a MongoDB, ambos usados juntos desde una misma aplicación en el Proyecto Integrador final.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet">
+<h2 data-eyebrow="Referencia">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Forma</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>CREATE ROLE nombre;</code></td><td>Crea un rol sin ningún privilegio, ni siquiera de conexión.</td></tr>
+<tr><td><code>CREATE ROLE nombre WITH LOGIN PASSWORD '...';</code></td><td>Crea un rol que puede conectarse directamente a la base.</td></tr>
+<tr><td><code>GRANT privilegio ON tabla TO rol;</code></td><td>Otorga un permiso específico (SELECT, INSERT, UPDATE, DELETE) sobre un objeto.</td></tr>
+<tr><td><code>REVOKE privilegio ON tabla FROM rol;</code></td><td>Retira un permiso otorgado antes, sin afectar a otros roles.</td></tr>
+<tr><td><code>GRANT rol_a TO rol_b;</code></td><td>rol_b se vuelve miembro de rol_a y hereda todos sus privilegios (membresía).</td></tr>
+<tr><td><code>SET ROLE nombre;</code></td><td>Cambia la identidad efectiva de la sesión actual.</td></tr>
+<tr><td><code>RESET ROLE;</code></td><td>Vuelve al rol original de la sesión, antes de cualquier SET ROLE.</td></tr>
+<tr><td><code>SELECT * FROM pg_roles;</code></td><td>Lista todos los roles de la base y sus atributos (rolcanlogin, rolsuper, ...).</td></tr>
+<tr><td><code>ALTER ROLE nombre WITH NOLOGIN;</code></td><td>Le quita a un rol la capacidad de conectarse, sin eliminarlo.</td></tr>
+<tr><td><code>GRANT USAGE ON SEQUENCE nombre_seq TO rol;</code></td><td>Necesario además de INSERT cuando la tabla usa una columna SERIAL — un detalle que se pisa la primera vez.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat">
+<h2 data-eyebrow="Contexto">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🔒 El mínimo privilegio no es solo de bases de datos</h3><p>Es una práctica de seguridad general: permisos de archivos en un sistema operativo, alcance de una API key, roles de IAM en AWS/GCP. La misma pregunta — "¿de verdad necesita esto?" — aplica en todos esos contextos, no solo en SQL.</p></div>
+<div class="info"><h3>👥 PostgreSQL ya trae roles predefinidos</h3><p>Además de los que vos creás, PostgreSQL incluye roles como <code>pg_read_all_data</code> o <code>pg_monitor</code>, pensados para otorgarse por membresía (igual que <code>GRANT editor TO admins;</code>) en vez de armar permisos equivalentes a mano, tabla por tabla.</p></div>
+<div class="info"><h3>🎯 GRANT también puede ser por columna</h3><p><code>GRANT SELECT (nombre, precio) ON productos TO rol;</code> le da acceso solo a esas dos columnas, no a la tabla entera — útil cuando una tabla mezcla datos públicos (nombre, precio) con datos sensibles (costo interno, margen) que no todos deberían ver.</p></div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Seguridad en PostgreSQL: Roles, GRANT y REVOKE</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Nivel 1: flujo con panel fijo (consola) — tramo 1, Roles. Prosa
+   a la derecha (.flow-beat) + panel de consola fijo a la izquierda
+   (#rolPanel) que se redibuja según qué paso cruza el centro del
+   viewport. Esta guía no ejecuta SQL real (a diferencia de los talleres
+   con PGlite): los resultados se calculan con JS a partir de datos fijos,
+   verificados de antemano contra Postgres real (roles/GRANT/REVOKE/SET
+   ROLE sí funcionan de verdad en PGlite, incluyendo el permission denied
+   real — ver taller-seguridad-roles.html, que ejecuta esto en vivo). No
+   es una actividad calificada: no llama a marcarResuelto. ===== */
+(function(){
+  var rolSteps = document.querySelectorAll('#roles .flow-beat');
+  if (!rolSteps.length) return;
+
+  var ROL_QUERY = {
+    0: [
+      '<span class="scrolly-query-placeholder">-- todo el curso, hasta ahora, corrió como el superusuario</span>'
+    ],
+    1: [
+      '<span class="keyword">CREATE ROLE</span> lector;'
+    ],
+    2: [
+      '<span class="keyword">CREATE ROLE</span> editor <span class="keyword">WITH LOGIN PASSWORD</span> \'clave123\';'
+    ],
+    3: [
+      '<span class="keyword">SELECT</span> rolname, rolcanlogin, rolsuper',
+      '<span class="keyword">FROM</span> pg_roles',
+      '<span class="keyword">WHERE</span> rolname <span class="keyword">IN</span> (\'lector\', \'editor\', \'postgres\')'
+    ],
+    4: [
+      '<span class="keyword">CREATE ROLE</span> admins;',
+      '<span class="keyword">GRANT</span> editor <span class="keyword">TO</span> admins;'
+    ],
+    5: [
+      '<span class="keyword">SET ROLE</span> lector;',
+      '<span class="keyword">SELECT</span> current_user;'
+    ],
+    6: [
+      '<span class="keyword">RESET ROLE</span>;',
+      '<span class="keyword">SELECT</span> current_user;'
+    ]
+  };
+
+  function rolCompute(step){
+    if (step === 0) return null;
+    if (step === 1) return {type:'success', text:'Rol lector creado (sin privilegios todavía).'};
+    if (step === 2) return {type:'success', text:'Rol editor creado, con permiso de conexión.'};
+    if (step === 3) return {type:'table', cols:['rolname','rolcanlogin','rolsuper'], rows:[
+      ['editor','true','false'], ['lector','false','false'], ['postgres','true','true']
+    ]};
+    if (step === 4) return {type:'success', text:'admins ahora es miembro de editor — hereda todos sus privilegios.'};
+    if (step === 5) return {type:'table', cols:['current_user'], rows:[['lector']]};
+    if (step === 6) return {type:'table', cols:['current_user'], rows:[['postgres']]};
+    return null;
+  }
+
+  var rolCurrentStep = -1;
+
+  function rolRenderResult(data, box){
+    if (!data) {
+      box.innerHTML = '<div class="scrolly-result-empty">Sin consulta todavía — el resultado aparece en el próximo paso.</div>';
+    } else if (data.type === 'success') {
+      box.innerHTML = '<div class="scrolly-result-success">✅ '+data.text+'</div>';
+    } else {
+      var head = '<tr>'+data.cols.map(function(c){ return '<th>'+c+'</th>'; }).join('')+'</tr>';
+      var body = data.rows.map(function(r){ return '<tr>'+r.map(function(v){ return '<td>'+v+'</td>'; }).join('')+'</tr>'; }).join('');
+      box.innerHTML = '<table class="scrolly-result-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table><div class="scrolly-result-count">'+data.rows.length+' fila'+(data.rows.length===1?'':'s')+'</div>';
+    }
+  }
+
+  function rolRender(step){
+    if (step === rolCurrentStep) return;
+    rolCurrentStep = step;
+
+    var pre = document.getElementById('rolQueryPre');
+    var lines = ROL_QUERY[step] || [];
+    if (step === 0) {
+      pre.innerHTML = lines[0];
+    } else {
+      pre.innerHTML = lines.map(function(l,i){ return '<div class="scrolly-qline'+(i===lines.length-1?' is-new':'')+'">'+l+'</div>'; }).join('');
+    }
+
+    rolRenderResult(rolCompute(step), document.getElementById('rolResultBox'));
+
+    document.getElementById('rolPanelStep').textContent = 'Paso '+(step+1)+' / 7';
+    rolSteps.forEach(function(el){ el.classList.toggle('is-active', Number(el.dataset.step)===step); });
+  }
+
+  var rolObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) rolRender(Number(e.target.dataset.step));
+    });
+  }, { rootMargin:'-35% 0px -55% 0px', threshold:0 });
+  rolSteps.forEach(function(s){ rolObserver.observe(s); });
+  rolRender(0);
+})();
+
+/* ===== Nivel 1: flujo con panel fijo (consola) — tramo 2, GRANT y REVOKE.
+   Mismo mecanismo que el tramo anterior. El panel también muestra un
+   error real en rojo (.scrolly-result-error) cuando el permiso todavía
+   no existe o ya fue revocado — igual que el trigger BEFORE INSERT de
+   procedimientos-triggers.html, pero acá el "permission denied" es el
+   mensaje literal y real que devuelve PostgreSQL cuando un rol intenta
+   tocar un objeto sin el privilegio correspondiente. ===== */
+(function(){
+  var permSteps = document.querySelectorAll('#permisos .flow-beat');
+  if (!permSteps.length) return;
+
+  var PERM_QUERY = {
+    0: [
+      '<span class="keyword">SET ROLE</span> lector;',
+      '<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> productos'
+    ],
+    1: [
+      '<span class="keyword">RESET ROLE</span>;',
+      '<span class="keyword">GRANT SELECT ON</span> productos <span class="keyword">TO</span> lector;'
+    ],
+    2: [
+      '<span class="keyword">SET ROLE</span> lector;',
+      '<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> productos'
+    ],
+    3: [
+      '<span class="keyword">INSERT INTO</span> productos (nombre, precio, stock)',
+      '<span class="keyword">VALUES</span> (\'Ropero\', <span class="number">200</span>, <span class="number">2</span>)'
+    ],
+    4: [
+      '<span class="keyword">RESET ROLE</span>;',
+      '<span class="keyword">GRANT SELECT, INSERT, UPDATE ON</span> productos <span class="keyword">TO</span> editor;'
+    ],
+    5: [
+      '<span class="keyword">REVOKE SELECT ON</span> productos <span class="keyword">FROM</span> lector;'
+    ],
+    6: [
+      '<span class="keyword">SET ROLE</span> lector;',
+      '<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> productos'
+    ]
+  };
+
+  function permCompute(step){
+    var productos = [
+      {id:1, nombre:'Mesa', precio:100, stock:15},
+      {id:2, nombre:'Silla', precio:40, stock:5},
+      {id:3, nombre:'Lámpara', precio:25, stock:0},
+      {id:4, nombre:'Estante', precio:80, stock:8}
+    ];
+    if (step === 0) return {type:'error', text:'ERROR:  permission denied for table productos'};
+    if (step === 1) return {type:'success', text:'lector ahora tiene el privilegio SELECT sobre productos.'};
+    if (step === 2) return {type:'table', cols:['id','nombre','precio','stock'], rows: productos.map(function(p){ return [String(p.id), p.nombre, 'Bs '+p.precio.toFixed(2), String(p.stock)]; })};
+    if (step === 3) return {type:'error', text:'ERROR:  permission denied for table productos'};
+    if (step === 4) return {type:'success', text:'editor ahora tiene SELECT, INSERT y UPDATE sobre productos.'};
+    if (step === 5) return {type:'success', text:'A lector se le retiró el privilegio SELECT sobre productos.'};
+    if (step === 6) return {type:'error', text:'ERROR:  permission denied for table productos'};
+    return null;
+  }
+
+  var permCurrentStep = -1;
+
+  function permRenderResult(data, box){
+    if (!data) {
+      box.innerHTML = '<div class="scrolly-result-empty">Sin consulta todavía — el resultado aparece en el próximo paso.</div>';
+    } else if (data.type === 'success') {
+      box.innerHTML = '<div class="scrolly-result-success">✅ '+data.text+'</div>';
+    } else if (data.type === 'error') {
+      box.innerHTML = '<div class="scrolly-result-error">⛔ '+data.text+'</div>';
+    } else {
+      var head = '<tr>'+data.cols.map(function(c){ return '<th>'+c+'</th>'; }).join('')+'</tr>';
+      var body = data.rows.map(function(r){ return '<tr>'+r.map(function(v){ return '<td>'+v+'</td>'; }).join('')+'</tr>'; }).join('');
+      box.innerHTML = '<table class="scrolly-result-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table><div class="scrolly-result-count">'+data.rows.length+' fila'+(data.rows.length===1?'':'s')+'</div>';
+    }
+  }
+
+  function permRender(step){
+    if (step === permCurrentStep) return;
+    permCurrentStep = step;
+
+    var pre = document.getElementById('permQueryPre');
+    var lines = PERM_QUERY[step] || [];
+    pre.innerHTML = lines.map(function(l,i){ return '<div class="scrolly-qline'+(i===lines.length-1?' is-new':'')+'">'+l+(i===lines.length-1?';':'')+'</div>'; }).join('');
+
+    permRenderResult(permCompute(step), document.getElementById('permResultBox'));
+
+    document.getElementById('permPanelStep').textContent = 'Paso '+(step+1)+' / 7';
+    permSteps.forEach(function(el){ el.classList.toggle('is-active', Number(el.dataset.sub)===step); });
+  }
+
+  var permObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) permRender(Number(e.target.dataset.sub));
+    });
+  }, { rootMargin:'-35% 0px -55% 0px', threshold:0 });
+  permSteps.forEach(function(s){ permObserver.observe(s); });
+  permRender(0);
+})();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde un
+     lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en la
+     URL); accedida directo, como siempre, no dispara nada nuevo. No toca
+     el motor de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. Usa paramsDeAtenza() (con
+     fallback a location.hash) desde el vamos, mismo criterio que
+     procedimientos-triggers.html. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf("?");
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get("atenza_token") && p.get("guia_intento")) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return;
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

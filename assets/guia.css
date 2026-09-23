@@ -329,6 +329,26 @@ footer{ padding:70px; text-align:center; color:var(--gris); }
 .dg-texto.small{ font-size:10.5px; font-weight:500; fill:var(--gris); }
 
 /* =========================================================
+   DIAGRAMAS UML (casos de uso, clases) — reusa el wrapper
+   .diagrama-caja; agnóstico del contenido, mismo patrón que
+   .diagrama-er .er-*. Piloto: guias_ds/nivel-1a-que-y-quien.html
+   ========================================================= */
+.diagrama-caja .uml-frontera{ fill:none; stroke:var(--gris); stroke-width:1.5; stroke-dasharray:6 4; }
+.diagrama-caja .uml-actor{ fill:none; stroke:var(--texto); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.diagrama-caja .uml-caso{ fill:var(--highlightBg); stroke:var(--verde); stroke-width:2; }
+.diagrama-caja .uml-caja{ fill:var(--highlightBg); stroke:var(--azul2); stroke-width:2; }
+.diagrama-caja .uml-caja-fondo{ fill:var(--blanco); stroke:var(--azul2); stroke-width:2; }
+.diagrama-caja .uml-separador{ stroke:var(--azul2); stroke-width:1.5; }
+.diagrama-caja .uml-linea{ stroke:var(--gris); stroke-width:1.5; fill:none; }
+.diagrama-caja .uml-herencia{ fill:var(--blanco); stroke:var(--texto); stroke-width:1.5; }
+.diagrama-caja .uml-composicion{ fill:var(--texto); stroke:var(--texto); }
+.diagrama-caja .uml-agregacion{ fill:var(--blanco); stroke:var(--texto); stroke-width:1.5; }
+.diagrama-caja .uml-mult{ fill:var(--gris); font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600; }
+.diagrama-caja .uml-titulo{ fill:var(--texto); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700; }
+.diagrama-caja .uml-texto{ fill:var(--texto); font-family:'DM Sans',sans-serif; font-size:12px; }
+.diagrama-caja .uml-texto.mono{ font-family:'JetBrains Mono',monospace; font-size:11.5px; }
+
+/* =========================================================
    PRESENTACIÓN POR DIAPOSITIVAS (formato deck, alternativo
    al esqueleto lineal de sidebar + scroll). Ver guías con
    clase .deck en el <body> — piloto: ingenieria-de-sistemas.html

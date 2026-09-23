@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nivel 1A: Qué y Quién — Casos de Uso y Clases | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">Club · <span>DS Nivel 1A</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="casos-de-uso">Casos de uso</button>
+<button data-target="clases">Clases</button>
+<button data-target="relaciones">Relaciones entre clases</button>
+<button data-target="vista-datos">Vista de datos</button>
+<button data-target="ia">Diseñar con IA</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🧩 Club · Ruta Diseñador de Sistemas · Nivel 1A</span>
+<h1 class="flow-h1">Modelar el problema: <span>qué y quién</span></h1>
+<p class="flow-lead">Antes de escribir una clase o pedirle código a una IA, hace falta saber dos cosas: quién va a usar el sistema y para qué (el <strong>alcance</strong>), y cómo se organiza por dentro (la <strong>estructura</strong>). Esta guía te enseña dos diagramas para eso — <strong>casos de uso</strong> y <strong>clases</strong> — desde cero, sin dar por sabido ningún diagrama anterior. El Nivel 1B sigue con dos más: secuencia y estados.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Seguís acompañando a Diego en <strong>TurnoYa</strong>. En cada decisión podés probar primero un camino equivocado, ver su consecuencia sin ninguna penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>Martes, 9:00. La pantalla en blanco de siempre.</h2>
+<p class="lead">Terminó el sprint de mentalidad de diseño y arranca uno nuevo. El objetivo: <strong>"el estudiante puede reservar turno en la fotocopiadora"</strong>. Diego abre su editor de código, listo para escribir la primera clase, cuando se da cuenta de que todavía no anotó nada sobre quién va a usar el sistema.</p>
+<div class="highlight">
+<strong>La tentación de siempre</strong>
+<p>Ir directo al código (o directo a las clases) sin haber definido primero el alcance suele terminar en una estructura que no encaja con lo que el sistema realmente necesita.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="casos-de-uso decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Por dónde empieza Diego?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Empezar a escribir la clase que le resulte más fácil, y agregar las demás sobre la marcha según se le ocurran.</button>
+<button class="quiz-opt" data-key="b">Copiar la estructura de otra app parecida que ya conoce, aunque no sepa si a TurnoYa le sirve de la misma forma.</button>
+<button class="quiz-opt" data-key="c" data-correct>Anotar quién va a usar el sistema y para qué, antes de pensar en ninguna clase ni ninguna línea de código.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Empezar por lo que resulta fácil de escribir no asegura que sea lo que el sistema necesita. Sin saber primero quién lo usa y para qué, es fácil terminar modelando algo que ningún actor real pidió. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Copiar una estructura ajena parece un atajo, pero cada sistema tiene sus propios actores y objetivos. Lo que le sirve a otra app puede sobrarle o faltarle a TurnoYa. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Exacto. Antes de modelar la estructura interna (las clases) conviene tener claro el alcance externo: quién interactúa con el sistema y qué necesita lograr. Eso es justo lo que dibuja un diagrama de casos de uso. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="casos-de-uso" hidden>
+<h2>Diagrama de casos de uso: el afuera del sistema</h2>
+<p class="lead">Un <strong>diagrama de casos de uso</strong> muestra, sin ningún detalle técnico, quién interactúa con el sistema y qué puede lograr con él. Es el primer diagrama porque responde la pregunta más básica: ¿para quién estamos construyendo esto, y para qué?</p>
+<table class="tabla">
+<thead><tr><th scope="col">Elemento</th><th scope="col">Qué es</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Actor</td><td>Una persona (o sistema externo) que interactúa con el sistema desde afuera.</td><td>Estudiante, Administrador de la cafetería.</td></tr>
+<tr><td>Caso de uso</td><td>Algo concreto que un actor logra usando el sistema, contado como una meta, no como un paso técnico.</td><td>Reservar turno, Cancelar turno.</td></tr>
+<tr><td>Frontera del sistema</td><td>El rectángulo que separa "adentro del sistema" (los casos de uso) de "afuera" (los actores).</td><td>El recuadro con el nombre "TurnoYa".</td></tr>
+<tr><td>Asociación</td><td>La línea que conecta a un actor con un caso de uso que puede realizar.</td><td>Estudiante — Reservar turno.</td></tr>
+</tbody>
+</table>
+
+<div class="diagrama-caja">
+<svg viewBox="0 0 680 410" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de casos de uso de TurnoYa: los actores Estudiante y Administrador conectados a cuatro casos de uso dentro de la frontera del sistema.">
+<rect class="uml-frontera" x="170" y="20" width="350" height="340" rx="8"></rect>
+<text class="uml-titulo" x="345" y="45" text-anchor="middle">Sistema: TurnoYa</text>
+
+<ellipse class="uml-caso" cx="345" cy="95" rx="130" ry="30"></ellipse>
+<text class="uml-texto" x="345" y="99" text-anchor="middle">Reservar turno</text>
+
+<ellipse class="uml-caso" cx="345" cy="165" rx="130" ry="30"></ellipse>
+<text class="uml-texto" x="345" y="169" text-anchor="middle">Cancelar turno</text>
+
+<ellipse class="uml-caso" cx="345" cy="235" rx="130" ry="30"></ellipse>
+<text class="uml-texto" x="345" y="239" text-anchor="middle">Consultar historial</text>
+
+<ellipse class="uml-caso" cx="345" cy="305" rx="130" ry="30"></ellipse>
+<text class="uml-texto" x="345" y="309" text-anchor="middle">Gestionar horarios</text>
+
+<line class="uml-linea" x1="90" y1="140" x2="215" y2="95"></line>
+<line class="uml-linea" x1="90" y1="155" x2="215" y2="165"></line>
+<line class="uml-linea" x1="90" y1="170" x2="215" y2="235"></line>
+<line class="uml-linea" x1="590" y1="305" x2="475" y2="305"></line>
+
+<g>
+<circle class="uml-actor" cx="65" cy="120" r="14"></circle>
+<line class="uml-actor" x1="65" y1="134" x2="65" y2="190"></line>
+<line class="uml-actor" x1="40" y1="155" x2="90" y2="155"></line>
+<line class="uml-actor" x1="65" y1="190" x2="45" y2="225"></line>
+<line class="uml-actor" x1="65" y1="190" x2="85" y2="225"></line>
+</g>
+<text class="uml-titulo" x="65" y="248" text-anchor="middle">Estudiante</text>
+
+<g>
+<circle class="uml-actor" cx="615" cy="270" r="14"></circle>
+<line class="uml-actor" x1="615" y1="284" x2="615" y2="340"></line>
+<line class="uml-actor" x1="590" y1="305" x2="640" y2="305"></line>
+<line class="uml-actor" x1="615" y1="340" x2="595" y2="375"></line>
+<line class="uml-actor" x1="615" y1="340" x2="635" y2="375"></line>
+</g>
+<text class="uml-titulo" x="615" y="393" text-anchor="middle">Administrador</text>
+</svg>
+</div>
+
+<div class="highlight">
+<strong>Qué NO es un caso de uso</strong>
+<p>Un paso técnico interno — "encriptar la contraseña", "guardar el turno en la tabla turnos" — no es un caso de uso: el actor nunca lo pide directamente, es parte de <em>cómo</em> el sistema cumple una meta que sí es un caso de uso (por ejemplo, "Iniciar sesión" o "Reservar turno"). Si un actor no puede nombrar la meta con sus propias palabras, probablemente sea un detalle de implementación, no un caso de uso.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="casos-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Actor, caso de uso o detalle interno?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Estudiante.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Actor</button>
+<button>Caso de uso</button>
+<button>Detalle interno</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Reservar turno.</span>
+<div class="quiz-classify-btns">
+<button>Detalle interno</button>
+<button>Actor</button>
+<button data-correct>Caso de uso</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Guardar el turno en la tabla turnos.</span>
+<div class="quiz-classify-btns">
+<button>Actor</button>
+<button data-correct>Detalle interno</button>
+<button>Caso de uso</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Administrador de la cafetería.</span>
+<div class="quiz-classify-btns">
+<button>Caso de uso</button>
+<button>Detalle interno</button>
+<button data-correct>Actor</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Validar la contraseña con bcrypt.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Detalle interno</button>
+<button>Caso de uso</button>
+<button>Actor</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cancelar turno.</span>
+<div class="quiz-classify-btns">
+<button>Actor</button>
+<button data-correct>Caso de uso</button>
+<button>Detalle interno</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>Casos de uso listos. ¿Y ahora?</h2>
+<p class="lead">Diego ya tiene su diagrama de casos de uso: dos actores, cuatro metas. Lucía lo mira y le pregunta cuándo empieza a programar la pantalla de reserva.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="clases decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué le responde Diego?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Empezar a programar directamente la pantalla de reserva, porque ya se sabe qué tiene que hacer el sistema.</button>
+<button class="quiz-opt" data-key="b" data-correct>Modelar la estructura interna: qué información y qué comportamiento va a tener cada parte del sistema, antes de escribir código.</button>
+<button class="quiz-opt" data-key="c">Mostrarle el diagrama a Lucía y esperar sus instrucciones sobre cómo programar cada pantalla.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Saber qué tiene que hacer el sistema no alcanza para saber cómo organizarlo por dentro. Sin modelar la estructura, es fácil mezclar responsabilidades que no deberían compartirse, o no separar nada en absoluto. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Cómo programar cada pantalla es una decisión de los Developers, no de la PO: ella decide qué vale la pena construir, no cómo estructurarlo por dentro. Pedirle instrucciones técnicas a Lucía invierte los roles. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. El diagrama de casos de uso muestra el afuera del sistema; ahora hace falta modelar el adentro: qué piezas de información y de comportamiento hacen falta para cumplir cada caso de uso. Eso es un diagrama de clases. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="clases" hidden>
+<h2>Diagrama de clases: el adentro del sistema</h2>
+<p class="lead">Un <strong>diagrama de clases</strong> muestra de qué piezas está hecho el sistema por dentro: qué información guarda cada una y qué puede hacer. Cada caja es una <strong>clase</strong>, dividida en tres partes: nombre, atributos y métodos.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Elemento</th><th scope="col">Qué es</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Clase</td><td>El molde que describe qué información y qué comportamiento comparten todas las cosas de ese tipo.</td><td>Turno, Estudiante.</td></tr>
+<tr><td>Atributo</td><td>Un dato que guarda cada objeto de esa clase.</td><td>fecha, hora, estado.</td></tr>
+<tr><td>Método</td><td>Una acción que un objeto de esa clase puede ejecutar.</td><td>confirmar(), cancelar().</td></tr>
+<tr><td>Objeto (instancia)</td><td>Una cosa concreta hecha con el molde de la clase, con sus propios valores.</td><td>El turno que reservó Ana para el jueves a las 10:00.</td></tr>
+</tbody>
+</table>
+
+<div class="diagrama-caja">
+<svg viewBox="0 0 640 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de clases: Estudiante y Turno, cada una con sus atributos y métodos, conectadas por una asociación con multiplicidad 1 a 0 o muchos.">
+<rect class="uml-caja" x="40" y="40" width="200" height="150" rx="4"></rect>
+<line class="uml-separador" x1="40" y1="75" x2="240" y2="75"></line>
+<line class="uml-separador" x1="40" y1="130" x2="240" y2="130"></line>
+<text class="uml-titulo" x="140" y="63" text-anchor="middle">Estudiante</text>
+<text class="uml-texto mono" x="50" y="94">- nombre: str</text>
+<text class="uml-texto mono" x="50" y="114">- carnet: str</text>
+<text class="uml-texto mono" x="50" y="150">+ reservarTurno()</text>
+<text class="uml-texto mono" x="50" y="170">+ verHistorial()</text>
+
+<rect class="uml-caja" x="380" y="40" width="200" height="165" rx="4"></rect>
+<line class="uml-separador" x1="380" y1="75" x2="580" y2="75"></line>
+<line class="uml-separador" x1="380" y1="145" x2="580" y2="145"></line>
+<text class="uml-titulo" x="480" y="63" text-anchor="middle">Turno</text>
+<text class="uml-texto mono" x="390" y="94">- fecha: date</text>
+<text class="uml-texto mono" x="390" y="114">- hora: str</text>
+<text class="uml-texto mono" x="390" y="134">- estado: str</text>
+<text class="uml-texto mono" x="390" y="165">+ confirmar()</text>
+<text class="uml-texto mono" x="390" y="185">+ cancelar()</text>
+
+<line class="uml-linea" x1="240" y1="115" x2="380" y2="123"></line>
+<text class="uml-mult" x="248" y="108">1</text>
+<text class="uml-mult" x="352" y="116">0..*</text>
+<text class="uml-texto" x="310" y="102" text-anchor="middle" font-style="italic">reserva</text>
+</svg>
+</div>
+
+<div class="highlight">
+<strong>Ojo: clase no es lo mismo que objeto</strong>
+<p>"Turno" (la clase) describe la forma que tiene cualquier turno. El turno concreto que reservó Ana el jueves a las 10:00 es un <strong>objeto</strong>: una instancia particular de esa clase, con sus propios valores en cada atributo.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="clases-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. "Turno" es el molde que describe qué información y qué comportamiento comparten todas las reservas. Es una
+<select class="quiz-blank" data-correct="clase">
+<option value="">— elige —</option>
+<option value="atributo">Atributo</option>
+<option value="clase">Clase</option>
+<option value="metodo">Método</option>
+<option value="objeto">Objeto</option>
+</select>.</p>
+<p>2. "fecha" guarda un dato propio de cada turno, como el 14 de octubre. Es un
+<select class="quiz-blank" data-correct="atributo">
+<option value="">— elige —</option>
+<option value="metodo">Método</option>
+<option value="atributo">Atributo</option>
+<option value="objeto">Objeto</option>
+<option value="clase">Clase</option>
+</select>.</p>
+<p>3. "confirmar()" es la acción que un turno puede ejecutar cuando el estudiante confirma su reserva. Es un
+<select class="quiz-blank" data-correct="metodo">
+<option value="">— elige —</option>
+<option value="clase">Clase</option>
+<option value="objeto">Objeto</option>
+<option value="metodo">Método</option>
+<option value="atributo">Atributo</option>
+</select>.</p>
+<p>4. El turno específico que reservó Ana para el jueves a las 10:00 es un
+<select class="quiz-blank" data-correct="objeto">
+<option value="">— elige —</option>
+<option value="atributo">Atributo</option>
+<option value="metodo">Método</option>
+<option value="clase">Clase</option>
+<option value="objeto">Objeto</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>"Un Turno pertenece a un Estudiante"</h2>
+<p class="lead">Con las dos clases dibujadas, a Diego le falta conectar "Turno" y "Estudiante" para que el diagrama diga lo que de verdad pasa: cada turno pertenece a un estudiante, y un estudiante puede tener varios turnos.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="relaciones vista-datos decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo lo modela Diego?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Conectar Turno y Estudiante con una asociación, indicando que un Estudiante puede tener varios Turnos.</button>
+<button class="quiz-opt" data-key="b">Hacer que la clase Turno herede de la clase Estudiante, para que un turno tenga automáticamente todos los datos del estudiante.</button>
+<button class="quiz-opt" data-key="c">Guardar el estudiante actual en una variable global que cualquier parte del programa pueda leer, sin conectarla a la clase Turno.</button>
+</div>
+<p class="quiz-fb ok" data-key="a" hidden>Exacto. "Pertenece a" describe una relación entre dos clases distintas, no un "es un tipo de": eso se modela con una asociación, indicando además cuántos de cada lado participan (la multiplicidad). Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="b" hidden>La herencia significa "es un tipo de": un Turno no es un tipo de Estudiante, son dos cosas distintas que se relacionan entre sí. Heredar acá le pegaría a Turno atributos que no le corresponden, como el carnet del estudiante. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Una variable global no queda registrada en el modelo, así que nadie que lea el diagrama de clases va a saber que esa conexión existe. Además, dos estudiantes distintos necesitarían cada uno la suya, no una sola compartida. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="relaciones" hidden>
+<h2>Cuatro formas de conectar dos clases</h2>
+<p class="lead">No todas las relaciones entre clases significan lo mismo. Estas cuatro son las que más vas a usar, de la más suelta a la más fuerte.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Relación</th><th scope="col">Qué significa</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Asociación</td><td>Dos clases están conectadas, cada una sigue existiendo por su cuenta sin la otra.</td><td>Estudiante reserva Turno.</td></tr>
+<tr><td>Agregación</td><td>Una clase "tiene" partes, pero esas partes podrían seguir existiendo por separado.</td><td>Cafetería tiene Empleados.</td></tr>
+<tr><td>Composición</td><td>Una clase "tiene" partes que no tienen sentido sin ella: si se borra el todo, se borran las partes.</td><td>Fotocopiadora tiene su Cola de espera.</td></tr>
+<tr><td>Herencia</td><td>Una clase "es un tipo de" otra y comparte sus atributos y métodos.</td><td>Estudiante y Administrador son tipos de Usuario.</td></tr>
+</tbody>
+</table>
+
+<div class="diagrama-caja">
+<svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama comparando cuatro tipos de relación entre clases: asociación, composición, agregación y herencia, cada una con un ejemplo de TurnoYa.">
+<rect class="uml-caja" x="40" y="20" width="140" height="42" rx="4"></rect>
+<text class="uml-titulo" x="110" y="45" text-anchor="middle">Estudiante</text>
+<rect class="uml-caja" x="380" y="20" width="140" height="42" rx="4"></rect>
+<text class="uml-titulo" x="450" y="45" text-anchor="middle">Turno</text>
+<line class="uml-linea" x1="180" y1="41" x2="380" y2="41"></line>
+<text class="uml-mult" x="192" y="34">1</text>
+<text class="uml-mult" x="335" y="34">0..*</text>
+<text class="uml-texto" x="280" y="70" text-anchor="middle">Asociación — Estudiante reserva Turno</text>
+
+<rect class="uml-caja" x="40" y="110" width="140" height="42" rx="4"></rect>
+<text class="uml-titulo" x="110" y="135" text-anchor="middle">Fotocopiadora</text>
+<rect class="uml-caja" x="380" y="110" width="140" height="42" rx="4"></rect>
+<text class="uml-titulo" x="450" y="135" text-anchor="middle">ColaDeEspera</text>
+<polygon class="uml-composicion" points="180,131 194,123 208,131 194,139"></polygon>
+<line class="uml-linea" x1="208" y1="131" x2="380" y2="131"></line>
+<text class="uml-texto" x="280" y="160" text-anchor="middle">Composición — la Cola no existe sin la Fotocopiadora</text>
+
+<rect class="uml-caja" x="40" y="200" width="140" height="42" rx="4"></rect>
+<text class="uml-titulo" x="110" y="225" text-anchor="middle">Cafetería</text>
+<rect class="uml-caja" x="380" y="200" width="140" height="42" rx="4"></rect>
+<text class="uml-titulo" x="450" y="225" text-anchor="middle">Empleado</text>
+<polygon class="uml-agregacion" points="180,221 194,213 208,221 194,229"></polygon>
+<line class="uml-linea" x1="208" y1="221" x2="380" y2="221"></line>
+<text class="uml-texto" x="280" y="250" text-anchor="middle">Agregación — un Empleado podría existir sin esa Cafetería</text>
+
+<rect class="uml-caja" x="40" y="290" width="140" height="42" rx="4"></rect>
+<text class="uml-titulo" x="110" y="315" text-anchor="middle">Estudiante</text>
+<rect class="uml-caja" x="380" y="290" width="140" height="42" rx="4"></rect>
+<text class="uml-titulo" x="450" y="315" text-anchor="middle">Usuario</text>
+<line class="uml-linea" x1="180" y1="311" x2="366" y2="311"></line>
+<polygon class="uml-herencia" points="380,311 366,303 366,319"></polygon>
+<text class="uml-texto" x="280" y="340" text-anchor="middle">Herencia — Estudiante y Administrador son tipos de Usuario</text>
+</svg>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="relaciones-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Qué tipo de relación describe cada caso?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Estudiante reserva Turno; un Estudiante puede tener varios Turnos, y un Turno es de un solo Estudiante.</span>
+<div class="quiz-classify-btns">
+<button>Composición</button>
+<button data-correct>Asociación</button>
+<button>Herencia</button>
+<button>Agregación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La Cola de espera de la fotocopiadora no tiene sentido sin la Fotocopiadora; si se elimina la fotocopiadora, se elimina su cola.</span>
+<div class="quiz-classify-btns">
+<button>Herencia</button>
+<button>Agregación</button>
+<button>Asociación</button>
+<button data-correct>Composición</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un Empleado de la cafetería podría seguir existiendo, y trabajar en otro lado, aunque cierren esa Cafetería.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Agregación</button>
+<button>Herencia</button>
+<button>Composición</button>
+<button>Asociación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Estudiante y Administrador son dos tipos distintos de Usuario, y comparten los datos y acciones básicas de Usuario.</span>
+<div class="quiz-classify-btns">
+<button>Asociación</button>
+<button>Agregación</button>
+<button data-correct>Herencia</button>
+<button>Composición</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cada Horario de atención pertenece a una única Fotocopiadora, y deja de tener sentido si esa fotocopiadora deja de existir.</span>
+<div class="quiz-classify-btns">
+<button>Asociación</button>
+<button>Herencia</button>
+<button>Agregación</button>
+<button data-correct>Composición</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una Notificación puede seguir en el sistema, como registro histórico, aunque el Turno que la generó ya se haya cancelado.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Agregación</button>
+<button>Composición</button>
+<button>Asociación</button>
+<button>Herencia</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un Turno está vinculado a la Fotocopiadora donde se reservó; una Fotocopiadora atiende muchos Turnos.</span>
+<div class="quiz-classify-btns">
+<button>Herencia</button>
+<button data-correct>Asociación</button>
+<button>Composición</button>
+<button>Agregación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Profesor y Estudiante heredan atributos comunes, como nombre y carnet, de una clase Persona.</span>
+<div class="quiz-classify-btns">
+<button>Composición</button>
+<button>Agregación</button>
+<button data-correct>Herencia</button>
+<button>Asociación</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="vista-datos" hidden>
+<h2>El mismo diagrama, visto como datos</h2>
+<p class="lead">Cuando llegue el momento de guardar esto en una base de datos, no hace falta dibujar un diagrama nuevo: el diagrama de clases ya tiene esa información, solo hay que leerlo con otro propósito.</p>
+<div class="highlight">
+<strong>Vista de datos del diagrama de clases</strong>
+<p><strong>Clase → Tabla.</strong> "Turno" se convierte en la tabla <code>turnos</code>.</p>
+<p><strong>Atributo → Columna.</strong> "fecha", "hora", "estado" se convierten en columnas de esa tabla.</p>
+<p><strong>Atributo identificador único → Clave primaria.</strong> Un dato que identifica a cada objeto sin repetirse, como un id de turno.</p>
+<p><strong>Asociación con multiplicidad "muchos" → Clave foránea.</strong> Como un Estudiante puede tener varios Turnos (0..*), la tabla <code>turnos</code> guarda a qué estudiante pertenece cada fila.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="datos-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada elemento del diagrama de clases con su equivalente en la base de datos.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="clase">Clase</button>
+<button class="quiz-match-item" data-pair="atributo">Atributo</button>
+<button class="quiz-match-item" data-pair="objeto">Objeto (instancia)</button>
+<button class="quiz-match-item" data-pair="identificador">Atributo identificador único</button>
+<button class="quiz-match-item" data-pair="multiplicidad">Multiplicidad "muchos" del otro lado</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="objeto">Fila de la tabla.</button>
+<button class="quiz-match-item" data-pair="multiplicidad">Clave foránea.</button>
+<button class="quiz-match-item" data-pair="clase">Tabla.</button>
+<button class="quiz-match-item" data-pair="identificador">Clave primaria.</button>
+<button class="quiz-match-item" data-pair="atributo">Columna.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>Diego le pide ayuda a una IA para el código</h2>
+<p class="lead">Con los dos diagramas terminados, a Diego le toca escribir las clases en Python. Abre un asistente de IA para que le adelante el esqueleto del código.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="ia repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué le pasa Diego a la IA?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Pedirle "hacé el backend completo de TurnoYa", sin mostrarle ningún diagrama ni contarle nada más.</button>
+<button class="quiz-opt" data-key="b">Describir el sistema en un párrafo largo de prosa, sin ningún diagrama, confiando en que la IA entienda la estructura igual.</button>
+<button class="quiz-opt" data-key="c" data-correct>Pasarle el diagrama de clases (nombres, atributos, métodos y relaciones) y pedirle que genere el código a partir de esa estructura.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Sin ningún contexto, la IA inventa su propia estructura: nombres de clases distintos a los que ya definió el equipo, atributos de más o de menos, y relaciones que no coinciden con lo decidido. Después hay que revisar todo contra el diagrama igual. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Un párrafo de prosa puede describir bien qué hace el sistema, pero es ambiguo para la estructura exacta: ¿"un turno pertenece a un estudiante" es una asociación o una herencia? El diagrama no deja esa duda abierta. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Exacto. Un diagrama de clases es información mucho más precisa que un párrafo de prosa: nombres, atributos, métodos y relaciones ya quedaron decididos, así que la IA no tiene que adivinarlos. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="ia" hidden>
+<h2>El diagrama como especificación para la IA</h2>
+<p class="lead">Un diagrama no es solo para que lo entienda un humano: también es el contexto más preciso que le podés dar a una IA. Cuanto más ambigua la descripción, más decisiones de estructura termina tomando la IA por su cuenta, sin que nadie las haya aprobado.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Lo que le das</th><th scope="col">Lo que suele devolver</th></tr></thead>
+<tbody>
+<tr><td>«Hacé el backend de TurnoYa»</td><td>Una estructura de clases inventada, con nombres y relaciones que el equipo nunca decidió.</td></tr>
+<tr><td>Un párrafo de prosa sin diagrama</td><td>Una interpretación razonable, pero ambigua en los detalles finos (¿asociación o herencia? ¿cuántos de cada lado?).</td></tr>
+<tr><td>El diagrama de clases (nombres, atributos, métodos, relaciones y multiplicidades)</td><td>Código alineado a la estructura exacta que el equipo ya decidió, sin inventar nada nuevo.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Lo que sigue siendo tuyo</strong>
+<p>Decidir la estructura (qué clases hay, cómo se relacionan) y revisar que el código respete cada relación y multiplicidad del diagrama. Si alguna decisión fue cara de revertir, igual queda su propio ADR — la IA no firma esa hoja por vos.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de las siguientes SÍ es un caso de uso válido para TurnoYa?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Encriptar la contraseña antes de guardarla.</button>
+<button class="quiz-opt">El actor Estudiante, que usa el sistema.</button>
+<button class="quiz-opt" data-correct>Consultar el historial de turnos.</button>
+<button class="quiz-opt">La tabla turnos de la base de datos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: es una meta que un actor puede nombrar con sus propias palabras. Las otras son un actor, un detalle de seguridad interno y una tabla de base de datos — ninguna es algo que un actor 'pide' directamente." data-ko="'Encriptar contraseña' y 'tabla turnos' son detalles internos, invisibles para el actor. 'Estudiante' es un actor, no una meta. La única meta que un actor puede nombrar con sus propias palabras es 'Consultar historial de turnos'." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Una asociación con multiplicidad 0..* de un lado significa que puede haber cero o muchas instancias relacionadas de ese lado.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: 0..* se lee 'cero o muchas'. Por ejemplo, un Estudiante puede tener 0 Turnos (todavía no reservó ninguno) o varios a la vez." data-ko="Es verdadero: 0..* se lee 'cero o muchas'. Un Estudiante puede tener 0 Turnos (todavía no reservó ninguno) o varios a la vez — la multiplicidad no obliga a que exista al menos uno." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">"Un Pedido no puede existir sin la Cuenta que lo generó, y se borra si se borra la cuenta." ¿Qué relación es?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Asociación</button>
+<button class="quiz-opt">Agregación</button>
+<button class="quiz-opt" data-correct>Composición</button>
+<button class="quiz-opt">Herencia</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la parte (Pedido) no tiene sentido sin el todo (Cuenta), y desaparece si el todo desaparece. Eso es composición, la relación más fuerte de las cuatro." data-ko="No es asociación (esa es más suelta, cada lado sigue existiendo por su cuenta), ni agregación (ahí la parte podría sobrevivir sin el todo), ni herencia (no dice 'es un tipo de'). Como el Pedido desaparece si desaparece la Cuenta, es composición." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: modelá un sistema real</h2>
+<p class="lead">Elegí un sistema real que conozcas: una app que uses, el sitio de tu facultad, un proyecto de tu club. Sin dibujar (todavía no hace falta una herramienta), describí en texto: 1) dos actores y tres casos de uso, contados como metas y no como pasos técnicos, 2) dos clases con al menos dos atributos y un método cada una, y el tipo de relación que las conecta (asociación, agregación, composición o herencia) y por qué, 3) cómo le pedirías a una IA que te ayude a escribir el código de esas dos clases a partir de lo que modelaste.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Actores, casos de uso, clases y una relación de un sistema real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>Los tres casos de uso son metas que un actor podría nombrar con sus propias palabras, no pasos técnicos internos.</li>
+<li>Los dos actores son distintos entre sí, y ninguno es en realidad un caso de uso disfrazado.</li>
+<li>Cada clase tiene atributos (datos) y al menos un método (acción) claramente separados.</li>
+<li>El tipo de relación elegido explica por qué (qué pasa si se borra un lado, si es "es un tipo de" o no), no solo lo nombra.</li>
+<li>El pedido a la IA incluye la estructura ya decidida (nombres, atributos, relación), no solo una descripción general.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Actor</td><td>Persona o sistema externo que interactúa con el sistema desde afuera.</td></tr>
+<tr><td>Caso de uso</td><td>Una meta concreta que un actor logra usando el sistema. Nunca un paso técnico interno.</td></tr>
+<tr><td>Frontera del sistema</td><td>El rectángulo que separa el adentro (casos de uso) del afuera (actores).</td></tr>
+<tr><td>Clase</td><td>El molde que describe la información (atributos) y el comportamiento (métodos) de un tipo de cosa.</td></tr>
+<tr><td>Atributo</td><td>Un dato que guarda cada objeto de una clase.</td></tr>
+<tr><td>Método</td><td>Una acción que un objeto de una clase puede ejecutar.</td></tr>
+<tr><td>Objeto (instancia)</td><td>Una cosa concreta hecha con el molde de una clase, con valores propios.</td></tr>
+<tr><td>Asociación</td><td>Relación suelta: cada clase sigue existiendo por su cuenta sin la otra.</td></tr>
+<tr><td>Multiplicidad</td><td>Cuántas instancias de un lado participan en la relación (1, 0..*, etc.).</td></tr>
+<tr><td>Agregación</td><td>"Tiene partes" que podrían seguir existiendo sin el todo.</td></tr>
+<tr><td>Composición</td><td>"Tiene partes" que no tienen sentido sin el todo: se borran si se borra el todo.</td></tr>
+<tr><td>Herencia</td><td>"Es un tipo de" otra clase y comparte sus atributos y métodos.</td></tr>
+<tr><td>Vista de datos</td><td>El propio diagrama de clases, leído como Clase→Tabla y Atributo→Columna, para diseñar la base de datos.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🤝 UML nació de una fusión</h3><p>A mediados de los 90, tres métodos de modelado distintos (los de Grady Booch, James Rumbaugh e Ivar Jacobson) se unificaron en un solo lenguaje común en la empresa Rational: el UML (Unified Modeling Language) que usan estos diagramas.</p></div>
+<div class="info"><h3>✏️ Un diagrama no tiene que ser perfecto</h3><p>Martin Fowler, autor de referencia en diseño de software, popularizó la idea de "UML as sketch": para el trabajo diario alcanza con un boceto rápido en un pizarrón o una hoja, no con un diagrama formal completo con cada detalle de la notación.</p></div>
+<div class="info"><h3>🧭 Lo que viene en el Nivel 1B</h3><p>Ya modelaste el qué y el quién. El próximo paso es el cómo y el cuándo: diagrama de secuencia (el orden en que las piezas se llaman entre sí) y diagrama de estados (qué transiciones son válidas, como que un turno no se puede cancelar si ya fue atendido).</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Nivel 1A: Qué y Quién — Casos de Uso y Clases</h2>
+<p>Material de apoyo para el Club de Programación · Ruta Diseñador de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "ds-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

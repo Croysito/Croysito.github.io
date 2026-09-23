@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller: Roles y Permisos en Vivo — PostgreSQL Real en tu Navegador | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* Estilos propios de este taller: tabla de resultados y barra de la base de datos, con la
+   misma estética "consola oscura" que ya usa .output-body en guia.css. No toca el CSS compartido. */
+.sql-result-table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+.sql-result-table th,.sql-result-table td{ padding:8px 10px; text-align:left; border:1px solid rgba(255,255,255,.15); }
+.sql-result-table thead th{ background:rgba(255,255,255,.08); color:#8fd48a; }
+.sql-result-table td em{ color:#7d8899; font-style:italic; }
+.sql-status{ margin:4px 0 10px; color:#8fd48a; }
+.sql-meta{ margin:0 0 10px; color:#7d8899; font-size:12px; }
+.db-toolbar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:18px 0 8px; padding:16px 20px; background:var(--highlightBg); border-left:6px solid var(--verde); border-radius:8px; }
+.db-toolbar button{ background:var(--verde); color:white; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:14px; }
+.db-toolbar button:hover{ background:var(--verde2); }
+.db-toolbar button:disabled{ opacity:.5; cursor:wait; }
+.db-toolbar button.secundario{ background:transparent; color:var(--verde); border:2px solid var(--verde); }
+.db-estado{ font-size:14px; opacity:.85; }
+
+/* Bloqueo de copiar/pegar en los editores: flash de aviso + toast global */
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>Taller Seguridad</span></div>
+<p>SQL en vivo con PostgreSQL real</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#zona-pruebas">Zona de pruebas libres</a>
+<a href="#preparar">Prepara tu base de datos</a>
+<a href="#roles-vivo">1. Crea tus roles</a>
+<a href="#grant-vivo">2. GRANT: dar permisos</a>
+<a href="#secuencia-vivo">3. El detalle de la secuencia</a>
+<a href="#revoke-vivo">4. REVOKE: quitar permisos</a>
+<a href="#membresia-vivo">5. Membresía de roles</a>
+<a href="#reto">Reto final</a>
+<a href="#repaso">Repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Taller de Laboratorio</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Roles y Permisos <span>en Vivo</span></h1>
+<p>Otra vez PostgreSQL de verdad, compilado a WebAssembly, corriendo enteramente en tu navegador. Esta vez vas a crear tus propios roles, otorgarles y quitarles permisos con GRANT y REVOKE, y comprobar con tus propios ojos el error real de PostgreSQL —"permission denied"— cuando un rol intenta tocar algo que no le corresponde.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Este taller es la práctica de laboratorio de <strong>roles, GRANT y REVOKE</strong> en PostgreSQL. No vuelve a explicar la teoría desde cero —asume que ya viste <a href="seguridad-roles.html">la guía</a>— y en cambio te da un PostgreSQL real donde vas a crear roles, intentar cosas que van a fallar a propósito, y después corregirlas con el permiso correcto.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Si todavía no viste la teoría, repasa primero <a href="seguridad-roles.html">Seguridad: Roles, GRANT y REVOKE</a> antes de continuar. Este taller usa una única tabla, <code>productos</code>, y una segunda tabla, <code>log_accesos</code>, que vas a crear en el reto final.</p>
+</div>
+<div class="highlight">
+<strong>⚠️ Todo vive en la memoria de esta pestaña</strong>
+<p>Esta página corre su <strong>propia</strong> base de datos, independiente de cualquier otro taller que hayas abierto antes. Existe solo mientras esta pestaña siga abierta: si <strong>recargas la página, la cierras, o navegas a otra guía, se pierde todo</strong> y hay que empezar de nuevo desde "Prepara tu base de datos". Si te equivocás y querés reiniciar sin recargar, usa el botón "Reiniciar base de datos" de abajo.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>✍️ Lo escribís vos</h3><p>Cada bloque parte vacío. El enunciado te dice qué tenés que lograr — el código SQL lo escribís de cero.</p></div>
+<div class="info"><h3>⛔ Algunos errores son a propósito</h3><p>Varios ejercicios te piden intentar algo que <strong>debería fallar</strong> —eso confirma que el permiso todavía no existe. Es la mejor forma de comprobar que GRANT y REVOKE hacen lo que dicen.</p></div>
+<div class="info"><h3>🔁 Una misma sesión, distintas identidades</h3><p><code>SET ROLE</code> y <code>RESET ROLE</code> te dejan cambiar de identidad dentro de la <strong>misma</strong> conexión, sin cerrar nada — así podés comprobar en el momento qué puede y qué no puede hacer cada rol.</p></div>
+</div>
+
+<div class="db-toolbar">
+<button type="button" id="resetDbBtn">🔄 Reiniciar base de datos</button>
+<span class="db-estado" id="dbEstado">La base de datos está vacía. Baja a "Prepara tu base de datos" para empezar.</span>
+</div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Este bloque queda disponible durante toda la guía. Usalo en cualquier momento para probar una idea propia, revisar el estado de una tabla con <code>SELECT * FROM tabla;</code>, o comprobar con qué rol estás corriendo con <code>SELECT current_user;</code> — sin desordenar los bloques guiados.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🧪 Escribe cualquier sentencia SQL</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Zona de pruebas libres" placeholder="Por ejemplo: SELECT current_user;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight">
+<strong>⚠️ Si te quedás "atascado" como otro rol</strong>
+<p>Si en algún momento un bloque te da errores raros de permiso que no esperabas, probablemente quedaste con un <code>SET ROLE</code> activo de un ejercicio anterior. Ejecutá <code>RESET ROLE;</code> acá mismo para volver a tu identidad original antes de seguir.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="preparar">
+<div class="card">
+<h2 class="section-title">Prepara tu base de datos</h2>
+<p class="lead">Escribe el <code>CREATE TABLE</code> y los <code>INSERT</code> para <code>productos</code>, con las columnas <code>id</code>, <code>nombre</code>, <code>precio</code> y <code>stock</code>. Cargale estas 5 filas exactas (los ejercicios de todo el taller asumen estos datos):</p>
+<div class="highlight">
+<strong>Datos de partida</strong>
+<table class="tabla" style="margin-top:8px;">
+<thead><tr><th scope="col">nombre</th><th scope="col">precio</th><th scope="col">stock</th></tr></thead>
+<tbody>
+<tr><td>Mesa</td><td>100.00</td><td>15</td></tr>
+<tr><td>Silla</td><td>40.00</td><td>5</td></tr>
+<tr><td>Lámpara</td><td>25.00</td><td>0</td></tr>
+<tr><td>Estante</td><td>80.00</td><td>8</td></tr>
+<tr><td>Escritorio</td><td>150.00</td><td>3</td></tr>
+</tbody>
+</table>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🏗️ Crea la tabla productos y carga las 5 filas</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:200px" aria-label="Editor SQL: preparación de productos" placeholder="-- CREATE TABLE productos (id SERIAL PRIMARY KEY, nombre ..., precio ..., stock ...);
+-- INSERT INTO productos (nombre, precio, stock) VALUES (...), (...), ...;
+-- SELECT * FROM productos ORDER BY id;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight">
+<strong>Confirma los datos</strong>
+<p>El <code>SELECT</code> final debería mostrarte <strong>5 filas</strong>, en el mismo orden de la tabla de arriba. Si algo no coincide, usa "🔄 Reiniciar base de datos" y volvé a intentar — el resto del taller asume exactamente estos precios y este stock.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="roles-vivo">
+<div class="card">
+<h2 class="section-title">1. Crea tus roles</h2>
+<p class="lead">Vas a necesitar dos roles a lo largo del taller: uno de solo lectura, y uno que además pueda escribir.</p>
+
+<div class="highlight">
+<strong>Enunciado — 1.1</strong>
+<p>Crea un rol llamado <code>lector</code>, sin ninguna cláusula extra — todavía no puede conectarse a nada, ni tiene ningún permiso.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.1 — CREATE ROLE lector</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: CREATE ROLE lector" placeholder="-- CREATE ROLE lector;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.2</strong>
+<p>Crea un segundo rol llamado <code>editor</code>, esta vez con <code>WITH LOGIN PASSWORD '...'</code> (cualquier contraseña que elijas).</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.2 — CREATE ROLE editor WITH LOGIN</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: CREATE ROLE editor con LOGIN" placeholder="-- CREATE ROLE editor WITH LOGIN PASSWORD 'clave123';"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.3</strong>
+<p>Confirma la diferencia entre ambos: <code>SELECT rolname, rolcanlogin FROM pg_roles WHERE rolname IN ('lector', 'editor');</code></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.3 — Consultar pg_roles</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: consultar pg_roles" placeholder="-- SELECT rolname, rolcanlogin FROM pg_roles WHERE rolname IN ('lector', 'editor');"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Confirma los valores</strong>
+<p><code>editor</code> debería mostrar <code>rolcanlogin = true</code>; <code>lector</code>, <code>false</code>.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="grant-vivo">
+<div class="card">
+<h2 class="section-title">2. GRANT: dar permisos</h2>
+<p class="lead">Un rol recién creado no puede tocar ninguna tabla. Vas a comprobarlo primero, y después arreglarlo con GRANT.</p>
+
+<div class="highlight">
+<strong>Enunciado — 2.1: antes de arreglarlo, comprobalo</strong>
+<p>Cambiá tu identidad a <code>lector</code> y probá leer <code>productos</code>: <code>SET ROLE lector;</code> seguido de <code>SELECT * FROM productos;</code> — debería fallar. Al final, volvé a tu identidad original con <code>RESET ROLE;</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.1 — SET ROLE lector y un SELECT que falla</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Editor SQL: SET ROLE lector, SELECT que falla, RESET ROLE" placeholder="-- SET ROLE lector;
+-- SELECT * FROM productos;
+-- RESET ROLE;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Error esperado</strong>
+<p>Deberías ver <code>permission denied for table productos</code>. No es un bug — es exactamente lo que tiene que pasar: <code>lector</code> todavía no tiene ningún permiso sobre esa tabla.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.2</strong>
+<p>Otorgá el permiso de lectura: <code>GRANT SELECT ON productos TO lector;</code> Después repetí el mismo <code>SET ROLE</code> + <code>SELECT</code> del ejercicio anterior, y confirmá que ahora sí funciona. Terminá con <code>RESET ROLE;</code></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.2 — GRANT SELECT y comprobar que ahora funciona</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: GRANT SELECT y comprobar" placeholder="-- GRANT SELECT ON productos TO lector;
+-- SET ROLE lector;
+-- SELECT * FROM productos;
+-- RESET ROLE;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Ahora sí, 5 filas</strong>
+<p>El mismo <code>SELECT</code> que falló en 2.1 ahora te devuelve las 5 filas de <code>productos</code>. Lo único que cambió fue el <code>GRANT</code>.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.3</strong>
+<p>Todavía como <code>lector</code>, intentá insertar una fila nueva — <strong>debería fallar</strong>, porque solo le diste SELECT: <code>SET ROLE lector; INSERT INTO productos (nombre, precio, stock) VALUES ('Ropero', 200, 2); RESET ROLE;</code></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.3 — INSERT como lector (debe fallar)</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Editor SQL: INSERT como lector, debe fallar" placeholder="-- SET ROLE lector;
+-- INSERT INTO productos (nombre, precio, stock) VALUES ('Ropero', 200, 2);
+-- RESET ROLE;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>SELECT no incluye INSERT</strong>
+<p>Otra vez <code>permission denied for table productos</code> — pero esta vez es un error distinto en el fondo: <code>lector</code> sí puede leer, pero INSERT es un privilegio aparte que nunca se le otorgó.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="secuencia-vivo">
+<div class="card">
+<h2 class="section-title">3. El detalle que todos olvidan la primera vez</h2>
+<p class="lead">GRANT INSERT no siempre alcanza para insertar — si la tabla tiene una columna <code>SERIAL</code>, hace falta un permiso más.</p>
+
+<div class="highlight">
+<strong>Enunciado — 3.1: dale INSERT a editor, y probalo</strong>
+<p>Otorgá <code>GRANT INSERT ON productos TO editor;</code>. Después, como <code>editor</code>, intentá <code>INSERT INTO productos (nombre, precio, stock) VALUES ('Ropero', 200, 2);</code> — <strong>debería fallar igual</strong>, con un mensaje distinto al de 2.3. Terminá con <code>RESET ROLE;</code></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.1 — GRANT INSERT a editor, y el INSERT falla igual</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: GRANT INSERT a editor y el INSERT que igual falla" placeholder="-- GRANT INSERT ON productos TO editor;
+-- SET ROLE editor;
+-- INSERT INTO productos (nombre, precio, stock) VALUES ('Ropero', 200, 2);
+-- RESET ROLE;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Fijate bien el mensaje</strong>
+<p>Esta vez el error es <code>permission denied for sequence productos_id_seq</code> — no "for table". La columna <code>id</code> es <code>SERIAL</code>, y por dentro eso usa una <strong>secuencia</strong> aparte para generar cada número. INSERT sobre la tabla no alcanza: hace falta <code>USAGE</code> sobre esa secuencia también.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.2: el permiso que faltaba</strong>
+<p>Otorgá <code>GRANT USAGE, SELECT ON SEQUENCE productos_id_seq TO editor;</code>. Repetí el mismo <code>INSERT</code> de 3.1 como <code>editor</code> — ahora sí debería funcionar. Terminá con <code>RESET ROLE;</code></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.2 — GRANT sobre la secuencia, y el INSERT que ahora funciona</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: GRANT sobre la secuencia y el INSERT que funciona" placeholder="-- GRANT USAGE, SELECT ON SEQUENCE productos_id_seq TO editor;
+-- SET ROLE editor;
+-- INSERT INTO productos (nombre, precio, stock) VALUES ('Ropero', 200, 2);
+-- RESET ROLE;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>6 filas ahora</strong>
+<p>Confirmá con <code>SELECT COUNT(*) FROM productos;</code> en la zona de pruebas libres — debería mostrarte <strong>6</strong> (las 5 originales más "Ropero").</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="revoke-vivo">
+<div class="card">
+<h2 class="section-title">4. REVOKE: quitar permisos</h2>
+<p class="lead">GRANT y REVOKE son simétricos: lo que uno otorga, el otro lo retira, sin afectar a ningún otro rol.</p>
+
+<div class="highlight">
+<strong>Enunciado — 4.1</strong>
+<p>Retirale a <code>lector</code> el permiso de lectura que le diste en 2.2: <code>REVOKE SELECT ON productos FROM lector;</code> Después, como <code>lector</code>, repetí el mismo <code>SELECT * FROM productos;</code> de siempre — debería volver a fallar. Terminá con <code>RESET ROLE;</code></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.1 — REVOKE SELECT y comprobar que vuelve a fallar</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: REVOKE SELECT y comprobar" placeholder="-- REVOKE SELECT ON productos FROM lector;
+-- SET ROLE lector;
+-- SELECT * FROM productos;
+-- RESET ROLE;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>De vuelta al principio</strong>
+<p>El mismo error de 2.1, <code>permission denied for table productos</code> — <code>REVOKE</code> deshizo exactamente lo que había hecho <code>GRANT</code> en 2.2, sin tocar los permisos de <code>editor</code>.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="membresia-vivo">
+<div class="card">
+<h2 class="section-title">5. Membresía de roles</h2>
+<p class="lead">Un rol puede volverse miembro de otro y heredar automáticamente todos sus privilegios — sin repetir cada GRANT a mano.</p>
+
+<div class="highlight">
+<strong>Enunciado — 5.1</strong>
+<p>Otorgale a <code>editor</code> también SELECT y UPDATE: <code>GRANT SELECT, UPDATE ON productos TO editor;</code> Creá un rol nuevo, <code>admins</code>, y hacelo miembro de <code>editor</code>: <code>CREATE ROLE admins; GRANT editor TO admins;</code></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.1a — Ampliar permisos de editor y crear admins</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: ampliar permisos de editor y crear admins" placeholder="-- GRANT SELECT, UPDATE ON productos TO editor;
+-- CREATE ROLE admins;
+-- GRANT editor TO admins;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 5.1b: probá admins sin darle ningún GRANT directo</strong>
+<p>Como <code>admins</code>, probá leer y modificar <code>productos</code> —sin haberle otorgado ningún permiso a <code>admins</code> directamente—: <code>SET ROLE admins; SELECT nombre FROM productos ORDER BY id; UPDATE productos SET precio = 45 WHERE nombre = 'Silla'; RESET ROLE;</code></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.1b — admins usa permisos heredados de editor</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: admins usa permisos heredados de editor" placeholder="-- SET ROLE admins;
+-- SELECT nombre FROM productos ORDER BY id;
+-- UPDATE productos SET precio = 45 WHERE nombre = 'Silla';
+-- RESET ROLE;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Ambas funcionan</strong>
+<p><code>admins</code> nunca recibió un GRANT directo sobre <code>productos</code> — pero como es miembro de <code>editor</code>, hereda automáticamente todo lo que <code>editor</code> tenga en cualquier momento. Confirmá el nuevo precio de Silla con <code>SELECT nombre, precio FROM productos WHERE nombre = 'Silla';</code> en la zona de pruebas libres.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="reto">
+<div class="card">
+<h2 class="section-title">Reto final: un rol con acceso a una tabla, y a ninguna otra</h2>
+<p class="lead">Cierra el taller mostrando que los permisos son siempre <strong>por objeto</strong>: tener acceso a una tabla no da acceso a ninguna otra.</p>
+<div class="highlight">
+<strong>Requisitos</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><strong>1.</strong> Crea una tabla nueva, <code>log_accesos</code>, con columnas <code>id</code> (clave primaria autoincremental), <code>rol</code> (texto) y <code>fecha</code> (con <code>DEFAULT now()</code>).</li>
+<li><strong>2.</strong> Crea un rol nuevo, <code>auditor</code>, y otorgale <code>SELECT, INSERT ON log_accesos</code> — más el <code>USAGE</code> sobre su secuencia (repasá la sección 3 si no te acordás el nombre exacto: <code>nombretabla_id_seq</code>).</li>
+<li><strong>3.</strong> Como <code>auditor</code>, insertá una fila en <code>log_accesos</code> con <code>rol = 'auditor'</code>, y confirmá que <code>SELECT * FROM log_accesos;</code> funciona.</li>
+<li><strong>4.</strong> Todavía como <code>auditor</code>, intentá <code>SELECT * FROM productos;</code> — <strong>debería fallar</strong>, aunque <code>auditor</code> ya tenga permisos sobre otra tabla.</li>
+</ul>
+</div>
+<div class="highlight">
+<strong>La idea central del reto</strong>
+<p>Que un rol tenga acceso a <code>log_accesos</code> no le da ningún acceso a <code>productos</code> —cada <code>GRANT</code> es específico de un objeto y un rol, nunca general. Esto es justamente lo que hace que el principio de mínimo privilegio sea posible: podés darle a <code>auditor</code> exactamente lo que necesita (su propia tabla de registro) sin abrirle ni una fila de las demás tablas de la base.</p>
+</div>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>🏆 Resuelve aquí el reto</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu solución al reto final" placeholder="-- 1. CREATE TABLE log_accesos (id SERIAL PRIMARY KEY, rol TEXT, fecha TIMESTAMP DEFAULT now());
+-- 2. CREATE ROLE auditor; GRANT SELECT, INSERT ON log_accesos TO auditor; GRANT USAGE, SELECT ON SEQUENCE log_accesos_id_seq TO auditor;
+-- 3. SET ROLE auditor; INSERT INTO log_accesos (rol) VALUES ('auditor'); SELECT * FROM log_accesos;
+-- 4. SELECT * FROM productos; (debe fallar) RESET ROLE;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="repaso">
+<div class="card">
+<h2 class="section-title">Repaso</h2>
+<p class="lead">Preguntas cortas sobre lo que acabas de ejecutar en vivo. Tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 2.1, el SELECT como lector falló antes de darle ningún GRANT. ¿Por qué exactamente?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Porque CREATE ROLE no otorga ningún privilegio — faltaba el GRANT SELECT.</button>
+<button class="quiz-opt">Porque escribiste mal el nombre de la tabla productos.</button>
+<button class="quiz-opt">Porque SET ROLE solo funciona con roles que tienen LOGIN.</button>
+<button class="quiz-opt">Porque productos todavía no tenía ninguna fila cargada.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: crear un rol y otorgarle permisos son dos pasos separados. Sin el GRANT SELECT, PostgreSQL le niega el acceso a la tabla, sin importar si tiene filas o no." data-ko="El nombre de la tabla estaba bien, SET ROLE no exige LOGIN, y la tabla ya tenía 5 filas. La causa real es que CREATE ROLE no da ningún permiso por sí solo — faltaba el GRANT SELECT." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">En el ejercicio 2.3, GRANT SELECT ON productos TO lector; (del ejercicio 2.2) también le permitió insertar filas nuevas.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: SELECT e INSERT son privilegios independientes. Otorgar uno no otorga el otro — por eso el INSERT del ejercicio 2.3 siguió fallando." data-ko="Es falso: SELECT no incluye INSERT. Son privilegios separados, y lector solo tenía el primero — por eso el INSERT de 2.3 falló igual." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 3.1, el error cambió de "permission denied for table productos" a "permission denied for sequence productos_id_seq". ¿Qué explica ese cambio?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Nada cambió realmente: es el mismo error con otro texto.</button>
+<button class="quiz-opt" data-correct>id es SERIAL: usa una secuencia aparte, con su propio permiso.</button>
+<button class="quiz-opt">GRANT INSERT falló silenciosamente y nunca se aplicó.</button>
+<button class="quiz-opt">PostgreSQL exige superusuario para insertar en cualquier tabla con SERIAL.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el GRANT INSERT sí se aplicó sobre la tabla. Lo que faltaba era USAGE sobre la secuencia que genera automáticamente cada valor de id — un permiso aparte, sobre un objeto distinto." data-ko="El GRANT INSERT sí funcionó — el error cambió de objeto, no de causa. Faltaba USAGE sobre la secuencia productos_id_seq, no privilegios de superusuario." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 4.1, REVOKE SELECT ON productos FROM lector; ¿afectó de alguna forma los permisos de editor?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Sí, REVOKE siempre le quita el mismo permiso a todos los roles a la vez.</button>
+<button class="quiz-opt">Sí, porque editor y lector comparten la misma fila en pg_roles.</button>
+<button class="quiz-opt" data-correct>No: REVOKE actúa sobre un rol puntual — editor conservó todos sus permisos.</button>
+<button class="quiz-opt">No se puede saber sin volver a crear la base desde cero.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: cada GRANT y cada REVOKE se aplican a un rol específico sobre un objeto específico. Quitarle SELECT a lector no toca en absoluto los privilegios de editor." data-ko="REVOKE no es global ni afecta a otros roles con solo compartir una tabla: actúa exclusivamente sobre el rol que nombrás. editor no perdió ningún permiso." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 5.1b, admins pudo leer y modificar productos sin haber recibido nunca un GRANT directo sobre esa tabla. ¿Por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque todo rol nuevo hereda automáticamente los permisos de postgres.</button>
+<button class="quiz-opt">Porque SET ROLE otorga privilegios temporales sobre cualquier tabla.</button>
+<button class="quiz-opt">Porque admins se creó con la palabra clave SUPERUSER.</button>
+<button class="quiz-opt" data-correct>Porque GRANT editor TO admins hizo que admins herede los privilegios de editor.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: GRANT rol_a TO rol_b es membresía, no un permiso sobre una tabla — hace que rol_b herede automáticamente todos los privilegios de rol_a, presentes y futuros." data-ko="Ningún rol hereda de postgres por defecto, SET ROLE no otorga privilegios nuevos, y admins nunca se creó como SUPERUSER. Lo que explicó todo fue la membresía: GRANT editor TO admins." hidden></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada sentencia que usaste en este taller según a qué categoría pertenece.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">CREATE ROLE admins;</span>
+<div class="quiz-classify-btns">
+<button>Otorgar permiso</button>
+<button data-correct>Gestión de roles</button>
+<button>Retirar permiso</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">GRANT SELECT ON productos TO lector;</span>
+<div class="quiz-classify-btns">
+<button>Retirar permiso</button>
+<button>Gestión de roles</button>
+<button data-correct>Otorgar permiso</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">REVOKE SELECT ON productos FROM lector;</span>
+<div class="quiz-classify-btns">
+<button data-correct>Retirar permiso</button>
+<button>Otorgar permiso</button>
+<button>Gestión de roles</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">GRANT editor TO admins;</span>
+<div class="quiz-classify-btns">
+<button>Gestión de roles</button>
+<button data-correct>Otorgar permiso</button>
+<button>Retirar permiso</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="repaso-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre el reto final: auditor pudo leer y escribir log_accesos, pero no productos.</p>
+<p>1. Eso pasa porque los privilegios de PostgreSQL son siempre
+<select class="quiz-blank" data-correct="objeto">
+<option value="">— elige —</option>
+<option value="objeto">específicos de un objeto (una tabla en particular)</option>
+<option value="global">globales para toda la base de datos</option>
+</select>.</p>
+<p>2. Si mañana auditor también necesitara leer productos, habría que
+<select class="quiz-blank" data-correct="grant">
+<option value="">— elige —</option>
+<option value="grant">otorgarle un GRANT SELECT ON productos aparte</option>
+<option value="nada">no hacer nada, ya lo hereda de log_accesos</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="repaso-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada término con lo que hizo en este taller.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="setrole">SET ROLE</button>
+<button class="quiz-match-item" data-pair="resetrole">RESET ROLE</button>
+<button class="quiz-match-item" data-pair="usage">GRANT USAGE ON SEQUENCE</button>
+<button class="quiz-match-item" data-pair="membresia">GRANT rol_a TO rol_b</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="setrole">Cambió la identidad efectiva de la sesión para poder probar los permisos de otro rol.</button>
+<button class="quiz-match-item" data-pair="resetrole">Devolvió la sesión a tu identidad original después de cada prueba.</button>
+<button class="quiz-match-item" data-pair="usage">El permiso extra que faltaba para poder insertar en una tabla con columna SERIAL.</button>
+<button class="quiz-match-item" data-pair="membresia">Hizo que admins heredara automáticamente todos los privilegios de editor.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet del taller</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Forma</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>CREATE ROLE nombre;</code></td><td>Crea un rol sin ningún privilegio, ni siquiera de conexión.</td></tr>
+<tr><td><code>CREATE ROLE nombre WITH LOGIN PASSWORD '...';</code></td><td>Crea un rol que puede conectarse directamente.</td></tr>
+<tr><td><code>GRANT privilegio ON tabla TO rol;</code></td><td>Otorga un permiso específico sobre un objeto.</td></tr>
+<tr><td><code>REVOKE privilegio ON tabla FROM rol;</code></td><td>Retira un permiso otorgado antes.</td></tr>
+<tr><td><code>GRANT USAGE, SELECT ON SEQUENCE tabla_id_seq TO rol;</code></td><td>Necesario además de INSERT, cuando la tabla usa una columna SERIAL.</td></tr>
+<tr><td><code>GRANT rol_a TO rol_b;</code></td><td>rol_b se vuelve miembro de rol_a y hereda todos sus privilegios.</td></tr>
+<tr><td><code>SET ROLE nombre;</code></td><td>Cambia la identidad efectiva de la sesión actual.</td></tr>
+<tr><td><code>RESET ROLE;</code></td><td>Vuelve al rol original de la sesión.</td></tr>
+<tr><td><code>SELECT rolname, rolcanlogin FROM pg_roles;</code></td><td>Lista todos los roles y sus atributos.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🗂️ Tus roles son tuyos solos</h3><p>Cada estudiante que abre este taller corre su propia base de datos en su propia pestaña. Los roles lector, editor y admins que creaste no existen en ningún otro navegador ni servidor — viven solo en la memoria de tu pestaña mientras esté abierta.</p></div>
+<div class="info"><h3>🔁 SET ROLE no es una nueva conexión</h3><p>A diferencia de cerrar sesión y volver a conectarte con otro usuario, SET ROLE cambia la identidad dentro de la misma sesión ya abierta — por eso es tan rápido para comprobar permisos, uno detrás de otro, sin reabrir nada.</p></div>
+<div class="info"><h3>🧩 El error de la secuencia es un clásico real</h3><p>"Permission denied for sequence" es uno de los errores de permisos más comunes en PostgreSQL real, precisamente porque no es intuitivo — GRANT INSERT ON tabla "se siente" suficiente, pero la secuencia detrás de una columna SERIAL es un objeto aparte con su propio dueño.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller: Roles y Permisos en Vivo — PostgreSQL Real en tu Navegador</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* =======================================================================
+   PGlite: PostgreSQL real compilado a WebAssembly, corriendo en el navegador.
+   Mismo patrón de carga perezosa que Pyodide en las guías de POO.
+   ======================================================================= */
+const PGLITE_CDN = "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.5.4/dist/index.js";
+let pgliteReadyPromise = null;
+
+function cargarPGlite(){
+  if (!pgliteReadyPromise) {
+    pgliteReadyPromise = (async () => {
+      const { PGlite } = await import(PGLITE_CDN);
+      return new PGlite();
+    })();
+  }
+  return pgliteReadyPromise;
+}
+
+function reiniciarPGlite(){
+  pgliteReadyPromise = null;
+}
+
+async function ejecutarSQL(codigo){
+  try {
+    const db = await cargarPGlite();
+    const resultados = await db.exec(codigo);
+    return { resultados, error: null };
+  } catch (e) {
+    return { resultados: null, error: (e && e.message) ? e.message : String(e) };
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* ===== Toast de aviso al bloquear copiar/pegar en los editores ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  if (!clipboardToast) return;
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
+function formatearValor(v){
+  if (v === null || v === undefined) return "<em>NULL</em>";
+  return escapeHtml(v);
+}
+
+function renderizarResultados(resultados){
+  if (!resultados || !resultados.length) {
+    return '<p class="sql-status">✅ Ejecutado. No se generó ningún resultado.</p>';
+  }
+  return resultados.map(r => {
+    const columnas = (r.fields || []).map(f => f.name);
+    if (columnas.length) {
+      let html = '<table class="sql-result-table"><thead><tr>' +
+        columnas.map(c => `<th scope="col">${escapeHtml(c)}</th>`).join("") +
+        "</tr></thead><tbody>";
+      if (!r.rows || !r.rows.length) {
+        html += `<tr><td colspan="${columnas.length}"><em>(0 filas)</em></td></tr>`;
+      } else {
+        r.rows.forEach(fila => {
+          html += "<tr>" + columnas.map(c => `<td>${formatearValor(fila[c])}</td>`).join("") + "</tr>";
+        });
+      }
+      html += "</tbody></table>";
+      return html;
+    }
+    const n = typeof r.affectedRows === "number" ? r.affectedRows : null;
+    const msg = n !== null
+      ? `✅ Sentencia ejecutada (${n} fila${n === 1 ? "" : "s"} afectada${n === 1 ? "" : "s"}).`
+      : "✅ Sentencia ejecutada correctamente.";
+    return `<p class="sql-status">${msg}</p>`;
+  }).join("");
+}
+
+function conectarSqlLab(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  /* En este taller el código se escribe, no se copia ni se pega: bloqueamos
+     copiar/cortar/pegar/arrastrar y avisamos brevemente por qué. */
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En este taller el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  ["copy", "cut", "paste", "drop"].forEach(evt => {
+    textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); });
+  });
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart;
+      const fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (teclaCtrl && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      avisarBloqueo();
+    }
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe alguna sentencia SQL antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando PostgreSQL real (WebAssembly)… la primera vez puede tardar varios segundos.";
+    runBtn.disabled = true;
+    try {
+      const { resultados, error } = await ejecutarSQL(codigo);
+      if (error) {
+        outputBody.textContent = "❌ Error de PostgreSQL: " + error;
+        output.classList.add("error");
+      } else {
+        outputBody.innerHTML = renderizarResultados(resultados);
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el motor de PostgreSQL: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+document.querySelectorAll(".editor-panel").forEach(conectarSqlLab);
+
+/* ===== Botón "Reiniciar base de datos" ===== */
+const resetBtn = document.getElementById("resetDbBtn");
+const dbEstado = document.getElementById("dbEstado");
+resetBtn.addEventListener("click", () => {
+  reiniciarPGlite();
+  document.querySelectorAll(".editor-panel .output").forEach(o => { o.hidden = true; });
+  dbEstado.textContent = "🔄 Base de datos reiniciada — todo lo creado antes se perdió. Vuelve a ejecutar 'Prepara tu base de datos'.";
+});
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=...
+     en la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedida directo, como siempre, no dispara nada nuevo. No toca el
+     motor de quizzes de arriba (repaso) ni la parte de PGlite/editores: se
+     engancha a marcarResuelto() y actualizarProgreso(), que ya existen.
+     Los ejercicios sueltos con editor SQL no reportan nada acá — solo
+     cuentan las preguntas de la sección "Repaso" (data-quiz-id), igual
+     que taller-procedimientos-triggers.html. Usa paramsDeAtenza() (con
+     fallback a location.hash) desde el vamos. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf("?");
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get("atenza_token") && p.get("guia_intento")) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
