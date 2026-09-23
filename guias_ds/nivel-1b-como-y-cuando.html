@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nivel 1B: Cómo y Cuándo — Secuencia y Estados | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">Club · <span>DS Nivel 1B</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="secuencia">Diagrama de secuencia</button>
+<button data-target="estados">Diagrama de estados</button>
+<button data-target="ia">Diseñar con IA</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🧩 Club · Ruta Diseñador de Sistemas · Nivel 1B</span>
+<h1 class="flow-h1">Modelar el problema: <span>cómo y cuándo</span></h1>
+<p class="flow-lead">En el Nivel 1A modelaste el <strong>afuera</strong> (casos de uso) y el <strong>adentro</strong> (clases) de TurnoYa. Pero esos dos diagramas no dicen en qué orden se llaman las piezas entre sí, ni qué cambios de estado son válidos y cuáles no. Esta guía cierra el modelado con dos diagramas más — <strong>secuencia</strong> y <strong>estados</strong> — y termina con el criterio para elegir cuál de los cuatro conviene mostrarle a una IA según el error que esté cometiendo.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Seguís acompañando a Diego en <strong>TurnoYa</strong>. Si todavía no hiciste el <a href="nivel-1a-que-y-quien.html">Nivel 1A</a>, conviene empezar por ahí. En cada decisión podés probar primero un camino equivocado, ver su consecuencia sin ninguna penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>El bug que nadie sabe explicar</h2>
+<p class="lead">Con el diagrama de clases del Nivel 1A, Diego y otro developer programaron en paralelo la reserva de turnos. Al integrar el código aparece un bug raro: a veces el sistema confirma un turno <em>antes</em> de terminar de comprobar si había disponibilidad. Cada uno asumió un orden distinto para las llamadas entre objetos, y nadie lo había dejado por escrito.</p>
+<div class="highlight">
+<strong>Lo que faltó</strong>
+<p>El diagrama de clases dice qué piezas existen y qué pueden hacer, pero no dice en qué <strong>orden</strong> se llaman entre sí para cumplir un caso de uso concreto.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="secuencia decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo evita Diego que se repita esta confusión?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Agregar comentarios en el código de cada método explicando en qué orden se espera que lo llamen.</button>
+<button class="quiz-opt" data-key="c">Redibujar el diagrama de clases con más detalle, agregando flechas numeradas entre las cajas.</button>
+<button class="quiz-opt" data-key="b" data-correct>Dibujar un diagrama de secuencia para el caso de uso "Reservar turno", mostrando el orden exacto de las llamadas.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Un comentario vive adentro de un solo método y describe su propia versión del orden — nada asegura que los demás métodos que participan tengan comentarios consistentes entre sí. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>El diagrama de clases muestra relaciones que existen siempre, no una secuencia de eventos en el tiempo para un caso puntual. Forzarlo a mostrar orden lo satura y sigue sin decir "primero esto, después esto otro". Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. Un diagrama de secuencia existe justo para esto: mostrar, paso a paso, en qué orden un objeto le pide algo a otro para completar un caso de uso concreto. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="secuencia" hidden>
+<h2>Diagrama de secuencia: el orden de las llamadas</h2>
+<p class="lead">Un <strong>diagrama de secuencia</strong> muestra a los objetos participando en un caso de uso concreto, y el orden exacto (de arriba hacia abajo) en que se piden cosas entre sí.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Elemento</th><th scope="col">Qué es</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Línea de vida</td><td>La línea vertical punteada que representa a un objeto o actor a lo largo del tiempo.</td><td>La línea debajo de "Estudiante" o de ": Turno".</td></tr>
+<tr><td>Barra de activación</td><td>El rectángulo angosto sobre una línea de vida que marca cuándo ese objeto está procesando algo.</td><td>El rectángulo mientras ": Fotocopiadora" verifica disponibilidad.</td></tr>
+<tr><td>Mensaje (síncrono)</td><td>La flecha sólida: un objeto llama a otro y espera su respuesta antes de seguir.</td><td>verificarDisponibilidad(hora).</td></tr>
+<tr><td>Mensaje de retorno</td><td>La flecha punteada: la respuesta que vuelve al objeto que hizo la llamada.</td><td>disponible.</td></tr>
+</tbody>
+</table>
+
+<div class="diagrama-caja">
+<svg viewBox="0 0 680 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de secuencia del caso de uso Reservar turno: el Estudiante llama a Fotocopiadora para verificar disponibilidad, recibe la respuesta, luego llama a Turno para crearlo y recibe la confirmación.">
+<defs>
+<marker id="flechaMsgSeq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+<path class="uml-flecha-llena" d="M0,0 L10,5 L0,10 z"></path>
+</marker>
+<marker id="flechaRetSeq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+<path class="uml-flecha-abierta" d="M1,1 L9,5 L1,9"></path>
+</marker>
+</defs>
+
+<g>
+<circle class="uml-actor" cx="90" cy="34" r="12"></circle>
+<line class="uml-actor" x1="90" y1="46" x2="90" y2="76"></line>
+<line class="uml-actor" x1="68" y1="58" x2="112" y2="58"></line>
+<line class="uml-actor" x1="90" y1="76" x2="72" y2="98"></line>
+<line class="uml-actor" x1="90" y1="76" x2="108" y2="98"></line>
+</g>
+<text class="uml-titulo" x="90" y="116" text-anchor="middle">Estudiante</text>
+
+<rect class="uml-caja" x="260" y="20" width="160" height="40" rx="4"></rect>
+<text class="uml-titulo" x="340" y="44" text-anchor="middle">: Fotocopiadora</text>
+
+<rect class="uml-caja" x="510" y="20" width="160" height="40" rx="4"></rect>
+<text class="uml-titulo" x="590" y="44" text-anchor="middle">: Turno</text>
+
+<line class="uml-lifeline" x1="90" y1="120" x2="90" y2="375"></line>
+<line class="uml-lifeline" x1="340" y1="60" x2="340" y2="375"></line>
+<line class="uml-lifeline" x1="590" y1="60" x2="590" y2="375"></line>
+
+<rect class="uml-activation" x="335" y="112" width="10" height="66"></rect>
+<rect class="uml-activation" x="585" y="228" width="10" height="66"></rect>
+
+<text class="uml-texto" x="215" y="106" text-anchor="middle">1: verificarDisponibilidad(hora)</text>
+<line class="uml-mensaje" x1="90" y1="112" x2="333" y2="112" marker-end="url(#flechaMsgSeq)"></line>
+
+<text class="uml-texto" x="215" y="172" text-anchor="middle">2: disponible</text>
+<line class="uml-retorno" x1="335" y1="178" x2="92" y2="178" marker-end="url(#flechaRetSeq)"></line>
+
+<text class="uml-texto" x="340" y="222" text-anchor="middle">3: crear(fecha, hora)</text>
+<line class="uml-mensaje" x1="90" y1="228" x2="583" y2="228" marker-end="url(#flechaMsgSeq)"></line>
+
+<text class="uml-texto" x="340" y="288" text-anchor="middle">4: turno confirmado</text>
+<line class="uml-retorno" x1="585" y1="294" x2="92" y2="294" marker-end="url(#flechaRetSeq)"></line>
+</svg>
+</div>
+
+<div class="highlight">
+<strong>Se lee de arriba hacia abajo</strong>
+<p>Lo que está más arriba pasa primero. Acá: (1) el Estudiante pide verificar disponibilidad, (2) Fotocopiadora responde, (3) recién entonces el Estudiante pide crear el turno, (4) Turno confirma. El bug de Diego pasaba porque su compañero había invertido los pasos 1 y 3.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="secuencia-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada elemento del diagrama de secuencia con su definición.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="lifeline">Línea de vida</button>
+<button class="quiz-match-item" data-pair="activacion">Barra de activación</button>
+<button class="quiz-match-item" data-pair="mensaje">Mensaje (flecha sólida)</button>
+<button class="quiz-match-item" data-pair="retorno">Mensaje de retorno (flecha punteada)</button>
+<button class="quiz-match-item" data-pair="orden">Orden de lectura del diagrama</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="retorno">La respuesta que vuelve al objeto que hizo la llamada.</button>
+<button class="quiz-match-item" data-pair="orden">De arriba hacia abajo: lo más arriba pasa primero.</button>
+<button class="quiz-match-item" data-pair="lifeline">La línea vertical punteada que representa a un objeto en el tiempo.</button>
+<button class="quiz-match-item" data-pair="mensaje">Una llamada: un objeto le pide algo a otro y espera respuesta.</button>
+<button class="quiz-match-item" data-pair="activacion">El rectángulo angosto que marca cuándo un objeto está procesando algo.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>"Cancelaron un turno que ya había pasado"</h2>
+<p class="lead">Con el orden de las llamadas resuelto, aparece un bug distinto: Don Julio reporta que un estudiante canceló, desde la app, un turno que ya había sido atendido esa misma mañana. En el código, cualquier función podía cambiar el estado de un Turno a cualquier otro estado, sin ninguna regla que lo impidiera.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="estados decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué modela Diego para resolverlo de raíz?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="c">Otro diagrama de secuencia, esta vez para el caso de uso "Cancelar turno".</button>
+<button class="quiz-opt" data-key="b" data-correct>Los estados posibles de un Turno y qué cambios de estado están permitidos entre ellos.</button>
+<button class="quiz-opt" data-key="a">Un mensaje de error genérico que se muestra cada vez que algo sale mal en la cancelación.</button>
+</div>
+<p class="quiz-fb ko" data-key="c" hidden>Un diagrama de secuencia muestra el orden de las llamadas para UN caso de uso, pero no dice qué transiciones son válidas para un objeto en general — un Turno puede recibir la llamada cancelar() desde muchos lugares distintos del sistema. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="a" hidden>Un mensaje de error es un parche después del hecho: atiende un síntoma puntual, pero no deja registrado en ningún lado qué transiciones son válidas para un Turno, así que el mismo problema puede reaparecer en otro lugar del código. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. Lo que falta es una regla explícita: qué estados puede tener un Turno y cuáles transiciones entre esos estados están permitidas. Eso es justo lo que dibuja un diagrama de estados. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="estados" hidden>
+<h2>Diagrama de estados: qué transiciones son válidas</h2>
+<p class="lead">Un <strong>diagrama de estados</strong> muestra por los que puede pasar un objeto a lo largo de su vida, y qué eventos permiten moverse de un estado a otro. Cualquier cambio que no esté dibujado como flecha, no debería poder pasar.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Elemento</th><th scope="col">Qué es</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Estado</td><td>Una situación concreta y estable en la que puede estar un objeto.</td><td>Solicitado, Confirmado, Atendido.</td></tr>
+<tr><td>Estado inicial</td><td>El círculo relleno que marca dónde empieza el objeto al crearse.</td><td>Todo Turno nuevo nace en Solicitado.</td></tr>
+<tr><td>Transición</td><td>La flecha entre dos estados, con el evento que la dispara.</td><td>confirmar() lleva de Solicitado a Confirmado.</td></tr>
+<tr><td>Estado final</td><td>Un estado sin ninguna transición de salida: ahí termina el ciclo de ese objeto.</td><td>Atendido, Cancelado y Ausente no tienen flechas de salida.</td></tr>
+</tbody>
+</table>
+
+<div class="diagrama-caja">
+<svg viewBox="0 0 680 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de estados de un Turno: comienza en Solicitado, pasa a Confirmado al confirmarse, y desde Confirmado puede pasar a Atendido, Cancelado o Ausente, sin ninguna transición de vuelta.">
+<defs>
+<marker id="flechaEstado" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+<path class="uml-flecha-llena" d="M0,0 L10,5 L0,10 z"></path>
+</marker>
+</defs>
+
+<circle class="uml-estado-inicial" cx="55" cy="170" r="8"></circle>
+<line class="uml-mensaje" x1="63" y1="170" x2="108" y2="170" marker-end="url(#flechaEstado)"></line>
+
+<rect class="uml-caja" x="110" y="145" width="150" height="50" rx="20"></rect>
+<text class="uml-titulo" x="185" y="175" text-anchor="middle">Solicitado</text>
+
+<rect class="uml-caja" x="320" y="145" width="150" height="50" rx="20"></rect>
+<text class="uml-titulo" x="395" y="175" text-anchor="middle">Confirmado</text>
+
+<rect class="uml-caja" x="530" y="45" width="140" height="50" rx="20"></rect>
+<text class="uml-titulo" x="600" y="75" text-anchor="middle">Atendido</text>
+
+<rect class="uml-caja" x="530" y="145" width="140" height="50" rx="20"></rect>
+<text class="uml-titulo" x="600" y="175" text-anchor="middle">Cancelado</text>
+
+<rect class="uml-caja" x="530" y="245" width="140" height="50" rx="20"></rect>
+<text class="uml-titulo" x="600" y="275" text-anchor="middle">Ausente</text>
+
+<line class="uml-mensaje" x1="260" y1="170" x2="318" y2="170" marker-end="url(#flechaEstado)"></line>
+<text class="uml-texto" x="290" y="160" text-anchor="middle">confirmar()</text>
+
+<line class="uml-mensaje" x1="450" y1="150" x2="528" y2="80" marker-end="url(#flechaEstado)"></line>
+<text class="uml-texto" x="500" y="105" text-anchor="middle">atender()</text>
+
+<line class="uml-mensaje" x1="470" y1="170" x2="528" y2="170" marker-end="url(#flechaEstado)"></line>
+<text class="uml-texto" x="500" y="160" text-anchor="middle">cancelar()</text>
+
+<line class="uml-mensaje" x1="450" y1="190" x2="528" y2="260" marker-end="url(#flechaEstado)"></line>
+<text class="uml-texto" x="500" y="235" text-anchor="middle">expira()</text>
+</svg>
+</div>
+
+<div class="highlight">
+<strong>El bug de Don Julio, visto en el diagrama</strong>
+<p>No existe ninguna flecha que salga de "Atendido" hacia "Cancelado". Si el código respeta este diagrama, cancelar un turno ya atendido debería ser directamente imposible, en vez de un caso especial que hay que acordarse de chequear a mano en cada función.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="estados-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Según el diagrama, ¿la transición es válida o no?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Solicitado → Confirmado</span>
+<div class="quiz-classify-btns">
+<button data-correct>Válida</button>
+<button>No válida</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Atendido → Cancelado</span>
+<div class="quiz-classify-btns">
+<button>Válida</button>
+<button data-correct>No válida</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Confirmado → Ausente</span>
+<div class="quiz-classify-btns">
+<button data-correct>Válida</button>
+<button>No válida</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cancelado → Confirmado</span>
+<div class="quiz-classify-btns">
+<button>Válida</button>
+<button data-correct>No válida</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Confirmado → Atendido</span>
+<div class="quiz-classify-btns">
+<button data-correct>Válida</button>
+<button>No válida</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Solicitado → Atendido</span>
+<div class="quiz-classify-btns">
+<button>Válida</button>
+<button data-correct>No válida</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>De vuelta con la IA: ¿qué diagrama le pasa esta vez?</h2>
+<p class="lead">Diego le pide a una IA que genere el código para cancelar un turno. Sin más contexto, la IA escribe una función <code>cancelar()</code> que funciona sobre cualquier Turno, sin importar en qué estado esté — exactamente el bug que acaban de arreglar.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="ia repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué le pasa Diego a la IA para que no repita el error?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="b" data-correct>El diagrama de estados de Turno, para que la IA respete qué transiciones están permitidas y cuáles no.</button>
+<button class="quiz-opt" data-key="a">El diagrama de clases del Nivel 1A, para que la IA vea de nuevo los atributos y métodos de Turno.</button>
+<button class="quiz-opt" data-key="c">Nada nuevo: le repite en texto "cancelar solo si no fue atendido" y confía en que esta vez lo respete.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>El diagrama de clases ya lo tenía: ahí está el método cancelar(), pero nada dice desde qué estados se puede llamar. El problema no es de estructura, es de qué transiciones son válidas. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Repetir la misma instrucción en texto plano es lo que ya había fallado antes: es ambigua sobre TODOS los estados posibles, no solo sobre el caso de "ya atendido" que se le ocurrió mencionar. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. El diagrama de estados deja explícitas todas las transiciones válidas de una sola vez, no solo la que Diego recuerde nombrar. Cerrás el recorrido del Nivel 1. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="ia" hidden>
+<h2>Cuatro diagramas, cuatro errores distintos de la IA</h2>
+<p class="lead">Entre el Nivel 1A y este, ya tenés cuatro diagramas. Cada uno le sirve a una IA para no cometer un tipo de error distinto — la clave es reconocer cuál error está cometiendo, para saber cuál diagrama pasarle.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Lo que falla en el código generado</th><th scope="col">Diagrama que lo previene</th></tr></thead>
+<tbody>
+<tr><td>Inventa funciones o funcionalidad que nadie pidió.</td><td>Casos de uso — deja explícito qué puede lograr cada actor, y nada más.</td></tr>
+<tr><td>Inventa nombres de clases, atributos o relaciones distintos a los ya decididos.</td><td>Clases — deja explícita la estructura exacta acordada por el equipo.</td></tr>
+<tr><td>Llama a las funciones en el orden equivocado, o se salta un paso.</td><td>Secuencia — deja explícito el orden temporal de las llamadas.</td></tr>
+<tr><td>Permite cambios de estado que no deberían ser posibles.</td><td>Estados — deja explícito qué transiciones están permitidas.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Lo que sigue siendo tuyo</strong>
+<p>Elegir qué diagrama corresponde a cada error es una decisión de diseño, no algo que la IA pueda resolver por vos — para elegir bien, primero hay que saber leer el error que está cometiendo.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Una IA genera código donde se puede "atender" un turno que ya estaba cancelado. ¿Qué diagrama conviene mostrarle?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El diagrama de casos de uso, para que sepa qué actores existen en el sistema.</button>
+<button class="quiz-opt">El diagrama de secuencia, para que respete el orden de las llamadas entre objetos.</button>
+<button class="quiz-opt" data-correct>El diagrama de estados, para que respete qué transiciones son válidas para un Turno.</button>
+<button class="quiz-opt">El diagrama de clases, para que use los mismos nombres de atributos y métodos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: permitir una transición que no debería existir (de Cancelado a Atendido) es exactamente el tipo de error que el diagrama de estados deja explícito y previene." data-ko="Casos de uso, secuencia y clases resuelven otros errores (funciones inventadas, orden equivocado, nombres distintos). El que deja explícitas las transiciones válidas de un objeto es el diagrama de estados." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">En un diagrama de secuencia, una flecha punteada representa una llamada nueva, igual que una flecha sólida.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la flecha punteada es un mensaje de retorno, la respuesta que vuelve al objeto que hizo la llamada. La llamada nueva se dibuja con flecha sólida." data-ko="Es falso: la flecha sólida representa una llamada nueva (mensaje síncrono); la flecha punteada representa el mensaje de retorno, la respuesta que vuelve al que llamó." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué representa la barra de activación sobre una línea de vida en un diagrama de secuencia?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Que ese objeto es el actor principal del caso de uso completo.</button>
+<button class="quiz-opt" data-correct>El tiempo en que ese objeto está procesando el mensaje recibido.</button>
+<button class="quiz-opt">Que ese objeto hereda atributos y métodos de otra clase relacionada.</button>
+<button class="quiz-opt">La cantidad de atributos que tiene definida la clase de ese objeto.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la barra de activación marca cuándo un objeto está 'ocupado' procesando el pedido que recibió, hasta que devuelve su respuesta." data-ko="Ser el actor principal, heredar de otra clase o la cantidad de atributos son ideas de otros diagramas. La barra de activación marca, específicamente, el período en que ese objeto está procesando un mensaje." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: modelá el cómo y el cuándo</h2>
+<p class="lead">Retomá el mismo sistema real que elegiste en el Reto Final del Nivel 1A (o uno nuevo si preferís). Sin dibujar, describí en texto: 1) un diagrama de secuencia para uno de tus casos de uso: qué objetos participan y en qué orden se llaman entre sí, con al menos un mensaje y su retorno, 2) un diagrama de estados para una de tus clases: al menos tres estados, su estado inicial, y qué eventos disparan cada transición, 3) qué error de una IA generando código previene cada uno de los cuatro diagramas que ya conocés (casos de uso, clases, secuencia, estados).</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Secuencia, estados y prompting de un sistema real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>La secuencia tiene un orden claro de arriba hacia abajo, con al menos un mensaje y su retorno.</li>
+<li>Los estados son situaciones estables (no acciones), y cada transición nombra el evento que la dispara.</li>
+<li>El diagrama de estados tiene un estado inicial claro, y al menos un estado sin transiciones de salida.</li>
+<li>Cada uno de los cuatro diagramas está asociado al error específico de IA que previene, no a una idea genérica de "ayuda".</li>
+<li>Ninguna transición dibujada permite un salto que en la vida real no tendría sentido (como saltear un paso obligatorio).</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Línea de vida</td><td>Línea vertical punteada: un objeto o actor a lo largo del tiempo.</td></tr>
+<tr><td>Barra de activación</td><td>Rectángulo angosto: cuándo un objeto está procesando un mensaje.</td></tr>
+<tr><td>Mensaje (síncrono)</td><td>Flecha sólida: una llamada que espera respuesta.</td></tr>
+<tr><td>Mensaje de retorno</td><td>Flecha punteada: la respuesta que vuelve a quien llamó.</td></tr>
+<tr><td>Estado</td><td>Una situación concreta y estable de un objeto.</td></tr>
+<tr><td>Estado inicial</td><td>Círculo relleno: dónde empieza el objeto al crearse.</td></tr>
+<tr><td>Transición</td><td>Flecha con el evento que mueve un objeto de un estado a otro.</td></tr>
+<tr><td>Estado final</td><td>Estado sin transiciones de salida: ahí termina el ciclo del objeto.</td></tr>
+<tr><td>Casos de uso → previene</td><td>Que la IA invente funciones que nadie pidió.</td></tr>
+<tr><td>Clases → previene</td><td>Que la IA invente nombres o estructura distintos a lo acordado.</td></tr>
+<tr><td>Secuencia → previene</td><td>Que la IA llame a las funciones en el orden equivocado.</td></tr>
+<tr><td>Estados → previene</td><td>Que la IA permita transiciones que no deberían existir.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📞 La secuencia nació en telefonía</h3><p>Los diagramas de secuencia descienden de los "Message Sequence Charts" usados desde los años 70 para documentar protocolos de comunicación entre centrales telefónicas — la misma idea de "quién le habla a quién y en qué orden".</p></div>
+<div class="info"><h3>🚦 Los estados vienen de las máquinas de estados finitos</h3><p>La idea de estados y transiciones es más vieja que el software: viene de la teoría de autómatas de mediados del siglo XX, la misma base matemática que describe un semáforo o un ascensor.</p></div>
+<div class="info"><h3>🧭 Lo que viene en el Nivel 2</h3><p>Ya cerraste el modelado de comportamiento. El próximo nivel mira los datos y las APIs: modelado relacional vs. documentos, diseño de endpoints REST, contratos, versionado e idempotencia.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Nivel 1B: Cómo y Cuándo — Secuencia y Estados</h2>
+<p>Material de apoyo para el Club de Programación · Ruta Diseñador de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "ds-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

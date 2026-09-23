@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Herencia en Python: Reutilizar y Extender Clases | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">Python <span>Herencia</span></div>
+<p>Guía completa de herencia: reutilizar clases, super(), sobrescritura de métodos e isinstance/issubclass en Python</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#problema">El problema: código repetido</a>
+<a href="#sintaxis-basica">Sintaxis básica de herencia</a>
+<a href="#super-init">super().__init__()</a>
+<a href="#sobrescritura">Sobrescritura de métodos</a>
+<a href="#extender-metodo">Extender un método con super()</a>
+<a href="#isinstance-issubclass">isinstance() e issubclass()</a>
+<a href="#errores">Errores comunes</a>
+<a href="#ejercicios">Ejercicios</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🐍 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Herencia <span>en Python</span></h1>
+<p>Hasta ahora, cada clase que escribiste fue independiente de las demás: si dos clases se parecen, tuviste que repetir el mismo <code>__init__</code> y los mismos métodos en las dos. La <strong>herencia</strong> permite definir una clase "base" con lo que varias clases tienen en común, y que otras clases "hereden" todo eso sin volver a escribirlo.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">En <a href="encapsulacion.html">Encapsulación</a> viste cómo proteger el estado interno de una clase. Ahora, con <code>_</code>, <code>__</code>, <code>@property</code> y todo lo demás ya dominado, es momento de resolver un problema distinto: qué hacer cuando dos o más clases se parecen mucho entre sí, y no querés escribir el mismo código dos veces.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía vas a saber declarar una clase que hereda de otra (<code>class Hija(Padre):</code>), usar <code>super().__init__()</code> para reutilizar el constructor de la clase base, <strong>sobrescribir</strong> un método para que una subclase se comporte distinto, <strong>extender</strong> un método heredado con <code>super().metodo()</code> en vez de reemplazarlo del todo, y usar <code>isinstance()</code>/<code>issubclass()</code> para preguntar por la relación entre clases.</p>
+</div>
+<div class="highlight">
+<strong>💻 Código en vivo</strong>
+<p>Todos los bloques con el encabezado <strong>Python</strong> son de solo lectura (para que los escribas a mano en el editor de abajo). El panel <strong>editor-panel</strong> que sigue a cada uno es donde escribes y ejecutas tu propio código —usa Pyodide, un Python real compilado a WebAssembly. La primera ejecución tarda unos segundos porque descarga el intérprete.</p>
+</div>
+<p>Además del código, esta guía tiene 3 preguntas conceptuales cortas para chequear que entendiste bien el porqué de cada herramienta, no solo su sintaxis.</p>
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">preguntas y ejercicios enviados</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📖 Aprende</h3><p>Por qué repetir código entre clases parecidas es un problema, y cómo <code>class Hija(Padre):</code> lo resuelve.</p></div>
+<div class="info"><h3>💻 Practica</h3><p>Ejemplos editables y ejecutables en cada sección, construyendo la misma jerarquía de vehículos paso a paso.</p></div>
+<div class="info"><h3>🎯 Domina</h3><p><code>super()</code>, sobrescritura de métodos, y <code>isinstance()</code>/<code>issubclass()</code>.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="problema">
+<div class="card">
+<h2 class="section-title">El problema: código repetido</h2>
+<p class="lead">Imagina dos clases parecidas: <code>Perro</code> y <code>Gato</code>. Ambas guardan un nombre y una edad, y ambas tienen un método para describirse. Sin herencia, ese código se escribe dos veces —casi idéntico.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class Perro:
+    def __init__(self, nombre, edad):
+        self.nombre = nombre
+        self.edad = edad
+
+    def describir(self):
+        print(self.nombre + " tiene " + str(self.edad) + " años")
+
+    def hacer_sonido(self):
+        print("Guau")
+
+class Gato:
+    def __init__(self, nombre, edad):
+        self.nombre = nombre
+        self.edad = edad
+
+    def describir(self):
+        print(self.nombre + " tiene " + str(self.edad) + " años")
+
+    def hacer_sonido(self):
+        print("Miau")
+
+perro = Perro("Rex", 3)
+gato = Gato("Michi", 2)
+perro.describir()
+gato.describir()</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-1">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe dos clases Auto y Moto, cada una con __init__(self, marca, modelo) y un método describir(self) que imprima marca y modelo. Repite el mismo código en las dos, a propósito."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>Rex tiene 3 años
+Michi tiene 2 años</pre>
+</div>
+<div class="highlight">
+<strong>__init__ y describir() están duplicados</strong>
+<p>Fíjate que <code>__init__</code> y <code>describir()</code> son <strong>exactamente iguales</strong> en las dos clases —solo <code>hacer_sonido()</code> cambia de verdad. Si mañana agregás un tercer atributo (por ejemplo, <code>raza</code>) a todos los animales, hay que tocar cada clase por separado, y es fácil olvidarse de alguna o escribirla distinto por error. El resto de esta guía muestra cómo evitar esa duplicación con herencia.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="sintaxis-basica">
+<div class="card">
+<h2 class="section-title">Sintaxis básica de herencia</h2>
+<p class="lead">Una clase <strong>base</strong> (o "padre") reúne lo que varias clases tienen en común. Una clase que <strong>hereda</strong> de ella (o "hija", o "subclase") se declara con <code>class Hija(Padre):</code>, y automáticamente obtiene todos sus atributos y métodos, sin escribir nada más.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class Animal:
+    def __init__(self, nombre, edad):
+        self.nombre = nombre
+        self.edad = edad
+
+    def describir(self):
+        print(self.nombre + " tiene " + str(self.edad) + " años")
+
+class Perro(Animal):
+    pass
+
+perro = Perro("Rex", 3)
+perro.describir()</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-2">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe una clase Vehiculo con __init__(self, marca, modelo) y describir(self). Después, class Auto(Vehiculo): pass. Crea un Auto y llama describir()."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>Rex tiene 3 años</pre>
+</div>
+<div class="highlight">
+<strong>pass no significa "vacía"</strong>
+<p><code>class Perro(Animal): pass</code> no define ningún atributo ni método propio —<code>pass</code> es solo un relleno sintáctico porque Python exige al menos una línea dentro del cuerpo de la clase. Aun así, <code>Perro</code> ya tiene <code>__init__</code> y <code>describir()</code>, heredados enteros de <code>Animal</code>. Eso es lo que hace la herencia: nada que escribir, todo heredado.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="super-init">
+<div class="card">
+<h2 class="section-title">super().__init__(): reutilizar el constructor</h2>
+<p class="lead">Una subclase casi siempre necesita <strong>agregar</strong> algo propio —no solo heredar todo tal cual. <code>super()</code> da acceso a la clase base desde adentro de la subclase, y <code>super().__init__(...)</code> llama al constructor del padre para no repetir su lógica.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class Animal:
+    def __init__(self, nombre, edad):
+        self.nombre = nombre
+        self.edad = edad
+
+    def describir(self):
+        print(self.nombre + " tiene " + str(self.edad) + " años")
+
+class Perro(Animal):
+    def __init__(self, nombre, edad, raza):
+        super().__init__(nombre, edad)
+        self.raza = raza
+
+perro = Perro("Rex", 3, "Labrador")
+perro.describir()
+print(perro.raza)</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-3">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe class Auto(Vehiculo) con __init__(self, marca, modelo, num_puertas) que llame super().__init__(marca, modelo) y guarde self.num_puertas."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>Rex tiene 3 años
+Labrador</pre>
+</div>
+<div class="highlight">
+<strong>super() apunta a la clase de arriba, no a self</strong>
+<p><code>super().__init__(nombre, edad)</code> ejecuta el <code>__init__</code> de <code>Animal</code>, que es quien realmente asigna <code>self.nombre</code> y <code>self.edad</code>. <code>Perro.__init__</code> no repite esas dos líneas: solo agrega lo que le falta, <code>self.raza</code>. Si <code>Animal</code> cambiara mañana (por ejemplo, agregando validación al nombre), <code>Perro</code> heredaría ese cambio automáticamente, sin tocar nada acá.</p>
+</div>
+<div class="highlight">
+<strong>Si no defines __init__ en la subclase, hereda el del padre tal cual</strong>
+<p>En la sección anterior, <code>Perro(Animal): pass</code> ni siquiera necesitó <code>super()</code> porque no definía su propio <code>__init__</code> —Python usa directamente el de <code>Animal</code>. <code>super()</code> hace falta recién cuando la subclase <strong>sí</strong> define su propio <code>__init__</code> y quiere reutilizar el del padre en vez de repetirlo entero.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="sobrescritura">
+<div class="card">
+<h2 class="section-title">Sobrescritura de métodos</h2>
+<p class="lead">Una subclase puede redefinir un método heredado con el <strong>mismo nombre</strong> para que se comporte distinto. A esto se lo llama <strong>sobrescribir</strong> (override): cuando se llama ese método sobre un objeto de la subclase, corre la versión nueva, no la del padre.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class Animal:
+    def __init__(self, nombre, edad):
+        self.nombre = nombre
+        self.edad = edad
+
+    def hacer_sonido(self):
+        print("Este animal no tiene un sonido definido")
+
+class Perro(Animal):
+    def hacer_sonido(self):
+        print("Guau")
+
+class Gato(Animal):
+    def hacer_sonido(self):
+        print("Miau")
+
+perro = Perro("Rex", 3)
+gato = Gato("Michi", 2)
+perro.hacer_sonido()
+gato.hacer_sonido()</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-4">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Agrega a Vehiculo un método sonido_bocina(self) que imprima algo genérico. Sobrescríbelo en Auto ('Fiiiu') y en una nueva clase Moto(Vehiculo) ('Beep beep')."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>Guau
+Miau</pre>
+</div>
+<div class="highlight">
+<strong>Mismo nombre, mismo llamado, comportamiento distinto</strong>
+<p><code>perro.hacer_sonido()</code> y <code>gato.hacer_sonido()</code> se llaman exactamente igual, pero cada uno ejecuta la versión definida en <strong>su propia clase</strong>, no la de <code>Animal</code>. Python busca el método primero en la clase del objeto, y solo sube a la clase base si no lo encuentra ahí. Esta idea —el mismo llamado comportándose distinto según el objeto— es la base de lo que en una guía futura se va a llamar <strong>polimorfismo</strong>.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="concepto-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Si <code>Perro</code> hereda de <code>Animal</code> y ambas clases definen un método <code>hacer_sonido()</code>, ¿qué versión se ejecuta al llamar <code>perro.hacer_sonido()</code> sobre un objeto <code>Perro</code>?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Siempre la de Animal, porque es la clase base y se ejecuta primero</button>
+<button class="quiz-opt">Las dos versiones se ejecutan seguidas, primero la de Perro y después la de Animal</button>
+<button class="quiz-opt" data-correct>La de Perro, porque Python busca el método primero en la clase del objeto</button>
+<button class="quiz-opt">Ninguna: Python lanza un error por tener dos métodos con el mismo nombre</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Python busca hacer_sonido() primero en la clase del propio objeto (Perro). Como ahí existe una versión propia, esa es la que corre — la de Animal queda sobrescrita para los objetos Perro." data-ko="Python busca el método primero en la clase del objeto (Perro), y solo sube a la clase base (Animal) si no lo encuentra ahí. Como Perro define su propia versión, esa es la que corre — no la de Animal." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="extender-metodo">
+<div class="card">
+<h2 class="section-title">Extender un método con super()</h2>
+<p class="lead">Sobrescribir no siempre significa reemplazar del todo. Con <code>super().metodo()</code> dentro de la versión nueva, una subclase puede ejecutar primero la lógica del padre y después agregar la suya propia —<strong>extender</strong> en vez de reemplazar.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class Animal:
+    def __init__(self, nombre, edad):
+        self.nombre = nombre
+        self.edad = edad
+
+    def describir(self):
+        print(self.nombre + " tiene " + str(self.edad) + " años")
+
+class Perro(Animal):
+    def __init__(self, nombre, edad, raza):
+        super().__init__(nombre, edad)
+        self.raza = raza
+
+    def describir(self):
+        super().describir()
+        print("Es de raza " + self.raza)
+
+perro = Perro("Rex", 3, "Labrador")
+perro.describir()</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-5">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Sobrescribe describir(self) en tu clase Auto: que llame super().describir() y después imprima 'Tiene ' + str(self.num_puertas) + ' puertas'."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>Rex tiene 3 años
+Es de raza Labrador</pre>
+</div>
+<div class="highlight">
+<strong>super().describir() no es una llamada recursiva</strong>
+<p>Dentro de <code>Perro.describir()</code>, <code>super().describir()</code> llama a la versión de <strong>Animal</strong>, no se llama a sí misma. Si en cambio hubieras escrito <code>self.describir()</code> ahí adentro, sí sería recursión infinita, porque <code>self</code> es un <code>Perro</code> y volvería a entrar a la misma versión sobrescrita una y otra vez.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="concepto-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Dentro de <code>Perro.describir()</code>, ¿qué hace exactamente la línea <code>super().describir()</code>?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Vuelve a llamar a Perro.describir(), generando una recursión infinita</button>
+<button class="quiz-opt" data-correct>Ejecuta la versión de describir() definida en Animal, la clase base</button>
+<button class="quiz-opt">Elimina el describir() de Perro y deja solo el de Animal para siempre</button>
+<button class="quiz-opt">No hace nada, porque describir() ya fue sobrescrito y el de Animal queda inaccesible</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: super().describir() busca describir() en la clase base (Animal) y lo ejecuta ahí mismo, como un paso más dentro de la versión nueva. Así se extiende el comportamiento heredado en vez de reemplazarlo del todo." data-ko="super().describir() ejecuta la versión de Animal, no la de Perro — no hay recursión. Eso es lo que permite extender el método heredado (correr la lógica del padre y después agregar algo más), en vez de reemplazarlo por completo." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="isinstance-issubclass">
+<div class="card">
+<h2 class="section-title">isinstance() e issubclass()</h2>
+<p class="lead">Con herencia de por medio, un objeto puede pertenecer a más de una clase a la vez —a la suya propia y a todas sus clases base. <code>isinstance(objeto, Clase)</code> pregunta por esa relación, y <code>issubclass(Subclase, Clase)</code> hace la misma pregunta pero entre dos clases.</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">class Animal:
+    pass
+
+class Perro(Animal):
+    pass
+
+perro = Perro()
+print(isinstance(perro, Perro))
+print(isinstance(perro, Animal))
+print(isinstance(perro, str))
+print(issubclass(Perro, Animal))
+print(issubclass(Animal, Perro))</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-6">
+<div class="editor-header">
+<span>✍️ Tu turno: escribe el código y ejecútalo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar el código que escribiste">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Con tus clases Vehiculo y Auto, crea un Auto y prueba isinstance(mi_auto, Auto), isinstance(mi_auto, Vehiculo) e issubclass(Auto, Vehiculo). Imprime los tres resultados."></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<p>Salida:</p>
+<div class="code salida">
+<div class="code-header"><span>Consola</span></div>
+<pre>True
+True
+False
+True
+False</pre>
+</div>
+<div class="highlight">
+<strong>isinstance() considera toda la cadena de herencia</strong>
+<p><code>isinstance(perro, Animal)</code> da <code>True</code> aunque <code>perro</code> fue creado como <code>Perro</code>, no como <code>Animal</code> directamente —porque <code>Perro</code> hereda de <code>Animal</code>, todo objeto <code>Perro</code> "también es" un <code>Animal</code>. En cambio, <code>type(perro) == Animal</code> daría <code>False</code>, porque <code>type()</code> compara la clase exacta, sin mirar la herencia. Por eso <code>isinstance()</code> es casi siempre la forma correcta de preguntar "¿esto es de este tipo?" en Python.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="concepto-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Con <code>class Perro(Animal): pass</code> y <code>perro = Perro()</code>, ¿por qué <code>isinstance(perro, Animal)</code> da <code>True</code> si <code>perro</code> nunca fue creado como <code>Animal("...")</code> directamente?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Es un error de Python: no debería dar True, pero es un caso especial sin explicación</button>
+<button class="quiz-opt">Porque isinstance() ignora de qué clase es el objeto y siempre da True</button>
+<button class="quiz-opt">Porque Python convierte automáticamente cada Perro en un Animal al crearlo</button>
+<button class="quiz-opt" data-correct>Porque isinstance() considera la herencia: un Perro también es un Animal, por ser su clase base</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: isinstance() no exige que la clase coincida exacto — recorre toda la cadena de herencia. Como Perro hereda de Animal, todo objeto Perro también cuenta como un Animal para isinstance()." data-ko="isinstance() recorre la cadena de herencia completa, no solo la clase exacta del objeto. Como Perro hereda de Animal, un objeto Perro también es un Animal para isinstance() — a diferencia de type(perro) == Animal, que daría False." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="errores">
+<div class="card">
+<h2 class="section-title">Errores comunes</h2>
+<div class="info-grid">
+<div class="info"><h3>❌ Olvidar super().__init__()</h3><p>Si la subclase define su propio <code>__init__</code> sin llamar a <code>super().__init__(...)</code>, los atributos que el padre debía asignar (como <code>nombre</code> o <code>edad</code>) simplemente no existen —cualquier método heredado que los use falla con <code>AttributeError</code>.</p></div>
+<div class="info"><h3>❌ Usar self.metodo() en vez de super().metodo()</h3><p>Dentro de una versión sobrescrita, llamar <code>self.metodo()</code> en vez de <code>super().metodo()</code> vuelve a ejecutar la <strong>misma</strong> versión sobrescrita —una recursión infinita que termina en <code>RecursionError</code>, no una llamada a la del padre.</p></div>
+<div class="info"><h3>❌ Pensar que Python soporta sobrecarga de métodos</h3><p>A diferencia de Java o C#, Python no permite dos métodos con el mismo nombre y distinta cantidad de parámetros dentro de la misma clase: la segunda definición simplemente reemplaza a la primera. No hay "sobrecarga" (overload), solo sobrescritura (override) entre clase base y subclase.</p></div>
+<div class="info"><h3>❌ Confundir type(x) == Clase con isinstance(x, Clase)</h3><p><code>type(perro) == Animal</code> exige que la clase sea <strong>exactamente</strong> <code>Animal</code>, y da <code>False</code> para un <code>Perro</code>. <code>isinstance(perro, Animal)</code> considera la herencia y da <code>True</code>. Casi siempre <code>isinstance()</code> es la forma correcta de preguntar por el tipo de un objeto.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Ejercicios Propuestos</h2>
+<p class="lead">Pon en práctica lo aprendido resolviendo los siguientes ejercicios directamente en el bloque editable.</p>
+<ol style="margin-left:25px;line-height:2">
+<li>Escribe una clase <code>Persona</code> con <code>__init__(self, nombre, edad)</code> y un método <code>presentarse(self)</code> que imprima <code>"Hola, soy " + self.nombre</code>. Escribe una clase <code>Estudiante(Persona)</code> que agregue <code>carrera</code> en su propio <code>__init__</code> (usando <code>super().__init__()</code> para nombre y edad), y crea un objeto para probarla.</li>
+<li>Escribe una clase <code>Figura</code> con un método <code>area(self)</code> que imprima <code>"Área no definida"</code>. Escribe <code>Rectangulo(Figura)</code> y <code>Circulo(Figura)</code>, cada una con su propio <code>__init__</code> (con los datos que necesite) y su propio <code>area(self)</code> sobrescrito, que calcule e imprima el área real.</li>
+<li>Escribe una clase <code>Empleado</code> con <code>__init__(self, nombre, salario_base)</code> y un método <code>calcular_salario(self)</code> que devuelva <code>self.salario_base</code>. Escribe <code>Gerente(Empleado)</code> que agregue <code>bono</code> en su <code>__init__</code> (con <code>super().__init__()</code>), y sobrescriba <code>calcular_salario(self)</code> para devolver <code>super().calcular_salario() + self.bono</code>.</li>
+<li>Escribe una clase <code>CuentaBancaria</code> con <code>__init__(self, saldo)</code> y un método <code>aplicar_interes(self)</code> que sume un 1% al saldo. Escribe <code>CuentaAhorro(CuentaBancaria)</code> que sobrescriba <code>aplicar_interes(self)</code> llamando a <code>super().aplicar_interes()</code> y sumando además un 2% extra —dos interés distintos combinados con <code>super()</code>.</li>
+<li>Escribe <code>isinstance()</code>/<code>issubclass()</code> de práctica: crea objetos de <code>Estudiante</code> (ejercicio 1) y de <code>Persona</code> directa, e imprime seis resultados: si cada objeto es instancia de <code>Persona</code>, de <code>Estudiante</code>, y si <code>Estudiante</code> es subclase de <code>Persona</code>.</li>
+</ol>
+<div class="editor-panel independiente" data-quiz-id="ejercicios-propuestos">
+<div class="editor-header">
+<span>✍️ Resuelve aquí los ejercicios</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="Escribe aquí tu solución a los ejercicios (puedes resolverlos uno por uno)…"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Reto Final</h2>
+<p>Completa una pequeña jerarquía de empleados que combine todo lo visto: herencia, <code>super()</code>, sobrescritura de métodos e <code>isinstance()</code>.</p>
+<ul style="margin-left:25px;line-height:2">
+<li><code>Empleado</code>: <code>__init__(self, nombre, salario_base)</code> guarda ambos datos. Método <code>calcular_salario(self)</code> devuelve <code>self.salario_base</code>.</li>
+<li><code>Vendedor(Empleado)</code>: <code>__init__(self, nombre, salario_base, comision)</code> llama <code>super().__init__(nombre, salario_base)</code> y guarda <code>self.comision</code>. Sobrescribe <code>calcular_salario(self)</code> para devolver <code>super().calcular_salario() + self.comision</code>.</li>
+<li><code>Gerente(Empleado)</code>: <code>__init__(self, nombre, salario_base, bono)</code> llama <code>super().__init__(nombre, salario_base)</code> y guarda <code>self.bono</code>. Sobrescribe <code>calcular_salario(self)</code> para devolver <code>super().calcular_salario() + self.bono</code>.</li>
+<li>Una función <code>mostrar_nomina(lista_empleados)</code> que recorra la lista con un <code>for</code> e imprima, para cada uno, <code>nombre + ": " + str(calcular_salario())</code> —el mismo llamado funcionando para los tres tipos de objeto, sin preguntar de qué clase es cada uno.</li>
+</ul>
+<p>Pruébala con este código:</p>
+<div class="code">
+<div class="code-header"><span>Python</span></div>
+<pre><code class="src">empleados = [
+    Empleado("Ana", 3000),
+    Vendedor("Beto", 2500, 800),
+    Gerente("Carla", 4000, 1500)
+]
+mostrar_nomina(empleados)
+print(isinstance(empleados[1], Empleado))
+print(isinstance(empleados[0], Vendedor))</code></pre>
+</div>
+<div class="editor-panel" data-quiz-id="codigo-reto">
+<div class="editor-header">
+<span>✍️ Resuelve el reto acá</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar tu solución">▶ Ejecutar</button>
+<button type="button" class="code-btn submit" aria-label="Enviar tu código para revisión" disabled>📨 Enviar para revisión</button>
+</div>
+<textarea class="editor" spellcheck="false" aria-label="Escribe aquí tu código Python" placeholder="class Empleado:&#10;    def __init__(self, nombre, salario_base):&#10;        self.nombre = nombre&#10;        self.salario_base = salario_base&#10;&#10;    def calcular_salario(self):&#10;        return self.salario_base&#10;&#10;class Vendedor(Empleado):&#10;    def __init__(self, nombre, salario_base, comision):&#10;        # completa&#10;&#10;    def calcular_salario(self):&#10;        # completa&#10;&#10;class Gerente(Empleado):&#10;    def __init__(self, nombre, salario_base, bono):&#10;        # completa&#10;&#10;    def calcular_salario(self):&#10;        # completa&#10;&#10;def mostrar_nomina(lista_empleados):&#10;    # completa"></textarea>
+<div class="output" hidden>
+<div class="output-head">Salida</div>
+<pre class="output-body"></pre>
+</div>
+</div>
+<div class="code salida">
+<div class="code-header"><span>Salida esperada</span></div>
+<pre>Ana: 3000
+Beto: 3300
+Carla: 5500
+True
+False</pre>
+</div>
+<p>Fíjate que <code>mostrar_nomina()</code> llama <code>calcular_salario()</code> sin preguntar en ningún momento de qué clase es cada empleado —cada objeto sabe resolver ese llamado a su manera.</p>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Uso</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Declarar una subclase</td><td><code>class Hija(Padre): ...</code></td></tr>
+<tr><td>Heredar todo sin cambios</td><td><code>class Hija(Padre): pass</code></td></tr>
+<tr><td>Reutilizar el constructor del padre</td><td><code>super().__init__(...)</code></td></tr>
+<tr><td>Sobrescribir un método</td><td>Redefinirlo con el mismo nombre en la subclase</td></tr>
+<tr><td>Extender un método heredado</td><td><code>super().metodo()</code> dentro de la versión nueva</td></tr>
+<tr><td>¿Es esta instancia de esta clase (o de una base)?</td><td><code>isinstance(objeto, Clase)</code></td></tr>
+<tr><td>¿Esta clase hereda de esta otra?</td><td><code>issubclass(Subclase, Clase)</code></td></tr>
+<tr><td>Clase exacta de un objeto (sin herencia)</td><td><code>type(objeto)</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🐍 Toda clase en Python hereda de object</h3><p>Aunque nunca lo escribas, <code>class Animal:</code> es en realidad <code>class Animal(object):</code> por debajo. Métodos como <code>__str__</code> o <code>__eq__</code> que quizás uses más adelante ya existen en <code>object</code> —cuando los definís en tu propia clase, en el fondo también los estás sobrescribiendo.</p></div>
+<div class="info"><h3>🧬 Python sí permite herencia múltiple</h3><p>A diferencia de Java o C#, en Python una clase puede heredar de <strong>más de una</strong> a la vez: <code>class Hija(Padre1, Padre2):</code>. Cuando dos padres definen el mismo método, Python decide cuál usar con un orden llamado <strong>MRO</strong> (Method Resolution Order) —un tema avanzado que no hace falta dominar todavía, pero que existe.</p></div>
+<div class="info"><h3>🧩 El name mangling de Encapsulación pensaba en esto</h3><p>En <a href="encapsulacion.html">Encapsulación</a> viste que <code>self.__atributo</code> se renombra por dentro a <code>_Clase__atributo</code>. Ahora que ya sabés herencia, tiene más sentido por qué: evita que un <code>__atributo</code> de una clase base choque por accidente con otro del mismo nombre definido en una subclase que la hereda.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Herencia en Python</h2>
+<p>Material de apoyo para la asignatura de Programación Orientada a Objetos.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de preguntas conceptuales (quiz-mc) ===== */
+const QUIZ_PREFIX = "poo-quiz-" + location.pathname + "-";
+
+// El link real que arma ATENZA para "Tomar la guía" puede llegar como
+// ".../herencia.html#seccion?atenza_token=...&guia_intento=..." — el
+// "?" queda DESPUÉS del "#", así que atenza_token y guia_intento caen
+// dentro del fragmento (hash) de la URL, no de la query string. Un
+// navegador nunca manda el fragmento en location.search, así que leerlos
+// de ahí siempre da vacío con ese formato de link. Esta función junta
+// candidatos — la query real primero, y si no aparece nada ahí, la
+// porción después del "?" que pueda venir enganchada dentro del hash — y
+// devuelve el primero que trae los dos parámetros.
+function paramsDeAtenza() {
+  const candidatos = [location.search];
+  const posInterrogante = location.hash.indexOf("?");
+  if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+  for (const c of candidatos) {
+    const p = new URLSearchParams(c);
+    if (p.get("atenza_token") && p.get("guia_intento")) return p;
+  }
+  return new URLSearchParams(candidatos[0]);
+}
+
+const abiertoDesdeAtenza = (() => {
+  const p = paramsDeAtenza();
+  return Boolean(p.get("atenza_token") && p.get("guia_intento"));
+})();
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => {
+    if (q.classList.contains("editor-panel") && !abiertoDesdeAtenza) return;
+    ids.add(q.dataset.quizId);
+  });
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Resaltado de sintaxis (sin librerías externas) ===== */
+const PY_KEYWORDS = ["False","None","True","and","as","assert","async","await","break","class",
+  "continue","def","del","elif","else","except","finally","for","from","global","if","import",
+  "in","is","lambda","nonlocal","not","or","pass","raise","return","try","while","with","yield",
+  "print","len","int","str","float","bool","input","type","isinstance","issubclass","round","self","super"];
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function highlightPython(code){
+  const escaped = escapeHtml(code);
+  const tokens = [];
+  const mask = (html) => {
+    const marker = String.fromCharCode(0xE000 + tokens.length);
+    tokens.push(html);
+    return marker;
+  };
+  let out = escaped.replace(
+    /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:[^"\\]|\\.)*"|f?'(?:[^'\\]|\\.)*')/gm,
+    (m, comment, str) => comment !== undefined
+      ? mask(`<span class="comment">${comment}</span>`)
+      : mask(`<span class="string">${str}</span>`)
+  );
+  out = out.replace(/\b\d+\.?\d*\b/g, m => mask(`<span class="number">${m}</span>`));
+  out = out.replace(new RegExp(`\\b(${PY_KEYWORDS.join("|")})\\b`, "g"), m => mask(`<span class="keyword">${m}</span>`));
+  out = out.replace(/\b([A-Za-z_]\w*)(?=\()/g, m => mask(`<span class="func">${m}</span>`));
+  out = out.replace(/[-]/g, ch => tokens[ch.charCodeAt(0) - 0xE000]);
+  return out;
+}
+
+/* ===== Pyodide en un Web Worker (así un bucle infinito nunca cuelga la pestaña) —
+   copiado tal cual de guias/funciones.html, sin modificar. ===== */
+const __CONTROL_SLOTS = 3;      // [0]=listo, [1]=largo de la respuesta, [2]=cancelado
+const __CONTROL_BYTES = __CONTROL_SLOTS * 4;
+const __TAM_BUFFER_INPUT = 8192; // bytes UTF-8 para la respuesta de input()
+
+function __crearSabInput(){
+  if (typeof SharedArrayBuffer === "undefined") return null;
+  try {
+    return new SharedArrayBuffer(__CONTROL_BYTES + __TAM_BUFFER_INPUT);
+  } catch (e) {
+    return null;
+  }
+}
+
+function __responderInput(sab, mensaje){
+  const control = new Int32Array(sab, 0, __CONTROL_SLOTS);
+  const textBuf = new Uint8Array(sab, __CONTROL_BYTES);
+  const respuesta = prompt(mensaje);
+  if (respuesta === null) {
+    Atomics.store(control, 2, 1);
+    Atomics.store(control, 1, 0);
+  } else {
+    Atomics.store(control, 2, 0);
+    const bytes = new TextEncoder().encode(respuesta);
+    const len = Math.min(bytes.length, textBuf.length);
+    textBuf.set(bytes.subarray(0, len));
+    Atomics.store(control, 1, len);
+  }
+  Atomics.store(control, 0, 1);
+  Atomics.notify(control, 0);
+}
+
+function __codigoWorkerPyodide(){
+  return `
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js");
+
+let __sabInput = null;
+let pyodideReadyPromise = null;
+
+function inputSincrono(mensaje){
+  if (!__sabInput) {
+    throw new Error("input() no está disponible: este navegador no soporta el modo protegido contra bucles infinitos (SharedArrayBuffer). Probá con una versión reciente de Chrome, Edge o Firefox.");
+  }
+  const control = new Int32Array(__sabInput, 0, ${__CONTROL_SLOTS});
+  const textBuf = new Uint8Array(__sabInput, ${__CONTROL_BYTES});
+  Atomics.store(control, 0, 0);
+  self.postMessage({ tipo: "input-request", mensaje: String(mensaje) });
+  Atomics.wait(control, 0, 0);
+  if (Atomics.load(control, 2)) return null;
+  const len = Atomics.load(control, 1);
+  return new TextDecoder().decode(textBuf.slice(0, len));
+}
+
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.tipo === "init") {
+    __sabInput = e.data.sab;
+  }
+});
+
+async function cargarPyodide(){
+  if (!pyodideReadyPromise) {
+    pyodideReadyPromise = (async () => {
+      const pyodide = await loadPyodide();
+      await pyodide.runPythonAsync(\`
+import sys, io, builtins, time
+from js import inputSincrono as __input_sincrono
+
+__LIMITE_SEGUNDOS = 8
+
+def __custom_input(mensaje=""):
+    respuesta = __input_sincrono(str(mensaje))
+    if respuesta is None:
+        raise EOFError("Entrada cancelada por el usuario")
+    print(mensaje, end="")
+    print(respuesta)
+    return respuesta
+
+def __run_capture(src):
+    buf = io.StringIO()
+    old_stdout = sys.stdout
+    old_input = builtins.input
+    sys.stdout = buf
+    inicio = time.time()
+
+    def __watchdog(frame, event, arg):
+        if time.time() - inicio > __LIMITE_SEGUNDOS:
+            raise TimeoutError(f"El código tardó más de {__LIMITE_SEGUNDOS} segundos en ejecutarse (¿bucle infinito?) y fue detenido.")
+        return __watchdog
+
+    builtins.input = __custom_input
+    err = None
+    sys.settrace(__watchdog)
+    try:
+        exec(compile(src, "<code>", "exec"), {})
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+    finally:
+        sys.settrace(None)
+        sys.stdout = old_stdout
+        builtins.input = old_input
+    return buf.getvalue(), err
+\`);
+      return pyodide;
+    })();
+  }
+  return pyodideReadyPromise;
+}
+
+self.onmessage = async (e) => {
+  if (e.data && e.data.tipo === "init") return;
+  const { id, codigo } = e.data;
+  try {
+    const pyodide = await cargarPyodide();
+    const funcion = pyodide.globals.get("__run_capture");
+    const resultado = funcion(codigo);
+    const [salida, error] = resultado.toJs();
+    resultado.destroy();
+    self.postMessage({ id, salida, error });
+  } catch (err) {
+    self.postMessage({ id, salida: "", error: "No se pudo ejecutar el código: " + err });
+  }
+};
+`;
+}
+
+let workerPy = null;
+let sabInputActual = null;
+let pedidoIdPy = 0;
+let pedidoActualPy = null;
+
+function __programarTimeoutPy(pedido){
+  pedido.timer = setTimeout(() => {
+    if (pedidoActualPy && pedidoActualPy.id === pedido.id) {
+      reiniciarWorkerPyodide();
+      pedidoActualPy.reject(new Error("El código tardó demasiado y fue detenido automáticamente."));
+      pedidoActualPy = null;
+    }
+  }, 20000);
+}
+
+function crearWorkerPyodide(){
+  const blob = new Blob([__codigoWorkerPyodide()], { type: "application/javascript" });
+  const worker = new Worker(URL.createObjectURL(blob));
+  sabInputActual = __crearSabInput();
+  worker.postMessage({ tipo: "init", sab: sabInputActual });
+  worker.onmessage = (e) => {
+    const msg = e.data;
+    if (msg && msg.tipo === "input-request") {
+      if (pedidoActualPy) clearTimeout(pedidoActualPy.timer);
+      __responderInput(sabInputActual, msg.mensaje);
+      if (pedidoActualPy) __programarTimeoutPy(pedidoActualPy);
+      return;
+    }
+    const { id, salida, error } = msg;
+    if (pedidoActualPy && pedidoActualPy.id === id) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.resolve({ salida, error });
+      pedidoActualPy = null;
+    }
+  };
+  worker.onerror = () => {
+    if (pedidoActualPy) {
+      clearTimeout(pedidoActualPy.timer);
+      pedidoActualPy.reject(new Error("El intérprete de Python se cerró inesperadamente."));
+      pedidoActualPy = null;
+    }
+    reiniciarWorkerPyodide();
+  };
+  return worker;
+}
+
+function obtenerWorkerPyodide(){
+  if (!workerPy) workerPy = crearWorkerPyodide();
+  return workerPy;
+}
+
+function reiniciarWorkerPyodide(){
+  if (workerPy) workerPy.terminate();
+  workerPy = null;
+  sabInputActual = null;
+}
+
+function detenerEjecucion(){
+  reiniciarWorkerPyodide();
+  if (pedidoActualPy) {
+    clearTimeout(pedidoActualPy.timer);
+    pedidoActualPy.reject(new Error("Ejecución detenida."));
+    pedidoActualPy = null;
+  }
+}
+
+async function ejecutarPython(codigo){
+  const worker = obtenerWorkerPyodide();
+  const id = ++pedidoIdPy;
+  return new Promise((resolve, reject) => {
+    pedidoActualPy = { id, resolve, reject, timer: null };
+    __programarTimeoutPy(pedidoActualPy);
+    worker.postMessage({ id, codigo });
+  });
+}
+
+/* ===== Resaltar cada ejemplo de solo lectura ===== */
+function resaltarEjemplo(bloque){
+  const codeEl = bloque.querySelector("pre code.src");
+  if (!codeEl) return;
+  codeEl.innerHTML = highlightPython(codeEl.textContent.trim());
+}
+
+/* ===== Conectar un panel de editor en blanco (ejecutar código real) ===== */
+function conectarEditor(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const submitBtn = panel.querySelector(".code-btn.submit");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+  const quizId = panel.dataset.quizId;
+
+  const stopBtn = document.createElement("button");
+  stopBtn.type = "button";
+  stopBtn.className = "code-btn stop";
+  stopBtn.textContent = "⏹ Detener";
+  stopBtn.setAttribute("aria-label", "Detener la ejecución");
+  stopBtn.hidden = true;
+  runBtn.after(stopBtn);
+  stopBtn.onclick = () => detenerEjecucion();
+
+  textarea.addEventListener("paste", e => e.preventDefault());
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key !== "Tab") return;
+    e.preventDefault();
+    const inicio = textarea.selectionStart;
+    const fin = textarea.selectionEnd;
+    textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+    textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "📨 Enviar para revisión"; }
+    if (!codigo) {
+      outputBody.textContent = "Escribe algo de código antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando Python… (la primera vez puede tardar unos segundos)";
+    runBtn.disabled = true;
+    stopBtn.hidden = false;
+    try {
+      const { salida, error } = await ejecutarPython(textarea.value);
+      if (error) {
+        outputBody.textContent = (salida || "") + error;
+        output.classList.add("error");
+      } else {
+        outputBody.textContent = salida.length ? salida : "(el código no produjo salida — usa print() para mostrar algo)";
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    } catch (e) {
+      outputBody.textContent = e && e.message ? e.message : String(e);
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+      stopBtn.hidden = true;
+    }
+  };
+
+  if (submitBtn && quizId) {
+    submitBtn.onclick = () => {
+      marcarResuelto(quizId, "ok");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "✅ Enviado";
+    };
+  }
+}
+
+/* ===== Bloquear copiado del ejemplo (para que se escriba a mano) ===== */
+function bloquearCopiado(bloque){
+  const pre = bloque.querySelector("pre");
+  if (!pre) return;
+  const header = bloque.querySelector(".code-header span");
+  const avisar = () => {
+    if (!header) return;
+    const original = header.dataset.original || header.textContent;
+    header.dataset.original = original;
+    header.textContent = "🔒 Escríbelo tú mismo";
+    clearTimeout(header._avisoTimeout);
+    header._avisoTimeout = setTimeout(() => { header.textContent = original; }, 1600);
+  };
+  pre.addEventListener("copy", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("contextmenu", e => { e.preventDefault(); avisar(); });
+  pre.addEventListener("dragstart", e => e.preventDefault());
+}
+
+/* ===== Igualar la altura del editor a la del ejemplo ===== */
+function sincronizarAltura(bloque, panel){
+  const pre = bloque.querySelector("pre");
+  const textarea = panel.querySelector(".editor");
+  if (pre && textarea) textarea.style.minHeight = pre.offsetHeight + "px";
+}
+
+if (!abiertoDesdeAtenza) {
+  document.querySelectorAll(".editor-panel .code-btn.submit").forEach(btn => btn.remove());
+}
+
+const parejas = [];
+document.querySelectorAll(".code:not(.salida)").forEach(bloque => {
+  resaltarEjemplo(bloque);
+  bloquearCopiado(bloque);
+  const panel = bloque.nextElementSibling;
+  if (!panel || !panel.classList.contains("editor-panel")) return;
+  conectarEditor(panel);
+  parejas.push([bloque, panel]);
+});
+
+document.querySelectorAll(".editor-panel.independiente").forEach(conectarEditor);
+document.querySelectorAll(".code.salida").forEach(bloquearCopiado);
+
+parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel));
+window.addEventListener("load", () => parejas.forEach(([bloque, panel]) => sincronizarAltura(bloque, panel)));
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde un
+     lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en la
+     URL); accedida directo, como siempre, no dispara nada nuevo. No toca
+     el motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('editor-panel')) {
+      var codigo = quiz.querySelector('.editor');
+      var salida = quiz.querySelector('.output-body');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre:
+          (codigo ? codigo.value : '') +
+          '\n\n--- Salida ---\n' +
+          (salida ? salida.textContent : ''),
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

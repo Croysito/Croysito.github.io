@@ -348,6 +348,16 @@ footer{ padding:70px; text-align:center; color:var(--gris); }
 .diagrama-caja .uml-texto{ fill:var(--texto); font-family:'DM Sans',sans-serif; font-size:12px; }
 .diagrama-caja .uml-texto.mono{ font-family:'JetBrains Mono',monospace; font-size:11.5px; }
 
+/* Secuencia (líneas de vida/activación) y estados (nodos/transiciones)
+   — mismos primitivos genéricos, piloto: guias_ds/nivel-1b-como-y-cuando.html */
+.diagrama-caja .uml-lifeline{ stroke:var(--gris); stroke-width:1.5; stroke-dasharray:5 4; }
+.diagrama-caja .uml-activation{ fill:var(--highlightBg); stroke:var(--azul2); stroke-width:1.5; }
+.diagrama-caja .uml-mensaje{ stroke:var(--texto); stroke-width:1.5; fill:none; }
+.diagrama-caja .uml-retorno{ stroke:var(--gris); stroke-width:1.5; fill:none; stroke-dasharray:5 3; }
+.diagrama-caja .uml-flecha-llena{ fill:var(--texto); }
+.diagrama-caja .uml-flecha-abierta{ fill:none; stroke:var(--gris); stroke-width:1.5; }
+.diagrama-caja .uml-estado-inicial{ fill:var(--texto); }
+
 /* =========================================================
    PRESENTACIÓN POR DIAPOSITIVAS (formato deck, alternativo
    al esqueleto lineal de sidebar + scroll). Ver guías con

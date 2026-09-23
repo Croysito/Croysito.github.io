@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nivel 2: Backlog y Sprint | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">Club · <span>PO Nivel 2</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="refinamiento">Refinamiento del backlog</button>
+<button data-target="priorizacion">Priorización</button>
+<button data-target="dor-dod">Definition of Ready / Done</button>
+<button data-target="ceremonias">El PO en las ceremonias</button>
+<button data-target="metricas">Velocity y burndown</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🎯 Club · Ruta Product Owner · Nivel 2</span>
+<h1 class="flow-h1">Del backlog al sprint: <span>ordenar, acordar y medir</span></h1>
+<p class="flow-lead">En el Nivel 1 aprendiste a convertir un problema real en historias de usuario con criterios de aceptación. Pero un backlog lleno de historias sueltas no alcanza: hay que mantenerlo claro con el tiempo, decidir qué entra primero, acordar cuándo algo está "listo para empezar" y cuándo está realmente "terminado", saber qué le toca al PO en cada ceremonia del sprint, y leer las métricas del equipo sin sacar conclusiones apuradas.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Seguís acompañando a Lucía, PO de <strong>TurnoYa</strong>. Si todavía no hiciste el <a href="nivel-1-descubrimiento-producto.html">Nivel 1</a>, conviene empezar por ahí. En cada decisión podés probar un camino equivocado, ver su consecuencia sin penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>El backlog que ya nadie entiende</h2>
+<p class="lead">Pasaron tres sprints desde el Nivel 1. El Product Backlog de TurnoYa creció: hay historias claras, pedidos nuevos de Don Julio, ideas sueltas que anotó Tomás en una reunión, y hasta una nota que dice solo "arreglar bug del QR". Antes de la próxima Sprint Planning, Lucía necesita que el backlog esté en condiciones de usarse.</p>
+<div class="highlight">
+<strong>Lo que está en juego</strong>
+<p>Si el equipo entra a Planning con historias así, la reunión se llena de preguntas que debieron resolverse antes, y la planificación se estira sin necesidad.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="refinamiento decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cuándo revisa y prepara Lucía el backlog?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Deja que el equipo decida en la propia Sprint Planning qué significa cada historia, sin ninguna revisión previa.</button>
+<button class="quiz-opt" data-key="b" data-correct>En sesiones cortas y regulares durante el sprint, revisando las historias que se vienen, no solo las del próximo.</button>
+<button class="quiz-opt" data-key="c">Una vez por semestre, en una reunión larga donde se revisa y estima todo el backlog de una sola vez.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Sin ninguna preparación previa, la Sprint Planning se convierte en la primera vez que alguien lee la historia con atención — y ahí aparecen todas las preguntas que debieron resolverse antes. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Preparar todo el backlog una sola vez por semestre no funciona: para cuando llega el sprint que la necesita, la historia quedó desactualizada o el equipo ya no recuerda lo acordado. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. El refinamiento (o grooming) es una actividad continua, en sesiones cortas, que mantiene siempre un puñado de historias "listas" un par de sprints por delante. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="refinamiento" hidden>
+<h2>Refinamiento del backlog: una actividad, no un evento</h2>
+<p class="lead">El refinamiento (a veces "grooming") es el trabajo constante de mantener el Product Backlog claro, ordenado y con las historias de arriba ya preparadas para entrar a un sprint. No tiene horario fijo como las demás ceremonias — es trabajo continuo del PO junto con el equipo.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Actividad</th><th scope="col">Qué implica</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Clarificar</td><td>Completar detalles que faltan en una historia ambigua.</td><td>"Arreglar bug del QR" se convierte en una historia con quién, qué y para qué.</td></tr>
+<tr><td>Dividir</td><td>Partir una historia demasiado grande en varias más chicas.</td><td>"Gestionar toda la fotocopiadora" se separa en reservar, cancelar y notificar.</td></tr>
+<tr><td>Estimar</td><td>El equipo calcula, a grandes rasgos, cuánto esfuerzo implica.</td><td>El equipo compara: reservar turno "vale" parecido a cancelar turno.</td></tr>
+<tr><td>Eliminar</td><td>Sacar del backlog lo que ya no tiene sentido.</td><td>El pedido de "chat interno" que nadie mencionó en las últimas entrevistas.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>¿Quién estima?</strong>
+<p>El PO no estima solo: propone y prioriza, pero el tamaño o esfuerzo lo calcula el equipo de desarrollo, porque son quienes lo van a construir.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="refinamiento-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada actividad de refinamiento con lo que implica.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="clarificar">Clarificar</button>
+<button class="quiz-match-item" data-pair="dividir">Dividir</button>
+<button class="quiz-match-item" data-pair="estimar">Estimar</button>
+<button class="quiz-match-item" data-pair="eliminar">Eliminar</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="estimar">El equipo calcula a grandes rasgos cuánto esfuerzo implica.</button>
+<button class="quiz-match-item" data-pair="clarificar">Completar los detalles que le faltan a una historia ambigua.</button>
+<button class="quiz-match-item" data-pair="eliminar">Sacar del backlog lo que ya no tiene sentido construir.</button>
+<button class="quiz-match-item" data-pair="dividir">Partir una historia demasiado grande en varias más chicas.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>Quince historias listas. ¿Cuál va primero?</h2>
+<p class="lead">El refinamiento dejó quince historias claras y estimadas en el backlog. El próximo sprint entran solo cinco o seis. Esta mañana, un stakeholder le pidió directo a Lucía que "pagos con QR" vaya primero porque a él le urge.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="priorizacion decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo decide Lucía qué entra primero?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Prioriza lo que pidió el stakeholder que habló con ella hoy, por ser el pedido más reciente y directo.</button>
+<button class="quiz-opt" data-key="c">Ordena el backlog por orden de llegada: la primera historia que se escribió es la primera que se construye.</button>
+<button class="quiz-opt" data-key="b" data-correct>Aplica un criterio explícito de priorización a todas las historias por igual, sin importar quién las pidió.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Priorizar por "quién pidió último" o "quién habla más fuerte" es justo el patrón que un criterio explícito busca evitar — el backlog termina reflejando presión, no valor. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>El orden de llegada no dice nada sobre valor ni esfuerzo: una idea vieja puede valer menos hoy que una nueva, o costar mucho más de construir. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. Con un criterio explícito aplicado por igual, la conversación deja de ser "quién insiste más" y pasa a ser "qué aporta más valor con menos esfuerzo". Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="priorizacion" hidden>
+<h2>Tres formas de priorizar (y cuándo usar cada una)</h2>
+<p class="lead">No hay una única técnica correcta: cada una sirve mejor según cuántas historias hay y qué tipo de conversación hace falta tener.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Técnica</th><th scope="col">Cómo funciona</th><th scope="col">Cuándo conviene</th></tr></thead>
+<tbody>
+<tr><td>MoSCoW</td><td>Cada historia se etiqueta Must (imprescindible), Should (importante), Could (deseable) o Won't (no, por ahora).</td><td>Para acordar con stakeholders qué entra sí o sí antes de una fecha concreta.</td></tr>
+<tr><td>Value vs Effort</td><td>Se ubica cada historia en una matriz de dos ejes: cuánto valor aporta y cuánto esfuerzo cuesta.</td><td>Para una vista rápida y visual con pocas historias, decidiendo en equipo.</td></tr>
+<tr><td>RICE</td><td>Puntaje = (Reach × Impact × Confidence) / Effort: alcance, impacto, confianza y esfuerzo.</td><td>Para comparar muchas historias con un número objetivo, cuando "a ojo" ya no alcanza.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>RICE aplicado a TurnoYa</strong>
+<p>"Avisar por WhatsApp cuando el turno está por llegar": Reach 200 (turnos por semana), Impact 2 (alto), Confidence 0.8 (80%), Effort 4 (semanas-persona). RICE = (200 × 2 × 0.8) / 4 = <strong>80</strong>. Ese número se compara contra el de otras historias, no contra una escala absoluta.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="priorizacion-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Qué técnica conviene en cada situación?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El equipo tiene veinte minutos para ubicar seis historias en un cuadrante dibujado en la pizarra.</span>
+<div class="quiz-classify-btns">
+<button>MoSCoW</button>
+<button data-correct>Value vs Effort</button>
+<button>RICE</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Hay que acordar con la universidad qué funciones entran sí o sí antes de que empiece el semestre.</span>
+<div class="quiz-classify-btns">
+<button>RICE</button>
+<button data-correct>MoSCoW</button>
+<button>Value vs Effort</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Hay cuarenta ideas en el backlog y hace falta un número para ordenarlas todas de forma objetiva.</span>
+<div class="quiz-classify-btns">
+<button>Value vs Effort</button>
+<button>MoSCoW</button>
+<button data-correct>RICE</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Hace falta distinguir qué es imprescindible de qué es "estaría bueno, pero no ahora".</span>
+<div class="quiz-classify-btns">
+<button data-correct>MoSCoW</button>
+<button>RICE</button>
+<button>Value vs Effort</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Dos historias parecen valer lo mismo; hace falta comparar su alcance, impacto y confianza además del esfuerzo.</span>
+<div class="quiz-classify-btns">
+<button>Value vs Effort</button>
+<button data-correct>RICE</button>
+<button>MoSCoW</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">En una reunión corta, el equipo quiere decidir juntos, con un dibujo simple, qué le conviene atacar primero.</span>
+<div class="quiz-classify-btns">
+<button>RICE</button>
+<button>MoSCoW</button>
+<button data-correct>Value vs Effort</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>"Ready" según quién preguntes</h2>
+<p class="lead">La historia de pagos con QR llega arriba del backlog priorizado. En la reunión previa a Planning, una desarrolladora pregunta: "¿esto ya está listo para que lo tomemos?" — y cada uno del equipo tiene una idea distinta de qué significa "listo".</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="dor-dod decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué le responde Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="b" data-correct>Que revisen juntos una checklist acordada de antemano por todo el equipo, antes de tomarla en Planning.</button>
+<button class="quiz-opt" data-key="a">Que sí, porque la historia ya tiene un título y ella la escribió la semana pasada.</button>
+<button class="quiz-opt" data-key="c">Que cada desarrollador decida por su cuenta si la historia le parece suficientemente clara.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Tener título y fecha de creación no dice nada sobre si la historia tiene lo necesario para empezar: ¿tiene criterios de aceptación? ¿está estimada? ¿depende de algo bloqueado? Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Si cada quien decide con su propio criterio, dos desarrolladores pueden tomar la misma historia con expectativas distintas de qué falta. La checklist tiene que ser una sola, acordada por todos. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. Esa checklist compartida es la Definition of Ready — no la inventa Lucía sola — y dice cuándo una historia puede entrar a un sprint sin sorpresas. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="dor-dod" hidden>
+<h2>Definition of Ready y Definition of Done</h2>
+<p class="lead">Son dos checklists distintas, para dos momentos distintos del mismo ítem del backlog.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Checklist</th><th scope="col">Responde</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Definition of Ready (DoR)</td><td>"¿Esta historia puede entrar a un sprint?" — se revisa <strong>antes</strong> de Planning.</td><td>Tiene criterios de aceptación, está estimada, no depende de nada bloqueado.</td></tr>
+<tr><td>Definition of Done (DoD)</td><td>"¿Esta historia está realmente terminada?" — se revisa <strong>al cerrar</strong> el sprint.</td><td>Código revisado por otro desarrollador, probado, sin errores conocidos, listo para mostrar.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Ojo con confundirlas</strong>
+<p>Los criterios de aceptación de una historia puntual le dan contenido a su DoD, pero la DoD es más amplia: aplica a <strong>todas</strong> las historias por igual. "Código revisado" no es un criterio de aceptación de "pagos con QR" — es una regla general del equipo, válida para cualquier historia que se cierre.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="dor-dod-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. Se revisa antes de que una historia entre a la Sprint Planning. Es la
+<select class="quiz-blank" data-correct="dor">
+<option value="">— elige —</option>
+<option value="dod">Definition of Done</option>
+<option value="dor">Definition of Ready</option>
+</select>.</p>
+<p>2. Incluye reglas generales, válidas para cualquier historia, como "código revisado por otro desarrollador". Es la
+<select class="quiz-blank" data-correct="dod">
+<option value="">— elige —</option>
+<option value="dor">Definition of Ready</option>
+<option value="dod">Definition of Done</option>
+</select>.</p>
+<p>3. Si falla, esa historia no debería tomarse todavía en ese sprint. Se trata de la
+<select class="quiz-blank" data-correct="dor">
+<option value="">— elige —</option>
+<option value="dod">Definition of Done</option>
+<option value="dor">Definition of Ready</option>
+</select>.</p>
+<p>4. Se confirma recién al cerrar el sprint, junto con los criterios de aceptación de esa historia. Es la
+<select class="quiz-blank" data-correct="dod">
+<option value="">— elige —</option>
+<option value="dor">Definition of Ready</option>
+<option value="dod">Definition of Done</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>"¿Podés venir a la Daily y contarnos en qué vas?"</h2>
+<p class="lead">Tomás, el Scrum Master, nota que Lucía no fue a la última Daily y le pide que a partir de ahora vaya siempre y reporte el estado de cada historia, como si fuera una desarrolladora más del equipo.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="ceremonias decision5">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué le responde Lucía a Tomás?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Que sí, y que de ahora en más va a decidir en la Daily qué tarea hace cada desarrollador ese día.</button>
+<button class="quiz-opt" data-key="c">Que prefiere no ir nunca a ninguna ceremonia del sprint, porque su trabajo es solo escribir historias.</button>
+<button class="quiz-opt" data-key="b" data-correct>Que la Daily es para que el equipo se coordine entre sí; ella puede escuchar, pero no le toca reportar ni repartir tareas.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Decidir qué tarea hace cada desarrollador es autoorganización del equipo, no del PO. Si Lucía reparte tareas en la Daily, está ocupando un rol que no es el suyo. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>El PO sí participa de varias ceremonias del sprint, solo que con un rol distinto en cada una. No ir a ninguna la deja afuera de decisiones donde sí tiene que estar, como Planning y Review. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. La Daily es del equipo de desarrollo, para coordinarse entre sí. El PO puede escuchar, pero reportar avance tarea por tarea no es su rol ahí. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="ceremonias" hidden>
+<h2>El PO en las cuatro ceremonias del sprint</h2>
+<p class="lead">El PO no tiene el mismo rol en las cuatro. En algunas es protagonista, en otras es apenas un oyente.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Ceremonia</th><th scope="col">Rol del PO</th></tr></thead>
+<tbody>
+<tr><td>Sprint Planning</td><td>Explica y prioriza el backlog, responde preguntas sobre las historias, acuerda el objetivo del sprint.</td></tr>
+<tr><td>Daily Scrum</td><td>No es su ceremonia — es del equipo de desarrollo para coordinarse. Puede escuchar, no dirige.</td></tr>
+<tr><td>Sprint Review</td><td>Ve lo construido, recoge feedback de stakeholders y decide, con eso, qué ajustar del backlog.</td></tr>
+<tr><td>Sprint Retrospective</td><td>Participa como un integrante más, para mejorar cómo trabaja el equipo — no como autoridad que evalúa.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-match" data-quiz-id="ceremonias-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada ceremonia con el rol que le toca al PO.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="planning">Sprint Planning</button>
+<button class="quiz-match-item" data-pair="daily">Daily Scrum</button>
+<button class="quiz-match-item" data-pair="review">Sprint Review</button>
+<button class="quiz-match-item" data-pair="retro">Sprint Retrospective</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="review">Recoge feedback de stakeholders sobre lo construido.</button>
+<button class="quiz-match-item" data-pair="daily">No es su ceremonia; puede escuchar, no dirige.</button>
+<button class="quiz-match-item" data-pair="retro">Participa como un integrante más, para mejorar el equipo.</button>
+<button class="quiz-match-item" data-pair="planning">Explica y prioriza el backlog, acuerda el objetivo del sprint.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision5" hidden>
+<h2>"Vamos re atrasados" — ¿en base a qué?</h2>
+<p class="lead">A mitad del sprint, un desarrollador comenta en el pasillo que "vamos re atrasados". Lucía quiere saber si es cierto antes de preocupar a nadie, y también planificar cuántas historias puede prometer en el sprint que viene.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-5" data-unlock="metricas repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué mira Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Le pregunta a cada desarrollador cuántas horas trabajó esta semana, para ver quién rinde menos.</button>
+<button class="quiz-opt" data-key="b" data-correct>El burndown del sprint actual, para ver la tendencia de trabajo restante, y la velocity de sprints anteriores.</button>
+<button class="quiz-opt" data-key="c">Nada: confía en la sensación del desarrollador, porque lleva más tiempo en el equipo que ella.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Medir horas individuales convierte una métrica de equipo en una herramienta para señalar personas, y no dice nada sobre si el sprint completo va a tiempo. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Una sensación de pasillo puede estar bien encaminada o completamente equivocada. Para algo que se puede medir con datos del propio sprint, conviene mirar los datos antes de sacar conclusiones. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. El burndown muestra la tendencia dentro del sprint actual, y la velocity (promedio de sprints anteriores) ayuda a planificar los que vienen — ninguna de las dos mide personas. Cerrás el recorrido del nivel. Ahora repasemos.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="metricas" hidden>
+<h2>Velocity y burndown: métricas del equipo, no de personas</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Métrica</th><th scope="col">Qué muestra</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td>Burndown</td><td>Una línea que baja mostrando cuánto trabajo queda dentro del sprint actual, día a día.</td><td>Ver si la tendencia del sprint va a tiempo, con margen para reaccionar.</td></tr>
+<tr><td>Velocity</td><td>El promedio de historias (o puntos) que el equipo completó en los últimos sprints.</td><td>Estimar, con datos reales, cuánto puede prometer el equipo en el próximo sprint.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Del equipo, no de una persona</strong>
+<p>Ninguna de las dos mide el desempeño individual: la velocity es del equipo completo y varía con normalidad de sprint a sprint. Usarla para comparar personas, o exigir que "suba" a la fuerza, rompe la métrica — el equipo empieza a inflar estimaciones en vez de medir realidad.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="metricas-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Es un uso correcto o incorrecto de la métrica?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Usar la velocity promedio de los últimos tres sprints para estimar cuántas historias prometer en el próximo.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Correcto</button>
+<button>Incorrecto</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Comparar la velocity de dos desarrolladores distintos para decidir a quién asignarle más tareas.</span>
+<div class="quiz-classify-btns">
+<button>Correcto</button>
+<button data-correct>Incorrecto</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Mirar el burndown a mitad de sprint para notar temprano que el trabajo no está bajando como se esperaba.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Correcto</button>
+<button>Incorrecto</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Exigir que la velocity "suba" cada sprint, sin importar qué tan grandes son realmente las historias.</span>
+<div class="quiz-classify-btns">
+<button>Correcto</button>
+<button data-correct>Incorrecto</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Usar el burndown del día anterior a la Review para señalar quién "atrasó" el sprint.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Correcto</button>
+<button>Incorrecto</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Usar la tendencia del burndown para decidir, a tiempo, si conviene reducir el alcance del sprint.</span>
+<div class="quiz-classify-btns">
+<button>Correcto</button>
+<button data-correct>Incorrecto</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Hay cuarenta historias en el backlog y hace falta compararlas todas con un número objetivo. ¿Qué técnica conviene?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">MoSCoW, porque separa con claridad lo imprescindible de lo que puede esperar.</button>
+<button class="quiz-opt">Value vs Effort, porque ubica cada historia en un cuadrante fácil de dibujar.</button>
+<button class="quiz-opt" data-correct>RICE, porque calcula un puntaje comparable incluso con muchas historias distintas.</button>
+<button class="quiz-opt">Ordenarlas por fecha de creación, empezando por las más antiguas del backlog.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: RICE da un puntaje objetivo (Reach × Impact × Confidence / Effort) que escala mejor que una matriz visual o unas pocas etiquetas cuando hay muchas historias para comparar." data-ko="MoSCoW funciona con etiquetas simples y Value vs Effort con pocas historias en una matriz visual; ninguna de las dos escala bien a cuarenta ítems. RICE da un número comparable para todas a la vez." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">La Definition of Done es la misma checklist para todas las historias del equipo, mientras que los criterios de aceptación son propios de cada historia.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la DoD son reglas generales del equipo, válidas para cualquier historia, mientras que los criterios de aceptación describen qué hace única y verificable a esa historia en particular." data-ko="Es verdadero: la DoD aplica igual a toda historia (reglas generales del equipo), mientras que los criterios de aceptación son propios de cada historia en particular." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un Scrum Master le pide al PO que reparta las tareas del día en la Daily Scrum. ¿Qué debería pasar?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El PO acepta, porque conoce mejor que nadie las prioridades del negocio.</button>
+<button class="quiz-opt" data-correct>El PO explica que repartir tareas es autoorganización del equipo de desarrollo, no su rol.</button>
+<button class="quiz-opt">El PO lo hace solo esa vez, para no generar un conflicto innecesario con Tomás.</button>
+<button class="quiz-opt">El PO cancela la Daily y la reemplaza por una reunión de estado con él.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: cómo se reparte el trabajo del día es autoorganización del equipo de desarrollo. El PO puede escuchar la Daily, pero dirigirla o repartir tareas no le corresponde." data-ko="Aceptar, ceder 'por esta vez' o cancelar la ceremonia entera evitan el conflicto sin resolver el fondo: repartir tareas es autoorganización del equipo de desarrollo, no un rol del PO." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: preparate para tu propio sprint</h2>
+<p class="lead">Con un backlog real (del club, de una materia, de un proyecto personal), escribí en no más de dos o tres líneas por punto: 1) tres acciones de refinamiento que le harías a una historia ambigua de tu backlog, 2) prioriza cinco ítems tuyos con una de las tres técnicas, diciendo cuál elegiste y por qué, 3) una checklist propia de Definition of Ready de al menos tres puntos, 4) qué harías vos, como PO, en cada una de las cuatro ceremonias del sprint.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Refinamiento, priorización, DoR y rol en las ceremonias de un backlog real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>Las acciones de refinamiento clarifican, dividen o eliminan — no inventan una solución técnica.</li>
+<li>La técnica de priorización elegida encaja con cuántos ítems tenés y qué tipo de conversación necesitás.</li>
+<li>La Definition of Ready es una checklist compartida, no una opinión tuya sobre una historia puntual.</li>
+<li>El rol en cada ceremonia respeta a quién le toca decidir: vos priorizás, el equipo se autoorganiza.</li>
+<li>Ninguna métrica ni checklist se usa para evaluar a una persona en particular.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Refinamiento</td><td>Actividad continua: clarificar, dividir, estimar y eliminar historias del backlog.</td></tr>
+<tr><td>MoSCoW</td><td>Etiquetar cada historia Must / Should / Could / Won't.</td></tr>
+<tr><td>Value vs Effort</td><td>Matriz visual de dos ejes: valor que aporta, esfuerzo que cuesta.</td></tr>
+<tr><td>RICE</td><td>Puntaje = (Reach × Impact × Confidence) / Effort.</td></tr>
+<tr><td>Definition of Ready (DoR)</td><td>Checklist compartida: cuándo una historia puede entrar a un sprint.</td></tr>
+<tr><td>Definition of Done (DoD)</td><td>Checklist compartida: cuándo una historia está realmente terminada.</td></tr>
+<tr><td>Sprint Planning</td><td>El PO explica y prioriza el backlog, acuerda el objetivo del sprint.</td></tr>
+<tr><td>Daily Scrum</td><td>Del equipo de desarrollo; el PO puede escuchar, no dirige.</td></tr>
+<tr><td>Sprint Review</td><td>El PO recoge feedback de stakeholders sobre lo construido.</td></tr>
+<tr><td>Sprint Retrospective</td><td>El PO participa como un integrante más, no como autoridad.</td></tr>
+<tr><td>Burndown</td><td>Tendencia del trabajo restante dentro del sprint actual.</td></tr>
+<tr><td>Velocity</td><td>Promedio de historias completadas en sprints anteriores, del equipo.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🔤 MoSCoW tiene casi treinta años</h3><p>Lo propuso Dai Clegg en 1994, dentro del método DSDM, para acordar entregas con fecha fija sin negociar cada función por separado. Las "o" minúsculas son solo para que se lea como palabra.</p></div>
+<div class="info"><h3>📈 RICE nació en un blog</h3><p>Sean McBride, de Intercom, publicó el framework RICE en 2016 como una forma de sacar la priorización de la intuición pura y ponerle un número encima, comparable entre historias muy distintas.</p></div>
+<div class="info"><h3>🧭 Lo que viene en el Nivel 3</h3><p>Ya sabés ordenar y correr un sprint. El próximo nivel mira más arriba: OKRs y KPIs, roadmapping (Now-Next-Later, Story Mapping), North Star Metric, y cómo se arma un experimento con un MVP.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Nivel 2: Backlog y Sprint</h2>
+<p>Material de apoyo para el Club de Programación · Ruta Product Owner.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "po-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
