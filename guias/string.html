@@ -1491,6 +1491,7 @@ function crearWorkerPyodide(){
       pedidoActualPy.resolve({ salida, error });
       pedidoActualPy = null;
     }
+    if (error && error.includes("fatally failed")) reiniciarWorkerPyodide();
   };
   worker.onerror = () => {
     if (pedidoActualPy) {
