@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Del Proceso Secuencial al Iterativo + Scrum en 15 Minutos | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">ISW · <span>Sprint 0</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="cascada-iterativo">Cascada vs. Iterativo</button>
+<button data-target="vision-alcance">Visión y alcance del producto</button>
+<button data-target="roles-scrum">Scrum en 15 minutos</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🚀 Ingeniería de Software · Sprint 0</span>
+<h1 class="flow-h1">Sprint 0: el kickoff de <span>EventoUAB</span></h1>
+<p class="flow-lead">Antes de escribir una sola línea de código, tu equipo tiene que decidir <strong>cómo</strong> va a trabajar, no solo <strong>qué</strong> va a construir. Esta guía recorre las primeras decisiones reales de un proyecto de Ingeniería de Software: elegir entre un proceso secuencial o uno iterativo, definir la visión y el alcance del producto, acordar reglas de equipo y armar el primer Product Backlog — todavía crudo, a propósito.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Vas a acompañar el kickoff de <strong>EventoUAB</strong> — la app que te encargó Bienestar Estudiantil de la UAB para reservar los espacios donde los clubes hacen sus eventos. En cada decisión podés probar primero un camino equivocado, ver su consecuencia sin ninguna penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>El mismo encargo, dos caminos posibles</h2>
+<p class="lead">Bienestar Estudiantil te dio el encargo en una reunión de 20 minutos: <em>"necesitamos una forma de reservar los espacios para eventos de club, ahora todo se coordina por WhatsApp y se duplican reservas todo el tiempo."</em> Nada más. Ninguna otra especificación. Tu equipo de cuatro personas, recién formado, tiene que decidir cómo arranca.</p>
+<div class="highlight">
+<strong>La primera decisión no es técnica</strong>
+<p>Antes de elegir lenguaje o framework, el equipo tiene que elegir un proceso: ¿planificar todo antes de construir, o construir un poco y aprender sobre la marcha?</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="cascada-iterativo decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo arranca tu equipo el Sprint 0?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Se reparten el trabajo ahora mismo: cada quien elige la parte de la app que más le interesa programar y arranca por su cuenta.</button>
+<button class="quiz-opt" data-key="b" data-correct>Definen juntos, en esta misma sesión, qué problema resuelven, quién es el usuario principal, y arman una primera versión chica y mostrable para dentro de dos semanas.</button>
+<button class="quiz-opt" data-key="c">Le piden a Bienestar Estudiantil que mande, por escrito, todas las pantallas y funciones que va a tener la app antes de tocar una sola línea de código.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Sin ponerse de acuerdo primero en qué problema resuelven y para quién, cada integrante termina construyendo una parte distinta de una app distinta. No hay una sola pieza que puedan mostrar junta al final de dos semanas. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Pedir la especificación completa por escrito asume que hoy ya se sabe todo lo que la app va a necesitar. Bienestar Estudiantil tampoco lo sabe todavía — ni siquiera si prefiere reservar por franja horaria o por día completo. Ese documento va a quedar desactualizado la primera semana. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. En Sprint 0 no se escribe código: se define el problema, el usuario y un primer recorte chico y mostrable. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="cascada-iterativo" hidden>
+<h2>Cascada vs. Iterativo: por qué el orden importa</h2>
+<p class="lead">Un proceso <strong>secuencial (cascada)</strong> analiza, diseña, construye, prueba y entrega una sola vez, de punta a punta. Un proceso <strong>iterativo</strong> recorre los mismos pasos, pero en ciclos cortos que se repiten — cada ciclo entrega algo real y trae de vuelta lo que el usuario opinó.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Aspecto</th><th scope="col">Cascada (secuencial)</th><th scope="col">Iterativo (Scrum)</th></tr></thead>
+<tbody>
+<tr><td>Orden del trabajo</td><td>Analizar → Diseñar → Construir → Probar → Entregar, una sola vez</td><td>Los mismos pasos, repetidos en ciclos cortos (sprints)</td></tr>
+<tr><td>Cuándo llega el feedback del usuario</td><td>Al final, cuando ya está casi todo construido</td><td>Cada pocas semanas, sobre un incremento real y usable</td></tr>
+<tr><td>Costo de un requisito mal entendido</td><td>Alto: se descubre tarde, con gran parte del sistema ya construido sobre ese supuesto</td><td>Bajo: se descubre en el primer o segundo incremento, antes de construir el resto</td></tr>
+<tr><td>Cuándo sí conviene</td><td>Problema ya bien entendido y estable (ej. construir un puente)</td><td>Problema que se termina de entender construyendo — la mayoría del software</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Iterativo no es "sin plan"</strong>
+<p>Cada sprint tiene un objetivo claro (Sprint Goal) y un compromiso concreto. La diferencia con cascada no es la ausencia de plan, sino que el plan se revisa cada pocas semanas contra algo real, en vez de una sola vez al principio.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="cascada-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Este comportamiento es típico de Cascada o de Iterativo?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El equipo entrega una sola vez, al final de seis meses de trabajo.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Cascada</button>
+<button>Iterativo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El equipo muestra un incremento funcionando cada dos semanas.</span>
+<div class="quiz-classify-btns">
+<button>Cascada</button>
+<button data-correct>Iterativo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un cambio de requisito en la semana 10 obliga a rehacer buena parte del diseño ya aprobado.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Cascada</button>
+<button>Iterativo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El backlog se reordena con lo que el usuario opinó la semana pasada.</span>
+<div class="quiz-classify-btns">
+<button>Cascada</button>
+<button data-correct>Iterativo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Todas las pantallas se diseñan antes de escribir la primera línea de código de cualquiera de ellas.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Cascada</button>
+<button>Iterativo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El equipo construye primero la reserva de un solo espacio, lo muestra, y recién después agrega el resto.</span>
+<div class="quiz-classify-btns">
+<button>Cascada</button>
+<button data-correct>Iterativo</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>Antes de escribir código: ¿para quién es esto?</h2>
+<p class="lead">El equipo quedó entusiasmado con la idea. Uno de tus compañeros ya quiere abrir el editor y empezar a programar la pantalla de login. Pero todavía nadie se puso de acuerdo en quién usa la app todos los días: ¿el estudiante que organiza el evento, cualquier estudiante, o el personal de Bienestar Estudiantil?</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="vision-alcance decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace el equipo antes de escribir la primera línea de código?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="b" data-correct>Dedican el resto de la sesión a escribir, en una sola hoja, el problema concreto, quién es el usuario principal, la propuesta de valor y el alcance inicial — sin tocar código todavía.</button>
+<button class="quiz-opt" data-key="c">Programan primero un prototipo con todas las funciones que se les ocurren, y recién después le preguntan a Bienestar Estudiantil si es lo que necesitaba.</button>
+<button class="quiz-opt" data-key="a">Nada más: ya tienen suficiente con la reunión de 20 minutos, así que arrancan a programar directamente la pantalla de login.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>20 minutos de reunión alcanzan para el encargo, no para saber quién es el usuario real. ¿Reserva el club completo o cada estudiante? ¿Puede cancelar? Sin esa definición, cada integrante programa una suposición distinta. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Construir "todo lo que se les ocurre" antes de validar nada es la misma trampa de la cascada, solo que sin documento: se invierte tiempo en funciones que capaz nadie pidió, y recién se pregunta cuando ya está construido. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. Esa hoja es la Visión del Producto — no reemplaza al código, lo enfoca. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="vision-alcance" hidden>
+<h2>La Visión del Producto en cuatro preguntas</h2>
+<p class="lead">La Visión del Producto no es un documento largo: son cuatro respuestas cortas que todo el equipo puede repetir de memoria. Sirve para que, en la semana 6, nadie tenga que adivinar por qué se está construyendo esto.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Pregunta</th><th scope="col">Qué responde</th><th scope="col">EventoUAB</th></tr></thead>
+<tbody>
+<tr><td>Problema</td><td>¿Qué está roto hoy?</td><td>Las reservas de espacios para eventos de club se coordinan por WhatsApp y se duplican.</td></tr>
+<tr><td>Usuario principal</td><td>¿Quién decide si esto sirve?</td><td>El estudiante responsable de un club que necesita reservar un espacio.</td></tr>
+<tr><td>Propuesta de valor</td><td>¿Qué gana ese usuario que hoy no tiene?</td><td>Ver en un solo lugar qué espacios están libres y reservar sin esperar respuesta de nadie.</td></tr>
+<tr><td>Alcance inicial</td><td>¿Qué NO entra todavía?</td><td>Pagos, reportes para la decana y notificaciones push quedan para más adelante.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>El alcance inicial se escribe hacia adentro, no hacia afuera</strong>
+<p>No es solo "qué va a tener la app": es también, explícitamente, qué queda afuera del primer incremento. Eso es lo que en la próxima guía se traduce en la regla "el Sprint 1 debe ser pequeño".</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="vision-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. El equipo anota que, por ahora, la app no va a manejar pagos ni reportes. Eso responde
+<select class="quiz-blank" data-correct="alcance">
+<option value="">— elige —</option>
+<option value="problema">Problema</option>
+<option value="usuario">Usuario principal</option>
+<option value="valor">Propuesta de valor</option>
+<option value="alcance">Alcance inicial</option>
+</select>.</p>
+<p>2. El equipo escribe: "hoy las reservas se duplican porque se coordinan por WhatsApp". Eso responde
+<select class="quiz-blank" data-correct="problema">
+<option value="">— elige —</option>
+<option value="alcance">Alcance inicial</option>
+<option value="problema">Problema</option>
+<option value="valor">Propuesta de valor</option>
+<option value="usuario">Usuario principal</option>
+</select>.</p>
+<p>3. El equipo decide que quien usa la app todos los días es el estudiante responsable del club, no el personal de Bienestar Estudiantil. Eso responde
+<select class="quiz-blank" data-correct="usuario">
+<option value="">— elige —</option>
+<option value="valor">Propuesta de valor</option>
+<option value="usuario">Usuario principal</option>
+<option value="problema">Problema</option>
+<option value="alcance">Alcance inicial</option>
+</select>.</p>
+<p>4. El equipo resume que la app le ahorra al estudiante la espera de una respuesta por WhatsApp. Eso responde
+<select class="quiz-blank" data-correct="valor">
+<option value="">— elige —</option>
+<option value="usuario">Usuario principal</option>
+<option value="alcance">Alcance inicial</option>
+<option value="valor">Propuesta de valor</option>
+<option value="problema">Problema</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>"Nos conocemos hace dos años, no hace falta un documento"</h2>
+<p class="lead">Con la visión definida, queda organizar cómo va a trabajar el equipo día a día: cuándo se reúnen, cómo se revisan los cambios de cada uno, qué pasa si alguien no llega a tiempo. Un compañero dice: "nos conocemos hace dos años, no hace falta poner reglas por escrito."</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="roles-scrum decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué conviene hacer con las reglas de trabajo del equipo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="b">Confiar en que, como se conocen bien, las reglas van a salir solas a medida que surjan los problemas.</button>
+<button class="quiz-opt" data-key="c">Copiar y pegar el Working Agreement de otro equipo del curso, sin discutirlo, para no perder tiempo de la sesión.</button>
+<button class="quiz-opt" data-key="a" data-correct>Escribir en diez minutos un Working Agreement corto: cuándo se reúnen, cómo se revisan los Pull Requests, y qué pasa si alguien no llega a tiempo con su parte.</button>
+</div>
+<p class="quiz-fb ko" data-key="b" hidden>Conocerse bien ayuda a llevarse bien, pero no reemplaza acordar reglas operativas: quién revisa un PR, hasta qué hora se puede pedir ayuda, qué pasa si alguien no entrega. Sin eso, el primer conflicto se resuelve improvisando, justo cuando más presión hay. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Un Working Agreement copiado no refleja los horarios ni los acuerdos reales de este equipo — la próxima vez que alguien lo necesite, va a decir algo que el equipo nunca discutió de verdad. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="a" hidden>Exacto. No hace falta que sea largo: cinco o seis acuerdos concretos alcanzan, y sirven para señalar el primer choque sin que se vuelva personal. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="roles-scrum" hidden>
+<h2>Scrum en 15 minutos</h2>
+<p class="lead">Scrum organiza el trabajo en <strong>sprints</strong>: ciclos cortos que terminan con algo usable. En un equipo de curso, alguien suele asumir el rol de Product Owner y otro el de Scrum Master, aunque todos programen — lo importante es que las tres preguntas de abajo tengan siempre un responsable claro.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Rol</th><th scope="col">Pregunta que responde</th></tr></thead>
+<tbody>
+<tr><td>Product Owner</td><td>¿Qué construimos, y qué va primero?</td></tr>
+<tr><td>Scrum Master</td><td>¿Estamos trabajando bien como equipo?</td></tr>
+<tr><td>Desarrolladores</td><td>¿Cómo lo construimos y cuánto entra en el sprint?</td></tr>
+</tbody>
+</table>
+<table class="tabla">
+<thead><tr><th scope="col">Pieza</th><th scope="col">Qué es</th></tr></thead>
+<tbody>
+<tr><td>Sprint Planning</td><td>Se define el objetivo del sprint y qué historias entran.</td></tr>
+<tr><td>Daily Scrum</td><td>Minutos diarios del equipo para sincronizarse.</td></tr>
+<tr><td>Sprint Review</td><td>Se muestra el incremento a los interesados y se recoge feedback.</td></tr>
+<tr><td>Sprint Retrospective</td><td>El equipo revisa cómo trabajó y qué mejorar para el próximo sprint.</td></tr>
+<tr><td>Product Backlog</td><td>Lista ordenada de todo lo que el producto podría necesitar. Vive todo el proyecto.</td></tr>
+<tr><td>Sprint Backlog</td><td>Lo elegido para este sprint, más el plan para lograrlo. Se protege durante el sprint.</td></tr>
+<tr><td>Incremento</td><td>Versión usable del producto que cumple la Definition of Done (se profundiza en la guía de Testing).</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-match" data-quiz-id="scrum-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada pieza de Scrum con su propósito.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="planning">Sprint Planning</button>
+<button class="quiz-match-item" data-pair="daily">Daily Scrum</button>
+<button class="quiz-match-item" data-pair="review">Sprint Review</button>
+<button class="quiz-match-item" data-pair="retro">Sprint Retrospective</button>
+<button class="quiz-match-item" data-pair="sprintbacklog">Sprint Backlog</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="review">Mostrar el incremento a los interesados y recoger su opinión.</button>
+<button class="quiz-match-item" data-pair="sprintbacklog">Lo elegido para este sprint, protegido mientras el sprint está en marcha.</button>
+<button class="quiz-match-item" data-pair="planning">Definir el objetivo del sprint y qué historias entran.</button>
+<button class="quiz-match-item" data-pair="retro">Revisar cómo trabajó el equipo y acordar mejoras para el próximo sprint.</button>
+<button class="quiz-match-item" data-pair="daily">Sincronizar al equipo cada día hacia el objetivo del sprint.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>Ideas sueltas antes del primer Sprint Planning</h2>
+<p class="lead">Con la visión y las reglas del equipo listas, aparece una lluvia de ideas: reservar un espacio, ver disponibilidad en un calendario, cancelar una reserva, notificar por correo, iniciar sesión con cuenta UAB, reportes de uso, pagos, un chat con Bienestar Estudiantil. Un compañero quiere redactar ya mismo cada una como historia de usuario completa.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace el equipo con esa lista de ideas sueltas, en esta primera sesión?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Redactar ya mismo cada idea como historia de usuario completa, con criterios de aceptación detallados para las ocho ideas.</button>
+<button class="quiz-opt" data-key="b" data-correct>Anotar las ideas tal cual surgieron, sin pulirlas todavía, y ordenarlas a ojo por cuáles se ven más valiosas — el refinamiento llega en la próxima sesión.</button>
+<button class="quiz-opt" data-key="c">Descartar las ideas que no suenan urgentes hoy, para no llenar el backlog de cosas que capaz nunca se construyan.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Escribir criterios de aceptación detallados todavía es prematuro: en Sprint 0 el Product Backlog arranca como ideas crudas. Pulir ocho historias completas hoy es tiempo perdido si mañana cambia la prioridad — eso se hace en Refinamiento, la próxima sesión. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>El backlog no es una lista de lo urgente-ya: una idea que hoy no parece prioritaria puede volverse la más valiosa dentro de tres sprints, cuando el equipo entienda mejor el problema. Descartarla ahora la pierde para siempre — se ordena, no se borra. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. El backlog inicial es una lista cruda y ordenada a ojo, no una lista perfecta — eso es justamente lo que distingue Sprint 0 de la próxima sesión (Refinamiento + Sprint Planning 1). Llegaste al final del kickoff: repasemos.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En un proyecto con requisitos que van a cambiar seguro (la mayoría del software), ¿por qué un enfoque iterativo suele costar menos que uno secuencial?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque construir un sprint corto siempre toma menos tiempo que analizar todo el proyecto completo de una sola vez, sin excepciones.</button>
+<button class="quiz-opt">Porque dentro de un sprint ya no hace falta ponerse de acuerdo con el usuario sobre lo que el equipo va a construir después.</button>
+<button class="quiz-opt">Porque Scrum directamente no permite que el usuario pida ningún cambio una vez que el sprint ya arrancó y está en marcha.</button>
+<button class="quiz-opt" data-correct>Porque un requisito mal entendido se descubre con un incremento chico ya construido, no con el sistema entero armado sobre ese supuesto.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el costo de un requisito mal entendido crece con la cantidad de sistema ya construido sobre ese supuesto. Un incremento chico limita ese costo; un sistema entero lo multiplica." data-ko="La razón no es la duración del sprint ni evitar acuerdos con el usuario: es que un requisito mal entendido se descubre temprano, con poco construido todavía, en vez de tarde, con casi todo el sistema armado sobre ese supuesto." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">El Product Backlog debe quedar perfecto y completo desde el kickoff, antes de arrancar el primer sprint.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el backlog arranca como ideas crudas y se refina sprint a sprint. Pedirlo perfecto desde el día uno frena al equipo con detalles que todavía pueden cambiar." data-ko="Es falso: el backlog arranca crudo a propósito. Se refina en cada sesión de Refinamiento, no se exige perfecto desde el kickoff." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas listas se protege durante el sprint, sin agregarle nada a mitad de camino salvo excepción justificada?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Sprint Backlog</button>
+<button class="quiz-opt">Product Backlog</button>
+<button class="quiz-opt">Working Agreement</button>
+<button class="quiz-opt">Visión del producto</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el Sprint Backlog es lo que el equipo se comprometió a construir en este sprint. El Product Backlog puede recibir ideas nuevas en cualquier momento — solo se protege lo que ya está en marcha." data-ko="Es el Sprint Backlog: lo que el equipo ya estimó y se comprometió a construir en este sprint. El Product Backlog puede seguir recibiendo ideas nuevas sin problema — lo que no se toca a mitad de camino es lo que ya está en marcha." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: el kickoff de tu propio proyecto</h2>
+<p class="lead">Ahora con el producto real de tu equipo en este curso. Escribí, en no más de un párrafo por punto: 1) el problema, el usuario principal, la propuesta de valor y el alcance inicial de tu proyecto, 2) tres reglas concretas de tu Working Agreement, 3) cinco ideas crudas para tu Product Backlog inicial, ordenadas a ojo por valor.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Visión, reglas de equipo y primer backlog de tu proyecto real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>El problema está escrito en una frase concreta, no en una idea de solución disfrazada de problema.</li>
+<li>El usuario principal es una sola persona o rol, no "todos".</li>
+<li>El alcance inicial dice explícitamente qué NO entra todavía.</li>
+<li>Las reglas del Working Agreement son operativas (cuándo, cómo, qué pasa si), no buenos deseos como "vamos a comunicarnos bien".</li>
+<li>El orden del backlog se puede justificar por valor, no por lo que resulta más fácil de programar primero.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Sprint 0</td><td>Sesión de kickoff: se forma el equipo, se define la visión y arranca el backlog crudo. No se escribe código todavía.</td></tr>
+<tr><td>Proceso secuencial (cascada)</td><td>Analizar, diseñar, construir, probar y entregar una sola vez, de punta a punta.</td></tr>
+<tr><td>Proceso iterativo</td><td>Los mismos pasos, repetidos en ciclos cortos que entregan algo real cada vez.</td></tr>
+<tr><td>Visión del producto</td><td>Problema + usuario principal + propuesta de valor + alcance inicial, en una hoja.</td></tr>
+<tr><td>Alcance inicial</td><td>Dice explícitamente qué NO entra todavía, no solo qué va a tener la app.</td></tr>
+<tr><td>Working Agreement</td><td>Reglas operativas y cortas del equipo: cuándo, cómo se revisa, qué pasa si alguien no entrega.</td></tr>
+<tr><td>Product Backlog</td><td>Lista única, visible y ordenada de todo lo que el producto podría necesitar. Arranca cruda.</td></tr>
+<tr><td>Sprint Backlog</td><td>Lo elegido para este sprint. Se protege: no se cambia sin conversarlo.</td></tr>
+<tr><td>Product Owner / Scrum Master / Desarrolladores</td><td>Qué construir y en qué orden / que el equipo trabaje bien / cómo construirlo y cuánto entra.</td></tr>
+<tr><td>Incremento</td><td>Versión usable del producto al final del sprint, que cumple la Definition of Done.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🌊 La "cascada" nunca se llamó así en el paper que la originó</h3><p>Winston Royce describió el modelo secuencial en un artículo de 1970 — pero para señalar sus riesgos, no para recomendarlo sin más: el propio paper sugería iterar entre fases. El nombre "waterfall" se popularizó después, sin la parte de la advertencia.</p></div>
+<div class="info"><h3>🏉 Scrum viene del rugby</h3><p>El nombre salió de un artículo de 1986 de Takeuchi y Nonaka sobre equipos de desarrollo de producto que avanzaban "como en un scrum": todos empujando juntos, pasándose la pelota, sin una cadena de mando rígida.</p></div>
+<div class="info"><h3>🧭 Lo que viene en la próxima guía</h3><p>Ya tenés la visión y el backlog crudo. El próximo paso es convertir esas ideas sueltas en historias de usuario con criterio: formato, INVEST, criterios de aceptación y estimación con Planning Poker.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Del Proceso Secuencial al Iterativo + Scrum en 15 Minutos</h2>
+<p>Guía de aula invertida · Ingeniería de Software.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "isw-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

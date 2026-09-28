@@ -227,6 +227,29 @@ Ver `guias/variables.html` como plantilla a copiar tal cual (bloque `/* ===== Py
 
 **Al completar una guía:** marcar su fila como "✅ Publicada" con la fecha, actualizar `index.html`, y avanzar "⏭️ Siguiente a crear".
 
+## Roadmap curricular: Ingeniería de Software (2026)
+
+**Contexto (decidido con Roy el 28/09/2026):** el curso real corre sobre 15 sesiones en vivo — Kickoff + 3 sprints (Planning → Diseño → Construcción → Testing → Review → Retro → Adaptación) + Demo Day — con equipos reales sobre un producto que cada equipo elige. **Las guías de este repo no reproducen las ceremonias** (Planning, Review, Retrospectiva, Demo Day): esas ocurren en clase con el backlog real de cada equipo, que varía y no se puede hardcodear en una guía compartida. Cada guía de acá enseña un **concepto transferible** que se usa en una o más sesiones, con un caso ficticio propio de ISW (no el producto de ningún equipo real). El mapeo es por concepto, no 1:1 por sesión — varias sesiones (Kickoff, Planning puro, Review/Retro, Demo Day) no generan guía porque son proceso puro sin contenido nuevo que enseñar fuera del aula. Formato elegido guía por guía según el contenido (Nivel 1 de la sección "Formatos alternativos de guía"), no un formato único para todo el curso.
+
+| # | Guía | Contenido | Estado |
+|---|---|---|---|
+| 1 | Del proceso secuencial al iterativo + Scrum en 15 minutos (`proceso-iterativo-scrum.html`) — cubre Sesión 1; Narrativa ramificada (Equipo secuencial vs. Equipo iterativo ante un mismo cambio de requisito) | ⏭️ Siguiente a crear |
+| 2 | Historias de usuario, INVEST y Planning Poker (`historias-usuario-invest.html`) — cubre Sesión 2; Lineal + `quiz-classify` | Pendiente |
+| 3 | Casos de uso: del backlog al diagrama (`casos-de-uso.html`) — cubre Sesión 3; Lineal, reusa el chrome `.uml-*` ya construido en `guias_ds/nivel-1a-que-y-quien.html` en vez de reinventar el SVG | Pendiente |
+| 4a | Modelo de dominio: entidades, atributos, relaciones (`modelo-dominio.html`) — cubre la mitad de Sesión 4; Lineal, mismo chrome `.uml-*` | Pendiente |
+| 4b | Arquitectura por capas y por qué invertir una dependencia (`arquitectura-capas-dip.html`) — cubre la otra mitad de Sesión 4; Scrollytelling (el diagrama de capas invierte flechas de dependencia en vivo al explicar DIP) | Pendiente |
+| 5 | Git en equipo (ramas, commits chicos, PR, revisión) + IA asistida con responsabilidad (`git-equipo-ia-responsable.html`) — cubre Sesión 5, refuerza Sesión 9; Narrativa ramificada, mismo patrón ya probado en `guias_bd/ia-bases-de-datos.html` ("usar IA con criterio") aplicado a código generado con un bug | Pendiente |
+| 6 | Testing contra criterios de aceptación + Definition of Done (`testing-criterios-dod.html`) — cubre Sesión 6; Lineal + `quiz-classify` (caso normal/inválido/borde) | Pendiente |
+| 7 | Adaptar el backlog con evidencia + Repository/DI: cuándo ayuda y cuándo estorba (`backlog-evidencia-repository-di.html`) — cubre Sesiones 7 y 8; Narrativa ramificada (decisiones a partir de hallazgos de retro) | Pendiente |
+| 8 | Testing profundo (unitarias, mocks, cobertura, regresión) + panorama breve de microservicios (`testing-profundo-microservicios.html`) — cubre Sesión 10; Lineal + `quiz-fill`, panorama de microservicios como sección de cierre corta, no guía aparte | Pendiente |
+| 9 | Refactorización: cómo saber que no rompiste nada (`refactorizacion-regresion.html`) — cubre Sesión 12; Lineal, bloques de código antes/después + `quiz-mc` sobre code smells | Pendiente |
+
+**Sin guía, queda 100% en clase (ceremonia con equipo y producto real):** Sesión 1 (logística de equipo), Planning en sí (S2/S7/S11 — la mecánica ya la enseñan las guías 2 y 7), Review/Retro (S6/S10), cierre técnico S13 (evaluar si conviene una plantilla descargable en vez de guía interactiva), Demo Day (S14-15).
+
+Sin editor de código en vivo (Pyodide/PGlite): cada equipo elige su propio stack, así que no hay un lenguaje fijo sobre el que ejecutar código real — las guías son teoría/narrativa/quizzes, no editores ejecutables.
+
+**Al completar una guía:** marcar su fila como "✅ Publicada" con la fecha, actualizar la tarjeta correspondiente en `index.html` (reemplaza las 2 tarjetas viejas de ISW que no correspondían a este roadmap), y avanzar "⏭️ Siguiente a crear".
+
 ## Roadmap: Club de Programación — Product Owner (0 → experto)
 
 **Contexto y decisiones (21/09/2026, tomadas explícitamente por Roy):** ruta pensada para el club, no para una materia con evaluación.
