@@ -1,0 +1,20 @@
+{
+    // Use IntelliSense para saber los atributos posibles.
+    // Mantenga el puntero para ver las descripciones de los existentes atributos.
+    // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Abrir archivo actual en Chrome",
+            "file": "${file}"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Abrir guía IA en Chrome",
+            "file": "${workspaceFolder}/guias_bd/ia-bases-de-datos.html"
+        }
+    ]
+}

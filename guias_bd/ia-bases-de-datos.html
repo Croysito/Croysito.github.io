@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usar IA en Bases de Datos | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // problema-proyecto-grado.html. Corre acá, antes que el resto de la
+  // página, para que el motor de quizzes de abajo ya encuentre el
+  // localStorage limpio si cambió el guia_intento.
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  var QUIZ_PREFIX = 'bd-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* Estilos propios de esta guía: tabla de resultados y barra de la base de
+   datos, misma estética "consola oscura" que .output-body en guia.css.
+   A diferencia de los talleres, acá NO se bloquea copiar/pegar en los
+   editores: el ejercicio no es "escribí SQL de memoria" sino "pegá y
+   ejecutá lo que te sugirió la IA para verificarlo con tus propios ojos",
+   así que los editores parten pre-cargados con esa sugerencia. */
+.sql-result-table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+.sql-result-table th,.sql-result-table td{ padding:8px 10px; text-align:left; border:1px solid rgba(255,255,255,.15); }
+.sql-result-table thead th{ background:rgba(255,255,255,.08); color:#8fd48a; }
+.sql-result-table td em{ color:#7d8899; font-style:italic; }
+.sql-status{ margin:4px 0 10px; color:#8fd48a; }
+.sql-meta{ margin:0 0 10px; color:#7d8899; font-size:12px; }
+.db-toolbar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:18px 0 8px; padding:16px 20px; background:var(--highlightBg); border-left:6px solid var(--verde); border-radius:8px; }
+.db-toolbar button{ background:var(--verde); color:white; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:14px; }
+.db-toolbar button:hover{ background:var(--verde2); }
+.db-toolbar button:disabled{ opacity:.5; cursor:wait; }
+.db-estado{ font-size:14px; opacity:.85; }
+</style>
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">BD II · <span>IA</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🔁 Guía de Aula Invertida</span>
+<h1 class="flow-h1">Usar la IA con <span>Criterio</span> en Bases de Datos</h1>
+<p class="flow-lead">Ya sabés escribir DDL, DML, JOINs, transacciones, procedimientos y roles con tus propias manos. Esta guía no enseña SQL nuevo: te pone en el lugar de alguien que usa una IA para ir más rápido con una base de datos real. En cada decisión vas a poder <strong>ejecutar vos mismo, contra PostgreSQL real, el SQL que sugirió la IA</strong> —y ver con tus propios ojos si funciona, si falla, o si da un resultado que parece bien pero está mal— antes de que se desbloquee el camino correcto.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Vas a acompañar a <strong>Iván</strong>, practicante en el área de sistemas de una empresa que gestiona pedidos con el mismo esquema <code>cliente</code>/<code>producto</code>/<code>pedido</code>/<code>detalle_pedido</code> que ya conocés, mientras arma un reporte apoyándose en una IA. Cada prompt que Iván escribe y cada respuesta que recibe están al pie de la letra —y cada consulta corre de verdad, con PGlite, el mismo PostgreSQL real compilado a WebAssembly que ya usaste en los talleres.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>El primer pedido a la IA</h2>
+<p class="lead">A Iván le piden un reporte: "los pedidos de cada cliente, con el total gastado". Para ir rápido, abre el chat de una IA generativa y empieza a escribir el pedido.</p>
+<div class="highlight">
+<strong>Antes de que Iván apriete Enter</strong>
+<p>Todavía no le mostró a la IA ni una sola tabla de su base de datos. Probemos qué pasa si sigue así —en un momento vas a poder ejecutar vos mismo, contra PostgreSQL real, lo que la IA responda.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="contexto decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué debería hacer Iván antes de pedirle la consulta a la IA?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Pegar en el chat los CREATE TABLE reales de cliente, producto, pedido y detalle_pedido antes de pedir nada.</button>
+<button class="quiz-opt" data-key="b">Escribir directamente "dame una consulta de pedidos por cliente" y confiar en que la IA reconoce los nombres típicos de un sistema de pedidos.</button>
+<button class="quiz-opt" data-key="c">Buscar una consulta parecida en un tutorial online y pedirle a la IA que la adapte a "su sistema".</button>
+</div>
+<p class="quiz-fb ok" data-key="a" hidden>Exacto. Sin el esquema real, la IA rellena el vacío con lo más probable estadísticamente —no con lo que existe en esta base de datos. Pegar el DDL real elimina esa adivinanza desde el principio. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="b" hidden>La IA no tiene ningún acceso a la base de datos de Iván. Sin el esquema real, "los nombres típicos" son una apuesta —puede acertar por casualidad, pero no porque sepa algo de este sistema en particular. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Un tutorial ajeno tiene su propio esquema, con sus propios nombres de tabla y columna —adaptarlo "a ojo" reintroduce exactamente el mismo problema: la IA sigue sin conocer el esquema real de Iván. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="contexto" hidden>
+<h2>Dale el esquema real, no una descripción de memoria</h2>
+<p class="lead">Esta es la base de datos real de Iván —la misma que ya construiste en la guía de DDL— ya cargada con clientes, productos y algunos pedidos de ejemplo:</p>
+<div class="code">
+<div class="code-header"><span>Esquema de ejemplo (ya cargado más abajo)</span></div>
+<pre><code class="src">CREATE TABLE cliente (
+    cliente_id      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cliente_nombre  VARCHAR(120) NOT NULL
+);
+CREATE TABLE producto (
+    producto_id      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    producto_nombre  VARCHAR(120) NOT NULL,
+    precio           NUMERIC(10,2) NOT NULL,
+    activo           BOOLEAN NOT NULL DEFAULT true
+);
+CREATE TABLE pedido (
+    pedido_id   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fecha       DATE NOT NULL DEFAULT CURRENT_DATE,
+    cliente_id  INTEGER NOT NULL REFERENCES cliente(cliente_id)
+);
+CREATE TABLE detalle_pedido (
+    pedido_id    INTEGER REFERENCES pedido(pedido_id) ON DELETE CASCADE,
+    producto_id  INTEGER REFERENCES producto(producto_id) ON DELETE RESTRICT,
+    cantidad     INTEGER NOT NULL CHECK (cantidad > 0),
+    PRIMARY KEY (pedido_id, producto_id)
+);</code></pre>
+</div>
+<p>De acá en adelante, cada botón <strong>▶ Ejecutar</strong> corre PostgreSQL real —el mismo motor WebAssembly de los talleres, PGlite— contra esta misma base de datos.</p>
+
+<div class="db-toolbar">
+<button type="button" id="resetDbBtn">🔄 Reiniciar base de datos</button>
+<span class="db-estado" id="dbEstado">Base de datos de ejemplo lista: cliente, producto, pedido, detalle_pedido.</span>
+</div>
+
+<div class="highlight">
+<strong>🧑 El prompt que escribió Iván (sin esquema)</strong>
+<p><em>"Tengo una base de datos de pedidos. Dame una consulta que traiga el nombre y el correo de mis clientes."</em></p>
+</div>
+<div class="code">
+<div class="code-header"><span>🤖 Respuesta de la IA</span></div>
+<pre><code class="src">SELECT nombre, email FROM clientes;</code></pre>
+</div>
+<p>Ejecutala vos, contra la base de datos real de Iván:</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>SQL sugerido — sin haberle mostrado el esquema a la IA</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL sugerido sin esquema">SELECT nombre, email FROM clientes;</textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+
+<p>Compará con el prompt correcto: pegar el esquema real antes de pedir la consulta.</p>
+<div class="highlight">
+<strong>🧑 El prompt correcto (con esquema real)</strong>
+<p><em>"Este es el esquema real de mi base de datos: [los 4 CREATE TABLE de arriba]. Dame una consulta que traiga el nombre de mis clientes."</em></p>
+</div>
+<div class="code">
+<div class="code-header"><span>🤖 Respuesta de la IA</span></div>
+<pre><code class="src">SELECT cliente_nombre FROM cliente;</code></pre>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>SQL sugerido — con el esquema real ya compartido</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL sugerido con esquema">SELECT cliente_nombre FROM cliente;</textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+
+<p>De acá en más, este editor queda disponible para lo que quieras probar en cualquier momento de la guía:</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🧪 Zona de pruebas libres</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="Zona de pruebas libres" placeholder="Por ejemplo: SELECT * FROM producto;"></textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="contexto-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre cómo Iván le compartió el esquema real a la IA:</p>
+<p>1. La vista del catálogo de PostgreSQL que lista tablas y columnas reales es
+<select class="quiz-blank" data-correct="infoschema">
+<option value="">— elige —</option>
+<option value="infoschema">information_schema.columns</option>
+<option value="pgcatalog">pg_stat_activity</option>
+<option value="explain">EXPLAIN ANALYZE</option>
+</select>.</p>
+<p>2. En vez de escribir el esquema de memoria, lo más confiable es
+<select class="quiz-blank" data-correct="pegar">
+<option value="">— elige —</option>
+<option value="pegar">pegar los CREATE TABLE reales tal cual quedaron</option>
+<option value="describir">describir las tablas en un párrafo, con tus propias palabras</option>
+<option value="nombrar">nombrar solo las tablas, sin listar columnas</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>La IA responde — pero con un problema</h2>
+<p class="lead">Con el esquema ya compartido, Iván pide: "dame los nombres de los clientes". La IA responde:</p>
+<div class="code">
+<div class="code-header"><span>🤖 Respuesta de la IA</span></div>
+<pre><code class="src">SELECT nombre_cliente FROM cliente;</code></pre>
+</div>
+<p>Ejecutala vos:</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>SQL sugerido por la IA</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL con columna inventada">SELECT nombre_cliente FROM cliente;</textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="alucinaciones decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Iván ante ese error?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Asume que es un error de PostgreSQL y vuelve a ejecutar la misma consulta tal cual, por si esta vez funciona.</button>
+<button class="quiz-opt" data-key="b" data-correct>Revisa el esquema que él mismo pegó, ve que la columna real se llama cliente_nombre, y se lo indica a la IA.</button>
+<button class="quiz-opt" data-key="c">Decide que la IA no sirve para nada y escribe todo el reporte a mano, sin volver a consultarla.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>PostgreSQL no tiene ningún error interno acá: te dice exactamente qué columna no encontró. Repetir la misma consulta no cambia nada —el nombre inventado sigue sin existir. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. El mensaje de PostgreSQL señala exactamente qué nombre no existe —y como Iván ya tiene el esquema real a mano, corregirlo es inmediato. Este tipo de alucinación truena fuerte y claro. Pero no todas avisan así de directo. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="c" hidden>Abandonar la IA por completo es una reacción exagerada: el error de PostgreSQL identifica el problema con precisión (una sola columna con el nombre invertido). Corregirlo y seguir usando la IA para el resto es más rápido que reescribir todo desde cero. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="alucinaciones" hidden>
+<h2>Detectar alucinaciones: cuando el error sí avisa</h2>
+<p class="lead">"Alucinación" no es una metáfora vacía: la IA inventa una tabla o columna que suena perfectamente plausible pero no existe en tu esquema, porque genera la secuencia de palabras más probable, no una consulta verificada. La buena noticia es que PostgreSQL casi siempre la rechaza con un error claro, apenas la ejecutás. El error que acabás de ver es un caso típico. Dos más, para reconocer el patrón:</p>
+
+<div class="editor-panel">
+<div class="editor-header">
+<span>🤖 "Dame todas las ventas del mes" → respuesta de la IA</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL con tabla inventada">SELECT * FROM ventas;</textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+<p>"Ventas" es un nombre de tabla genérico que aparece en miles de ejemplos con los que se entrenó la IA —pero en el esquema de Iván esa tabla nunca existió.</p>
+
+<div class="editor-panel">
+<div class="editor-header">
+<span>🤖 "Dame el cliente y el total de cada pedido" → respuesta de la IA</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="SQL con columna inventada en JOIN">SELECT c.cliente_nombre, p.total
+FROM cliente c
+JOIN pedido p ON p.cliente_id = c.cliente_id;</textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+<p>El JOIN está perfecto —esa parte la IA la razonó bien— pero <code>pedido</code> no tiene ninguna columna <code>total</code>: eso se calcula sumando <code>detalle_pedido</code>, no viene guardado directamente.</p>
+
+<div class="highlight">
+<strong>La buena noticia: una alucinación de nombre casi siempre truena</strong>
+<p>Como acabás de comprobar tres veces, PostgreSQL rechaza el nombre inventado con un error claro apenas intentás ejecutar la consulta —no se ejecuta a medias ni da un resultado engañoso. El riesgo real no es que el error pase desapercibido, sino perder minutos revisando "qué está mal" antes de notar que el nombre nunca existió en tu esquema.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="aluc-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada consulta con el error real de PostgreSQL que acabás de ver, sobre el esquema de Iván.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="col">SELECT nombre_cliente FROM cliente;</button>
+<button class="quiz-match-item" data-pair="tabla">SELECT * FROM ventas;</button>
+<button class="quiz-match-item" data-pair="ok">SELECT cliente_nombre FROM cliente;</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="ok">Se ejecuta sin error: la columna sí existe en el esquema.</button>
+<button class="quiz-match-item" data-pair="tabla">ERROR: relation "ventas" does not exist</button>
+<button class="quiz-match-item" data-pair="col">ERROR: column "nombre_cliente" does not exist</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>Ahora la consulta "corre" sin problema</h2>
+<p class="lead">Ya con los nombres corregidos, Iván pide: "dame el total gastado por Ana Rojas". La IA responde:</p>
+<div class="code">
+<div class="code-header"><span>🤖 Respuesta de la IA</span></div>
+<pre><code class="src">SELECT c.cliente_nombre, SUM(pr.precio) AS total
+FROM cliente c
+JOIN pedido p ON p.cliente_id = c.cliente_id
+JOIN detalle_pedido dp ON dp.pedido_id = p.pedido_id
+JOIN producto pr ON pr.producto_id = dp.producto_id
+WHERE c.cliente_nombre = 'Ana Rojas'
+GROUP BY c.cliente_nombre;</code></pre>
+</div>
+<p>Ejecutala vos, y fijate el resultado:</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>SQL sugerido por la IA</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="SQL con error de lógica silencioso">SELECT c.cliente_nombre, SUM(pr.precio) AS total
+FROM cliente c
+JOIN pedido p ON p.cliente_id = c.cliente_id
+JOIN detalle_pedido dp ON dp.pedido_id = p.pedido_id
+JOIN producto pr ON pr.producto_id = dp.producto_id
+WHERE c.cliente_nombre = 'Ana Rojas'
+GROUP BY c.cliente_nombre;</textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+<p>Corre sin ningún error. La IA agrega: "Listo, la consulta ya está optimizada."</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="explain decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Iván antes de poner ese número en el reporte?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Lo copia directo al reporte: no hubo ningún error, así que el número tiene que estar bien.</button>
+<button class="quiz-opt" data-key="b">Le pregunta a la misma IA si el número está bien, y usa esa segunda respuesta como confirmación.</button>
+<button class="quiz-opt" data-key="c" data-correct>Calcula el total a mano con los datos reales (cantidad × precio de cada línea) y lo compara contra el resultado de la IA.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>"Sin error" solo confirma que la sintaxis es válida y que los nombres existen —no que la lógica sea correcta. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>La IA no ejecutó nada contra la base de datos real la primera vez, y preguntarle de nuevo tampoco lo hace —solo genera otra respuesta de texto, igual de no verificada que la primera. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Vamos a calcularlo juntos y comparar contra lo que acabás de ejecutar. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="explain" hidden>
+<h2>Qué falló: faltó multiplicar por la cantidad</h2>
+<p class="lead">Estos son los pedidos reales de Ana Rojas en la base de datos de ejemplo:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Producto</th><th scope="col">Cantidad</th><th scope="col">Precio</th><th scope="col">Real (cant × precio)</th></tr></thead>
+<tbody>
+<tr><td>Mouse óptico</td><td>2</td><td>80.00</td><td>160.00</td></tr>
+<tr><td>Monitor 24"</td><td>1</td><td>620.00</td><td>620.00</td></tr>
+<tr><td>Teclado mecánico</td><td>1</td><td>250.00</td><td>250.00</td></tr>
+<tr><td colspan="3"><strong>Total real</strong></td><td><strong>1030.00</strong></td></tr>
+</tbody>
+</table>
+<p>La consulta de la IA sumó <code>pr.precio</code> una sola vez por cada línea, sin multiplicarlo por <code>detalle_pedido.cantidad</code> —por eso te dio 950.00 en vez de 1030.00. Confirmalo corriendo la versión que sí multiplica:</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>Consulta corregida (cantidad × precio)</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="SQL corregido con cantidad">SELECT c.cliente_nombre, SUM(dp.cantidad * pr.precio) AS total
+FROM cliente c
+JOIN pedido p ON p.cliente_id = c.cliente_id
+JOIN detalle_pedido dp ON dp.pedido_id = p.pedido_id
+JOIN producto pr ON pr.producto_id = dp.producto_id
+WHERE c.cliente_nombre = 'Ana Rojas'
+GROUP BY c.cliente_nombre;</textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+<p>1030.00 contra 950.00: una diferencia de exactamente Bs 80 —el segundo mouse que la consulta de la IA nunca contó. Ningún mensaje de error avisó de esto: el único modo de detectarlo fue conocer los datos reales y comparar.</p>
+
+<div class="highlight">
+<strong>Otro clásico: el JOIN al que le falta una condición</strong>
+<p>Sin ningún <code>WHERE</code> ni <code>ON</code> que relacione ambas tablas, esta consulta también corre sin error. Con 3 clientes y 4 pedidos en la base, ¿cuántas filas esperás? Ejecutala y contalas:</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>SQL sin condición de JOIN</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL con producto cartesiano">SELECT c.cliente_nombre, p.pedido_id FROM cliente c, pedido p;</textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+<p>No son 4 filas (una por pedido): son <strong>12</strong>, el producto cartesiano de las dos tablas —cada cliente aparece emparejado con todos los pedidos, no solo los suyos.</p>
+<p>La defensa contra los dos casos es la misma: correr <code>EXPLAIN</code> / <code>EXPLAIN ANALYZE</code> vos mismo y mirar qué tablas toca el plan, tal como aprendiste en la guía de Funciones de Ventana e Índices —no la palabra de la IA sobre si "ya está optimizada".</p>
+
+<div class="quiz quiz-mc" data-quiz-id="explain-1">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Si una consulta SQL sugerida por una IA se ejecuta sin lanzar ningún error, eso garantiza que el resultado es correcto.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: 'sin error' solo significa que la sintaxis es válida y que todas las tablas y columnas existen. Un JOIN sin condición o un SUM sin multiplicar por la cantidad correcta pueden ejecutarse perfectamente y devolver un resultado incorrecto sin avisar — lo acabás de comprobar vos mismo." data-ko="Es falso: acabás de comprobarlo vos mismo. La consulta del total sin cantidad corrió sin error y dio 950.00 en vez de 1030.00, y el JOIN sin condición corrió sin error y devolvió 12 filas en vez de 4. La ausencia de error no dice nada sobre si la lógica es correcta." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>El reporte necesita un buscador</h2>
+<p class="lead">El reporte ya casi está listo. Falta un buscador para que el usuario escriba el nombre de un cliente y filtre la tabla. Iván le pide a la IA el código Python, y recibe esto:</p>
+<div class="code">
+<div class="code-header"><span>🤖 Respuesta de la IA (Python)</span></div>
+<pre><code class="src">nombre = input("Buscar cliente: ")
+consulta = "SELECT * FROM cliente WHERE cliente_nombre = '" + nombre + "'"
+cursor.execute(consulta)</code></pre>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="inyeccion decision5">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Iván con este código antes de subirlo al reporte?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Lo reescribe con una consulta parametrizada, porque concatena directamente lo que escribe el usuario dentro del SQL.</button>
+<button class="quiz-opt" data-key="b">Lo sube tal cual: funcionó perfecto en sus propias pruebas con nombres normales.</button>
+<button class="quiz-opt" data-key="c">Le agrega un WHERE extra que "filtra caracteres raros" antes de la concatenación.</button>
+</div>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. Con un parámetro separado, el driver nunca interpreta el valor del usuario como parte de la instrucción SQL, sin importar qué escriba. Seguí leyendo para comprobar el porqué exacto, corriéndolo vos mismo. ↓</p>
+<p class="quiz-fb ko" data-key="b" hidden>Que funcione con nombres normales no prueba nada: el riesgo aparece con nombres construidos a propósito, como uno que contenga una comilla. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Filtrar "caracteres raros" a mano es frágil —siempre queda algún caso sin cubrir, y el problema de fondo (concatenar texto del usuario dentro del SQL) sigue intacto. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="inyeccion" hidden>
+<h2>Por qué ese código es un riesgo real</h2>
+<p class="lead">Si alguien escribe <code>' OR '1'='1</code> como "nombre" en el buscador de Iván, la consulta que termina ejecutándose contra la base de datos real es esta. Ejecutala vos y mirá cuántas filas devuelve:</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>SQL resultante si alguien escribe ' OR '1'='1 en el buscador</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL con inyección">SELECT * FROM cliente WHERE cliente_nombre = '' OR '1'='1';</textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+<p>Devuelve <strong>los 3 clientes</strong> de la base de datos —no el cliente puntual que alguien buscaba, sino una condición siempre verdadera que ignora por completo el filtro. Con texto más agresivo, la misma técnica puede llegar a borrar filas si el driver lo permite. La corrección es un parámetro separado, no texto concatenado:</p>
+<div class="code">
+<div class="code-header"><span>Python · Parametrizado</span></div>
+<pre><code class="src">nombre = input("Buscar cliente: ")
+consulta = "SELECT * FROM cliente WHERE cliente_nombre = %s"
+cursor.execute(consulta, (nombre,))</code></pre>
+</div>
+<p>Con <code>%s</code> más una tupla aparte, el driver envía el valor de <code>nombre</code> separado de la instrucción SQL. Por más que el usuario escriba comillas o palabras clave de SQL, se trata siempre como un simple valor de texto —el equivalente sería buscar un cliente llamado literalmente <code>' OR '1'='1</code>, que no existe, así que devolvería 0 filas en vez de las 3 que acabás de ver.</p>
+
+<div class="quiz quiz-classify" data-quiz-id="iny-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasificá cada línea de código según su riesgo de inyección SQL.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">cursor.execute("SELECT * FROM producto WHERE producto_id = " + id_producto)</span>
+<div class="quiz-classify-btns">
+<button data-correct>Vulnerable: concatena el valor dentro del texto SQL</button>
+<button>Seguro: usa un parámetro separado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">cursor.execute("SELECT * FROM producto WHERE producto_id = %s", (id_producto,))</span>
+<div class="quiz-classify-btns">
+<button>Vulnerable: concatena el valor dentro del texto SQL</button>
+<button data-correct>Seguro: usa un parámetro separado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">consulta = f"DELETE FROM cliente WHERE cliente_id = {id_cliente}"</span>
+<div class="quiz-classify-btns">
+<button data-correct>Vulnerable: concatena el valor dentro del texto SQL</button>
+<button>Seguro: usa un parámetro separado</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision5" hidden>
+<h2>Una decisión que no es solo código</h2>
+<p class="lead">Con el reporte terminado, el líder técnico le pide a Iván una cosa más: va a correr con muchos usuarios consultando al mismo tiempo, y hay que decidir el nivel de aislamiento de la transacción que arma los datos. "Preguntale a la IA y aplicá lo que te diga", le sugieren.</p>
+<div class="highlight">
+<strong>Por qué acá no hay un editor para ejecutar</strong>
+<p>PGlite —como viste en la guía de Transacciones— corre en una sola conexión dentro de esta pestaña: no puede simular dos usuarios reales chocando al mismo tiempo sobre las mismas filas. Esta decisión se razona con el mismo criterio, aunque no se pueda demostrar en vivo acá.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-5" data-unlock="cuandono sintesis repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Iván?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Copia el nivel de aislamiento que sugiere la IA y lo aplica sin revisar el escenario real de concurrencia.</button>
+<button class="quiz-opt" data-key="b">Evita el tema por completo y deja la transacción con la configuración por defecto, sin pensarlo.</button>
+<button class="quiz-opt" data-key="c" data-correct>Le pide a la IA que explique las opciones y sus riesgos, pero decide él mismo según la concurrencia real del sistema.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>La IA no conoce cuántos usuarios reales van a chocar sobre las mismas filas, ni qué tan grave sería un dato inconsistente en este sistema puntual —ese contexto es justo lo que le falta para decidir bien. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Ignorar la decisión no la evita: el nivel de aislamiento por defecto también es una elección, solo que tomada sin pensarla. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. La IA es un buen apoyo para explicar las opciones —la decisión final, que depende de conocer el sistema real, le corresponde a Iván. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="cuandono" hidden>
+<h2>Cuándo la decisión final no se delega</h2>
+<p class="lead">Para tareas mecánicas y repetitivas, apoyarse en una IA y revisar el resultado alcanza. Pero hay decisiones donde el contexto de negocio —el que la IA no tiene— es justo lo que define la respuesta correcta.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Situación</th><th scope="col">Por qué</th></tr></thead>
+<tbody>
+<tr><td><strong>Diseño de esquema desde cero</strong></td><td>Normalizar y elegir claves depende de reglas de negocio que solo vos conocés —no de un patrón genérico de "cómo se modela un sistema de pedidos".</td></tr>
+<tr><td><strong>Transacciones con concurrencia real</strong></td><td>El nivel de aislamiento exige entender qué puede pasar si dos usuarios operan al mismo tiempo sobre las mismas filas —un análisis del sistema completo, no de sintaxis.</td></tr>
+<tr><td><strong>Borrados o migraciones irreversibles en producción</strong></td><td>La IA no sabe qué backup existe ni qué tan crítica es esa tabla para el negocio.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-classify" data-quiz-id="delegar-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Para cada tarea, decidí si Iván puede apoyarse en una IA (revisando el resultado) o si la decisión final tiene que ser suya.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Escribir un SELECT repetitivo que ya sabe armar a mano.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Podés apoyarte en la IA, revisando el resultado</button>
+<button>La decisión final es tuya</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Diseñar el esquema completo de una base de datos nueva.</span>
+<div class="quiz-classify-btns">
+<button data-correct>La decisión final es tuya</button>
+<button>Podés apoyarte en la IA, revisando el resultado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Generar filas de prueba (INSERT) para probar una consulta.</span>
+<div class="quiz-classify-btns">
+<button>La decisión final es tuya</button>
+<button data-correct>Podés apoyarte en la IA, revisando el resultado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Decidir el nivel de aislamiento de una transacción con alta concurrencia.</span>
+<div class="quiz-classify-btns">
+<button data-correct>La decisión final es tuya</button>
+<button>Podés apoyarte en la IA, revisando el resultado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Explicar en palabras simples qué hace una consulta ya escrita.</span>
+<div class="quiz-classify-btns">
+<button>La decisión final es tuya</button>
+<button data-correct>Podés apoyarte en la IA, revisando el resultado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Aprobar un DROP TABLE en la base de datos de producción.</span>
+<div class="quiz-classify-btns">
+<button>Podés apoyarte en la IA, revisando el resultado</button>
+<button data-correct>La decisión final es tuya</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="sintesis" hidden>
+<h2>El recorrido completo de Iván</h2>
+<p class="lead">Las cinco decisiones que acabás de recorrer —y de verificar con tus propias manos— con Iván, resumidas con la señal de alerta que avisa que algo salió mal en cada una.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Momento</th><th scope="col">Qué hacer</th><th scope="col">Señal de alerta</th></tr></thead>
+<tbody>
+<tr><td>Antes de pedir la consulta</td><td>Pegar el esquema real (CREATE TABLE o information_schema).</td><td>La IA "adivina" nombres de tabla o columna.</td></tr>
+<tr><td>La IA responde con una tabla/columna</td><td>Verificar que exista en tu esquema real, ejecutándola.</td><td><code>relation ... does not exist</code> / <code>column ... does not exist</code>.</td></tr>
+<tr><td>La consulta corre sin error</td><td>Correr EXPLAIN y comparar el resultado contra un cálculo propio.</td><td>Un número "razonable" que nadie verificó.</td></tr>
+<tr><td>La IA sugiere código de aplicación</td><td>Usar siempre consultas parametrizadas, nunca texto concatenado.</td><td>El valor del usuario se pega con + dentro del SQL.</td></tr>
+<tr><td>La IA opina sobre una decisión crítica</td><td>Pedirle explicación, pero decidir vos con el contexto real del sistema.</td><td>Copiar la sugerencia sin evaluar el escenario propio.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el recorrido. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<p class="lead">Antes de los quizzes, una verificación más con tus propias manos. Sofía Paz también tiene un pedido con dos líneas —escribí vos la consulta que calcula su total real (cantidad × precio) y ejecutala:</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>Escribí la consulta del total real de Sofía Paz</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Verificación manual: total de Sofía Paz" placeholder="-- Pista: mismo patrón que la consulta corregida de la sección anterior, cambiando el WHERE."></textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+<details style="margin:10px 0 25px;">
+<summary style="cursor:pointer;color:var(--verde2,#78b159);font-weight:600;">Ver el total esperado</summary>
+<p>Bs 580.00 (1 mouse óptico + 2 teclados mecánicos).</p>
+</details>
+
+<div class="quiz quiz-match" data-quiz-id="repaso-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada señal con lo que indica.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="err">ERROR: column "x" does not exist</button>
+<button class="quiz-match-item" data-pair="sinerror">La consulta corre sin ningún error</button>
+<button class="quiz-match-item" data-pair="concat">cursor.execute(sql + variable_del_usuario)</button>
+<button class="quiz-match-item" data-pair="aislamiento">Nivel de aislamiento de una transacción crítica</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="aislamiento">Decisión que no conviene delegarle a la IA.</button>
+<button class="quiz-match-item" data-pair="concat">Riesgo real de inyección SQL.</button>
+<button class="quiz-match-item" data-pair="err">Alucinación de nombre: PostgreSQL avisa de inmediato.</button>
+<button class="quiz-match-item" data-pair="sinerror">No garantiza que el resultado sea correcto.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un SUM() generado por una IA corre sin error y da un total menor al real, porque olvidó multiplicar por la cantidad de cada línea. ¿Cómo se llama este tipo de problema?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Una alucinación de nombre, igual que una tabla inventada.</button>
+<button class="quiz-opt" data-correct>Un error de lógica silencioso: el resultado es incorrecto sin ningún mensaje de error.</button>
+<button class="quiz-opt">Un error de sintaxis que PostgreSQL debería haber rechazado.</button>
+<button class="quiz-opt">Un problema de rendimiento, no de corrección del resultado.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la consulta es sintácticamente válida y todos los nombres existen, así que Postgres la ejecuta sin quejarse. El error está en la lógica de negocio, y ese tipo de error nunca produce un mensaje — solo un número equivocado, como el 950.00 que viste con Ana Rojas." data-ko="No es una alucinación de nombre (todas las tablas y columnas existen) ni un problema de sintaxis (por eso corre sin error) ni de rendimiento (el número en sí está mal). Es un error de lógica silencioso: el resultado es incorrecto y nada lo señala." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Que un código "funcione bien" con datos de prueba normales demuestra que no es vulnerable a inyección SQL.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el riesgo de inyección no aparece con datos normales, sino con texto construido a propósito (comillas, palabras clave de SQL). El código de Iván 'funcionaba' con nombres comunes y aun así era vulnerable, como viste al ejecutar el ' OR '1'='1." data-ko="Es falso: probar con datos normales nunca revela un riesgo de inyección, porque ese riesgo depende de texto construido específicamente para explotarlo — como el ' OR '1'='1 que ejecutaste, y que devolvió los 3 clientes en vez de uno." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: tu propio prompt</h2>
+<p class="lead">Ahora te toca con una base de datos real tuya (de una guía anterior, un proyecto propio, o cualquiera que conozcas). En el cuadro de abajo escribí el prompt completo que le darías a una IA para pedirle una consulta, siguiendo lo que aprendiste con Iván.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Tu prompt: qué esquema le compartirías, qué le pedirías que verifique, y qué no le delegarías.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>El prompt incluye el CREATE TABLE real (o el resultado de information_schema), no una descripción de memoria.</li>
+<li>Pide explícitamente que la IA use solo los nombres de tabla/columna que aparecen en ese esquema.</li>
+<li>Si el pedido incluye código de aplicación, exige consultas parametrizadas, no texto concatenado.</li>
+<li>Deja claro que el resultado se va a verificar ejecutándolo (o con EXPLAIN, o con un cálculo propio) antes de darlo por bueno.</li>
+<li>No le delega a la IA ninguna decisión de diseño de esquema ni de nivel de aislamiento de una transacción crítica.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Práctica</th><th scope="col">Por qué importa</th></tr></thead>
+<tbody>
+<tr><td>Pegar el <code>CREATE TABLE</code> real antes de pedir una consulta</td><td>Sin esquema real, la IA adivina nombres de tabla y columna.</td></tr>
+<tr><td><code>information_schema.columns</code> / <code>\d tabla</code></td><td>Formas rápidas de sacar el esquema exacto, sin transcribir de memoria.</td></tr>
+<tr><td><code>ERROR: relation "x" does not exist</code></td><td>Tabla inventada por la IA — no existe en tu esquema.</td></tr>
+<tr><td><code>ERROR: column "x" does not exist</code></td><td>Columna inventada o con el nombre real equivocado.</td></tr>
+<tr><td>Un resultado sin error puede seguir siendo incorrecto</td><td>Errores de lógica (JOIN sin condición, SUM sin multiplicar) no lanzan ningún mensaje.</td></tr>
+<tr><td><code>EXPLAIN</code> / <code>EXPLAIN ANALYZE</code></td><td>La única forma de verificar el plan real, no la palabra de la IA.</td></tr>
+<tr><td>Consultas parametrizadas (<code>%s</code> + tupla), nunca <code>+</code> con datos del usuario</td><td>Evita inyección SQL en código generado.</td></tr>
+<tr><td>Diseño de esquema y transacciones críticas</td><td>Decisiones que la IA puede opinar, pero que te corresponde tomar a vos.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🧠 "Alucinación" no es una metáfora vacía</h3><p>El término es el mismo que usan los papers de investigación en IA: describe cuando un modelo genera texto que suena coherente y seguro pero no corresponde a ningún hecho real —incluida la existencia de una tabla o columna que nunca existió.</p></div>
+<div class="info"><h3>🐘 PostgreSQL no "corrige" tu SQL por vos</h3><p>A diferencia de un corrector ortográfico, PostgreSQL nunca adivina qué columna quisiste decir cuando escribís un nombre inexistente. Solo rechaza la consulta con el nombre exacto que no encontró.</p></div>
+<div class="info"><h3>💉 La inyección SQL es más vieja que la mayoría de los frameworks web</h3><p>Se documenta formalmente desde fines de los años 90. Que siga apareciendo en código sugerido por herramientas modernas no es una novedad técnica: es la misma vulnerabilidad de siempre, reproducida por un patrón de código viejo que todavía circula en el material de entrenamiento.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Reforzamiento: Usar IA con Criterio en Bases de Datos</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo la
+   opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+/* =======================================================================
+   PGlite: PostgreSQL real compilado a WebAssembly, corriendo en el
+   navegador. Mismo patrón de carga perezosa que los talleres de SQL en
+   vivo. A diferencia de los talleres, acá la base de datos se siembra
+   automáticamente (DB_SEED) apenas se carga el motor por primera vez: el
+   ejercicio de esta guía es verificar lo que sugiere la IA, no construir
+   el esquema desde cero.
+   ======================================================================= */
+const PGLITE_CDN = "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.5.4/dist/index.js";
+const DB_SEED = `
+CREATE TABLE cliente (
+    cliente_id      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cliente_nombre  VARCHAR(120) NOT NULL
+);
+CREATE TABLE producto (
+    producto_id      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    producto_nombre  VARCHAR(120) NOT NULL,
+    precio           NUMERIC(10,2) NOT NULL,
+    activo           BOOLEAN NOT NULL DEFAULT true
+);
+CREATE TABLE pedido (
+    pedido_id   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fecha       DATE NOT NULL DEFAULT CURRENT_DATE,
+    cliente_id  INTEGER NOT NULL REFERENCES cliente(cliente_id)
+);
+CREATE TABLE detalle_pedido (
+    pedido_id    INTEGER REFERENCES pedido(pedido_id) ON DELETE CASCADE,
+    producto_id  INTEGER REFERENCES producto(producto_id) ON DELETE RESTRICT,
+    cantidad     INTEGER NOT NULL CHECK (cantidad > 0),
+    PRIMARY KEY (pedido_id, producto_id)
+);
+INSERT INTO cliente (cliente_nombre) VALUES ('Ana Rojas'), ('Marco Vidal'), ('Sofía Paz');
+INSERT INTO producto (producto_nombre, precio) VALUES ('Mouse óptico', 80.00), ('Monitor 24"', 620.00), ('Silla ergonómica', 890.00), ('Teclado mecánico', 250.00);
+INSERT INTO pedido (cliente_id) VALUES (1), (1), (2), (3);
+INSERT INTO detalle_pedido (pedido_id, producto_id, cantidad) VALUES
+  (1,1,2), (1,2,1), (2,4,1), (3,3,1), (4,1,1), (4,4,2);
+`;
+let pgliteReadyPromise = null;
+
+function cargarPGlite(){
+  if (!pgliteReadyPromise) {
+    pgliteReadyPromise = (async () => {
+      const { PGlite } = await import(PGLITE_CDN);
+      const db = new PGlite();
+      await db.exec(DB_SEED);
+      return db;
+    })();
+  }
+  return pgliteReadyPromise;
+}
+
+function reiniciarPGlite(){
+  pgliteReadyPromise = null;
+}
+
+async function ejecutarSQL(codigo){
+  try {
+    const db = await cargarPGlite();
+    const resultados = await db.exec(codigo);
+    return { resultados, error: null };
+  } catch (e) {
+    return { resultados: null, error: (e && e.message) ? e.message : String(e) };
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function formatearValor(v){
+  if (v === null || v === undefined) return "<em>NULL</em>";
+  return escapeHtml(v);
+}
+
+function renderizarResultados(resultados){
+  if (!resultados || !resultados.length) {
+    return '<p class="sql-status">✅ Ejecutado. No se generó ningún resultado.</p>';
+  }
+  return resultados.map(r => {
+    const columnas = (r.fields || []).map(f => f.name);
+    if (columnas.length) {
+      let html = '<table class="sql-result-table"><thead><tr>' +
+        columnas.map(c => `<th scope="col">${escapeHtml(c)}</th>`).join("") +
+        "</tr></thead><tbody>";
+      if (!r.rows || !r.rows.length) {
+        html += `<tr><td colspan="${columnas.length}"><em>(0 filas)</em></td></tr>`;
+      } else {
+        r.rows.forEach(fila => {
+          html += "<tr>" + columnas.map(c => `<td>${formatearValor(fila[c])}</td>`).join("") + "</tr>";
+        });
+      }
+      html += "</tbody></table>";
+      return html;
+    }
+    const n = typeof r.affectedRows === "number" ? r.affectedRows : null;
+    const msg = n !== null
+      ? `✅ Sentencia ejecutada (${n} fila${n === 1 ? "" : "s"} afectada${n === 1 ? "" : "s"}).`
+      : "✅ Sentencia ejecutada correctamente.";
+    return `<p class="sql-status">${msg}</p>`;
+  }).join("");
+}
+
+function conectarSqlLab(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe alguna sentencia SQL antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando PostgreSQL real (WebAssembly)… la primera vez puede tardar varios segundos.";
+    runBtn.disabled = true;
+    try {
+      const { resultados, error } = await ejecutarSQL(codigo);
+      if (error) {
+        outputBody.textContent = "❌ Error de PostgreSQL: " + error;
+        output.classList.add("error");
+      } else {
+        outputBody.innerHTML = renderizarResultados(resultados);
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el motor de PostgreSQL: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+document.querySelectorAll(".editor-panel").forEach(conectarSqlLab);
+
+/* ===== Botón "Reiniciar base de datos" ===== */
+const resetBtn = document.getElementById("resetDbBtn");
+const dbEstado = document.getElementById("dbEstado");
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    reiniciarPGlite();
+    document.querySelectorAll(".editor-panel .output").forEach(o => { o.hidden = true; });
+    if (dbEstado) dbEstado.textContent = "🔄 Base de datos reiniciada y recargada con los mismos datos de ejemplo.";
+  });
+}
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL); accedida directo, como siempre, no dispara nada nuevo. No
+     toca el motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return;
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
