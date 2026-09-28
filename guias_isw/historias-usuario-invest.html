@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Historias de Usuario, INVEST y Planning Poker | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">ISW <span>Historias · INVEST</span></div>
+<p>De ideas crudas a historias listas para estimar</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#formato-historia">El formato de una historia</a>
+<a href="#criterios-aceptacion">Criterios de aceptación</a>
+<a href="#invest">INVEST</a>
+<a href="#priorizacion">Valor, esfuerzo y dependencias</a>
+<a href="#planning-poker">Planning Poker</a>
+<a href="#razonamiento">Ejercicios de razonamiento</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">📋 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Historias de Usuario, <span>INVEST</span> y Planning Poker</h1>
+<p>El equipo de EventoUAB salió del kickoff con una lista de ideas crudas: reservar un espacio, ver disponibilidad, cancelar, notificar, iniciar sesión. Esta guía convierte esas ideas en historias de usuario bien formadas, con criterios de aceptación verificables, y les enseña a estimarlas juntos con Planning Poker antes del primer Sprint Planning.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">En el <strong>Sprint 0</strong> el equipo de EventoUAB armó un Product Backlog crudo, sin pulir a propósito. Ahora, antes del primer <strong>Sprint Planning</strong>, toca convertir esas ideas sueltas en <strong>historias de usuario</strong>: enunciados cortos, con un formato que obliga a nombrar quién se beneficia y por qué, más criterios concretos para saber cuándo están terminadas.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás escribir una historia en el formato estándar, redactar criterios de aceptación verificables, revisar una historia contra las seis letras de <strong>INVEST</strong>, priorizar por valor y esfuerzo teniendo en cuenta dependencias, y participar en una sesión de <strong>Planning Poker</strong>.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Encontrarás <strong>actividades cortas y autocorregibles</strong> —selección múltiple, clasificación, emparejamiento y completar espacios— repartidas a lo largo de la guía, y una sección de <strong>ejercicios de razonamiento</strong> donde se te da un escenario y debes predecir la respuesta correcta antes de comprobarla.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>✍️ Formato</h3><p>De "reservar un espacio" a una historia con usuario, acción y beneficio explícitos.</p></div>
+<div class="info"><h3>✅ INVEST</h3><p>Seis preguntas para saber si una historia está lista para entrar a un sprint.</p></div>
+<div class="info"><h3>🃏 Planning Poker</h3><p>Cómo el equipo estima tamaño relativo sin que el primero en hablar arrastre a los demás.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="formato-historia">
+<div class="card">
+<h2 class="section-title">El formato de una historia</h2>
+<p class="lead">Una historia de usuario no es una especificación técnica: es un recordatorio de una conversación pendiente, escrito desde el punto de vista de quien se beneficia. El formato más usado tiene tres partes.</p>
+<div class="highlight">
+<strong>Como &lt;tipo de usuario&gt;, quiero &lt;acción&gt;, para &lt;beneficio&gt;.</strong>
+<p>El primer espacio en blanco obliga a nombrar a alguien real, no "el sistema". El tercero obliga a explicar el <em>para qué</em> — si no podés completarlo, probablemente la idea es una tarea técnica disfrazada de historia.</p>
+</div>
+<p>Ejemplo real del backlog de EventoUAB: la idea cruda "reservar un espacio" se convierte en:</p>
+<div class="highlight">
+<strong>Como estudiante responsable de un club, quiero reservar un espacio para mi evento, para no tener que coordinar por WhatsApp con Bienestar Estudiantil.</strong>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="historia-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Convertí estas dos ideas crudas del backlog al formato de historia.</p>
+<p>1. Idea cruda: "cancelar una reserva". Como
+<select class="quiz-blank" data-correct="rol1">
+<option value="">— elige —</option>
+<option value="rol1">estudiante responsable de un club</option>
+<option value="rol2">administrador del sistema</option>
+<option value="rol3">desarrollador del equipo</option>
+</select>, quiero
+<select class="quiz-blank" data-correct="accion1">
+<option value="">— elige —</option>
+<option value="accion2">tener acceso directo a la base de datos</option>
+<option value="accion1">poder cancelar una reserva que ya no voy a usar</option>
+<option value="accion3">revisar el código de reservas</option>
+</select>, para
+<select class="quiz-blank" data-correct="beneficio1">
+<option value="">— elige —</option>
+<option value="beneficio3">cumplir con lo que pidió el profesor</option>
+<option value="beneficio2">practicar mis habilidades de programación</option>
+<option value="beneficio1">liberar el espacio y que otro club lo pueda usar</option>
+</select>.</p>
+<p>2. Idea cruda: "ver qué espacios están libres". Como
+<select class="quiz-blank" data-correct="rol1b">
+<option value="">— elige —</option>
+<option value="rol2b">personal de Bienestar Estudiantil</option>
+<option value="rol1b">estudiante responsable de un club</option>
+<option value="rol3b">integrante del equipo de desarrollo</option>
+</select>, quiero
+<select class="quiz-blank" data-correct="accion1b">
+<option value="">— elige —</option>
+<option value="accion1b">ver en un calendario qué espacios están disponibles</option>
+<option value="accion3b">configurar la base de datos de espacios</option>
+<option value="accion2b">generar un reporte mensual de uso</option>
+</select>, para
+<select class="quiz-blank" data-correct="beneficio1b">
+<option value="">— elige —</option>
+<option value="beneficio2b">tener una tarea más para el sprint</option>
+<option value="beneficio1b">elegir un horario libre sin escribirle a nadie primero</option>
+<option value="beneficio3b">que el sistema tenga más funciones</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="criterios-aceptacion">
+<div class="card">
+<h2 class="section-title">Criterios de aceptación</h2>
+<p class="lead">Una historia sin criterios de aceptación es una promesa ambigua: cada quien en el equipo se imagina un "terminado" distinto. Los criterios son condiciones concretas y verificables, típicamente en formato <strong>Dado / Cuando / Entonces</strong>.</p>
+<div class="highlight">
+<strong>Criterios para "reservar un espacio"</strong>
+<p><strong>Dado</strong> que el espacio está libre en ese horario, <strong>cuando</strong> el estudiante confirma la reserva, <strong>entonces</strong> el espacio queda marcado como ocupado y aparece en "mis reservas".</p>
+<p><strong>Dado</strong> que el espacio ya está reservado en ese horario, <strong>cuando</strong> otro estudiante intenta reservarlo, <strong>entonces</strong> el sistema muestra que no está disponible y no permite duplicar la reserva.</p>
+</div>
+<div class="highlight">
+<strong>No son casos de prueba técnicos, pero se parecen</strong>
+<p>Los criterios de aceptación describen comportamiento desde afuera, sin mencionar clases ni funciones. Cuando en la guía de Testing armes casos normales, inválidos y de borde, vas a partir exactamente de estos criterios.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="criterios-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas opciones es un criterio de aceptación bien escrito para la historia "reservar un espacio"?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El sistema debe ser fácil e intuitivo de usar para cualquier estudiante nuevo.</button>
+<button class="quiz-opt">El código de la función de reserva debe estar bien comentado y organizado.</button>
+<button class="quiz-opt">La reserva debe hacerse de forma rápida, sin demoras que molesten al estudiante.</button>
+<button class="quiz-opt" data-correct>Dado un espacio libre en un horario, cuando el estudiante confirma, entonces el espacio queda marcado como ocupado.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: describe una condición concreta y verificable (Dado/Cuando/Entonces) sobre el comportamiento visible, sin mencionar código." data-ko="Fácil de usar, bien comentado y rápido no son verificables objetivamente: cada persona los interpreta distinto. Un criterio de aceptación describe una condición concreta y comprobable, típicamente en formato Dado/Cuando/Entonces." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="invest">
+<div class="card">
+<h2 class="section-title">INVEST: seis preguntas antes de aceptar una historia</h2>
+<p class="lead">INVEST es un acrónimo con seis propiedades que una buena historia debería cumplir. No es una fórmula mágica — es una lista de chequeo para detectar historias problemáticas antes de que entren a un sprint.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Letra</th><th scope="col">Exige que la historia sea...</th><th scope="col">Ejemplo que la rompe en EventoUAB</th></tr></thead>
+<tbody>
+<tr><td><strong>I</strong>ndependent</td><td>No depender de forma rígida de otra historia para poder empezarla.</td><td>"Reservar un espacio" solo puede arrancar cuando otro equipo termine de migrar el servidor.</td></tr>
+<tr><td><strong>N</strong>egotiable</td><td>Un punto de partida para conversar, no un contrato cerrado con todos los detalles técnicos fijos.</td><td>"Reservar un espacio usando exactamente este componente de calendario con esta paleta de colores."</td></tr>
+<tr><td><strong>V</strong>aluable</td><td>Aportar valor visible al usuario, no ser una tarea técnica interna disfrazada.</td><td>"Como desarrollador, quiero refactorizar la clase Reserva."</td></tr>
+<tr><td><strong>E</strong>stimable</td><td>Estar lo bastante clara como para que el equipo pueda estimar su tamaño.</td><td>"Como usuario, quiero que el sistema sea seguro."</td></tr>
+<tr><td><strong>S</strong>mall</td><td>Caber cómoda en un solo sprint.</td><td>"Como estudiante, quiero gestionar completamente mi club: eventos, miembros, presupuesto y reservas."</td></tr>
+<tr><td><strong>T</strong>estable</td><td>Poder verificarse objetivamente si se cumplió o no.</td><td>"Como usuario, quiero que la app sea intuitiva."</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-classify" data-quiz-id="invest-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Qué letra de INVEST rompe principalmente cada historia?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Como desarrollador, quiero optimizar las consultas SQL de la base de datos."</span>
+<div class="quiz-classify-btns">
+<button>Small</button>
+<button data-correct>Valuable</button>
+<button>Testable</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Como estudiante, quiero gestionar completamente mi club: eventos, miembros, presupuesto y reservas."</span>
+<div class="quiz-classify-btns">
+<button data-correct>Small</button>
+<button>Negotiable</button>
+<button>Independent</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Como usuario, quiero que la app sea rápida y confiable."</span>
+<div class="quiz-classify-btns">
+<button>Valuable</button>
+<button>Estimable</button>
+<button data-correct>Testable</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Como usuario, quiero reservar un espacio, pero esta historia solo puede empezar cuando otro equipo termine de migrar el servidor."</span>
+<div class="quiz-classify-btns">
+<button data-correct>Independent</button>
+<button>Small</button>
+<button>Negotiable</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Como usuario, quiero reservar un espacio usando exactamente este componente de calendario con esta paleta de colores."</span>
+<div class="quiz-classify-btns">
+<button>Testable</button>
+<button data-correct>Negotiable</button>
+<button>Valuable</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Como usuario, quiero que el sistema sea seguro."</span>
+<div class="quiz-classify-btns">
+<button>Independent</button>
+<button>Small</button>
+<button data-correct>Estimable</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="priorizacion">
+<div class="card">
+<h2 class="section-title">Valor, esfuerzo y dependencias</h2>
+<p class="lead">Con el backlog convertido en historias, hay que ordenarlas. La regla práctica: comparar el <strong>valor</strong> que aportan contra el <strong>esfuerzo</strong> que cuestan, y revisar si alguna depende técnicamente de otra.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Valor</th><th scope="col">Esfuerzo</th><th scope="col">Qué hacer</th></tr></thead>
+<tbody>
+<tr><td>Alto</td><td>Bajo</td><td>Primero: gana rápido y visible.</td></tr>
+<tr><td>Alto</td><td>Alto</td><td>Vale la pena, pero conviene partirla en historias más chicas.</td></tr>
+<tr><td>Bajo</td><td>Bajo</td><td>Relleno oportunista si sobra tiempo en el sprint, no prioridad.</td></tr>
+<tr><td>Bajo</td><td>Alto</td><td>Cuestionar si de verdad hace falta, o postergarla.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Las dependencias mandan sobre el valor</strong>
+<p>Una historia de bajo valor pero que es prerrequisito técnico de otra de alto valor puede tener que ir antes igual. Priorizar por valor no significa ignorar el orden técnico obligatorio.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="priorizacion-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">El equipo tiene tres historias para el Sprint 1: A) ver espacios disponibles en una lista simple — alto valor, esfuerzo chico; B) reservas recurrentes automáticas con reglas complejas — alto valor, esfuerzo grande; C) cambiar la paleta de colores del botón de reservar — bajo valor, esfuerzo chico. El sprint tiene que ser pequeño y mostrable. ¿Cuál entra primero?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>A, porque combina alto valor con esfuerzo chico y es justo el tamaño de un Sprint 1 pequeño.</button>
+<button class="quiz-opt">C, porque al ser de esfuerzo chico se termina rápido y suma al conteo de historias completadas.</button>
+<button class="quiz-opt">B, porque al tener el valor más alto de las tres conviene resolverla cuanto antes, sin importar el esfuerzo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: alto valor con esfuerzo chico es la combinación ideal para un primer incremento pequeño y mostrable. B conviene partirla en historias más chicas para sprints futuros, y C es relleno de bajo valor, no prioridad." data-ko="B tiene alto valor pero esfuerzo grande: entera no cabe en un Sprint 1 chico, conviene partirla primero. C es bajo valor, no debería ir primero solo por ser fácil. A combina alto valor con esfuerzo chico: es la que corresponde." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="planning-poker">
+<div class="card">
+<h2 class="section-title">Planning Poker</h2>
+<p class="lead">Planning Poker es una forma de estimar el <strong>tamaño relativo</strong> de una historia entre todo el equipo, sin que la opinión de la primera persona en hablar arrastre a las demás. Cada integrante tiene cartas con una secuencia parecida a Fibonacci: 1, 2, 3, 5, 8, 13, 20, 40, 100.</p>
+<div class="highlight">
+<strong>¿Por qué una secuencia no lineal?</strong>
+<p>La distancia entre 7 y 8 casi no importa, pero discutir cuál de los dos es "más correcto" hace perder tiempo. Los saltos grandes (13 a 20, 20 a 40) reflejan que, a mayor tamaño, también crece la incertidumbre real sobre cuánto va a costar.</p>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Paso</th><th scope="col">Qué pasa</th></tr></thead>
+<tbody>
+<tr><td>1. Lectura</td><td>El Product Owner lee la historia y sus criterios de aceptación en voz alta.</td></tr>
+<tr><td>2. Voto en secreto</td><td>Cada integrante elige una carta sin mostrarla todavía.</td></tr>
+<tr><td>3. Revelación</td><td>Todas las cartas se muestran a la vez.</td></tr>
+<tr><td>4. Discusión de outliers</td><td>Si hay mucha diferencia (ej. un 2 y un 13), quienes votaron los extremos explican por qué.</td></tr>
+<tr><td>5. Nueva votación</td><td>Con lo discutido, el equipo vuelve a votar hasta converger.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-match" data-quiz-id="poker-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada paso de Planning Poker con el motivo por el que existe.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="secreto">Voto en secreto</button>
+<button class="quiz-match-item" data-pair="revelacion">Revelación simultánea</button>
+<button class="quiz-match-item" data-pair="outliers">Discusión de outliers</button>
+<button class="quiz-match-item" data-pair="lectura">Lectura de la historia</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="lectura">Todo el equipo parte del mismo alcance antes de votar.</button>
+<button class="quiz-match-item" data-pair="outliers">Un desacuerdo grande suele significar que alguien vio un riesgo que otro no vio.</button>
+<button class="quiz-match-item" data-pair="secreto">Evita que la primera opinión en voz alta arrastre al resto del equipo.</button>
+<button class="quiz-match-item" data-pair="revelacion">Cada quien muestra su estimación sin haber visto antes la de los demás.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Ejercicios de razonamiento</h2>
+<p class="lead">En estas preguntas no se te pide recordar una definición: se te da un escenario y debés razonar la respuesta antes de comprobarla.</p>
+
+<div class="highlight">
+<strong>Escenario</strong>
+<p>El equipo tiene dos historias: "Como estudiante, quiero reservar un espacio" y "Como estudiante, quiero recibir un correo cuando mi reserva es confirmada".</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué implica esto para el orden del Sprint 1?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Da igual el orden: ambas historias son completamente independientes y no se afectan entre sí de ninguna forma.</button>
+<button class="quiz-opt">"Recibir un correo" debe ir primero porque parece una función más simple y rápida de programar en el sprint.</button>
+<button class="quiz-opt" data-correct>"Reservar un espacio" va antes, porque confirmar por correo depende de que ya exista una reserva confirmada.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: no se puede confirmar por correo una reserva que todavía no existe como concepto funcionando. La dependencia técnica obliga el orden, más allá de cuál parezca más simple." data-ko="No son independientes: notificar una confirmación necesita que la reserva y su estado 'confirmada' ya existan. Por eso reservar un espacio va primero, sin importar cuál parezca más fácil de programar." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Otro escenario</strong>
+<p>Una historia dice: "Como estudiante, quiero administrar todo lo relacionado a mi club: eventos, miembros, presupuesto, reservas y reportes." El equipo no logra estimarla con confianza.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Cuál es la forma correcta de partirla, sin perder el criterio INVEST?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Partirla en historias más chicas por función (reservar espacios, ver miembros, registrar presupuesto), cada una con su propio valor y criterios.</button>
+<button class="quiz-opt">Dejarla igual de grande, pero agregarle más criterios de aceptación para que quede más clara.</button>
+<button class="quiz-opt">Partirla por capa técnica: una historia para el backend y otra para el frontend de la misma función.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: partir por función mantiene cada historia Valuable (aporta algo usable por sí sola) y Small. Partir por capa técnica (backend/frontend) rompe Valuable: ninguna de las dos mitades es usable sola." data-ko="Agregar más criterios no arregla que la historia sea demasiado grande para estimar. Partir por capa técnica (backend/frontend) tampoco sirve: ninguna mitad aporta valor usable por sí sola. La forma correcta es partir por función, manteniendo cada parte valiosa por separado." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué el formato "Como... quiero... para..." incluye siempre un "para qué"?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque así la historia queda más larga y da la impresión de estar más completa para mostrarle al profesor.</button>
+<button class="quiz-opt">Porque es simplemente un requisito de formato que exige Scrum, sin ninguna razón práctica real detrás de eso.</button>
+<button class="quiz-opt" data-correct>Porque obliga a nombrar el beneficio real — si no aparece uno, la historia suele ser una tarea técnica sin valor visible.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el 'para qué' fuerza a nombrar el beneficio. Si no aparece uno real, es una señal de que la historia rompe la V de Valuable." data-ko="No es solo relleno de formato: el 'para qué' obliga a nombrar un beneficio real. Cuando no se puede completar con algo concreto, suele ser porque la idea es una tarea técnica disfrazada de historia." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Una historia que cumple INVEST ya no necesita criterios de aceptación, porque el formato "Como... quiero... para..." alcanza.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: INVEST evalúa si la historia está bien planteada, pero los criterios de aceptación son los que definen, en detalle, cuándo se considera terminada. Son complementarios, no sustitutos." data-ko="Es falso: INVEST y los criterios de aceptación responden preguntas distintas. INVEST revisa si la historia está bien planteada; los criterios dicen exactamente qué condiciones deben cumplirse para darla por terminada." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En Planning Poker, ¿qué señala una diferencia grande entre las cartas reveladas (por ejemplo, un 2 y un 13)?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Que probablemente alguien identificó un riesgo o una complejidad que los demás no vieron, y conviene discutirlo antes de revotar.</button>
+<button class="quiz-opt">Que alguien del equipo no entendió bien la dinámica del juego y hay que ignorarlo.</button>
+<button class="quiz-opt">Que se debe promediar automáticamente ambos números y usar ese promedio como estimación final.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el desacuerdo es información valiosa, no ruido. Se discuten las razones detrás de los extremos antes de volver a votar." data-ko="No se ignora ni se promedia automáticamente: una diferencia grande suele significar que alguien vio un riesgo u otra interpretación de la historia que el resto no consideró. Por eso se discute antes de revotar." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Una historia de alto valor pero muy grande para caber en un sprint. Según lo visto en esta guía, ¿qué corresponde hacer?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Meterla igual en el sprint, confiando en que el equipo trabajará horas extra para terminarla.</button>
+<button class="quiz-opt" data-correct>Partirla en historias más chicas por función, cada una valiosa por separado, hasta que quepan en un sprint.</button>
+<button class="quiz-opt">Descartarla del backlog, ya que si no entra en un sprint no vale la pena conservarla.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: partir por función mantiene el valor de cada parte y respeta Small. No hace falta descartarla ni forzar el sprint con horas extra." data-ko="Forzarla con horas extra no es sostenible, y descartarla pierde una historia de alto valor. La respuesta correcta es partirla en historias más chicas por función, manteniendo cada una valiosa por separado." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Historia de usuario</td><td>"Como &lt;usuario&gt;, quiero &lt;acción&gt;, para &lt;beneficio&gt;." Un recordatorio de conversación, no una especificación cerrada.</td></tr>
+<tr><td>Criterios de aceptación</td><td>Condiciones concretas y verificables (Dado/Cuando/Entonces) que dicen cuándo la historia está terminada.</td></tr>
+<tr><td>INVEST</td><td>Independent, Negotiable, Valuable, Estimable, Small, Testable — seis chequeos para una historia lista.</td></tr>
+<tr><td>Valor vs. esfuerzo</td><td>Alto valor + bajo esfuerzo va primero. Las dependencias técnicas mandan sobre el valor.</td></tr>
+<tr><td>Planning Poker</td><td>Voto en secreto con cartas tipo Fibonacci; se discuten los desacuerdos grandes antes de revotar.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>✍️ El formato "Como... quiero... para..." tiene autora</h3><p>Se popularizó como "Connextra template", por la empresa londinense donde Rachel Davies lo propuso en 2001, para que los requisitos dejaran de leerse como listas técnicas y empezaran a nombrar a un usuario real.</p></div>
+<div class="info"><h3>🔤 INVEST lo acuñó Bill Wake en 2003</h3><p>El consultor ágil Bill Wake publicó el acrónimo en su blog como una lista de chequeo rápida, pensada para que un equipo pudiera revisar una historia en segundos, no como una teoría formal.</p></div>
+<div class="info"><h3>🧭 Lo que viene en la próxima guía</h3><p>Con historias priorizadas y estimadas, el próximo paso es modelar el alcance del Sprint 1 con un diagrama de casos de uso: actores, flujos principales y su trazabilidad hacia estas mismas historias.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Reforzamiento: Historias de Usuario, INVEST y Planning Poker</h2>
+<p>Material de apoyo para la asignatura de Ingeniería de Software.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "isw-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

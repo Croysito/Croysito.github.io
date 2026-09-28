@@ -233,8 +233,8 @@ Ver `guias/variables.html` como plantilla a copiar tal cual (bloque `/* ===== Py
 
 | # | Guía | Contenido | Estado |
 |---|---|---|---|
-| 1 | Del proceso secuencial al iterativo + Scrum en 15 minutos (`proceso-iterativo-scrum.html`) — cubre Sesión 1; Narrativa ramificada (Equipo secuencial vs. Equipo iterativo ante un mismo cambio de requisito) | ⏭️ Siguiente a crear |
-| 2 | Historias de usuario, INVEST y Planning Poker (`historias-usuario-invest.html`) — cubre Sesión 2; Lineal + `quiz-classify` | Pendiente |
+| 1 | Del proceso secuencial al iterativo + Scrum en 15 minutos (`proceso-iterativo-scrum.html`) — cubre Sesión 1; Narrativa ramificada, caso propio EventoUAB | ✅ Publicada (2026-09-28) |
+| 2 | Historias de usuario, INVEST y Planning Poker (`historias-usuario-invest.html`) — cubre Sesión 2; Lineal + `quiz-classify` | ⏭️ Siguiente a crear |
 | 3 | Casos de uso: del backlog al diagrama (`casos-de-uso.html`) — cubre Sesión 3; Lineal, reusa el chrome `.uml-*` ya construido en `guias_ds/nivel-1a-que-y-quien.html` en vez de reinventar el SVG | Pendiente |
 | 4a | Modelo de dominio: entidades, atributos, relaciones (`modelo-dominio.html`) — cubre la mitad de Sesión 4; Lineal, mismo chrome `.uml-*` | Pendiente |
 | 4b | Arquitectura por capas y por qué invertir una dependencia (`arquitectura-capas-dip.html`) — cubre la otra mitad de Sesión 4; Scrollytelling (el diagrama de capas invierte flechas de dependencia en vivo al explicar DIP) | Pendiente |
