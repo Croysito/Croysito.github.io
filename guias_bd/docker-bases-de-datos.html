@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docker para Bases de Datos | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+<style>
+/* Estilos propios de esta guía. Los comandos de Docker se copian a la
+   terminal del estudiante, así que a diferencia del resto del sitio los
+   bloques .code de acá SÍ se pueden seleccionar y copiar. */
+.code pre,.code pre *{ user-select:text; -webkit-user-select:text; -ms-user-select:text; }
+.code-header .code-btn{ margin-left:auto; }
+.armador{ background:var(--grisClaro); border:1px solid var(--borde); border-radius:12px; padding:22px; margin:25px 0; }
+.armador-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:16px 22px; }
+.armador-campo{ display:flex; flex-direction:column; gap:6px; font-size:14px; font-weight:500; }
+.armador-campo input[type="text"],.armador-campo input[type="number"],.armador-campo select{
+  padding:9px 11px; border:1px solid var(--borde); border-radius:8px; background:var(--blanco); color:var(--texto);
+  font-family:'JetBrains Mono',monospace; font-size:14px;
+}
+.armador-campo input:focus,.armador-campo select:focus{ outline:2px solid var(--verde); outline-offset:1px; }
+.armador-check{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:500; cursor:pointer; }
+.armador-check input{ accent-color:var(--verde); width:17px; height:17px; }
+.armador-avisos{ margin:18px 0 6px; display:flex; flex-direction:column; gap:8px; }
+.armador-aviso{ font-size:14px; padding:10px 14px; border-radius:8px; border-left:5px solid var(--amarillo); background:rgba(255,212,59,.14); }
+.armador-aviso.ok{ border-left-color:var(--verde); background:var(--highlightBg); }
+.armador-aviso.error{ border-left-color:#dc3545; background:rgba(220,53,69,.10); }
+.armador-vacio{ color:#7d8899; font-style:italic; }
+.tag-exploratoria{ display:inline-block; font-size:12px; font-weight:700; padding:3px 10px; border-radius:999px; background:var(--highlightBg); color:var(--texto); border:1px solid var(--verde); margin-bottom:10px; }
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>Docker</span></div>
+<p>Postgres y Mongo en contenedores</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#por-que">Imágenes y contenedores</a>
+<a href="#run">docker run con PostgreSQL</a>
+<a href="#env">Variables de entorno</a>
+<a href="#volumenes">Volúmenes: que los datos sobrevivan</a>
+<a href="#puertos">Puertos y conexión</a>
+<a href="#mongo">MongoDB en un contenedor</a>
+<a href="#compose">docker-compose: los dos motores juntos</a>
+<a href="#armador">Armador de comandos</a>
+<a href="#razonamiento">Cuando algo falla</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🗄️ Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Docker para <span>Bases de Datos</span></h1>
+<p>Hasta ahora corriste PostgreSQL dentro del navegador. Para trabajar en serio necesitás el motor de verdad en tu máquina, sin instalarlo a mano y sin ensuciar tu sistema. Con Docker levantás PostgreSQL y MongoDB con un comando, los borrás sin dejar rastro y los reproducís idénticos en cualquier computadora.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">En las guías anteriores escribiste SQL contra un PostgreSQL que vivía dentro de tu navegador. Sirve para aprender, pero un proyecto real necesita un servidor de base de datos que arranque, guarde datos en disco y acepte conexiones desde tu aplicación. <strong>Docker</strong> te da eso sin instalar el motor directamente en tu sistema operativo.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás levantar PostgreSQL y MongoDB con <code>docker run</code>, configurarlos con variables de entorno, hacer que sus datos sobrevivan con volúmenes, conectarte mediante puertos, y describir los dos motores juntos en un archivo <code>docker-compose.yml</code>.</p>
+</div>
+<div class="highlight">
+<strong>⚠️ Esta guía no ejecuta Docker en el navegador</strong>
+<p>A diferencia de los talleres, acá los comandos los corrés <strong>vos, en tu propia terminal</strong>. Para eso necesitás Docker instalado: <strong>Docker Desktop</strong> en Windows o macOS (en Windows usa WSL 2), o Docker Engine en Linux. Comprobalo con <code>docker --version</code> y <code>docker compose version</code>. Los bloques de código de esta guía sí se pueden seleccionar y copiar.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Encontrarás <strong>actividades cortas y autocorregibles</strong> repartidas por la guía, un <strong>armador de comandos</strong> interactivo para experimentar sin calificar, y una sección de <strong>escenarios de fallas</strong> reales donde tenés que decidir qué pasó antes de ver la respuesta.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📦 Aislá</h3><p>Cada motor corre en su propio contenedor, sin tocar el resto de tu computadora.</p></div>
+<div class="info"><h3>💾 Persistí</h3><p>Los volúmenes deciden si tus datos sobreviven cuando el contenedor desaparece.</p></div>
+<div class="info"><h3>🔌 Conectá</h3><p>Puertos y variables de entorno son la puerta de entrada y la configuración de cada base de datos.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="por-que">
+<div class="card">
+<h2 class="section-title">Imágenes y contenedores</h2>
+<p class="lead">Instalar PostgreSQL directamente en tu sistema tiene costos escondidos: una sola versión a la vez, servicios que arrancan solos, y una desinstalación que casi nunca deja todo limpio. Un contenedor evita todo eso.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto</th><th scope="col">Qué es</th></tr></thead>
+<tbody>
+<tr><td><strong>Imagen</strong></td><td>Una plantilla de solo lectura con el programa y todo lo que necesita (por ejemplo <code>postgres:16</code>). Se descarga una vez desde un registro como Docker Hub.</td></tr>
+<tr><td><strong>Contenedor</strong></td><td>Una instancia en ejecución de una imagen, con su propio sistema de archivos y su propia red. De una misma imagen podés crear varios contenedores.</td></tr>
+<tr><td><strong>Volumen</strong></td><td>Un espacio de almacenamiento que vive fuera del contenedor. Es lo que permite que los datos sobrevivan a su borrado.</td></tr>
+<tr><td><strong>Etiqueta (tag)</strong></td><td>La versión de la imagen después de los dos puntos: <code>postgres:16</code>. Sin etiqueta Docker usa <code>latest</code>, y una actualización silenciosa puede romperte el proyecto.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Fijá siempre la versión</strong>
+<p>Escribí <code>postgres:16</code> y no solo <code>postgres</code>. Así todo el equipo, y vos dentro de seis meses, levantan exactamente el mismo motor. Un salto de versión mayor puede cambiar el formato de los datos en disco.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="imagen-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Corrés <code>docker run</code> tres veces con la imagen <code>postgres:16</code>, cada vez con un nombre distinto. ¿Qué obtenés?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Una sola imagen y un solo contenedor, porque las tres comparten la plantilla.</button>
+<button class="quiz-opt">Tres imágenes distintas, una por cada nombre que elegiste al crearlas.</button>
+<button class="quiz-opt" data-correct>Una imagen descargada una vez y tres contenedores independientes.</button>
+<button class="quiz-opt">Un error, porque la segunda ejecución pisa el contenedor de la primera.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la imagen es la plantilla y se descarga una sola vez; cada docker run crea un contenedor nuevo e independiente a partir de ella." data-ko="La imagen es solo la plantilla y se reutiliza. Cada docker run con un nombre distinto crea su propio contenedor independiente; lo que da error es repetir el mismo nombre, no la misma imagen." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="run">
+<div class="card">
+<h2 class="section-title">docker run con PostgreSQL</h2>
+<p class="lead">Este es el comando mínimo para tener un PostgreSQL real escuchando en tu máquina:</p>
+<div class="code">
+<div class="code-header"><span>Terminal</span></div>
+<pre><code class="src">docker run -d --name pg-uab \
+  -e POSTGRES_PASSWORD=cambiame123 \
+  -p 5432:5432 \
+  postgres:16</code></pre>
+</div>
+<p>La primera vez, Docker descarga la imagen (puede tardar un par de minutos). Después crea el contenedor y lo deja corriendo. Cada parte del comando cumple un rol:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Parte</th><th scope="col">Qué hace</th></tr></thead>
+<tbody>
+<tr><td><code>-d</code></td><td>Modo <em>detached</em>: el contenedor corre en segundo plano y te devuelve la terminal.</td></tr>
+<tr><td><code>--name pg-uab</code></td><td>Le pone un nombre que vos elegís. Sin esto Docker inventa uno al azar.</td></tr>
+<tr><td><code>-e VARIABLE=valor</code></td><td>Define una variable de entorno dentro del contenedor: así se configura la imagen.</td></tr>
+<tr><td><code>-p 5432:5432</code></td><td>Publica un puerto: conecta el puerto de tu máquina con el del contenedor.</td></tr>
+<tr><td><code>postgres:16</code></td><td>La imagen y su versión. Va siempre al final.</td></tr>
+</tbody>
+</table>
+<p>Para comprobar que está vivo y entrar a un <code>psql</code> dentro del contenedor:</p>
+<div class="code">
+<div class="code-header"><span>Terminal</span></div>
+<pre><code class="src">docker ps                        # contenedores en ejecución
+docker logs pg-uab               # mensajes del motor al arrancar
+docker exec -it pg-uab psql -U postgres</code></pre>
+</div>
+<p>Dentro de <code>psql</code> ya podés correr <code>CREATE TABLE</code>, <code>INSERT</code> y todo lo que practicaste en las guías anteriores, pero ahora sobre un PostgreSQL de verdad. Salís con <code>\q</code>.</p>
+
+<div class="quiz quiz-classify" data-quiz-id="run-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada necesidad según el tipo de opción de <code>docker run</code> que la resuelve.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Que la base de datos siga existiendo después de borrar el contenedor.</span>
+<div class="quiz-classify-btns">
+<button>Acceso de red</button>
+<button>Configuración</button>
+<button data-correct>Persistencia</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Definir la contraseña del superusuario al crear el contenedor.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Configuración</button>
+<button>Persistencia</button>
+<button>Acceso de red</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Poder conectarte desde DBeaver, instalado en tu propia máquina.</span>
+<div class="quiz-classify-btns">
+<button>Persistencia</button>
+<button data-correct>Acceso de red</button>
+<button>Configuración</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Guardar los archivos de datos en una carpeta de tu proyecto.</span>
+<div class="quiz-classify-btns">
+<button>Configuración</button>
+<button data-correct>Persistencia</button>
+<button>Acceso de red</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="env">
+<div class="card">
+<h2 class="section-title">Variables de entorno</h2>
+<p class="lead">Las imágenes oficiales no traen un archivo de configuración para editar: se configuran con <strong>variables de entorno</strong> que definís con <code>-e</code>. Estas son las de PostgreSQL:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Variable</th><th scope="col">Efecto</th></tr></thead>
+<tbody>
+<tr><td><code>POSTGRES_PASSWORD</code></td><td><strong>Obligatoria.</strong> Contraseña del superusuario. Sin ella el contenedor se detiene al arrancar.</td></tr>
+<tr><td><code>POSTGRES_USER</code></td><td>Nombre del superusuario. Si no la definís, es <code>postgres</code>.</td></tr>
+<tr><td><code>POSTGRES_DB</code></td><td>Base de datos que se crea al iniciar. Si no la definís, usa el nombre del usuario.</td></tr>
+</tbody>
+</table>
+<div class="code">
+<div class="code-header"><span>Terminal</span></div>
+<pre><code class="src">docker run -d --name pg-uab \
+  -e POSTGRES_USER=roy \
+  -e POSTGRES_PASSWORD=cambiame123 \
+  -e POSTGRES_DB=tienda \
+  -p 5432:5432 \
+  postgres:16</code></pre>
+</div>
+<div class="highlight">
+<strong>Las variables se leen una sola vez</strong>
+<p>PostgreSQL usa <code>POSTGRES_USER</code>, <code>POSTGRES_PASSWORD</code> y <code>POSTGRES_DB</code> únicamente cuando <strong>inicializa un directorio de datos vacío</strong>. Si después cambiás la contraseña en el comando pero el volumen ya tiene datos, el motor ignora el valor nuevo y sigue con el anterior. Es la causa de confusión más frecuente con Docker y bases de datos.</p>
+</div>
+<div class="highlight">
+<strong>La contraseña no va en el repositorio</strong>
+<p>Escribirla en el comando la deja en el historial de tu terminal. Escribirla en un <code>docker-compose.yml</code> versionado la publica junto con el código. La práctica correcta es guardarla en un archivo <code>.env</code> que Git ignora (línea <code>.env</code> en <code>.gitignore</code>) y pasarla con <code>--env-file .env</code> o dejar que Compose la lea. Lo vas a ver en la sección de <code>docker-compose</code>.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="env-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre la configuración de la imagen de PostgreSQL:</p>
+<p>1. Si arrancás el contenedor sin definir la contraseña del superusuario, el resultado es que
+<select class="quiz-blank" data-correct="falla">
+<option value="">— elige —</option>
+<option value="vacia">arranca con una contraseña vacía</option>
+<option value="falla">el contenedor se detiene con un error</option>
+<option value="azar">Docker genera una contraseña al azar</option>
+</select>.</p>
+<p>2. Para que la contraseña no quede escrita en el código, lo más adecuado es guardarla en
+<select class="quiz-blank" data-correct="env">
+<option value="">— elige —</option>
+<option value="readme">el README del proyecto</option>
+<option value="compose">el docker-compose.yml versionado</option>
+<option value="env">un archivo .env fuera de Git</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="volumenes">
+<div class="card">
+<h2 class="section-title">Volúmenes: que los datos sobrevivan</h2>
+<p class="lead">Un contenedor es desechable por diseño. Todo lo que escribe dentro de su propio sistema de archivos desaparece con él. Para una base de datos eso es un desastre, salvo que guardes los datos en un <strong>volumen</strong>.</p>
+<div class="code">
+<div class="code-header"><span>Terminal</span></div>
+<pre><code class="src">docker run -d --name pg-uab \
+  -e POSTGRES_PASSWORD=cambiame123 \
+  -p 5432:5432 \
+  -v pgdata:/var/lib/postgresql/data \
+  postgres:16</code></pre>
+</div>
+<p><code>-v pgdata:/var/lib/postgresql/data</code> significa: "guardá lo que el contenedor escribe en <code>/var/lib/postgresql/data</code> (el directorio de datos de PostgreSQL) dentro del volumen llamado <code>pgdata</code>". Si borrás el contenedor y creás otro con el mismo <code>-v</code>, la base de datos reaparece intacta.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Opción</th><th scope="col">Sintaxis</th><th scope="col">Cuándo conviene</th></tr></thead>
+<tbody>
+<tr><td>Sin volumen</td><td>(nada)</td><td>Pruebas descartables. Al borrar el contenedor, la base de datos queda huérfana y el próximo arranca vacío.</td></tr>
+<tr><td>Volumen con nombre</td><td><code>-v pgdata:/ruta</code></td><td>La opción recomendada para bases de datos. Docker lo administra y funciona igual en todos los sistemas.</td></tr>
+<tr><td>Carpeta local (bind mount)</td><td><code>-v ./datos:/ruta</code></td><td>Cuando querés ver los archivos desde tu máquina, por ejemplo para scripts. En Windows y macOS con Postgres puede dar problemas de permisos.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Sin volumen, los datos no se pierden: se pierde el acceso a ellos</strong>
+<p>La imagen de PostgreSQL crea un volumen anónimo automáticamente aunque no lo pidas. Al borrar el contenedor, esos datos quedan en un volumen con nombre aleatorio al que nadie apunta, y el contenedor nuevo arranca con una base vacía. Por eso conviene siempre nombrar el volumen.</p>
+</div>
+<div class="highlight">
+<strong>Ojo con la versión de la imagen</strong>
+<p>Este ejemplo usa <code>postgres:16</code>. Desde PostgreSQL 18 la imagen oficial cambió el punto de montaje recomendado. Si usás otra versión mayor, revisá la documentación de la imagen en Docker Hub antes de copiar la ruta.</p>
+</div>
+<p>Para administrar volúmenes:</p>
+<div class="code">
+<div class="code-header"><span>Terminal</span></div>
+<pre><code class="src">docker volume ls                 # lista los volúmenes
+docker volume inspect pgdata     # dónde vive y desde cuándo existe
+docker volume rm pgdata          # BORRA los datos para siempre</code></pre>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="vol-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada comando con su efecto sobre los datos guardados en un volumen con nombre.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="stop">docker stop pg-uab</button>
+<button class="quiz-match-item" data-pair="rm">docker rm pg-uab</button>
+<button class="quiz-match-item" data-pair="volrm">docker volume rm pgdata</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="volrm">Elimina los datos de forma definitiva.</button>
+<button class="quiz-match-item" data-pair="stop">Detiene el motor; los datos siguen intactos.</button>
+<button class="quiz-match-item" data-pair="rm">Elimina el contenedor; los datos siguen en el volumen.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="vol-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Creaste una base con <code>-v pgdata:/var/lib/postgresql/data</code>, cargaste datos y ejecutaste <code>docker rm -f pg-uab</code>. ¿Cómo recuperás la base?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">No se puede: al borrar el contenedor se elimina todo lo que guardó.</button>
+<button class="quiz-opt">Reinstalando la imagen de PostgreSQL desde Docker Hub con otra versión.</button>
+<button class="quiz-opt">Restaurando el archivo de respaldo, que Docker genera al borrar el contenedor.</button>
+<button class="quiz-opt" data-correct>Creando otro contenedor que monte el mismo volumen pgdata.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el volumen vive fuera del contenedor. Un contenedor nuevo con el mismo -v pgdata:... encuentra el directorio de datos ya inicializado y la base reaparece." data-ko="El volumen con nombre no se borra con docker rm. Los datos siguen en pgdata, y un contenedor nuevo que lo monte en la misma ruta los recupera; no hace falta ningún respaldo especial." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="puertos">
+<div class="card">
+<h2 class="section-title">Puertos y conexión</h2>
+<p class="lead">Un contenedor tiene su propia red aislada. PostgreSQL escucha en el puerto 5432 <em>adentro</em>, pero tu máquina no lo ve hasta que lo publicás con <code>-p</code>.</p>
+<div class="code">
+<div class="code-header"><span>Sintaxis</span></div>
+<pre><code class="src">-p PUERTO_DE_TU_MAQUINA:PUERTO_DEL_CONTENEDOR</code></pre>
+</div>
+<p>El puerto de la derecha lo fija el motor: 5432 para PostgreSQL, 27017 para MongoDB. El de la izquierda lo elegís vos. Si ya tenés otro PostgreSQL instalado en tu máquina usando el 5432, Docker se queja con <code>port is already allocated</code>. La solución es cambiar solo el lado izquierdo:</p>
+<div class="code">
+<div class="code-header"><span>Terminal</span></div>
+<pre><code class="src">docker run -d --name pg-uab \
+  -e POSTGRES_PASSWORD=cambiame123 \
+  -p 5433:5432 \
+  -v pgdata:/var/lib/postgresql/data \
+  postgres:16
+
+# desde tu máquina ahora te conectás al 5433
+psql -h localhost -p 5433 -U postgres</code></pre>
+</div>
+<p>Una aplicación o herramienta (DBeaver, tu backend) usa una cadena de conexión con esos mismos datos:</p>
+<div class="code">
+<div class="code-header"><span>Cadenas de conexión</span></div>
+<pre><code class="src">postgresql://postgres:cambiame123@localhost:5433/postgres
+mongodb://admin:cambiame123@localhost:27017/?authSource=admin</code></pre>
+</div>
+<div class="highlight">
+<strong>Publicar un puerto lo expone</strong>
+<p><code>-p 5432:5432</code> escucha en todas las interfaces de tu máquina, y por tanto en tu red local. En una computadora compartida o una red pública conviene limitarlo a tu equipo con <code>-p 127.0.0.1:5432:5432</code>. Y nunca uses una contraseña como <code>postgres</code> o <code>admin</code> en un puerto abierto.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="puertos-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Ejecutaste el contenedor con <code>-p 5433:5432</code>. Desde DBeaver, en tu máquina, ¿a qué puerto te conectás?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Al 5433, el puerto que publicaste en tu máquina.</button>
+<button class="quiz-opt">Al 5432, porque es el puerto estándar de PostgreSQL.</button>
+<button class="quiz-opt">A cualquiera de los dos, porque Docker los trata como equivalentes.</button>
+<button class="quiz-opt">A ninguno; DBeaver no puede conectarse a un contenedor.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el número de la izquierda es el de tu máquina. El 5432 de la derecha existe solo dentro de la red del contenedor." data-ko="El primer número de -p es el puerto de tu máquina, y es el que usan las herramientas externas. El 5432 de la derecha es el puerto interno del contenedor y desde afuera no se ve." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="mongo">
+<div class="card">
+<h2 class="section-title">MongoDB en un contenedor</h2>
+<p class="lead">MongoDB sigue exactamente el mismo patrón: imagen oficial, variables de entorno para el usuario administrador, un puerto y un volumen. Lo único que cambia son los nombres.</p>
+<div class="code">
+<div class="code-header"><span>Terminal</span></div>
+<pre><code class="src">docker run -d --name mongo-uab \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=cambiame123 \
+  -p 27017:27017 \
+  -v mongodata:/data/db \
+  mongo:7
+
+docker exec -it mongo-uab mongosh -u admin -p cambiame123 --authenticationDatabase admin</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col"></th><th scope="col">PostgreSQL</th><th scope="col">MongoDB</th></tr></thead>
+<tbody>
+<tr><td>Imagen</td><td><code>postgres:16</code></td><td><code>mongo:7</code></td></tr>
+<tr><td>Puerto estándar</td><td><code>5432</code></td><td><code>27017</code></td></tr>
+<tr><td>Datos dentro del contenedor</td><td><code>/var/lib/postgresql/data</code></td><td><code>/data/db</code></td></tr>
+<tr><td>Contraseña del administrador</td><td><code>POSTGRES_PASSWORD</code></td><td><code>MONGO_INITDB_ROOT_PASSWORD</code></td></tr>
+<tr><td>Cliente en la terminal</td><td><code>psql</code></td><td><code>mongosh</code></td></tr>
+</tbody>
+</table>
+<p>Con esto ya tenés el entorno listo para las próximas guías: JSON en PostgreSQL y, después, MongoDB de verdad. Y para el proyecto integrador vas a necesitar los dos motores corriendo a la vez, que es justo lo que resuelve la siguiente sección.</p>
+
+<div class="quiz quiz-match" data-quiz-id="mongo-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada dato con lo que representa en la configuración de los contenedores.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="puerto">27017</button>
+<button class="quiz-match-item" data-pair="datos">/data/db</button>
+<button class="quiz-match-item" data-pair="cli">psql</button>
+<button class="quiz-match-item" data-pair="pass">MONGO_INITDB_ROOT_PASSWORD</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="cli">Cliente de línea de comandos de PostgreSQL.</button>
+<button class="quiz-match-item" data-pair="pass">Contraseña del administrador de MongoDB.</button>
+<button class="quiz-match-item" data-pair="puerto">Puerto estándar de MongoDB.</button>
+<button class="quiz-match-item" data-pair="datos">Directorio de datos de MongoDB dentro del contenedor.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="compose">
+<div class="card">
+<h2 class="section-title">docker-compose: los dos motores juntos</h2>
+<p class="lead">Dos motores con sus puertos, variables y volúmenes son dos comandos largos que nadie quiere recordar. <strong>Docker Compose</strong> describe todo en un archivo <code>docker-compose.yml</code> y lo levanta con un solo comando. Además queda dentro del repositorio: quien clone el proyecto tiene el mismo entorno.</p>
+<div class="code">
+<div class="code-header"><span>docker-compose.yml</span></div>
+<pre><code class="src">services:
+  postgres:
+    image: postgres:16
+    container_name: pg-uab
+    environment:
+      POSTGRES_USER: roy
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: tienda
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U roy -d tienda"]
+      interval: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:7
+    container_name: mongo-uab
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+
+volumes:
+  pgdata:
+  mongodata:</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>.env  (junto al docker-compose.yml, ignorado por Git)</span></div>
+<pre><code class="src">POSTGRES_PASSWORD=cambiame123
+MONGO_PASSWORD=otra-clave-distinta-456</code></pre>
+</div>
+<p>Compose lee el <code>.env</code> automáticamente y reemplaza cada <code>${...}</code>. La estructura es la misma que ya conocés, ahora en YAML: <code>image</code>, <code>environment</code> (los <code>-e</code>), <code>ports</code> (los <code>-p</code>) y <code>volumes</code> (los <code>-v</code>). Los volúmenes con nombre se declaran además al final, en el bloque <code>volumes:</code> de nivel superior.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Comando</th><th scope="col">Qué hace</th></tr></thead>
+<tbody>
+<tr><td><code>docker compose up -d</code></td><td>Crea y arranca todos los servicios en segundo plano.</td></tr>
+<tr><td><code>docker compose ps</code></td><td>Muestra el estado de los servicios del archivo.</td></tr>
+<tr><td><code>docker compose logs -f postgres</code></td><td>Sigue en vivo los mensajes de un servicio.</td></tr>
+<tr><td><code>docker compose down</code></td><td>Detiene y elimina los contenedores. Los volúmenes se conservan.</td></tr>
+<tr><td><code>docker compose down -v</code></td><td>Además elimina los volúmenes: <strong>borra todos los datos</strong>.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Una red compartida, sin configurar nada</strong>
+<p>Compose pone todos los servicios del archivo en una misma red y cada uno se alcanza por su nombre. Cuando agregues tu aplicación como otro servicio, se conectará al host <code>postgres</code> o <code>mongo</code>, no a <code>localhost</code>: dentro de un contenedor, <code>localhost</code> es ese mismo contenedor. Los puertos publicados con <code>ports</code> sirven para las herramientas que corren en tu máquina.</p>
+</div>
+<div class="highlight">
+<strong>Scripts de inicialización</strong>
+<p>Si montás una carpeta con archivos <code>.sql</code> en <code>/docker-entrypoint-initdb.d</code>, PostgreSQL los ejecuta en orden al inicializar. Es la forma de arrancar con las tablas del esquema ya creadas. Como las variables de entorno, corren <strong>solo la primera vez</strong>, con el directorio de datos vacío.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="compose-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre el archivo de Compose de arriba:</p>
+<p>1. Para levantar los dos motores juntos, en segundo plano, ejecutás
+<select class="quiz-blank" data-correct="up">
+<option value="">— elige —</option>
+<option value="run">docker compose run</option>
+<option value="start">docker compose start -a</option>
+<option value="up">docker compose up -d</option>
+</select>.</p>
+<p>2. Para apagar todo pero conservar los datos guardados, ejecutás
+<select class="quiz-blank" data-correct="down">
+<option value="">— elige —</option>
+<option value="down">docker compose down</option>
+<option value="downv">docker compose down -v</option>
+<option value="rm">docker volume prune</option>
+</select>.</p>
+<p>3. Una aplicación que corre como otro servicio de este archivo se conecta a PostgreSQL usando el host
+<select class="quiz-blank" data-correct="nombre">
+<option value="">— elige —</option>
+<option value="localhost">localhost, el mismo equipo</option>
+<option value="nombre">postgres, el nombre del servicio</option>
+<option value="ip">127.0.0.1, la dirección local</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="armador">
+<div class="card">
+<span class="tag-exploratoria">🧪 Actividad exploratoria · no califica</span>
+<h2 class="section-title">Armador de comandos</h2>
+<p class="lead">Elegí los motores y las opciones, y mirá cómo cambian al instante el comando <code>docker run</code> y el <code>docker-compose.yml</code>. Los avisos de abajo te dicen qué riesgo introduce cada decisión.</p>
+
+<div class="armador">
+<div class="armador-grid">
+<label class="armador-check"><input type="checkbox" id="armPg" checked> PostgreSQL</label>
+<label class="armador-check"><input type="checkbox" id="armMg"> MongoDB</label>
+<label class="armador-campo">Contraseña
+<input type="text" id="armPass" value="cambiame123" autocomplete="off" spellcheck="false"></label>
+<label class="armador-campo">Puerto en tu máquina (PostgreSQL)
+<input type="number" id="armPortPg" value="5432" min="1" max="65535"></label>
+<label class="armador-campo">Puerto en tu máquina (MongoDB)
+<input type="number" id="armPortMg" value="27017" min="1" max="65535"></label>
+<label class="armador-campo">Volumen
+<select id="armVol">
+<option value="named">Volumen con nombre</option>
+<option value="bind">Carpeta local (bind mount)</option>
+<option value="none">Sin volumen</option>
+</select></label>
+<label class="armador-check"><input type="checkbox" id="armEnv"> Guardar la contraseña en un archivo .env</label>
+</div>
+<div class="armador-avisos" id="armAvisos" aria-live="polite"></div>
+</div>
+
+<div class="code">
+<div class="code-header"><span>docker run</span><button type="button" class="code-btn" data-copiar="armRun">📋 Copiar</button></div>
+<pre><code class="src" id="armRun"></code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>docker-compose.yml</span><button type="button" class="code-btn" data-copiar="armCompose">📋 Copiar</button></div>
+<pre><code class="src" id="armCompose"></code></pre>
+</div>
+<div class="code" id="armEnvBloque" hidden>
+<div class="code-header"><span>.env</span><button type="button" class="code-btn" data-copiar="armEnvTxt">📋 Copiar</button></div>
+<pre><code class="src" id="armEnvTxt"></code></pre>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Cuando algo falla</h2>
+<p class="lead">Casi todos los problemas con bases de datos en Docker caen en un puñado de errores. Reconocerlos por su mensaje te ahorra horas.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Mensaje o síntoma</th><th scope="col">Causa habitual</th></tr></thead>
+<tbody>
+<tr><td><code>port is already allocated</code></td><td>Otro programa o contenedor ya usa ese puerto de tu máquina. Cambiá el número de la izquierda de <code>-p</code>.</td></tr>
+<tr><td><code>container name "/pg-uab" is already in use</code></td><td>Ya existe un contenedor con ese nombre, aunque esté detenido. Borralo con <code>docker rm pg-uab</code> o elegí otro nombre.</td></tr>
+<tr><td><code>Database is uninitialized and superuser password is not specified</code></td><td>Falta <code>POSTGRES_PASSWORD</code>.</td></tr>
+<tr><td><code>password authentication failed</code></td><td>La contraseña que usás no es la que quedó guardada al inicializar el volumen. Cambiar la variable después no la modifica.</td></tr>
+<tr><td>La base de datos aparece vacía después de recrear el contenedor</td><td>El contenedor nuevo montó otro volumen (o ninguno). Revisá el <code>-v</code> con <code>docker volume ls</code>.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Tu compañera cambió <code>POSTGRES_PASSWORD</code> en el <code>docker-compose.yml</code> y ejecutó <code>docker compose up -d</code>, pero el volumen <code>pgdata</code> ya tenía datos. Al conectarse con la clave nueva recibe <code>password authentication failed</code>. ¿Por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Docker Compose no relee el archivo YAML si el contenedor ya existía antes.</button>
+<button class="quiz-opt" data-correct>PostgreSQL solo aplica esa variable al inicializar un directorio de datos vacío.</button>
+<button class="quiz-opt">Las contraseñas del YAML deben ir siempre entre comillas para que funcionen.</button>
+<button class="quiz-opt">El puerto 5432 quedó bloqueado por el contenedor anterior que se detuvo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: con datos ya inicializados en el volumen, la variable se ignora y la contraseña vieja sigue vigente. Se cambia con ALTER USER dentro de la base, o se borra el volumen (perdiendo los datos) para reinicializar." data-ko="El problema no es el YAML ni las comillas ni el puerto. La contraseña se fija una sola vez, cuando el directorio de datos está vacío; con el volumen ya inicializado, la variable nueva se ignora." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Al ejecutar <code>docker run ... -p 5432:5432 ...</code> aparece <code>port is already allocated</code>. Tenés un PostgreSQL instalado en tu PC que no querés apagar. ¿Qué hacés?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Cambiás el puerto interno a <code>-p 5432:5433</code> para esquivar el conflicto.</button>
+<button class="quiz-opt">Agregás <code>--force</code> al comando para que Docker tome el puerto ocupado.</button>
+<button class="quiz-opt" data-correct>Cambiás el puerto de tu máquina, por ejemplo a <code>-p 5433:5432</code>.</button>
+<button class="quiz-opt">Reinstalás Docker, porque el puerto quedó mal registrado.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el conflicto está en el lado izquierdo (tu máquina). El derecho lo fija el motor y debe seguir siendo 5432. Después te conectás a localhost:5433." data-ko="El puerto de la derecha es el del motor dentro del contenedor y no se toca; y no existe una opción --force para ocupar un puerto ajeno. Lo que se cambia es el número de la izquierda, el de tu máquina." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="razonamiento-3">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Un equipo trabaja con Compose y volúmenes con nombre. Predecí qué pasa en cada caso:</p>
+<p>1. Ejecutan <code>docker compose down</code> al terminar el día y <code>docker compose up -d</code> a la mañana siguiente: las tablas
+<select class="quiz-blank" data-correct="siguen">
+<option value="">— elige —</option>
+<option value="siguen">siguen ahí, con sus datos</option>
+<option value="vacias">quedan vacías, sin filas</option>
+<option value="desaparecen">han desaparecido por completo</option>
+</select>.</p>
+<p>2. Ejecutan <code>docker compose down -v</code> y luego <code>up -d</code>: la base de datos
+<select class="quiz-blank" data-correct="nueva">
+<option value="">— elige —</option>
+<option value="conserva">conserva todo, porque -v es de verbose</option>
+<option value="nueva">arranca vacía, sin ningún dato anterior</option>
+<option value="error">no arranca hasta que se cree un volumen a mano</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué diferencia hay entre una imagen y un contenedor?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Son lo mismo; "contenedor" es solo el nombre que se usa en Windows.</button>
+<button class="quiz-opt">La imagen está en ejecución y el contenedor es el archivo de instalación.</button>
+<button class="quiz-opt" data-correct>La imagen es la plantilla; el contenedor es una instancia en ejecución de ella.</button>
+<button class="quiz-opt">El contenedor guarda los datos de forma permanente y la imagen no.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la imagen es de solo lectura y sirve de molde; cada contenedor es una instancia viva creada a partir de ella." data-ko="La imagen es la plantilla de solo lectura y el contenedor la instancia en ejecución. Y los datos no se guardan de forma permanente en el contenedor: para eso existen los volúmenes." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Al ejecutar <code>docker rm</code> sobre un contenedor de PostgreSQL cuyo directorio de datos está montado en un volumen con nombre, se borran también los datos del volumen.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Falso</button>
+<button class="quiz-opt">Verdadero</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: docker rm elimina el contenedor, no los volúmenes con nombre. Los datos se pierden solo si borrás el volumen (docker volume rm o compose down -v)." data-ko="Es falso: un volumen con nombre es independiente del contenedor y sobrevive a docker rm. Solo se elimina si lo pedís explícitamente con docker volume rm o docker compose down -v." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué configura la variable <code>MONGO_INITDB_ROOT_USERNAME</code>?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El nombre de la primera colección que se crea al iniciar.</button>
+<button class="quiz-opt" data-correct>El nombre del usuario administrador que se crea al inicializar.</button>
+<button class="quiz-opt">El nombre del contenedor dentro de la red de Docker.</button>
+<button class="quiz-opt">El nombre del volumen donde se guardan los datos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: junto con MONGO_INITDB_ROOT_PASSWORD, crea el usuario administrador la primera vez que se inicializa el directorio de datos." data-ko="Esa variable define el usuario administrador de MongoDB, creado al inicializar. El nombre del contenedor se fija con --name y el del volumen con -v." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Tu aplicación corre como un servicio más del mismo <code>docker-compose.yml</code> que PostgreSQL. ¿Qué host usa en su cadena de conexión?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">localhost, porque la base de datos está en la misma computadora.</button>
+<button class="quiz-opt">La dirección IP pública que tenga tu equipo en ese momento.</button>
+<button class="quiz-opt">El nombre del volumen donde PostgreSQL guarda sus datos.</button>
+<button class="quiz-opt" data-correct>El nombre del servicio, por ejemplo postgres.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Compose crea una red compartida en la que cada servicio se resuelve por su nombre. Dentro de un contenedor, localhost apunta al propio contenedor de la aplicación." data-ko="Dentro de un contenedor, localhost es ese mismo contenedor, no la base de datos. En la red que crea Compose, cada servicio se alcanza por su nombre, como postgres o mongo." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué conviene escribir <code>postgres:16</code> en lugar de solo <code>postgres</code>?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Para que todos usen la misma versión y no cambie sin aviso.</button>
+<button class="quiz-opt">Porque sin la etiqueta Docker no puede descargar la imagen.</button>
+<button class="quiz-opt">Porque la versión 16 es la única que admite volúmenes con nombre.</button>
+<button class="quiz-opt">Porque la etiqueta acelera la descarga al saltarse la verificación.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: sin etiqueta Docker usa latest, que puede saltar a otra versión mayor en cualquier momento y volver incompatible un directorio de datos existente." data-ko="Sin etiqueta Docker sí descarga la imagen, pero usa latest, que puede cambiar de versión mayor sin avisarte. Fijar la etiqueta es lo que garantiza un entorno reproducible." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Comando</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>docker run -d --name X -e V=v -p H:C -v vol:/ruta imagen:tag</code></td><td>Crea y arranca un contenedor en segundo plano.</td></tr>
+<tr><td><code>docker ps -a</code></td><td>Lista contenedores, incluidos los detenidos.</td></tr>
+<tr><td><code>docker logs -f X</code></td><td>Sigue en vivo los mensajes del contenedor.</td></tr>
+<tr><td><code>docker exec -it X psql -U usuario</code></td><td>Abre un cliente dentro del contenedor.</td></tr>
+<tr><td><code>docker stop X / docker start X</code></td><td>Detiene o reanuda un contenedor sin perder nada.</td></tr>
+<tr><td><code>docker rm X</code></td><td>Elimina el contenedor (los volúmenes con nombre quedan).</td></tr>
+<tr><td><code>docker volume ls / rm V</code></td><td>Lista o elimina volúmenes. <code>rm</code> borra los datos.</td></tr>
+<tr><td><code>docker compose up -d / down</code></td><td>Levanta o apaga todos los servicios del archivo.</td></tr>
+<tr><td><code>docker compose down -v</code></td><td>Apaga y borra también los volúmenes: pierde los datos.</td></tr>
+<tr><td><code>POSTGRES_PASSWORD · MONGO_INITDB_ROOT_PASSWORD</code></td><td>Contraseñas de administrador; solo se leen al inicializar.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🐋 El nombre</h3><p>Docker se lanzó como proyecto de código abierto en 2013. La ballena de su logo carga contenedores sobre el lomo, igual que los barcos de carga que inspiraron el nombre.</p></div>
+<div class="info"><h3>⚡ No es una máquina virtual</h3><p>Un contenedor comparte el núcleo del sistema operativo de tu computadora, por eso arranca en segundos y pesa mucho menos que una máquina virtual completa, que trae su propio sistema operativo.</p></div>
+<div class="info"><h3>🧹 Entornos descartables</h3><p>Como un contenedor se destruye y recrea en segundos, muchos equipos levantan una base de datos limpia para cada ejecución de sus pruebas automáticas y la tiran al terminar.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Reforzamiento: Docker para Bases de Datos</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+</script>
+
+<script>
+/* =======================================================================
+   Armador de comandos (actividad exploratoria, no califica): arma en vivo
+   el docker run y el docker-compose.yml según las opciones elegidas.
+   ======================================================================= */
+(function(){
+  const $ = id => document.getElementById(id);
+  const el = {
+    pg: $("armPg"), mg: $("armMg"), pass: $("armPass"),
+    portPg: $("armPortPg"), portMg: $("armPortMg"),
+    vol: $("armVol"), env: $("armEnv"),
+    avisos: $("armAvisos"), run: $("armRun"), compose: $("armCompose"),
+    envBloque: $("armEnvBloque"), envTxt: $("armEnvTxt")
+  };
+  const DEBILES = ["postgres","admin","root","password","1234","12345","123456","12345678","qwerty","mongo"];
+  const puertoValido = v => /^\d+$/.test(v) && +v >= 1 && +v <= 65535;
+  const simple = s => /^[A-Za-z0-9_.\-]+$/.test(s);
+  const shellQ = s => simple(s) ? s : "'" + s.replace(/'/g, "'\\''") + "'";
+  const yamlQ = s => simple(s) ? s : '"' + s.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
+
+  function aviso(lista, texto, tipo){ lista.push({ texto, tipo: tipo || "" }); }
+
+  function render(){
+    const usaPg = el.pg.checked, usaMg = el.mg.checked;
+    const usaEnv = el.env.checked;
+    const vol = el.vol.value;
+    const pass = el.pass.value;
+    const portPg = el.portPg.value.trim(), portMg = el.portMg.value.trim();
+    const avisos = [];
+
+    if (!usaPg && !usaMg) {
+      el.run.innerHTML = '<span class="armador-vacio">Elegí al menos un motor.</span>';
+      el.compose.innerHTML = '<span class="armador-vacio">Elegí al menos un motor.</span>';
+      el.envBloque.hidden = true;
+      el.avisos.innerHTML = "";
+      return;
+    }
+
+    let errores = false;
+    if (!pass.trim()) { aviso(avisos, "Falta la contraseña: PostgreSQL no arranca sin POSTGRES_PASSWORD, y MongoDB quedaría sin autenticación.", "error"); errores = true; }
+    if (usaPg && !puertoValido(portPg)) { aviso(avisos, "El puerto de PostgreSQL debe ser un número entre 1 y 65535.", "error"); errores = true; }
+    if (usaMg && !puertoValido(portMg)) { aviso(avisos, "El puerto de MongoDB debe ser un número entre 1 y 65535.", "error"); errores = true; }
+    if (usaPg && usaMg && portPg === portMg && puertoValido(portPg)) { aviso(avisos, "Los dos motores no pueden publicar el mismo puerto en tu máquina: el segundo contenedor fallaría con port is already allocated.", "error"); errores = true; }
+
+    if (pass.trim() && (pass.length < 8 || DEBILES.includes(pass.toLowerCase()))) aviso(avisos, "Contraseña débil: en un puerto publicado, cualquiera en tu red puede probarla. Usá al menos 8 caracteres y evitá palabras comunes.");
+    if (vol === "none") aviso(avisos, "Sin volumen: al borrar el contenedor perdés el acceso a los datos. Servirá para una prueba descartable, no para un proyecto.");
+    if (vol === "bind" && usaPg) aviso(avisos, "Carpeta local con PostgreSQL: en Windows y macOS suele dar problemas de permisos. Un volumen con nombre es más seguro.");
+    if (usaPg && portPg === "5432") aviso(avisos, "Si ya tenés PostgreSQL instalado en tu PC, el 5432 estará ocupado. En ese caso publicá otro puerto, como 5433.");
+    if (!usaEnv && pass.trim()) aviso(avisos, "La contraseña queda escrita en el comando y en el YAML. En un repositorio real va en un archivo .env fuera de Git (activá la casilla para verlo).");
+    if (!errores && avisos.length === 0) aviso(avisos, "Configuración sin advertencias.", "ok");
+
+    el.avisos.innerHTML = "";
+    avisos.forEach(a => {
+      const d = document.createElement("div");
+      d.className = "armador-aviso " + a.tipo;
+      d.textContent = (a.tipo === "error" ? "⛔ " : a.tipo === "ok" ? "✅ " : "⚠️ ") + a.texto;
+      el.avisos.appendChild(d);
+    });
+
+    const pwShown = pass.trim() ? pass : "TU_CONTRASEÑA";
+    const pgPort = puertoValido(portPg) ? portPg : "5432";
+    const mgPort = puertoValido(portMg) ? portMg : "27017";
+    const volRun = (nombre, ruta, carpeta) =>
+      vol === "named" ? ["  -v " + nombre + ":" + ruta] :
+      vol === "bind"  ? ["  -v " + carpeta + ":" + ruta] : [];
+
+    /* ---- docker run ---- */
+    const bloquesRun = [];
+    if (usaPg) {
+      const l = ["docker run -d --name pg-uab"];
+      if (usaEnv) l.push("  --env-file .env");
+      else l.push("  -e POSTGRES_PASSWORD=" + shellQ(pwShown));
+      l.push("  -p " + pgPort + ":5432");
+      volRun("pgdata", "/var/lib/postgresql/data", "./datos/postgres").forEach(x => l.push(x));
+      l.push("  postgres:16");
+      bloquesRun.push(l.join(" \\\n"));
+    }
+    if (usaMg) {
+      const l = ["docker run -d --name mongo-uab"];
+      if (usaEnv) l.push("  --env-file .env");
+      else {
+        l.push("  -e MONGO_INITDB_ROOT_USERNAME=admin");
+        l.push("  -e MONGO_INITDB_ROOT_PASSWORD=" + shellQ(pwShown));
+      }
+      l.push("  -p " + mgPort + ":27017");
+      volRun("mongodata", "/data/db", "./datos/mongo").forEach(x => l.push(x));
+      l.push("  mongo:7");
+      bloquesRun.push(l.join(" \\\n"));
+    }
+    let textoRun = bloquesRun.join("\n\n");
+    if (usaEnv) textoRun += "\n\n# el archivo .env define las variables de cada motor (ver más abajo)";
+    el.run.textContent = textoRun;
+
+    /* ---- docker-compose.yml ---- */
+    const y = ["services:"];
+    const nombrados = [];
+    if (usaPg) {
+      y.push("  postgres:", "    image: postgres:16", "    container_name: pg-uab", "    environment:");
+      y.push("      POSTGRES_PASSWORD: " + (usaEnv ? "${POSTGRES_PASSWORD}" : yamlQ(pwShown)));
+      y.push("    ports:", '      - "' + pgPort + ':5432"');
+      if (vol === "named") { y.push("    volumes:", "      - pgdata:/var/lib/postgresql/data"); nombrados.push("pgdata"); }
+      if (vol === "bind")  { y.push("    volumes:", "      - ./datos/postgres:/var/lib/postgresql/data"); }
+    }
+    if (usaPg && usaMg) y.push("");
+    if (usaMg) {
+      y.push("  mongo:", "    image: mongo:7", "    container_name: mongo-uab", "    environment:");
+      y.push("      MONGO_INITDB_ROOT_USERNAME: admin");
+      y.push("      MONGO_INITDB_ROOT_PASSWORD: " + (usaEnv ? "${MONGO_PASSWORD}" : yamlQ(pwShown)));
+      y.push("    ports:", '      - "' + mgPort + ':27017"');
+      if (vol === "named") { y.push("    volumes:", "      - mongodata:/data/db"); nombrados.push("mongodata"); }
+      if (vol === "bind")  { y.push("    volumes:", "      - ./datos/mongo:/data/db"); }
+    }
+    if (nombrados.length) { y.push("", "volumes:"); nombrados.forEach(n => y.push("  " + n + ":")); }
+    el.compose.textContent = y.join("\n");
+
+    /* ---- .env ---- */
+    el.envBloque.hidden = !usaEnv;
+    if (usaEnv) {
+      const e = [];
+      if (usaPg) e.push("POSTGRES_PASSWORD=" + pwShown);
+      if (usaMg) {
+        e.push("MONGO_PASSWORD=" + pwShown);
+        e.push("MONGO_INITDB_ROOT_USERNAME=admin");
+        e.push("MONGO_INITDB_ROOT_PASSWORD=" + pwShown);
+      }
+      e.push("", "# agregá .env a tu .gitignore");
+      el.envTxt.textContent = e.join("\n");
+    }
+  }
+
+  [el.pg, el.mg, el.pass, el.portPg, el.portMg, el.vol, el.env].forEach(c => {
+    c.addEventListener("input", render);
+    c.addEventListener("change", render);
+  });
+
+  document.querySelectorAll("[data-copiar]").forEach(btn => {
+    const original = btn.textContent;
+    btn.addEventListener("click", async () => {
+      const texto = document.getElementById(btn.dataset.copiar).textContent;
+      let ok = false;
+      try { await navigator.clipboard.writeText(texto); ok = true; }
+      catch (e) {
+        const ta = document.createElement("textarea");
+        ta.value = texto; ta.style.cssText = "position:fixed;opacity:0";
+        document.body.appendChild(ta); ta.select();
+        try { ok = document.execCommand("copy"); } catch (_) {}
+        ta.remove();
+      }
+      btn.textContent = ok ? "✅ Copiado" : "No se pudo copiar";
+      setTimeout(() => { btn.textContent = original; }, 2000);
+    });
+  });
+
+  render();
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

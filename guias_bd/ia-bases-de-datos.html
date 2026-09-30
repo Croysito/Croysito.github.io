@@ -53,7 +53,13 @@
    A diferencia de los talleres, acá NO se bloquea copiar/pegar en los
    editores: el ejercicio no es "escribí SQL de memoria" sino "pegá y
    ejecutá lo que te sugirió la IA para verificarlo con tus propios ojos",
-   así que los editores parten pre-cargados con esa sugerencia. */
+   así que los editores de "respuesta de la IA" parten vacíos: el estudiante
+   copia el prompt, se lo pasa a su IA y pega la respuesta; el botón
+   "Cargar respuesta de ejemplo" trae la que recibió Iván (fallback). */
+.highlight .code-btn{ background:var(--verde); border-color:var(--verde); color:white; margin-top:6px; }
+.highlight .code-btn:hover{ background:var(--verde2); }
+.editor-header .code-btn.cargar-ejemplo{ margin-right:6px; }
+.code pre.copiable,.code pre.copiable *{ user-select:text; -webkit-user-select:text; -ms-user-select:text; }
 .sql-result-table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
 .sql-result-table th,.sql-result-table td{ padding:8px 10px; text-align:left; border:1px solid rgba(255,255,255,.15); }
 .sql-result-table thead th{ background:rgba(255,255,255,.08); color:#8fd48a; }
@@ -124,8 +130,8 @@
 <h2>Dale el esquema real, no una descripción de memoria</h2>
 <p class="lead">Esta es la base de datos real de Iván —la misma que ya construiste en la guía de DDL— ya cargada con clientes, productos y algunos pedidos de ejemplo:</p>
 <div class="code">
-<div class="code-header"><span>Esquema de ejemplo (ya cargado más abajo)</span></div>
-<pre><code class="src">CREATE TABLE cliente (
+<div class="code-header"><span>Esquema de ejemplo (ya cargado más abajo)</span><button type="button" class="code-btn copiar-esquema">📋 Copiar esquema</button></div>
+<pre class="copiable"><code class="src">CREATE TABLE cliente (
     cliente_id      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     cliente_nombre  VARCHAR(120) NOT NULL
 );
@@ -155,20 +161,24 @@ CREATE TABLE detalle_pedido (
 </div>
 
 <div class="highlight">
+<strong>🤖 Cómo funcionan los ejercicios con IA de esta guía</strong>
+<p>Cada vez que veas un prompt con el botón <strong>📋 Copiar prompt</strong>: pegáselo a la IA que uses (ChatGPT, Claude, Gemini, Copilot…), copiá el SQL que te devuelva, pegalo en el editor de abajo y ejecutalo contra la base de datos de Iván.</p>
+<p>Tu IA puede responder distinto a la del caso —sobre todo si le das el esquema, hoy muchas aciertan a la primera—. Si eso pasa, o no tenés una IA a mano, usá <strong>💡 Cargar respuesta de ejemplo</strong> para seguir el caso de Iván con la respuesta que él recibió.</p>
+</div>
+
+<div class="highlight">
 <strong>🧑 El prompt que escribió Iván (sin esquema)</strong>
 <p><em>"Tengo una base de datos de pedidos. Dame una consulta que traiga el nombre y el correo de mis clientes."</em></p>
+<button type="button" class="code-btn copiar-prompt" data-prompt="Tengo una base de datos de pedidos. Dame una consulta que traiga el nombre y el correo de mis clientes.">📋 Copiar prompt</button>
 </div>
-<div class="code">
-<div class="code-header"><span>🤖 Respuesta de la IA</span></div>
-<pre><code class="src">SELECT nombre, email FROM clientes;</code></pre>
-</div>
-<p>Ejecutala vos, contra la base de datos real de Iván:</p>
+<p>Pegá acá la respuesta de la IA y ejecutala contra la base de datos real de Iván:</p>
 <div class="editor-panel">
 <div class="editor-header">
 <span>SQL sugerido — sin haberle mostrado el esquema a la IA</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+<span><button type="button" class="code-btn cargar-ejemplo">💡 Cargar respuesta de ejemplo</button> <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button></span>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL sugerido sin esquema">SELECT nombre, email FROM clientes;</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL sugerido sin esquema" placeholder="Pegá acá el SQL que te devolvió la IA…"></textarea>
+<script type="text/plain" class="ejemplo">SELECT nombre, email FROM clientes;</script>
 <div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
 </div>
 
@@ -176,17 +186,15 @@ CREATE TABLE detalle_pedido (
 <div class="highlight">
 <strong>🧑 El prompt correcto (con esquema real)</strong>
 <p><em>"Este es el esquema real de mi base de datos: [los 4 CREATE TABLE de arriba]. Dame una consulta que traiga el nombre de mis clientes."</em></p>
-</div>
-<div class="code">
-<div class="code-header"><span>🤖 Respuesta de la IA</span></div>
-<pre><code class="src">SELECT cliente_nombre FROM cliente;</code></pre>
+<button type="button" class="code-btn copiar-prompt" data-prompt="Este es el esquema real de mi base de datos:&#10;&#10;{{ESQUEMA}}&#10;&#10;Dame una consulta que traiga el nombre de mis clientes.">📋 Copiar prompt (con el esquema incluido)</button>
 </div>
 <div class="editor-panel">
 <div class="editor-header">
 <span>SQL sugerido — con el esquema real ya compartido</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+<span><button type="button" class="code-btn cargar-ejemplo">💡 Cargar respuesta de ejemplo</button> <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button></span>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL sugerido con esquema">SELECT cliente_nombre FROM cliente;</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL sugerido con esquema" placeholder="Pegá acá el SQL que te devolvió la IA…"></textarea>
+<script type="text/plain" class="ejemplo">SELECT cliente_nombre FROM cliente;</script>
 <div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
 </div>
 
@@ -223,18 +231,20 @@ CREATE TABLE detalle_pedido (
 
 <section class="flow-flat" id="decision2" hidden>
 <h2>La IA responde — pero con un problema</h2>
-<p class="lead">Con el esquema ya compartido, Iván pide: "dame los nombres de los clientes". La IA responde:</p>
-<div class="code">
-<div class="code-header"><span>🤖 Respuesta de la IA</span></div>
-<pre><code class="src">SELECT nombre_cliente FROM cliente;</code></pre>
+<p class="lead">Con el esquema ya compartido, Iván pide: "dame los nombres de los clientes". La respuesta que recibió trae un problema.</p>
+<div class="highlight">
+<strong>🧑 El prompt de Iván</strong>
+<p><em>"[el esquema real] Dame los nombres de los clientes."</em></p>
+<button type="button" class="code-btn copiar-prompt" data-prompt="Este es el esquema real de mi base de datos:&#10;&#10;{{ESQUEMA}}&#10;&#10;Dame los nombres de los clientes.">📋 Copiar prompt (con el esquema incluido)</button>
 </div>
-<p>Ejecutala vos:</p>
+<p>Pegá la respuesta de tu IA y ejecutala. Si te devolvió algo distinto y correcto, probá igual el ejemplo de Iván para ver el error:</p>
 <div class="editor-panel">
 <div class="editor-header">
 <span>SQL sugerido por la IA</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+<span><button type="button" class="code-btn cargar-ejemplo">💡 Cargar respuesta de ejemplo</button> <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button></span>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL con columna inventada">SELECT nombre_cliente FROM cliente;</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL con columna inventada" placeholder="Pegá acá el SQL que te devolvió la IA…"></textarea>
+<script type="text/plain" class="ejemplo">SELECT nombre_cliente FROM cliente;</script>
 <div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
 </div>
 
@@ -256,24 +266,34 @@ CREATE TABLE detalle_pedido (
 <h2>Detectar alucinaciones: cuando el error sí avisa</h2>
 <p class="lead">"Alucinación" no es una metáfora vacía: la IA inventa una tabla o columna que suena perfectamente plausible pero no existe en tu esquema, porque genera la secuencia de palabras más probable, no una consulta verificada. La buena noticia es que PostgreSQL casi siempre la rechaza con un error claro, apenas la ejecutás. El error que acabás de ver es un caso típico. Dos más, para reconocer el patrón:</p>
 
+<div class="highlight">
+<strong>🧑 Prompt: "Dame todas las ventas del mes"</strong>
+<button type="button" class="code-btn copiar-prompt" data-prompt="Este es el esquema real de mi base de datos:&#10;&#10;{{ESQUEMA}}&#10;&#10;Dame todas las ventas del mes.">📋 Copiar prompt (con el esquema incluido)</button>
+</div>
 <div class="editor-panel">
 <div class="editor-header">
 <span>🤖 "Dame todas las ventas del mes" → respuesta de la IA</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+<span><button type="button" class="code-btn cargar-ejemplo">💡 Cargar respuesta de ejemplo</button> <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button></span>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL con tabla inventada">SELECT * FROM ventas;</textarea>
+<textarea class="editor" spellcheck="false" style="min-height:50px" aria-label="SQL con tabla inventada" placeholder="Pegá acá el SQL que te devolvió la IA…"></textarea>
+<script type="text/plain" class="ejemplo">SELECT * FROM ventas;</script>
 <div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
 </div>
 <p>"Ventas" es un nombre de tabla genérico que aparece en miles de ejemplos con los que se entrenó la IA —pero en el esquema de Iván esa tabla nunca existió.</p>
 
+<div class="highlight">
+<strong>🧑 Prompt: "Dame el cliente y el total de cada pedido"</strong>
+<button type="button" class="code-btn copiar-prompt" data-prompt="Este es el esquema real de mi base de datos:&#10;&#10;{{ESQUEMA}}&#10;&#10;Dame el cliente y el total de cada pedido.">📋 Copiar prompt (con el esquema incluido)</button>
+</div>
 <div class="editor-panel">
 <div class="editor-header">
 <span>🤖 "Dame el cliente y el total de cada pedido" → respuesta de la IA</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+<span><button type="button" class="code-btn cargar-ejemplo">💡 Cargar respuesta de ejemplo</button> <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button></span>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="SQL con columna inventada en JOIN">SELECT c.cliente_nombre, p.total
+<textarea class="editor" spellcheck="false" style="min-height:70px" aria-label="SQL con columna inventada en JOIN" placeholder="Pegá acá el SQL que te devolvió la IA…"></textarea>
+<script type="text/plain" class="ejemplo">SELECT c.cliente_nombre, p.total
 FROM cliente c
-JOIN pedido p ON p.cliente_id = c.cliente_id;</textarea>
+JOIN pedido p ON p.cliente_id = c.cliente_id;</script>
 <div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
 </div>
 <p>El JOIN está perfecto —esa parte la IA la razonó bien— pero <code>pedido</code> no tiene ninguna columna <code>total</code>: eso se calcula sumando <code>detalle_pedido</code>, no viene guardado directamente.</p>
@@ -304,30 +324,26 @@ JOIN pedido p ON p.cliente_id = c.cliente_id;</textarea>
 
 <section class="flow-flat" id="decision3" hidden>
 <h2>Ahora la consulta "corre" sin problema</h2>
-<p class="lead">Ya con los nombres corregidos, Iván pide: "dame el total gastado por Ana Rojas". La IA responde:</p>
-<div class="code">
-<div class="code-header"><span>🤖 Respuesta de la IA</span></div>
-<pre><code class="src">SELECT c.cliente_nombre, SUM(pr.precio) AS total
-FROM cliente c
-JOIN pedido p ON p.cliente_id = c.cliente_id
-JOIN detalle_pedido dp ON dp.pedido_id = p.pedido_id
-JOIN producto pr ON pr.producto_id = dp.producto_id
-WHERE c.cliente_nombre = 'Ana Rojas'
-GROUP BY c.cliente_nombre;</code></pre>
+<p class="lead">Ya con los nombres corregidos, Iván pide: "dame el total gastado por Ana Rojas". La respuesta que recibió corre sin ningún error.</p>
+<div class="highlight">
+<strong>🧑 El prompt de Iván</strong>
+<p><em>"[el esquema real] Dame el total gastado por Ana Rojas."</em></p>
+<button type="button" class="code-btn copiar-prompt" data-prompt="Este es el esquema real de mi base de datos:&#10;&#10;{{ESQUEMA}}&#10;&#10;Dame el total gastado por Ana Rojas.">📋 Copiar prompt (con el esquema incluido)</button>
 </div>
-<p>Ejecutala vos, y fijate el resultado:</p>
+<p>Pegá la respuesta de tu IA, ejecutala y fijate el resultado. Ojo: es posible que la tuya sí multiplique por la cantidad —si es así, cargá también el ejemplo de Iván para ver el error que esta sección quiere mostrar:</p>
 <div class="editor-panel">
 <div class="editor-header">
 <span>SQL sugerido por la IA</span>
-<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+<span><button type="button" class="code-btn cargar-ejemplo">💡 Cargar respuesta de ejemplo</button> <button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button></span>
 </div>
-<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="SQL con error de lógica silencioso">SELECT c.cliente_nombre, SUM(pr.precio) AS total
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="SQL con error de lógica silencioso" placeholder="Pegá acá el SQL que te devolvió la IA…"></textarea>
+<script type="text/plain" class="ejemplo">SELECT c.cliente_nombre, SUM(pr.precio) AS total
 FROM cliente c
 JOIN pedido p ON p.cliente_id = c.cliente_id
 JOIN detalle_pedido dp ON dp.pedido_id = p.pedido_id
 JOIN producto pr ON pr.producto_id = dp.producto_id
 WHERE c.cliente_nombre = 'Ana Rojas'
-GROUP BY c.cliente_nombre;</textarea>
+GROUP BY c.cliente_nombre;</script>
 <div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
 </div>
 <p>Corre sin ningún error. La IA agrega: "Listo, la consulta ya está optimizada."</p>
@@ -1115,6 +1131,54 @@ function conectarSqlLab(panel){
 }
 
 document.querySelectorAll(".editor-panel").forEach(conectarSqlLab);
+
+/* ===== Prompts copiables y respuesta de ejemplo ===== */
+function armarPrompt(plantilla){
+  const esquema = DB_SEED.slice(0, DB_SEED.indexOf("INSERT")).trim();
+  return plantilla.replace("{{ESQUEMA}}", esquema);
+}
+
+async function copiarTexto(texto){
+  try {
+    await navigator.clipboard.writeText(texto);
+    return true;
+  } catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = texto;
+    ta.style.cssText = "position:fixed;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (_) {}
+    ta.remove();
+    return ok;
+  }
+}
+
+document.querySelectorAll(".copiar-prompt").forEach(btn => {
+  const original = btn.textContent;
+  btn.addEventListener("click", async () => {
+    const ok = await copiarTexto(armarPrompt(btn.dataset.prompt));
+    btn.textContent = ok ? "✅ Copiado — pegalo en tu IA" : "No se pudo copiar";
+    setTimeout(() => { btn.textContent = original; }, 2200);
+  });
+});
+
+document.querySelectorAll(".copiar-esquema").forEach(btn => {
+  const original = btn.textContent;
+  btn.addEventListener("click", async () => {
+    const ok = await copiarTexto(armarPrompt("{{ESQUEMA}}"));
+    btn.textContent = ok ? "✅ Copiado" : "No se pudo copiar";
+    setTimeout(() => { btn.textContent = original; }, 2200);
+  });
+});
+
+document.querySelectorAll(".cargar-ejemplo").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const panel = btn.closest(".editor-panel");
+    panel.querySelector(".editor").value = panel.querySelector("script.ejemplo").textContent.trim();
+  });
+});
 
 /* ===== Botón "Reiniciar base de datos" ===== */
 const resetBtn = document.getElementById("resetDbBtn");
