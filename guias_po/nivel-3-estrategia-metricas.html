@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nivel 3: Estrategia y Métricas | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">Club · <span>PO Nivel 3</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="okrs">OKRs y KPIs</button>
+<button data-target="roadmap">Roadmap y Story Mapping</button>
+<button data-target="nsm">North Star Metric</button>
+<button data-target="experimentos">Hipótesis y MVP</button>
+<button data-target="resultados">Leer un experimento</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🎯 Club · Ruta Product Owner · Nivel 3</span>
+<h1 class="flow-h1">Del sprint al rumbo: <span>objetivos, roadmap y evidencia</span></h1>
+<p class="flow-lead">En el Nivel 2 aprendiste a ordenar el backlog y a correr un sprint. Pero un equipo puede entregar sprint tras sprint y aun así no saber hacia dónde va. Este nivel sube un piso: cómo fijar objetivos que se puedan medir, cómo mostrar un roadmap sin prometer fechas imposibles, cómo elegir una sola métrica que diga si el producto funciona, y cómo probar una idea barata antes de construirla cara.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Seguís acompañando a Lucía, PO de <strong>TurnoYa</strong>. Si todavía no hiciste el <a href="nivel-2-backlog-sprint.html">Nivel 2</a>, conviene empezar por ahí. En cada decisión podés probar un camino equivocado, ver su consecuencia sin penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>Un backlog ordenado, pero ¿hacia dónde?</h2>
+<p class="lead">Don Julio, el dueño de la fotocopiadora, le pregunta a Lucía: "¿Qué va a lograr TurnoYa este trimestre?". Ella le muestra su lista de doce historias priorizadas. Don Julio asiente, pero el equipo sigue sin saber para qué se construye cada una: si mañana aparece una idea nueva, nadie puede decir si ayuda o no.</p>
+<div class="highlight">
+<strong>Lo que está en juego</strong>
+<p>Una lista de funciones dice <em>qué</em> se va a construir, pero no <em>para qué</em>. Sin un rumbo claro, cada decisión de prioridad vuelve a empezar de cero.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="okrs decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo plantea Lucía el rumbo del trimestre?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Con la lista de las doce funciones que se entregarán, ordenadas por fecha, como compromiso con Don Julio.</button>
+<button class="quiz-opt" data-key="b">Con un objetivo ambicioso y sin números, para que cada persona lo interprete a su manera y se mantenga flexible.</button>
+<button class="quiz-opt" data-key="c" data-correct>Con un objetivo claro y dos o tres resultados clave medibles que muestren si realmente se está cumpliendo.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Comprometer una lista de funciones convierte el éxito en "entregar todo", aunque nada de eso mejore la vida del estudiante. Se puede cumplir la lista y fracasar en lo que importaba. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Sin números, cada persona entiende algo distinto y nadie puede decir a fin de trimestre si se cumplió o no. Un objetivo que no se puede verificar no orienta ninguna decisión. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Ese es el formato OKR: un objetivo que inspira y resultados clave numéricos que permiten saber, con evidencia, si te estás acercando. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="okrs" hidden>
+<h2>OKRs y KPIs: objetivo, resultados y salud del producto</h2>
+<p class="lead">Son dos herramientas distintas, con dos propósitos distintos. Los OKRs apuntan a un cambio que querés lograr en un período; los KPIs vigilan lo que no puede deteriorarse.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto</th><th scope="col">Qué es</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Objetivo (O)</td><td>Una meta cualitativa e inspiradora: qué querés lograr, sin números.</td><td>"Que ir a la fotocopiadora deje de significar hacer fila."</td></tr>
+<tr><td>Resultado clave (KR)</td><td>Una medida numérica que dice si te acercás al objetivo. Mide un resultado, no una tarea.</td><td>"Subir de 35% a 60% los turnos reservados desde la app."</td></tr>
+<tr><td>KPI</td><td>Un indicador que se monitorea siempre, para ver la salud del producto. No tiene una meta de trimestre.</td><td>Turnos cancelados por semana.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Tarea vs resultado</strong>
+<p>"Lanzar el módulo de pagos" es una tarea: se hace o no se hace. "Que 30% de los pagos se hagan con QR" es un resultado: depende de que la gente realmente lo use. Un resultado clave que se puede cumplir sin que nada cambie para el usuario es una tarea disfrazada.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="okrs-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Es un resultado clave o una tarea disfrazada?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Lanzar la pantalla de recordatorios antes de fin de mes.</span>
+<div class="quiz-classify-btns">
+<button>Resultado clave</button>
+<button data-correct>Tarea disfrazada</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Subir de 35% a 60% los turnos reservados desde la app.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Resultado clave</button>
+<button>Tarea disfrazada</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Terminar las doce historias que hoy están en el backlog.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Tarea disfrazada</button>
+<button>Resultado clave</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Bajar de 15% a 5% los turnos en los que el estudiante no se presenta.</span>
+<div class="quiz-classify-btns">
+<button>Tarea disfrazada</button>
+<button data-correct>Resultado clave</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Rediseñar el logo y la paleta de colores de la app.</span>
+<div class="quiz-classify-btns">
+<button>Resultado clave</button>
+<button data-correct>Tarea disfrazada</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Que 8 de cada 10 estudiantes nuevos reserven su primer turno sin pedir ayuda.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Resultado clave</button>
+<button>Tarea disfrazada</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>"Quiero el cronograma de los próximos seis meses"</h2>
+<p class="lead">Con los OKRs claros, Don Julio pide algo más: un cronograma con la fecha exacta de cada función durante seis meses, para planificar con la universidad. Lucía sabe que en tres sprints van a aprender cosas que cambiarán el plan, y no quiere prometer lo que no puede cumplir.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="roadmap decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué roadmap le muestra?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Uno Now-Next-Later: detalle de lo que se hace ahora, algo menos de lo siguiente, y solo dirección para lo que queda lejos.</button>
+<button class="quiz-opt" data-key="b">Un cronograma con fechas exactas, y si algo cambia después lo ajusta sin avisar para no preocuparlo.</button>
+<button class="quiz-opt" data-key="c">Ninguno: le explica que trabajan en forma ágil y que por eso no hay nada que mostrar a futuro.</button>
+</div>
+<p class="quiz-fb ko" data-key="b" hidden>Un cronograma exacto a seis meses es una promesa que el equipo todavía no tiene cómo sostener. Cuando se rompa —y se rompe—, Don Julio se entera de golpe y la confianza se pierde. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>"Ágil" no significa "sin dirección". Don Julio necesita saber hacia dónde va el producto para planificar; negarle toda visibilidad tampoco construye confianza. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. Un roadmap Now-Next-Later es honesto sobre la incertidumbre: da certeza donde la hay y dirección donde todavía no. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="roadmap" hidden>
+<h2>Roadmap: una dirección, no una promesa de fechas</h2>
+<p class="lead">El roadmap no es un contrato: es una forma de comunicar prioridades y rumbo. Cuanto más lejos mira, menos detalle debería tener.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Columna</th><th scope="col">Horizonte</th><th scope="col">Nivel de detalle</th></tr></thead>
+<tbody>
+<tr><td>Ahora (Now)</td><td>Este sprint y el siguiente.</td><td>Alto: historias claras, estimadas y en curso.</td></tr>
+<tr><td>Próximo (Next)</td><td>Uno a tres meses.</td><td>Medio: temas e ideas ya priorizadas, sin fecha exacta.</td></tr>
+<tr><td>Después (Later)</td><td>Más lejos.</td><td>Bajo: apuestas y dirección; pueden cambiar o desaparecer.</td></tr>
+</tbody>
+</table>
+
+<h3>Story Mapping: ver el recorrido completo del usuario</h3>
+<p>Un backlog es una lista plana y eso esconde el panorama. El <strong>story map</strong> acomoda las historias en dos ejes: horizontal, los pasos del recorrido del usuario; vertical, la prioridad (arriba lo imprescindible). Una línea horizontal marca la primera versión que ya sirve de punta a punta.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Recorrido →</th><th scope="col">Elegir servicio</th><th scope="col">Reservar</th><th scope="col">Ser atendido</th><th scope="col">Pagar</th></tr></thead>
+<tbody>
+<tr><td><strong>Primera versión</strong></td><td>Ver fotocopiadora o cafetería</td><td>Elegir horario libre</td><td>Mostrar código del turno</td><td>Pagar en el mostrador</td></tr>
+<tr><td><strong>Después</strong></td><td>Buscar por tipo de impresión</td><td>Recordatorio por WhatsApp</td><td>Avisar cuando falte poco</td><td>Pago con QR</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Por qué sirve</strong>
+<p>Evita construir la parte "más linda" de un solo paso del recorrido (por ejemplo, un pago sofisticado) mientras el estudiante todavía no puede ni reservar un turno de punta a punta.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="roadmap-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada concepto con su descripción.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="now">Ahora (Now)</button>
+<button class="quiz-match-item" data-pair="next">Próximo (Next)</button>
+<button class="quiz-match-item" data-pair="later">Después (Later)</button>
+<button class="quiz-match-item" data-pair="map">Story map</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="later">Apuestas y dirección lejana, que pueden cambiar o desaparecer.</button>
+<button class="quiz-match-item" data-pair="map">Mapa con el recorrido del usuario en horizontal y la prioridad en vertical.</button>
+<button class="quiz-match-item" data-pair="now">Trabajo en curso con historias claras y estimadas.</button>
+<button class="quiz-match-item" data-pair="next">Temas ya priorizados, sin fecha exacta, a uno o tres meses.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>Una sola métrica para saber si TurnoYa va bien</h2>
+<p class="lead">El equipo mira un tablero con quince números distintos y cada uno cuenta una historia diferente. Lucía quiere una única métrica que resuma si el producto entrega valor. Tomás propone tres candidatas: descargas de la app, estudiantes registrados y turnos completados por semana.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="nsm decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cuál elige como North Star Metric?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Las descargas de la app, porque es el número que más sube y el que más motiva al equipo.</button>
+<button class="quiz-opt" data-key="b" data-correct>Los turnos completados por semana, porque reflejan el valor que recibe el estudiante y se relacionan con el negocio.</button>
+<button class="quiz-opt" data-key="c">Los estudiantes registrados, porque es fácil de contar y es un número que nunca baja con el tiempo.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Una descarga solo dice que alguien instaló la app, no que le resolvió algo. Puede crecer mientras nadie vuelve a usarla, y entonces no avisa de ningún problema. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Un número que nunca baja no puede avisarte cuando algo anda mal: el acumulado solo crece, aunque la gente deje de usar el producto. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. Un turno completado significa que el estudiante reservó, se presentó y fue atendido: el valor real, y además puede bajar si algo se rompe. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="nsm" hidden>
+<h2>North Star Metric y métricas de vanidad</h2>
+<p class="lead">La North Star Metric (NSM) es la métrica que mejor captura el valor que el producto entrega a sus usuarios. No reemplaza a las demás: es la que orienta a todo el equipo en la misma dirección.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Pregunta de control</th><th scope="col">Una buena NSM</th><th scope="col">Una métrica de vanidad</th></tr></thead>
+<tbody>
+<tr><td>¿Refleja el valor que recibe el usuario?</td><td>Sí: mide algo que el usuario logró.</td><td>No: mide actividad de superficie.</td></tr>
+<tr><td>¿Puede bajar si hacemos algo mal?</td><td>Sí: avisa cuando algo se rompe.</td><td>No: suele ser un acumulado que solo crece.</td></tr>
+<tr><td>¿Dice qué decisión tomar?</td><td>Sí: el equipo puede influir en ella.</td><td>No: sube o baja sin que se sepa por qué.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Una NSM sola no alcanza</strong>
+<p>Se acompaña con métricas de apoyo que vigilan que no la estés inflando a costa de otra cosa. Si los turnos completados suben pero los tiempos de espera también, algo no está bien — por eso existen los KPIs del apartado anterior.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="nsm-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Es una métrica de vanidad o una métrica accionable?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Total acumulado de usuarios registrados desde el lanzamiento.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Vanidad</button>
+<button>Accionable</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Porcentaje de estudiantes que reserva un segundo turno dentro de las dos semanas siguientes.</span>
+<div class="quiz-classify-btns">
+<button>Vanidad</button>
+<button data-correct>Accionable</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Visitas a la página de inicio de la app durante el mes.</span>
+<div class="quiz-classify-btns">
+<button>Accionable</button>
+<button data-correct>Vanidad</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Tiempo promedio entre reservar el turno y ser atendido, medido por semana.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Accionable</button>
+<button>Vanidad</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cantidad de seguidores de la cuenta de TurnoYa en redes sociales.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Vanidad</button>
+<button>Accionable</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Turnos cancelados con menos de una hora de anticipación, por semana.</span>
+<div class="quiz-classify-btns">
+<button>Vanidad</button>
+<button data-correct>Accionable</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>Cuatro semanas de trabajo para una idea que no se probó</h2>
+<p class="lead">"Avisar por WhatsApp antes del turno" salió con 80 puntos en el RICE del Nivel 2, el más alto del backlog. Pero construirlo cuesta unas cuatro semanas-persona, y nadie sabe si los recordatorios realmente van a reducir las ausencias. El desarrollador más entusiasta ya quiere empezar.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="experimentos decision5">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Lucía antes de construirlo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Lo construye completo, porque el RICE ya dio 80 y los números calculados no se equivocan.</button>
+<button class="quiz-opt" data-key="b">Les pregunta en una encuesta si les gustaría recibir recordatorios, y construye si la mayoría dice que sí.</button>
+<button class="quiz-opt" data-key="c" data-correct>Formula una hipótesis y la prueba con un MVP barato: manda recordatorios a mano a un grupo chico y mide si se ausentan menos.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>El RICE incluye un 80% de confianza justamente porque es una estimación, no un hecho. Un número alto prioriza, pero no demuestra que la idea funcione. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Una encuesta mide lo que la gente dice que haría, no lo que hace. Casi todos contestan que sí a un recordatorio gratis, aunque después no cambien su conducta. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Probar a mano con pocas personas cuesta un par de horas, no cuatro semanas, y mide conducta real en lugar de opiniones. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="experimentos" hidden>
+<h2>Hipótesis y MVP: aprender barato antes de construir caro</h2>
+<p class="lead">Una idea de producto es una apuesta. Un experimento es la forma más barata de averiguar si la apuesta es buena antes de invertir semanas de trabajo.</p>
+
+<div class="highlight">
+<strong>Cómo se escribe una hipótesis</strong>
+<p>"Creemos que <em>[este cambio]</em> para <em>[estas personas]</em> logrará <em>[este resultado]</em>. Lo sabremos cuando <em>[esta métrica]</em> pase de <em>X</em> a <em>Y</em>."<br>
+Ejemplo: "Creemos que recordar el turno por WhatsApp a los estudiantes de primer año reducirá las ausencias. Lo sabremos cuando pasen de 15% a 8% o menos."</p>
+</div>
+
+<p>Un <strong>MVP</strong> (producto mínimo viable) no es una versión mala del producto: es lo más chico que permite aprender si la idea funciona. Hay formas muy baratas de armarlo:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Tipo</th><th scope="col">Qué se hace</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Concierge (a mano)</td><td>Hacer manualmente, para pocas personas, lo que luego se automatizaría.</td><td>Lucía manda los recordatorios desde su propio WhatsApp.</td></tr>
+<tr><td>Página señuelo</td><td>Mostrar la función y medir cuánta gente intenta usarla.</td><td>Un botón "Recordarme el turno" que registra clics, sin enviar nada todavía.</td></tr>
+<tr><td>Prototipo</td><td>Una maqueta navegable sin lógica real detrás.</td><td>Pantallas dibujadas que los estudiantes recorren en una entrevista.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-match" data-quiz-id="experimentos-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada término con lo que significa.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="hipotesis">Hipótesis</button>
+<button class="quiz-match-item" data-pair="mvp">MVP</button>
+<button class="quiz-match-item" data-pair="concierge">MVP concierge</button>
+<button class="quiz-match-item" data-pair="criterio">Criterio de éxito</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="criterio">Umbral que se fija antes de empezar para decidir si funcionó.</button>
+<button class="quiz-match-item" data-pair="concierge">Hacer a mano, para pocas personas, lo que luego se automatizaría.</button>
+<button class="quiz-match-item" data-pair="hipotesis">Afirmación que los datos pueden confirmar o refutar.</button>
+<button class="quiz-match-item" data-pair="mvp">Lo más chico que permite aprender si una idea funciona.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision5" hidden>
+<h2>"¡Funcionó! Lo construimos ya"</h2>
+<p class="lead">Lucía hizo el experimento: mandó recordatorios a mano a 12 estudiantes (grupo B) y a otros 12 no les mandó nada (grupo A, de comparación). Resultado: en el grupo A faltaron 3 y en el grupo B faltaron 2. Su criterio de éxito, fijado antes de empezar, era bajar las ausencias a la mitad. El desarrollador entusiasta ya está festejando.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-5" data-unlock="resultados repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Lucía con ese resultado?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Reconoce que la muestra es muy chica para concluir, extiende el experimento con más estudiantes y lo compara con su criterio original.</button>
+<button class="quiz-opt" data-key="b">Da el experimento por exitoso, porque el grupo B tuvo menos ausencias que el A y eso alcanza para decidir.</button>
+<button class="quiz-opt" data-key="c">Descarta la idea, porque la diferencia es de una sola persona y eso casi no se nota en la práctica.</button>
+</div>
+<p class="quiz-fb ko" data-key="b" hidden>Con 12 personas por grupo, una sola ausencia de diferencia puede ser puro azar: otro día, otro grupo, y el resultado se invierte. Además, 3 a 2 no alcanza el criterio de "bajar a la mitad" que ella misma había fijado. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Tampoco hay evidencia para descartarla: con tan pocos casos, tanto "no sirve" como "sirve" son compatibles con lo observado. Un resultado inconcluso no es un resultado negativo. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. Con tan pocos casos no se puede concluir ni en un sentido ni en el otro: se amplía la muestra y se juzga contra el criterio fijado de antemano. Cerrás el recorrido del nivel. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="resultados" hidden>
+<h2>Leer un experimento sin engañarte</h2>
+<p class="lead">El peligro de un experimento no es que salga mal, sino que lo interpretemos como queremos. Cuatro reglas ayudan a no engañarte.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Regla</th><th scope="col">Por qué importa</th></tr></thead>
+<tbody>
+<tr><td>Grupo de control</td><td>Sin un grupo que no reciba el cambio, no hay con qué comparar: cualquier mejora podría haber pasado igual.</td></tr>
+<tr><td>Cambiar una sola cosa</td><td>Si cambian dos cosas a la vez, no se sabe cuál produjo el resultado.</td></tr>
+<tr><td>Criterio fijado antes</td><td>Decidir qué es "éxito" después de ver los datos permite acomodar la conclusión a lo que uno esperaba.</td></tr>
+<tr><td>Muestra suficiente</td><td>Con pocos casos, la diferencia entre dos grupos puede ser azar y no un efecto real.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Tres salidas posibles</strong>
+<p><strong>Perseverar</strong> (la evidencia respalda la idea: construirla), <strong>pivotar</strong> (la idea no funciona pero el problema sigue siendo real: probar otra solución) o <strong>parar</strong> (ni la idea ni el problema justifican seguir). Un resultado inconcluso suma una cuarta: seguir midiendo.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="resultados-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. El grupo que NO recibe el cambio y sirve de comparación se llama grupo de
+<select class="quiz-blank" data-correct="control">
+<option value="">— elige —</option>
+<option value="variante">variante</option>
+<option value="control">control</option>
+<option value="muestra">muestra</option>
+</select>.</p>
+<p>2. Para saber qué produjo el resultado, en un experimento conviene cambiar
+<select class="quiz-blank" data-correct="una">
+<option value="">— elige —</option>
+<option value="una">una sola cosa</option>
+<option value="todo">todo lo posible</option>
+<option value="gusto">lo que el equipo prefiera</option>
+</select>.</p>
+<p>3. El criterio de éxito se fija
+<select class="quiz-blank" data-correct="antes">
+<option value="">— elige —</option>
+<option value="despues">después de ver los datos</option>
+<option value="review">cuando termine la Sprint Review</option>
+<option value="antes">antes de empezar el experimento</option>
+</select>.</p>
+<p>4. Con 24 personas y una sola ausencia de diferencia entre grupos, lo correcto es decir que el resultado es
+<select class="quiz-blank" data-correct="inconcluso">
+<option value="">— elige —</option>
+<option value="inconcluso">inconcluso</option>
+<option value="exitoso">exitoso</option>
+<option value="fracaso">un fracaso</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Para el objetivo "que reservar un turno sea rápido", ¿cuál es un buen resultado clave?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Implementar el nuevo formulario de reserva antes del viernes de esta semana.</button>
+<button class="quiz-opt">Entregar las seis historias del sprint con la Definition of Done cumplida.</button>
+<button class="quiz-opt" data-correct>Bajar de 4 a 1 minuto el tiempo promedio que lleva reservar un turno.</button>
+<button class="quiz-opt">Que el equipo se sienta cómodo con la nueva pantalla de reserva del sistema.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: es una medida numérica de un resultado para el usuario. Las otras opciones son tareas que se pueden cumplir sin que reservar sea más rápido, o sensaciones imposibles de verificar." data-ko="Un resultado clave mide un cambio para el usuario con números. Implementar algo o entregar historias son tareas (se pueden cumplir sin que nada mejore), y 'sentirse cómodo' no se puede verificar." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Un roadmap Now-Next-Later promete fechas exactas para todo lo que aparece en la columna "Después".</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: lo que aparece en 'Después' es dirección, no compromiso; puede cambiar o desaparecer según lo que se aprenda en el camino." data-ko="Es falso: justamente el valor del formato es no prometer fechas exactas para lo lejano. 'Después' marca dirección y apuestas, no compromisos." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Una app tiene 50.000 descargas pero casi nadie vuelve a usarla. ¿Qué dice eso de "descargas" como North Star Metric?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Mide interés al instalar, no valor recibido; por eso no sirve para guiar decisiones de producto.</button>
+<button class="quiz-opt">Que sí sirve, siempre que se la acompañe de más campañas para que las descargas sigan subiendo.</button>
+<button class="quiz-opt">Que el problema es la app, porque una buena North Star garantiza que los usuarios vuelvan.</button>
+<button class="quiz-opt">Que es irrelevante, porque ninguna métrica numérica sirve como guía de un producto.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: una descarga solo mide el momento de instalar. Una buena North Star captura el valor que el usuario recibe, y por eso puede bajar cuando algo no funciona." data-ko="Las descargas miden interés inicial, no valor entregado: pueden subir mientras nadie usa el producto. Una North Star no garantiza nada por sí sola, pero sí tiene que reflejar valor real, y otras métricas numéricas sí sirven." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: ponele rumbo a tu propio producto</h2>
+<p class="lead">Con un producto real (del club, de una materia, de un proyecto personal), escribí en no más de dos o tres líneas por punto: 1) un objetivo con dos resultados clave medibles, 2) un roadmap Now-Next-Later con al menos dos ítems por columna, 3) una North Star Metric y por qué la elegiste frente a una métrica de vanidad, 4) una hipótesis completa (cambio, personas, resultado y métrica de X a Y) con el MVP barato que usarías para probarla.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Objetivos, roadmap, North Star y experimento de un producto real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>Los resultados clave son números sobre algo que cambia para el usuario, no tareas que se puedan tachar.</li>
+<li>El roadmap tiene más detalle en "Ahora" que en "Después", y ningún ítem lejano lleva fecha exacta.</li>
+<li>La North Star puede bajar si algo anda mal y refleja valor recibido, no solo actividad o acumulado.</li>
+<li>La hipótesis nombra un valor inicial y uno esperado, y el MVP cuesta mucho menos que construir la función completa.</li>
+<li>El criterio de éxito está escrito antes de ver cualquier dato del experimento.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Objetivo (O)</td><td>Meta cualitativa e inspiradora: qué querés lograr, sin números.</td></tr>
+<tr><td>Resultado clave (KR)</td><td>Medida numérica de un resultado para el usuario, no una tarea.</td></tr>
+<tr><td>KPI</td><td>Indicador de salud que se vigila siempre, sin meta de trimestre.</td></tr>
+<tr><td>Roadmap Now-Next-Later</td><td>Más detalle cerca, menos lejos; dirección y no promesa de fechas.</td></tr>
+<tr><td>Story map</td><td>Recorrido del usuario en horizontal, prioridad en vertical.</td></tr>
+<tr><td>North Star Metric</td><td>La métrica que mejor captura el valor entregado al usuario.</td></tr>
+<tr><td>Métrica de vanidad</td><td>Número que solo crece o mide actividad de superficie; no orienta decisiones.</td></tr>
+<tr><td>Hipótesis</td><td>Afirmación con métrica de X a Y que los datos pueden confirmar o refutar.</td></tr>
+<tr><td>MVP</td><td>Lo más chico que permite aprender si una idea funciona.</td></tr>
+<tr><td>Grupo de control</td><td>Grupo que no recibe el cambio y sirve de comparación.</td></tr>
+<tr><td>Criterio de éxito</td><td>Umbral que se fija antes de empezar el experimento.</td></tr>
+<tr><td>Resultado inconcluso</td><td>Con muestra chica no es éxito ni fracaso: se sigue midiendo.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🎯 Los OKRs nacieron en Intel</h3><p>Andy Grove los desarrolló en Intel en los años 70, y John Doerr los llevó a Google en 1999, donde se volvieron famosos. La idea central, medir resultados y no actividad, sigue igual.</p></div>
+<div class="info"><h3>🧪 "MVP" se hizo popular con Lean Startup</h3><p>Eric Ries difundió el término en su libro <em>The Lean Startup</em> (2011). Su punto es el que viste acá: un MVP no es un producto a medias, sino una forma de aprender con el menor esfuerzo posible.</p></div>
+<div class="info"><h3>🧭 Lo que viene en el Nivel 4</h3><p>Ya sabés fijar rumbo y probar ideas. El próximo nivel trata de las personas: negociar alcance con stakeholders, sostener la calidad bajo presión de negocio, trabajar con UX e ingeniería, y explicar la deuda técnica a un PO.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Nivel 3: Estrategia y Métricas</h2>
+<p>Material de apoyo para el Club de Programación · Ruta Product Owner.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "po-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

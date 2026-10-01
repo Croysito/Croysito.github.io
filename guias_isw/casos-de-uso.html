@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casos de uso: del backlog al diagrama | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // problema-proyecto-grado.html. Corre acá, antes que el resto de la
+  // página, para que el motor de quizzes de abajo ya encuentre el
+  // localStorage limpio si cambió el guia_intento.
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  var QUIZ_PREFIX = 'isw-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">ISW <span>Casos de uso</span></div>
+<p>Del backlog al diagrama de alcance</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#actores-casos">Actores, casos de uso y frontera</a>
+<a href="#historias-casos">De historias a casos de uso</a>
+<a href="#include-extend">Include y extend</a>
+<a href="#descripcion">Describir un caso de uso</a>
+<a href="#razonamiento">Ejercicios de razonamiento</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">📋 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Casos de uso: del <span>backlog</span> al diagrama</h1>
+<p>EventoUAB ya tiene historias de usuario priorizadas y estimadas. Antes de diseñar nada, el equipo necesita una vista de una sola página que responda: ¿quién usa el sistema, para lograr qué, y dónde termina lo que vamos a construir? Esta guía convierte esas historias en un diagrama de casos de uso con actores, frontera, relaciones include/extend y una descripción escrita de cada caso.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Las historias de usuario son excelentes para conversar y estimar, pero tienen un límite: son muchas, sueltas, y cuesta ver el conjunto. Un <strong>diagrama de casos de uso</strong> junta todas esas metas en un mapa: quién interactúa con el sistema, qué puede lograr cada quién, y qué queda adentro y afuera del producto.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás identificar actores y casos de uso a partir de un backlog, dibujar la frontera del sistema, distinguir <strong>«include»</strong> de <strong>«extend»</strong>, y escribir la descripción de un caso de uso con su flujo principal y sus flujos alternativos.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Encontrarás <strong>actividades cortas y autocorregibles</strong> —selección múltiple, clasificación, emparejamiento y completar espacios— repartidas a lo largo de la guía, y una sección de <strong>ejercicios de razonamiento</strong> donde se te da un escenario y debés predecir la respuesta correcta antes de comprobarla.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🧍 Actores</h3><p>Quién está afuera del sistema e interactúa con él.</p></div>
+<div class="info"><h3>🎯 Casos de uso</h3><p>Metas concretas que un actor logra usando el sistema.</p></div>
+<div class="info"><h3>🔗 Relaciones</h3><p>Cuándo un caso de uso incluye a otro y cuándo solo lo extiende.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="actores-casos">
+<div class="card">
+<h2 class="section-title">Actores, casos de uso y frontera</h2>
+<p class="lead">Un diagrama de casos de uso tiene solo tres ingredientes. Con ellos, el Sprint 1 de EventoUAB cabe en una imagen.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Elemento</th><th scope="col">Qué es</th><th scope="col">En EventoUAB</th></tr></thead>
+<tbody>
+<tr><td>Actor</td><td>Alguien (o algo) que está <em>afuera</em> del sistema e interactúa con él. Se dibuja como un muñeco.</td><td>Estudiante responsable de un club; personal de Bienestar Estudiantil.</td></tr>
+<tr><td>Caso de uso</td><td>Una meta concreta que un actor logra usando el sistema. Se dibuja como una elipse con verbo + objeto.</td><td>Reservar espacio, Cancelar reserva.</td></tr>
+<tr><td>Frontera del sistema</td><td>El rectángulo que separa lo que el equipo va a construir (adentro) de quienes lo usan (afuera).</td><td>El recuadro "Sistema: EventoUAB".</td></tr>
+</tbody>
+</table>
+
+<div class="diagrama-caja">
+<svg viewBox="0 0 720 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de casos de uso de EventoUAB: el actor Estudiante conectado a Ver disponibilidad, Reservar espacio y Cancelar reserva, y el actor Bienestar conectado a Gestionar espacios, todos dentro de la frontera del sistema.">
+<rect class="uml-frontera" x="190" y="20" width="340" height="360" rx="8"></rect>
+<text class="uml-titulo" x="360" y="45" text-anchor="middle">Sistema: EventoUAB</text>
+
+<ellipse class="uml-caso" cx="360" cy="95" rx="120" ry="28"></ellipse>
+<text class="uml-texto" x="360" y="99" text-anchor="middle">Ver disponibilidad</text>
+
+<ellipse class="uml-caso" cx="360" cy="175" rx="120" ry="28"></ellipse>
+<text class="uml-texto" x="360" y="179" text-anchor="middle">Reservar espacio</text>
+
+<ellipse class="uml-caso" cx="360" cy="255" rx="120" ry="28"></ellipse>
+<text class="uml-texto" x="360" y="259" text-anchor="middle">Cancelar reserva</text>
+
+<ellipse class="uml-caso" cx="360" cy="335" rx="120" ry="28"></ellipse>
+<text class="uml-texto" x="360" y="339" text-anchor="middle">Gestionar espacios</text>
+
+<line class="uml-linea" x1="90" y1="155" x2="242" y2="105"></line>
+<line class="uml-linea" x1="90" y1="155" x2="240" y2="175"></line>
+<line class="uml-linea" x1="90" y1="155" x2="246" y2="243"></line>
+<line class="uml-linea" x1="610" y1="285" x2="478" y2="328"></line>
+
+<g>
+<circle class="uml-actor" cx="65" cy="120" r="14"></circle>
+<line class="uml-actor" x1="65" y1="134" x2="65" y2="190"></line>
+<line class="uml-actor" x1="40" y1="155" x2="90" y2="155"></line>
+<line class="uml-actor" x1="65" y1="190" x2="45" y2="225"></line>
+<line class="uml-actor" x1="65" y1="190" x2="85" y2="225"></line>
+</g>
+<text class="uml-titulo" x="65" y="248" text-anchor="middle">Estudiante</text>
+
+<g>
+<circle class="uml-actor" cx="635" cy="250" r="14"></circle>
+<line class="uml-actor" x1="635" y1="264" x2="635" y2="320"></line>
+<line class="uml-actor" x1="610" y1="285" x2="660" y2="285"></line>
+<line class="uml-actor" x1="635" y1="320" x2="615" y2="355"></line>
+<line class="uml-actor" x1="635" y1="320" x2="655" y2="355"></line>
+</g>
+<text class="uml-titulo" x="635" y="378" text-anchor="middle">Bienestar</text>
+</svg>
+</div>
+
+<div class="highlight">
+<strong>Dos reglas para no equivocarse</strong>
+<p><strong>1.</strong> Un caso de uso se nombra desde la <em>meta del actor</em> ("Reservar espacio"), nunca desde un paso o una tecnología ("Guardar en la tabla reservas"). <strong>2.</strong> Los actores van siempre <em>afuera</em> de la frontera: si lo programa tu equipo, no es un actor, es parte del sistema.</p>
+</div>
+<div class="highlight">
+<strong>Un actor no tiene por qué ser una persona</strong>
+<p>También puede ser otro sistema que interactúa con el tuyo, por ejemplo un servicio externo de correo. Lo que lo hace actor es que está fuera de lo que construye el equipo, no que sea humano.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="actores-mc">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas opciones es un actor del diagrama de EventoUAB?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La tabla espacios de la base de datos de EventoUAB.</button>
+<button class="quiz-opt">El módulo de reservas que programa el equipo.</button>
+<button class="quiz-opt" data-correct>El personal de Bienestar Estudiantil que gestiona los espacios.</button>
+<button class="quiz-opt">El botón "Confirmar" de la pantalla de reservas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Bienestar está afuera del sistema y lo usa para lograr una meta. La tabla, el módulo y el botón son partes del producto que el propio equipo construye, así que quedan adentro de la frontera." data-ko="Un actor está afuera del sistema. La tabla de espacios, el módulo de reservas y el botón de confirmar son piezas que el equipo mismo construye, por lo tanto pertenecen al sistema. Quien está afuera y lo usa es el personal de Bienestar." hidden></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="cu-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Qué es cada una de estas frases dentro de un análisis de EventoUAB?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Ver disponibilidad de espacios"</span>
+<div class="quiz-classify-btns">
+<button>Paso de un caso de uso</button>
+<button data-correct>Caso de uso</button>
+<button>Detalle técnico</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"El estudiante toca el botón Confirmar"</span>
+<div class="quiz-classify-btns">
+<button>Detalle técnico</button>
+<button>Caso de uso</button>
+<button data-correct>Paso de un caso de uso</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Guardar la reserva en la tabla reservas"</span>
+<div class="quiz-classify-btns">
+<button data-correct>Detalle técnico</button>
+<button>Paso de un caso de uso</button>
+<button>Caso de uso</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Cancelar una reserva"</span>
+<div class="quiz-classify-btns">
+<button>Paso de un caso de uso</button>
+<button>Detalle técnico</button>
+<button data-correct>Caso de uso</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Elegir fecha y hora en el calendario"</span>
+<div class="quiz-classify-btns">
+<button>Caso de uso</button>
+<button data-correct>Paso de un caso de uso</button>
+<button>Detalle técnico</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Validar con una consulta SQL que no haya choque de horario"</span>
+<div class="quiz-classify-btns">
+<button data-correct>Detalle técnico</button>
+<button>Caso de uso</button>
+<button>Paso de un caso de uso</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="historias-casos">
+<div class="card">
+<h2 class="section-title">De historias a casos de uso</h2>
+<p class="lead">Las historias de la guía anterior ya traen casi todo lo que hace falta: el <strong>"Como..."</strong> es el actor, y el <strong>"quiero..."</strong> es el caso de uso. El "para..." no se dibuja, pero sigue siendo el criterio para decidir si ese caso vale la pena.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Historia del backlog</th><th scope="col">Actor</th><th scope="col">Caso de uso</th></tr></thead>
+<tbody>
+<tr><td>Como estudiante responsable de un club, quiero ver qué espacios están libres, para elegir un horario sin escribirle a nadie.</td><td>Estudiante</td><td>Ver disponibilidad</td></tr>
+<tr><td>Como estudiante responsable de un club, quiero reservar un espacio, para no coordinar por WhatsApp.</td><td>Estudiante</td><td>Reservar espacio</td></tr>
+<tr><td>Como estudiante responsable de un club, quiero cancelar una reserva que ya no voy a usar, para liberar el espacio.</td><td>Estudiante</td><td>Cancelar reserva</td></tr>
+<tr><td>Como personal de Bienestar, quiero dar de alta y de baja espacios, para que el catálogo esté siempre actualizado.</td><td>Bienestar</td><td>Gestionar espacios</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Trazabilidad en las dos direcciones</strong>
+<p>Cada caso de uso del diagrama debe poder rastrearse hasta al menos una historia del backlog, y cada historia del Sprint 1 debe aparecer en el diagrama. Un caso sin historia suele ser alcance inventado; una historia sin caso, un hueco en el análisis.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="traza-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada historia con el caso de uso que sale de ella.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="disp">Quiero ver qué espacios están libres</button>
+<button class="quiz-match-item" data-pair="reservar">Quiero reservar un espacio para mi evento</button>
+<button class="quiz-match-item" data-pair="cancelar">Quiero liberar una reserva que no usaré</button>
+<button class="quiz-match-item" data-pair="gestionar">Quiero dar de alta y de baja espacios</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="gestionar">Gestionar espacios</button>
+<button class="quiz-match-item" data-pair="disp">Ver disponibilidad</button>
+<button class="quiz-match-item" data-pair="cancelar">Cancelar reserva</button>
+<button class="quiz-match-item" data-pair="reservar">Reservar espacio</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="include-extend">
+<div class="card">
+<h2 class="section-title">Include y extend</h2>
+<p class="lead">Cuando un caso de uso crece, a veces conviene sacar una parte a otro caso de uso. Hay dos formas de conectarlos, y la diferencia está en una sola pregunta: <strong>¿esa parte ocurre siempre o solo a veces?</strong></p>
+<table class="tabla">
+<thead><tr><th scope="col">Relación</th><th scope="col">Cuándo se usa</th><th scope="col">Hacia dónde apunta la flecha</th><th scope="col">En EventoUAB</th></tr></thead>
+<tbody>
+<tr><td>«include»</td><td>La parte ocurre <strong>siempre</strong>; el caso base no se completa sin ella.</td><td>Del caso base hacia el caso incluido.</td><td>Reservar espacio → Iniciar sesión; Reservar espacio → Notificar confirmación.</td></tr>
+<tr><td>«extend»</td><td>La parte ocurre <strong>solo a veces</strong>, bajo una condición; el caso base funciona sin ella.</td><td>Del caso opcional hacia el caso base.</td><td>Pedir proyector o sonido → Reservar espacio.</td></tr>
+</tbody>
+</table>
+
+<div class="diagrama-caja">
+<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Reservar espacio incluye siempre Iniciar sesión y Notificar confirmación, y es extendido solo a veces por Pedir proyector o sonido.">
+<rect class="uml-frontera" x="30" y="20" width="660" height="320" rx="8"></rect>
+<text class="uml-titulo" x="360" y="45" text-anchor="middle">Sistema: EventoUAB</text>
+
+<ellipse class="uml-caso" cx="130" cy="125" rx="85" ry="26"></ellipse>
+<text class="uml-texto" x="130" y="129" text-anchor="middle">Iniciar sesión</text>
+
+<ellipse class="uml-caso" cx="360" cy="175" rx="95" ry="28"></ellipse>
+<text class="uml-texto" x="360" y="179" text-anchor="middle">Reservar espacio</text>
+
+<ellipse class="uml-caso" cx="590" cy="110" rx="95" ry="26"></ellipse>
+<text class="uml-texto" x="590" y="114" text-anchor="middle">Notificar confirmación</text>
+
+<ellipse class="uml-caso" cx="360" cy="290" rx="100" ry="26"></ellipse>
+<text class="uml-texto" x="360" y="294" text-anchor="middle">Pedir proyector o sonido</text>
+
+<line class="uml-retorno" x1="268" y1="163" x2="214" y2="137"></line>
+<polyline class="uml-flecha-abierta" points="224,146 214,137 227,136"></polyline>
+<text class="uml-mult" x="250" y="132" text-anchor="middle">«include»</text>
+
+<line class="uml-retorno" x1="435" y1="153" x2="500" y2="118"></line>
+<polyline class="uml-flecha-abierta" points="492,128 500,118 487,119"></polyline>
+<text class="uml-mult" x="480" y="150" text-anchor="middle">«include»</text>
+
+<line class="uml-retorno" x1="360" y1="264" x2="360" y2="203"></line>
+<polyline class="uml-flecha-abierta" points="353,215 360,203 367,215"></polyline>
+<text class="uml-mult" x="372" y="238">«extend»</text>
+</svg>
+</div>
+
+<div class="highlight">
+<strong>Un truco para no confundirlas</strong>
+<p>Preguntate: "¿puedo terminar el caso base sin esa parte?". Si no podés (reservar sin haber iniciado sesión), es <strong>include</strong>. Si podés (reservar sin pedir proyector), es <strong>extend</strong>. Y recordá: con extend, la flecha sale del caso opcional y llega al base.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="incl-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Completá las tres frases sobre las relaciones del diagrama.</p>
+<p>1. Reservar espacio no se completa sin iniciar sesión, así que se conectan con
+<select class="quiz-blank" data-correct="inc">
+<option value="">— elige —</option>
+<option value="inc">«include»</option>
+<option value="ext">«extend»</option>
+<option value="aso">una asociación con el actor</option>
+</select>.</p>
+<p>2. Pedir proyector o sonido ocurre solo si el estudiante lo necesita, así que se conecta con
+<select class="quiz-blank" data-correct="ext2">
+<option value="">— elige —</option>
+<option value="inc2">«include»</option>
+<option value="aso2">una asociación con el actor</option>
+<option value="ext2">«extend»</option>
+</select>.</p>
+<p>3. En una relación «extend», la flecha sale
+<select class="quiz-blank" data-correct="op3">
+<option value="">— elige —</option>
+<option value="base3">del caso base hacia el caso opcional</option>
+<option value="op3">del caso opcional hacia el caso base</option>
+<option value="act3">del actor hacia el caso base</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="descripcion">
+<div class="card">
+<h2 class="section-title">Describir un caso de uso</h2>
+<p class="lead">La elipse es solo el título. El valor real de un caso de uso está en su <strong>descripción escrita</strong>: qué pasa paso a paso cuando todo sale bien y qué pasa cuando no.</p>
+<table class="tabla">
+<thead><tr><th scope="col" colspan="2">Caso de uso: Reservar espacio</th></tr></thead>
+<tbody>
+<tr><td><strong>Actor</strong></td><td>Estudiante responsable de un club.</td></tr>
+<tr><td><strong>Precondición</strong></td><td>El estudiante inició sesión (caso incluido).</td></tr>
+<tr><td><strong>Flujo principal</strong></td><td>1. El estudiante elige un espacio, una fecha y una hora.<br>2. El sistema verifica que el espacio esté libre en ese horario.<br>3. El estudiante confirma la reserva.<br>4. El sistema registra la reserva y la muestra en "mis reservas".</td></tr>
+<tr><td><strong>Flujo alternativo</strong></td><td>2a. El horario ya está ocupado: el sistema avisa que no está disponible y vuelve al paso 1.</td></tr>
+<tr><td><strong>Postcondición</strong></td><td>El espacio queda marcado como ocupado en ese horario.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>El flujo alternativo ya lo conocés</strong>
+<p>El alternativo 2a es el criterio "Dado que el espacio ya está reservado, cuando otro estudiante intenta reservarlo, entonces el sistema muestra que no está disponible" de la guía anterior, contado como pasos. Los criterios de aceptación y los flujos alternativos son dos formas de decir lo mismo; más adelante, los casos de prueba salen de ahí.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="flujo-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">En el paso 2 el sistema detecta que el horario elegido ya está ocupado. ¿Cuál es el flujo alternativo bien escrito?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>2a. El horario está ocupado: el sistema avisa que no está disponible y vuelve al paso 1.</button>
+<button class="quiz-opt">Se reserva igual y se avisa a Bienestar para que decida después quién usa el espacio.</button>
+<button class="quiz-opt">El flujo principal se cancela y el caso de uso termina sin indicarle nada al estudiante.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: indica en qué paso se bifurca, qué hace el sistema y a dónde vuelve el flujo. Los otros dos contradicen el criterio de aceptación (no duplicar la reserva) o dejan al usuario sin respuesta." data-ko="Un flujo alternativo bien escrito dice en qué paso se bifurca, qué hace el sistema y a dónde sigue. Reservar igual duplicaría el espacio (contra el criterio de aceptación), y terminar sin avisar deja al estudiante sin saber qué pasó." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Ejercicios de razonamiento</h2>
+<p class="lead">En estas preguntas no se te pide recordar una definición: se te da un escenario y debés razonar la respuesta antes de comprobarla.</p>
+
+<div class="highlight">
+<strong>Escenario</strong>
+<p>Un integrante del equipo dibuja una elipse llamada "Guardar reserva en PostgreSQL" y la conecta con el actor Estudiante.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué problema tiene ese caso de uso?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ninguno: todo lo que hace el sistema por dentro debería tener su propio caso de uso en el diagrama.</button>
+<button class="quiz-opt" data-correct>Describe un detalle técnico de implementación y no una meta que el estudiante logre usando el sistema.</button>
+<button class="quiz-opt">Que PostgreSQL debería dibujarse como un actor, dentro de la frontera y conectado al estudiante.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el estudiante no tiene como meta 'guardar en PostgreSQL'; su meta es reservar un espacio. Guardar es un paso interno de ese caso, no un caso aparte." data-ko="Un caso de uso es una meta del actor, no un mecanismo interno. Guardar en la base de datos es parte de cómo se cumple 'Reservar espacio'. Tampoco corresponde un actor PostgreSQL: la base de datos es parte del sistema, y los actores van afuera de la frontera." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Otro escenario</strong>
+<p>Cada vez que se confirma una reserva, el sistema envía un correo al estudiante. El estudiante nunca "pide" ese correo: ocurre solo, sin excepción.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Cómo se conecta "Notificar confirmación" con "Reservar espacio"?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Con «extend», porque el correo es un extra que a veces se manda y a veces no.</button>
+<button class="quiz-opt">Con una asociación directa del estudiante, porque es a él a quien le llega el correo.</button>
+<button class="quiz-opt" data-correct>Con «include» desde Reservar espacio, porque ocurre cada vez que se confirma una reserva.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: como ocurre siempre y la reserva no se considera completa sin esa notificación, la relación es include. El estudiante no inicia ese caso, así que no lleva asociación propia." data-ko="El correo no es opcional: ocurre cada vez que se confirma una reserva, por eso no es extend. Y como el estudiante no inicia la notificación, no se le dibuja una asociación; la dispara Reservar espacio mediante un include." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué diferencia a un actor de un caso de uso?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un actor es siempre una persona; un caso de uso es siempre una pantalla del sistema.</button>
+<button class="quiz-opt" data-correct>Un actor está fuera del sistema e interactúa con él; un caso de uso es una meta que se logra con el sistema.</button>
+<button class="quiz-opt">Un actor es cada clase del código; un caso de uso es cada método que escribe el programador.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el actor es quien usa el sistema desde afuera; el caso de uso es lo que logra. Ninguno de los dos habla de pantallas, clases o métodos." data-ko="Un actor no tiene por qué ser una persona ni una clase, y un caso de uso no es una pantalla ni un método. El actor está afuera de la frontera; el caso de uso es una meta que logra usando el sistema." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Si Reservar espacio necesita siempre que el estudiante inicie sesión, la relación correcta entre ambos casos es «extend».</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: lo que ocurre siempre se modela con «include», con la flecha desde Reservar espacio hacia Iniciar sesión. «extend» queda para partes opcionales." data-ko="Es falso: si iniciar sesión es obligatorio para reservar, la relación es «include». «extend» se reserva para comportamientos opcionales que dependen de una condición." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Para qué sirve rastrear cada caso de uso hasta una historia del backlog?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Para verificar que cada caso responde a una necesidad real y que ninguna historia quedó sin cubrir.</button>
+<button class="quiz-opt">Para que el diagrama tenga más elipses y se vea más completo ante el docente.</button>
+<button class="quiz-opt">Para reemplazar las historias, que dejan de hacer falta una vez dibujado el diagrama.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la trazabilidad detecta tanto casos de uso inventados (sin historia) como historias olvidadas (sin caso de uso)." data-ko="El diagrama no reemplaza al backlog ni busca verse más completo: la trazabilidad sirve para detectar alcance inventado, casos sin historia, y huecos, historias sin ningún caso de uso." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Dónde se dibuja un actor respecto de la frontera del sistema?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Adentro del rectángulo, junto a los casos de uso con los que interactúa.</button>
+<button class="quiz-opt">Sobre el borde del rectángulo, para indicar que comparte responsabilidad con el sistema.</button>
+<button class="quiz-opt" data-correct>Afuera del rectángulo, porque el actor no es parte del sistema que se está construyendo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la frontera separa lo que el equipo construye de quienes lo usan, y los actores siempre quedan del lado de afuera." data-ko="La frontera existe justamente para separar el sistema de sus actores. Ni adentro ni sobre el borde: los actores van siempre afuera del rectángulo." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Actor</td><td>Quien está afuera del sistema e interactúa con él. Puede ser una persona u otro sistema.</td></tr>
+<tr><td>Caso de uso</td><td>Una meta concreta del actor, nombrada con verbo + objeto. No es un paso ni un detalle técnico.</td></tr>
+<tr><td>Frontera del sistema</td><td>El rectángulo que separa los casos de uso (adentro) de los actores (afuera).</td></tr>
+<tr><td>«include»</td><td>Parte que ocurre siempre. La flecha va del caso base al incluido.</td></tr>
+<tr><td>«extend»</td><td>Parte que ocurre solo a veces. La flecha va del caso opcional al base.</td></tr>
+<tr><td>Descripción</td><td>Actor, precondición, flujo principal, flujos alternativos y postcondición.</td></tr>
+<tr><td>Trazabilidad</td><td>Cada caso sale de al menos una historia; cada historia del sprint aparece en el diagrama.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📡 Nacieron en las telecomunicaciones</h3><p>Ivar Jacobson formuló la idea de caso de uso a fines de los años 80, mientras trabajaba en Ericsson, y más tarde fue uno de los autores de UML, el lenguaje donde hoy se dibujan estos diagramas.</p></div>
+<div class="info"><h3>🤖 Sirven para pedirle código a una IA</h3><p>Una IA a la que le pedís "hacé el sistema de reservas" suele inventar funciones que nadie pidió. Un caso de uso con su flujo principal le acota el alcance: le dice exactamente qué metas existen y cuáles no.</p></div>
+<div class="info"><h3>🧭 Lo que viene en la próxima guía</h3><p>Ya sabemos quién hace qué. El siguiente paso es el modelo de dominio: las entidades que el sistema debe recordar (Espacio, Reserva, Club), con sus atributos y relaciones.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Reforzamiento: Casos de uso, del backlog al diagrama</h2>
+<p>Material de apoyo para la asignatura de Ingeniería de Software.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "isw-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL); accedida directo, como siempre, no dispara nada nuevo. No
+     toca el motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return;
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

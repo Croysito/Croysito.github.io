@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nivel 2: Datos y APIs | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">Club · <span>DS Nivel 2</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="relacional">Modelo relacional</button>
+<button data-target="documentos">Modelo de documentos</button>
+<button data-target="rest">APIs REST</button>
+<button data-target="contratos">Contratos y versionado</button>
+<button data-target="idempotencia">Idempotencia</button>
+<button data-target="ia">Contrato para la IA</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🧩 Club · Ruta Diseñador de Sistemas · Nivel 2</span>
+<h1 class="flow-h1">Datos y APIs: <span>cómo se guardan y cómo se piden</span></h1>
+<p class="flow-lead">En el Nivel 1 dibujaste qué hace TurnoYa, cómo se llaman sus piezas y qué estados tiene cada turno. Pero todavía todo vive en la memoria de un solo programa. Este nivel baja al terreno de los datos y las conexiones: dónde se guardan de verdad (tablas o documentos), cómo otras aplicaciones los piden (APIs REST), cómo cambiar esa conversación sin romper a quien ya la usa, y cómo evitar que un reintento duplique una operación.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Seguís acompañando a Diego en <strong>TurnoYa</strong>. Si todavía no hiciste el <a href="nivel-1b-como-y-cuando.html">Nivel 1B</a>, conviene empezar por ahí. Todo se explica desde cero: solo hace falta saber programar lo básico. En cada decisión podés probar primero un camino equivocado, ver su consecuencia sin penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>¿Dónde viven los turnos?</h2>
+<p class="lead">Hasta ahora TurnoYa guarda los turnos en una variable dentro del servidor: si se reinicia, se pierden todos. Diego tiene que elegir dónde guardarlos de verdad. Los datos son claros: estudiante, fotocopiadora y horario. Y las reglas también: un horario de una fotocopiadora no se puede reservar dos veces, y cada turno tiene que apuntar a un estudiante que exista.</p>
+<div class="highlight">
+<strong>Lo que está en juego</strong>
+<p>No alcanza con guardar los datos: hay que decidir quién garantiza que las reglas se cumplan, incluso cuando dos estudiantes tocan "reservar" al mismo tiempo.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="relacional decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué tipo de almacenamiento elige Diego?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Un archivo de texto en el servidor donde cada línea es un turno, fácil de leer y de editar a mano.</button>
+<button class="quiz-opt" data-key="b" data-correct>Una base de datos relacional, con tablas relacionadas y restricciones que hagan cumplir esas reglas.</button>
+<button class="quiz-opt" data-key="c">Una variable global más grande, con copia diaria en la nube, para no depender de un motor de base de datos.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Un archivo no sabe nada de las reglas: si dos peticiones llegan a la vez, las dos pueden escribir la misma línea, y nada impide un turno con un estudiante inexistente. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Una copia diaria significa que, ante una caída, se pierde hasta un día entero de turnos. Y la variable sigue sin garantizar ninguna regla de las que importan. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. Una base relacional puede rechazar por sí sola un horario repetido o un estudiante inexistente, aunque el código de la aplicación tenga un error. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="relacional" hidden>
+<h2>El modelo relacional: tablas, claves y reglas que se cumplen solas</h2>
+<p class="lead">En una base relacional los datos se guardan en <strong>tablas</strong>: cada fila es un registro y cada columna un dato. Las tablas se conectan entre sí mediante claves, y la base misma hace cumplir las reglas que declarás.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Concepto</th><th scope="col">Qué es</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Clave primaria (PK)</td><td>La columna que identifica cada fila de forma única.</td><td>El <code>id</code> de cada turno.</td></tr>
+<tr><td>Clave foránea (FK)</td><td>Una columna que apunta a la fila de otra tabla y obliga a que esa fila exista.</td><td><code>estudiante_id</code> en turno apunta a estudiante.</td></tr>
+<tr><td>Restricción UNIQUE</td><td>Prohíbe que dos filas repitan la misma combinación de valores.</td><td>Una fotocopiadora no puede tener dos turnos con el mismo inicio.</td></tr>
+<tr><td>Transacción</td><td>Un grupo de cambios que se aplican todos juntos o no se aplica ninguno.</td><td>Crear el turno y descontar el cupo, o ninguna de las dos cosas.</td></tr>
+</tbody>
+</table>
+
+<p>Así quedaría la tabla de turnos. No hace falta que memorices la sintaxis: mirá cómo cada regla del enunciado es una línea.</p>
+<div class="code">
+<div class="code-header"><span>SQL — tabla turno</span></div>
+<pre><code class="src">CREATE TABLE turno (
+  id               SERIAL PRIMARY KEY,
+  estudiante_id    INT NOT NULL REFERENCES estudiante(id),
+  fotocopiadora_id INT NOT NULL REFERENCES fotocopiadora(id),
+  inicio           TIMESTAMP NOT NULL,
+  estado           TEXT NOT NULL DEFAULT 'solicitado',
+  UNIQUE (fotocopiadora_id, inicio)
+);</code></pre>
+</div>
+
+<div class="highlight">
+<strong>Del diagrama de clases a las tablas</strong>
+<p>Cada clase del Nivel 1A suele convertirse en una tabla, sus atributos en columnas, y cada relación entre clases en una clave foránea. El diagrama de clases ya era la "vista de datos" de TurnoYa.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="relacional-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada concepto con lo que garantiza.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="pk">Clave primaria</button>
+<button class="quiz-match-item" data-pair="fk">Clave foránea</button>
+<button class="quiz-match-item" data-pair="unique">UNIQUE</button>
+<button class="quiz-match-item" data-pair="trx">Transacción</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="trx">Que un grupo de cambios se aplique completo o no se aplique.</button>
+<button class="quiz-match-item" data-pair="pk">Que cada fila tenga una identidad única.</button>
+<button class="quiz-match-item" data-pair="unique">Que una combinación de valores no se repita.</button>
+<button class="quiz-match-item" data-pair="fk">Que la fila a la que apunta exista de verdad.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>El menú que no cabe en una tabla</h2>
+<p class="lead">La cafetería del campus quiere sumar su menú a TurnoYa. Cada producto tiene atributos distintos: un café tiene tamaño, tipo de leche y temperatura; un sándwich tiene ingredientes y si es vegetariano; un combo es una lista de otros productos con descuento. El dueño agrega un tipo nuevo de producto casi todas las semanas, y la app siempre muestra cada producto completo, con todos sus datos juntos.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="documentos decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo guarda Diego el menú?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Una tabla relacional con una columna por cada atributo posible de cualquier producto, dejando vacías las que no aplican.</button>
+<button class="quiz-opt" data-key="b">Una tabla distinta por cada tipo de producto, creando una tabla nueva cada vez que el dueño agrega un tipo.</button>
+<button class="quiz-opt" data-key="c" data-correct>Documentos (JSON), uno por producto, cada uno con los atributos que le corresponden y sin forzar una estructura común.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>La tabla termina con decenas de columnas casi siempre vacías, y cada tipo nuevo obliga a modificar la estructura de toda la tabla. Funciona, pero pelea contra la forma de los datos. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Una tabla por tipo obliga a crear estructura nueva cada semana y complica leer "todo el menú" de una sola vez, que es justo lo que la app hace siempre. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Cada producto es un documento autocontenido con su propia forma, que se guarda y se lee entero de una sola vez — justo el patrón del menú. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="documentos" hidden>
+<h2>El modelo de documentos: cada registro lleva su propia forma</h2>
+<p class="lead">En una base de documentos cada registro es un documento, normalmente JSON, que puede tener campos anidados y distintos a los de otros documentos de la misma colección.</p>
+<div class="code">
+<div class="code-header"><span>JSON — dos productos del menú</span></div>
+<pre><code class="src">{ "_id": "cafe-01", "tipo": "cafe",
+  "nombre": "Cortado", "tamanos": ["chico", "grande"],
+  "leche": ["entera", "deslactosada"], "caliente": true }
+
+{ "_id": "sand-07", "tipo": "sandwich",
+  "nombre": "Milanesa completa",
+  "ingredientes": ["milanesa", "lechuga", "tomate"],
+  "vegetariano": false }</code></pre>
+</div>
+
+<table class="tabla">
+<thead><tr><th scope="col">Aspecto</th><th scope="col">Relacional</th><th scope="col">Documentos</th></tr></thead>
+<tbody>
+<tr><td>Estructura</td><td>Fija y declarada de antemano para toda la tabla.</td><td>Flexible: cada documento puede tener la suya.</td></tr>
+<tr><td>Relaciones y reglas</td><td>La base las hace cumplir (claves foráneas, UNIQUE).</td><td>Quedan mayormente a cargo de la aplicación.</td></tr>
+<tr><td>Lectura típica</td><td>Combinar datos de varias tablas.</td><td>Leer un documento completo de una sola vez.</td></tr>
+<tr><td>Conviene cuando</td><td>Las reglas entre datos son estrictas y críticas.</td><td>La forma varía o los datos se leen siempre juntos.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>No hay un ganador general</strong>
+<p>Se elige por la forma de los datos y por las reglas que hay que garantizar. Un sistema real puede usar los dos a la vez: turnos y pagos en relacional, menú y registro de eventos en documentos.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="documentos-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Qué modelo conviene para cada dato?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Pagos, donde cada pago debe apuntar a un pedido y a un estudiante que existan.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Relacional</button>
+<button>Documentos</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Preferencias de perfil, con opciones distintas según cada persona.</span>
+<div class="quiz-classify-btns">
+<button>Relacional</button>
+<button data-correct>Documentos</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Reservas de turnos, donde ningún horario puede quedar ocupado dos veces.</span>
+<div class="quiz-classify-btns">
+<button>Documentos</button>
+<button data-correct>Relacional</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Registro de eventos de la app (clics, errores), con campos que cambian según el evento.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Documentos</button>
+<button>Relacional</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Inventario de insumos, donde cada venta descuenta cantidades sin perder ni duplicar nada.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Relacional</button>
+<button>Documentos</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Fichas de promociones de distinto tipo, que siempre se leen completas de una sola vez.</span>
+<div class="quiz-classify-btns">
+<button>Relacional</button>
+<button data-correct>Documentos</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>"¿Cómo le pido al servidor que cancele un turno?"</h2>
+<p class="lead">La app móvil de los estudiantes necesita hablar con el servidor de TurnoYa. Diego tiene que definir cómo se ve la petición para cancelar un turno. Acordate del Nivel 1B: un turno cancelado no desaparece, pasa al estado "cancelado", y solo se puede cancelar desde ciertos estados.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="rest decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo expone Diego la cancelación?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Un PATCH sobre el turno que cambia su estado a cancelado, y el servidor rechaza el cambio si la transición no es válida.</button>
+<button class="quiz-opt" data-key="b">Una ruta POST /cancelarTurno que recibe el id en el cuerpo, y una ruta nueva por cada acción que aparezca.</button>
+<button class="quiz-opt" data-key="c">Un DELETE sobre el turno que lo borre de la base de datos, para que no queden turnos cancelados ocupando espacio.</button>
+</div>
+<p class="quiz-fb ko" data-key="b" hidden>Poner el verbo en la ruta y crear una nueva por cada acción lleva a decenas de rutas sueltas sin un patrón. Además no deja claro qué recurso se está modificando. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Borrar el turno destruye el historial: nadie podría saber cuántos turnos se cancelaron ni por qué. Y además contradice el diagrama de estados, donde "cancelado" es un estado más. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. El turno es el recurso, el verbo dice qué se hace con él, y el servidor aplica las reglas del diagrama de estados. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="rest" hidden>
+<h2>APIs REST: recursos con nombre, verbos con significado</h2>
+<p class="lead">Una <strong>API</strong> es el acuerdo mediante el cual un programa le pide cosas a otro. En una API REST sobre HTTP, la ruta nombra un <strong>recurso</strong> (un sustantivo, como <code>/turnos</code>) y el <strong>verbo HTTP</strong> dice qué hacer con él.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Verbo</th><th scope="col">Qué hace</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>GET</td><td>Lee, sin modificar nada.</td><td><code>GET /turnos/7</code></td></tr>
+<tr><td>POST</td><td>Crea un recurso nuevo.</td><td><code>POST /turnos</code></td></tr>
+<tr><td>PUT / PATCH</td><td>Reemplaza o modifica parte de un recurso.</td><td><code>PATCH /turnos/7</code></td></tr>
+<tr><td>DELETE</td><td>Elimina el recurso.</td><td><code>DELETE /turnos/7</code></td></tr>
+</tbody>
+</table>
+
+<div class="code">
+<div class="code-header"><span>HTTP — cancelar el turno 7</span></div>
+<pre><code class="src">PATCH /turnos/7
+Content-Type: application/json
+
+{ "estado": "cancelado" }
+
+--- respuesta si el turno estaba "confirmado" ---
+200 OK
+{ "id": 7, "estado": "cancelado" }
+
+--- respuesta si el turno ya estaba "atendido" ---
+409 Conflict
+{ "error": "No se puede cancelar un turno atendido" }</code></pre>
+</div>
+
+<table class="tabla">
+<thead><tr><th scope="col">Código</th><th scope="col">Cuándo usarlo</th></tr></thead>
+<tbody>
+<tr><td>200 OK / 201 Created</td><td>La operación salió bien / se creó el recurso.</td></tr>
+<tr><td>400 Bad Request</td><td>La petición está mal armada (falta un campo, formato inválido).</td></tr>
+<tr><td>404 Not Found</td><td>El recurso pedido no existe.</td></tr>
+<tr><td>409 Conflict</td><td>La petición choca con el estado actual (por ejemplo, cancelar un turno ya atendido).</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Un endpoint gordo o varios</strong>
+<p>Evitá el endpoint único tipo <code>POST /accion</code> con un campo "tipo" que decide qué hacer: no se puede documentar, ni cachear, ni devolver códigos claros. Varios endpoints chicos, uno por recurso, se entienden solos.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="rest-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada petición o código con su significado.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="get">GET /turnos/7</button>
+<button class="quiz-match-item" data-pair="post">POST /turnos</button>
+<button class="quiz-match-item" data-pair="c409">409 Conflict</button>
+<button class="quiz-match-item" data-pair="c404">404 Not Found</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="c404">El recurso pedido no existe.</button>
+<button class="quiz-match-item" data-pair="get">Leer ese turno sin cambiar nada.</button>
+<button class="quiz-match-item" data-pair="c409">La acción choca con el estado actual del recurso.</button>
+<button class="quiz-match-item" data-pair="post">Crear un turno nuevo.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>"La hora vieja trae bugs, pero la app ya está instalada"</h2>
+<p class="lead">Las respuestas de la API traen la hora del turno como un texto suelto, <code>"hora": "10:30"</code>, sin fecha ni zona horaria — y eso ya causó confusiones. Diego quiere cambiarlo por un campo <code>inicio</code> con fecha y hora completas. El problema: la versión 1 de la app ya está instalada en cientos de celulares, y muchos estudiantes no actualizan.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="contratos decision5">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo publica Diego el cambio?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Renombra el campo en el servidor y avisa por el grupo del club para que todos actualicen la app esta semana.</button>
+<button class="quiz-opt" data-key="b">Deja el campo como está para siempre, aunque cause errores, para no tocar nunca el contrato de la API.</button>
+<button class="quiz-opt" data-key="c" data-correct>Publica la versión nueva en /v2/turnos y mantiene /v1 funcionando hasta que los clientes viejos migren.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Apenas se renombra el campo, la app v1 deja de encontrar "hora" y se rompe para todos los que no actualizaron. Un aviso por chat no llega a todos, y la rotura es inmediata. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Congelar el contrato para siempre protege a los clientes viejos, pero deja el bug para todos, incluidos los clientes nuevos. Existe una forma de mejorar sin romper a nadie. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Con dos versiones conviviendo, los clientes nuevos usan el contrato mejorado y los viejos siguen funcionando mientras migran. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="contratos" hidden>
+<h2>Contratos y versionado: no rompas a quien ya te usa</h2>
+<p class="lead">El <strong>contrato</strong> de una API es lo que prometés: rutas, nombres de campos, tipos de dato y códigos de respuesta. Cualquier aplicación que ya lo use depende de cada detalle, aunque nunca lo hayas visto.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Tipo de cambio</th><th scope="col">Efecto en clientes existentes</th><th scope="col">Ejemplos</th></tr></thead>
+<tbody>
+<tr><td>Compatible</td><td>Los clientes viejos siguen funcionando sin tocar nada.</td><td>Agregar un campo opcional a la respuesta; agregar un endpoint nuevo.</td></tr>
+<tr><td>Incompatible</td><td>Algún cliente viejo se rompe.</td><td>Renombrar o quitar un campo; cambiar su tipo; volver obligatorio algo que era opcional.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>La regla práctica</strong>
+<p>Los cambios compatibles se publican sin más. Los incompatibles necesitan una versión nueva (<code>/v2/...</code>) y un plazo de convivencia con la anterior. Una forma de versionar es poner el número en la ruta; otra es mandarlo en un encabezado, pero el principio es el mismo.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="contratos-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Es un cambio compatible o incompatible?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Agregar un campo opcional "notas" a la respuesta de un turno.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Compatible</button>
+<button>Incompatible</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Renombrar el campo "hora" a "inicio" en todas las respuestas.</span>
+<div class="quiz-classify-btns">
+<button>Compatible</button>
+<button data-correct>Incompatible</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Agregar un endpoint nuevo, GET /fotocopiadoras, que antes no existía.</span>
+<div class="quiz-classify-btns">
+<button>Incompatible</button>
+<button data-correct>Compatible</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cambiar "estudiante_id" de un número a un texto.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Incompatible</button>
+<button>Compatible</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Volver obligatorio un campo que antes se podía omitir al crear un turno.</span>
+<div class="quiz-classify-btns">
+<button>Compatible</button>
+<button data-correct>Incompatible</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Devolver más datos en el detalle del turno, sin quitar ninguno de los anteriores.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Compatible</button>
+<button>Incompatible</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision5" hidden>
+<h2>Tres cafés por un solo toque</h2>
+<p class="lead">En un pasillo con mala señal, una estudiante toca "Pedir" para encargar un café en la cafetería. No ve respuesta y vuelve a tocar. Además, la app reintenta sola cuando no recibe respuesta. Resultado: <code>POST /pedidos</code> llegó tres veces, y a ella le cobraron tres cafés.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-5" data-unlock="idempotencia decision6">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo evita Diego los pedidos duplicados?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Deshabilita el botón después del primer toque en la app, y asume que con eso ya no se repite ninguna petición.</button>
+<button class="quiz-opt" data-key="b" data-correct>Hace que la app envíe una clave única por intento, y el servidor devuelve el mismo pedido si recibe esa clave de nuevo.</button>
+<button class="quiz-opt" data-key="c">Agrega un cartel que diga "no toque dos veces" y revisa a mano cada mañana los pedidos repetidos.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Deshabilitar el botón ayuda con los toques repetidos, pero no con los reintentos automáticos de la red ni con una petición que se reenvía sola. El servidor sigue sin poder distinguir un reintento de un pedido nuevo. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Un cartel no frena los reintentos que hace la app sola, y revisar a mano cada mañana llega siempre después del cobro. El problema se corrige a mano cuando debió evitarse en el diseño. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. Con una clave de idempotencia, el servidor reconoce un reintento y devuelve el resultado de la primera vez en lugar de crear otro pedido. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="idempotencia" hidden>
+<h2>Idempotencia: pedir lo mismo dos veces sin efectos dobles</h2>
+<p class="lead">Una operación es <strong>idempotente</strong> si repetirla deja el sistema en el mismo estado final que hacerla una sola vez. En una red real los mensajes se pierden y se reenvían, así que esta propiedad no es un lujo.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Verbo</th><th scope="col">¿Idempotente?</th><th scope="col">Por qué</th></tr></thead>
+<tbody>
+<tr><td>GET</td><td>Sí</td><td>Solo lee: leer diez veces no cambia nada.</td></tr>
+<tr><td>PUT</td><td>Sí</td><td>Reemplaza el recurso con los mismos datos; el resultado final es igual.</td></tr>
+<tr><td>DELETE</td><td>Sí</td><td>Después del primer borrado, el recurso ya no existe; repetir no cambia ese estado.</td></tr>
+<tr><td>POST</td><td>No</td><td>Cada llamada crea un recurso nuevo, salvo que se la proteja.</td></tr>
+</tbody>
+</table>
+
+<p>Para proteger un <code>POST</code>, el cliente genera una clave única por intento lógico y la manda en cada reintento:</p>
+<div class="code">
+<div class="code-header"><span>HTTP — pedido con clave de idempotencia</span></div>
+<pre><code class="src">POST /pedidos
+Idempotency-Key: 7f3a-91c2-4d10
+Content-Type: application/json
+
+{ "producto": "cafe-01", "cantidad": 1 }
+
+--- primera vez ---
+201 Created   { "id": 412, "estado": "recibido" }
+
+--- reintento con la MISMA clave ---
+200 OK        { "id": 412, "estado": "recibido" }   (mismo pedido)</code></pre>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="idempotencia-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. Hacer un PUT dos veces con los mismos datos deja el recurso igual que hacerlo una vez, por eso PUT es
+<select class="quiz-blank" data-correct="idem">
+<option value="">— elige —</option>
+<option value="peligroso">peligroso</option>
+<option value="opcional">opcional</option>
+<option value="idem">idempotente</option>
+</select>.</p>
+<p>2. Un POST /pedidos repetido, sin ninguna protección, crea
+<select class="quiz-blank" data-correct="cada">
+<option value="">— elige —</option>
+<option value="unico">un único pedido</option>
+<option value="cada">un pedido por cada petición</option>
+<option value="ninguno">ningún pedido</option>
+</select>.</p>
+<p>3. Para que el servidor reconozca un reintento, el cliente envía una
+<select class="quiz-blank" data-correct="clave">
+<option value="">— elige —</option>
+<option value="clave">clave de idempotencia</option>
+<option value="password">contraseña de usuario</option>
+<option value="version">versión de la API</option>
+</select>.</p>
+<p>4. Si llega una petición con una clave que ya se usó, el servidor responde con
+<select class="quiz-blank" data-correct="guardado">
+<option value="">— elige —</option>
+<option value="nuevo">un pedido nuevo</option>
+<option value="guardado">el resultado guardado de la primera vez</option>
+<option value="borrar">una orden de borrar el pedido anterior</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision6" hidden>
+<h2>De vuelta con la IA: ¿qué le pasa Diego esta vez?</h2>
+<p class="lead">Diego le pide a una IA: "hacé el endpoint para reservar un turno". Devuelve una ruta <code>POST /reservarTurno</code>, un campo <code>userId</code> que no existe en ninguna tabla, una tabla con nombres distintos a los acordados, y una respuesta <code>200</code> para absolutamente todo, incluso cuando el horario ya estaba ocupado.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-6" data-unlock="ia repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué le da Diego a la IA para el próximo intento?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>El esquema de tablas y el contrato del endpoint: ruta, JSON de entrada y de salida, códigos de estado y regla de reintentos.</button>
+<button class="quiz-opt" data-key="b">Solo el nombre del endpoint ya decidido, para que la IA complete sola el resto con las convenciones más comunes.</button>
+<button class="quiz-opt" data-key="c">Un pedido más largo en texto libre, con adjetivos como "profesional" y "seguro", pero sin ningún ejemplo de datos.</button>
+</div>
+<p class="quiz-fb ko" data-key="b" hidden>Con solo un nombre, la IA vuelve a rellenar los huecos con lo que le parezca típico: nombres de campos, códigos de error, reintentos. Es el mismo problema de antes con un mejor título. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>"Profesional" y "seguro" no son verificables: la IA los interpreta como quiera y los nombres siguen sin coincidir con tu base de datos. Más palabras no son más precisión. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. Un esquema y un contrato concretos eliminan los huecos donde la IA inventa. Cerrás el recorrido del nivel. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="ia" hidden>
+<h2>Qué le das a la IA para que no invente el contrato</h2>
+<p class="lead">Cada error típico de una IA al generar una API tiene un material concreto que lo previene. La clave es reconocer el error para saber qué pasarle.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Lo que falla en el código generado</th><th scope="col">Qué pasarle a la IA</th></tr></thead>
+<tbody>
+<tr><td>Inventa nombres de campos, tablas o columnas.</td><td>El esquema de tablas exacto y un ejemplo de JSON real.</td></tr>
+<tr><td>Rutas con verbos (<code>/reservarTurno</code>) o verbos HTTP equivocados.</td><td>La lista de rutas con su verbo, ya decidida por el equipo.</td></tr>
+<tr><td>Responde 200 para todo.</td><td>Una tabla con el código de estado esperado para cada caso.</td></tr>
+<tr><td>Ignora los reintentos y crea duplicados.</td><td>La regla de idempotencia escrita explícitamente.</td></tr>
+</tbody>
+</table>
+
+<p>Un prompt con contrato se ve así:</p>
+<div class="code">
+<div class="code-header"><span>Prompt — contrato para la IA</span></div>
+<pre><code class="src">Implementá POST /turnos.
+Tabla: turno(id, estudiante_id, fotocopiadora_id, inicio, estado)
+  con UNIQUE(fotocopiadora_id, inicio).
+Entrada:  { "estudiante_id": 5, "fotocopiadora_id": 2,
+            "inicio": "2026-10-05T10:30:00-04:00" }
+Salida:   201 { "id": 7, "estado": "solicitado" }
+Errores:  400 si falta un campo; 404 si el estudiante
+          no existe; 409 si el horario ya está ocupado.
+Reintentos: si llega la misma Idempotency-Key, devolver
+          el turno ya creado con 200.
+No agregues campos ni rutas que no estén acá.</code></pre>
+</div>
+
+<div class="highlight">
+<strong>Lo que sigue siendo tuyo</strong>
+<p>Decidir el contrato —nombres, códigos, qué cambios son compatibles— es una decisión de diseño. La IA no tiene forma de saber qué aplicaciones ya instaladas dependen de tu API; eso solo lo sabés vos.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un sistema registra pagos que deben apuntar siempre a un pedido existente, sin excepción. ¿Qué almacenamiento conviene?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Documentos sin estructura fija, porque así cada pago puede tener los campos que necesite.</button>
+<button class="quiz-opt">Un archivo de texto compartido, porque es lo más simple de revisar a mano cuando algo falla.</button>
+<button class="quiz-opt" data-correct>Relacional, con una clave foránea hacia pedido que impida registrar un pago sin pedido existente.</button>
+<button class="quiz-opt">Cualquiera de los dos, porque la elección del modelo no cambia las garantías que se obtienen.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la clave foránea hace que la propia base rechace un pago sin pedido. Esa garantía es la razón principal para elegir relacional cuando las reglas entre datos son críticas." data-ko="Cuando una regla entre datos es crítica, conviene que la base misma la haga cumplir. Un modelo flexible o un archivo la dejan a cargo del código, y los modelos sí cambian las garantías disponibles." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Agregar un campo opcional a la respuesta de un endpoint suele ser un cambio compatible con los clientes que ya existen.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un cliente viejo simplemente ignora el campo que no conoce, así que sigue funcionando sin cambios." data-ko="Es verdadero: un cliente viejo ignora el campo que no conoce. Lo que rompe es quitar, renombrar o cambiar el tipo de algo que ya existía." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Llega un PATCH para cancelar un turno que ya fue atendido. ¿Con qué código debería responder el servidor?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">200 OK, porque la petición llegó bien y el servidor la procesó sin errores técnicos.</button>
+<button class="quiz-opt">404 Not Found, porque el turno ya no está disponible para que alguien lo cancele.</button>
+<button class="quiz-opt">201 Created, porque el servidor crea un registro de que se intentó cancelar el turno.</button>
+<button class="quiz-opt" data-correct>409 Conflict, porque la acción choca con el estado actual y esa transición no es válida.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el turno existe y la petición está bien armada, pero choca con el estado actual. Ese es exactamente el caso de 409 Conflict." data-ko="El turno existe (no es 404) y no se creó nada (no es 201). Tampoco es un éxito (200): la petición choca con el estado actual, que es el caso de 409 Conflict." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: diseñá los datos y la API de tu sistema</h2>
+<p class="lead">Retomá el mismo sistema real de los retos anteriores (o uno nuevo si preferís). Sin programar, escribí en no más de dos o tres líneas por punto: 1) tres entidades de tu sistema y, para cada una, si la guardarías como relacional o como documento, con la razón, 2) tres endpoints de un caso de uso (verbo, ruta y códigos de estado), sin verbos dentro de la ruta, 3) un cambio incompatible que podría pasar en el futuro y cómo lo publicarías sin romper a nadie, 4) una operación de tu sistema que necesite idempotencia y cómo la resolverías, 5) un prompt con contrato para pedirle a una IA que implemente uno de tus endpoints.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Datos, endpoints, versionado e idempotencia de un sistema real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>La elección relacional/documentos se justifica por la forma de los datos o las reglas a garantizar, no por moda.</li>
+<li>Las rutas nombran recursos (sustantivos) y el verbo HTTP expresa la acción; no hay <code>/crearAlgo</code>.</li>
+<li>Cada endpoint tiene al menos un código de éxito y uno de error distinto de 200, con su motivo.</li>
+<li>El cambio incompatible elegido tiene un plan de versión y convivencia, no un "avisamos y listo".</li>
+<li>La operación idempotente identifica qué se repite y qué clave o regla evita el efecto doble.</li>
+<li>El prompt incluye esquema, entrada, salida, errores y la instrucción de no inventar nada fuera del contrato.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Clave primaria (PK)</td><td>Columna que identifica cada fila de forma única.</td></tr>
+<tr><td>Clave foránea (FK)</td><td>Columna que apunta a otra tabla y obliga a que esa fila exista.</td></tr>
+<tr><td>Transacción</td><td>Grupo de cambios que se aplican todos o ninguno.</td></tr>
+<tr><td>Modelo relacional</td><td>Tablas con estructura fija; la base hace cumplir las reglas.</td></tr>
+<tr><td>Modelo de documentos</td><td>Documentos JSON con forma propia, leídos completos de una vez.</td></tr>
+<tr><td>API REST</td><td>Rutas que nombran recursos y verbos HTTP que dicen qué hacer.</td></tr>
+<tr><td>409 Conflict</td><td>La petición choca con el estado actual del recurso.</td></tr>
+<tr><td>Contrato</td><td>Lo que la API promete: rutas, campos, tipos y códigos.</td></tr>
+<tr><td>Cambio incompatible</td><td>Renombrar, quitar o cambiar el tipo de algo: pide una versión nueva.</td></tr>
+<tr><td>Idempotente</td><td>Repetir la operación deja el mismo estado final que hacerla una vez.</td></tr>
+<tr><td>Idempotency-Key</td><td>Clave única por intento que permite reconocer un reintento.</td></tr>
+<tr><td>Prompt con contrato</td><td>Esquema + entrada + salida + errores + reintentos, sin dejar huecos.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🗄️ El modelo relacional tiene más de 50 años</h3><p>Edgar Codd lo propuso en 1970, trabajando en IBM. La idea de organizar datos en tablas relacionadas por claves sigue siendo la base de los motores relacionales que se usan hoy.</p></div>
+<div class="info"><h3>🌐 REST salió de una tesis doctoral</h3><p>Roy Fielding definió REST en su tesis del año 2000, describiendo por qué la web había escalado tan bien. Muchas "APIs REST" actuales siguen solo una parte de esas ideas, y igual resultan útiles.</p></div>
+<div class="info"><h3>🧭 Lo que viene en el Nivel 3</h3><p>Ya sabés cómo se guardan los datos y cómo se piden. El próximo nivel mira el conjunto: arquitectura limpia, monolito modular vs. microservicios, colas, eventos y cache, y cómo decidir cuánto de eso necesita un equipo de tres.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Nivel 2: Datos y APIs</h2>
+<p>Material de apoyo para el Club de Programación · Ruta Diseñador de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "ds-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
