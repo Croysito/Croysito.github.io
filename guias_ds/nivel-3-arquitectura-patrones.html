@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nivel 3: Arquitectura y Patrones | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">Club · <span>DS Nivel 3</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="capas">Capas y dependencias</button>
+<button data-target="puertos">Puertos y adaptadores</button>
+<button data-target="monolito">Monolito vs. microservicios</button>
+<button data-target="eventos">Colas y eventos</button>
+<button data-target="cache">Cache</button>
+<button data-target="ia">Patrones y prompt con IA</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🧩 Club · Ruta Diseñador de Sistemas · Nivel 3</span>
+<h1 class="flow-h1">Arquitectura y patrones: <span>cómo se organiza el sistema entero</span></h1>
+<p class="flow-lead">En el Nivel 2 decidiste cómo se guardan los datos y cómo se piden. Ahora toca mirar el conjunto: cómo organizar el código para que cambiar la base de datos no toque las reglas, si conviene partir el sistema en servicios, cómo sacar de la petición lo que tarda, cómo acelerar lecturas con cache, y cómo pedirle a una IA que respete la estructura que armaste. Todo con el criterio de un equipo chico: usar solo la complejidad que se necesita.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Seguís acompañando a Diego en <strong>TurnoYa</strong>. Si todavía no hiciste el <a href="nivel-2-datos-apis.html">Nivel 2</a>, conviene empezar por ahí. Todo se explica desde cero: solo hace falta saber programar lo básico (los ejemplos están en Python). En cada decisión podés probar primero un camino equivocado, ver su consecuencia sin penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>Cambiar la base de datos no debería tocar las reglas</h2>
+<p class="lead">TurnoYa guarda todo en SQLite, pero el hosting gratuito termina y hay que pasar a PostgreSQL. Diego abre el código y encuentra algo que no esperaba: la regla "un turno no se puede reservar si el horario está ocupado" está escrita dentro del controlador de la API, mezclada con consultas SQL propias de SQLite. Cambiar de base significa tocar —y volver a probar— las reglas del negocio.</p>
+<div class="highlight">
+<strong>Lo que está en juego</strong>
+<p>Cuando las reglas del negocio dependen de detalles como la base de datos o el framework web, cambiar cualquiera de esos detalles es caro y arriesga romper lo que ya funcionaba.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="capas decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo reorganiza Diego el código?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Copia el controlador entero y cambia las consultas por las de PostgreSQL, así lo viejo sigue funcionando como respaldo.</button>
+<button class="quiz-opt" data-key="b">Mueve todas las reglas a procedimientos almacenados de la base, así viven junto a los datos y no se mezclan con la API.</button>
+<button class="quiz-opt" data-key="c" data-correct>Pone las reglas en el centro, sin saber de la base ni de la API, y deja esos detalles afuera, apuntando hacia el centro.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Duplicar el controlador deja la misma regla en dos lugares: cuando cambie, hay que acordarse de tocar las dos. Se resolvió el cambio de base de hoy y se empeoró el de mañana. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Mover las reglas a la base las ata todavía más a ese motor: el próximo cambio sería otra reescritura, y probar las reglas exigiría levantar una base real. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Esa es la idea de la arquitectura limpia (o hexagonal): el núcleo con las reglas no conoce los detalles, y los detalles dependen de él. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="capas" hidden>
+<h2>Arquitectura limpia: capas y la regla de dependencia</h2>
+<p class="lead">La arquitectura limpia organiza el código en capas concéntricas. Lo que cambia poco y vale mucho (las reglas del negocio) va en el centro; lo que cambia seguido (framework, base, servicios externos) va afuera. Una sola regla lo sostiene: el código de adentro nunca importa al de afuera.</p>
+<div class="diagrama-caja">
+<svg viewBox="0 0 640 310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de tres capas concéntricas: infraestructura afuera, aplicación en el medio y dominio en el centro, con flechas de dependencia apuntando hacia adentro.">
+<rect class="uml-frontera" x="20" y="20" width="600" height="260" rx="10"></rect>
+<text class="uml-titulo" x="40" y="46">Infraestructura</text>
+<text class="uml-texto" x="320" y="272" text-anchor="middle">API HTTP · base de datos · servicio de WhatsApp</text>
+<rect class="uml-caja" x="70" y="70" width="500" height="190" rx="8"></rect>
+<text class="uml-titulo" x="90" y="95">Aplicación</text>
+<text class="uml-texto" x="320" y="246" text-anchor="middle">ReservarTurno · CancelarTurno</text>
+<rect class="uml-caja-fondo" x="150" y="120" width="340" height="100" rx="6"></rect>
+<text class="uml-titulo" x="320" y="150" text-anchor="middle">Dominio</text>
+<text class="uml-texto" x="320" y="178" text-anchor="middle">Turno · un horario no se reserva dos veces</text>
+<line class="uml-mensaje" x1="28" y1="170" x2="64" y2="170"></line>
+<polyline class="uml-flecha-abierta" points="56,164 64,170 56,176"></polyline>
+<line class="uml-mensaje" x1="78" y1="170" x2="144" y2="170"></line>
+<polyline class="uml-flecha-abierta" points="136,164 144,170 136,176"></polyline>
+<text class="uml-mult" x="320" y="302" text-anchor="middle">Los imports apuntan siempre hacia adentro: el dominio no conoce a nadie.</text>
+</svg>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Capa</th><th scope="col">Qué contiene</th><th scope="col">En TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Dominio</td><td>Entidades y reglas del negocio. No importa nada externo.</td><td>Turno; "un horario no se reserva dos veces".</td></tr>
+<tr><td>Aplicación</td><td>Casos de uso: orquestan el dominio para lograr una meta.</td><td>ReservarTurno, CancelarTurno.</td></tr>
+<tr><td>Infraestructura</td><td>Detalles técnicos: API, base, servicios externos.</td><td>Rutas HTTP, PostgreSQL, el envío de WhatsApp.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>No hace falta usar estos nombres</strong>
+<p>Algunos equipos hablan de "hexagonal", "puertos y adaptadores" u "onion". Los nombres cambian; lo que importa es la dirección de las dependencias. Si podés cambiar la base sin tocar una sola regla, estás en lo correcto.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="capas-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿En qué capa va cada pieza?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un turno no puede empezar en el pasado.</span>
+<div class="quiz-classify-btns">
+<button>Aplicación</button>
+<button data-correct>Dominio</button>
+<button>Infraestructura</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El código que arma el JSON de respuesta de GET /turnos.</span>
+<div class="quiz-classify-btns">
+<button>Dominio</button>
+<button>Aplicación</button>
+<button data-correct>Infraestructura</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">ReservarTurno: busca el horario, verifica que esté libre, guarda el turno y pide el aviso.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Aplicación</button>
+<button>Infraestructura</button>
+<button>Dominio</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La consulta SQL que trae los turnos de una fotocopiadora.</span>
+<div class="quiz-classify-btns">
+<button>Aplicación</button>
+<button>Dominio</button>
+<button data-correct>Infraestructura</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un estudiante con tres turnos pendientes no puede reservar otro.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Dominio</button>
+<button>Infraestructura</button>
+<button>Aplicación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">CancelarTurno: carga el turno, lo cancela y guarda el resultado.</span>
+<div class="quiz-classify-btns">
+<button>Infraestructura</button>
+<button>Dominio</button>
+<button data-correct>Aplicación</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>El caso de uso necesita guardar el turno</h2>
+<p class="lead">Diego ya separó las capas. Ahora escribe ReservarTurno, que necesita guardar el turno. Lo primero que se le ocurre es importar la librería de PostgreSQL dentro del caso de uso, y listo. Pero Tomás le marca dos problemas: la capa de aplicación acaba de depender de la base —al revés de la regla— y para probar el caso de uso hará falta una base real encendida.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="puertos decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo lo resuelve Diego?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Define en el núcleo una interfaz RepositorioDeTurnos con lo que necesita, y la base de datos la implementa desde afuera.</button>
+<button class="quiz-opt" data-key="b">Importa la librería de la base en el caso de uso, pero la envuelve en una función auxiliar para esconder los detalles.</button>
+<button class="quiz-opt" data-key="c">Hace que el dominio importe también el framework web, para tener acceso directo a la sesión y a los datos de cada petición.</button>
+</div>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. Eso es invertir la dependencia: el núcleo declara qué necesita (un puerto) y la infraestructura se adapta a eso. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="b" hidden>Una función auxiliar que sigue importando la librería deja la dependencia donde estaba: la capa de aplicación todavía no puede probarse ni usarse sin esa base. Cambió el aspecto, no la dirección. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Hace lo opuesto: el núcleo pasa a depender del framework, un detalle que cambia más seguido que las reglas. Es justamente lo que la regla de dependencia prohíbe. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="puertos" hidden>
+<h2>Puertos y adaptadores: invertir la dependencia</h2>
+<p class="lead">Un <strong>puerto</strong> es la descripción de lo que el núcleo necesita ("guardá este turno"). Un <strong>adaptador</strong> es el código de afuera que cumple esa descripción con una tecnología concreta (PostgreSQL, una lista en memoria). Mirá cómo quedan las flechas de import.</p>
+<div class="code">
+<div class="code-header"><span>Python — el núcleo define el puerto</span></div>
+<pre><code class="src"># dominio/turno.py  (núcleo: no importa nada de afuera)
+class Turno:
+    def __init__(self, estudiante_id, fotocopiadora_id, inicio):
+        self.estudiante_id = estudiante_id
+        self.fotocopiadora_id = fotocopiadora_id
+        self.inicio = inicio
+        self.estado = "solicitado"
+
+# aplicacion/puertos.py  (lo que el caso de uso NECESITA, sin decir cómo)
+class RepositorioDeTurnos:
+    def horario_libre(self, fotocopiadora_id, inicio): ...
+    def guardar(self, turno): ...
+
+# aplicacion/reservar_turno.py
+class ReservarTurno:
+    def __init__(self, repo):              # recibe el puerto, no una base concreta
+        self.repo = repo
+
+    def ejecutar(self, estudiante_id, fotocopiadora_id, inicio):
+        if not self.repo.horario_libre(fotocopiadora_id, inicio):
+            raise ValueError("Horario ocupado")
+        turno = Turno(estudiante_id, fotocopiadora_id, inicio)
+        self.repo.guardar(turno)
+        return turno</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Python — los adaptadores lo cumplen</span></div>
+<pre><code class="src"># infraestructura/repo_postgres.py  (adaptador: cumple el puerto con PostgreSQL)
+class RepoPostgres(RepositorioDeTurnos):
+    def __init__(self, conexion):
+        self.conexion = conexion
+    def horario_libre(self, fotocopiadora_id, inicio): ...   # SELECT real
+    def guardar(self, turno): ...                            # INSERT real
+
+# pruebas/repo_en_memoria.py  (otro adaptador: una lista, sin base de datos)
+class RepoEnMemoria(RepositorioDeTurnos):
+    def __init__(self):
+        self.turnos = []
+    def horario_libre(self, fotocopiadora_id, inicio):
+        return all(not (t.fotocopiadora_id == fotocopiadora_id and t.inicio == inicio)
+                   for t in self.turnos)
+    def guardar(self, turno):
+        self.turnos.append(turno)
+
+# La misma regla se prueba en milisegundos, sin levantar ninguna base:
+caso = ReservarTurno(RepoEnMemoria())</code></pre>
+</div>
+<div class="highlight">
+<strong>Qué se gana</strong>
+<p>Cambiar PostgreSQL por otra base es escribir un adaptador nuevo, sin tocar ReservarTurno. Y las reglas se prueban con una lista en memoria, en milisegundos. En Python no hace falta una palabra especial para "interfaz": una clase base con métodos vacíos alcanza. Lo importante es quién importa a quién.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="puertos-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada término con su descripción.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="p0">Entidad</button>
+<button class="quiz-match-item" data-pair="p1">Caso de uso</button>
+<button class="quiz-match-item" data-pair="p2">Puerto</button>
+<button class="quiz-match-item" data-pair="p3">Adaptador</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="p3">Código de afuera que cumple un puerto con una tecnología.</button>
+<button class="quiz-match-item" data-pair="p2">Descripción de lo que el núcleo necesita de afuera.</button>
+<button class="quiz-match-item" data-pair="p1">Una meta del usuario hecha código, como ReservarTurno.</button>
+<button class="quiz-match-item" data-pair="p0">Objeto del negocio con sus reglas, como Turno.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>"Netflix usa microservicios"</h2>
+<p class="lead">Tomás vio una charla y propone separar TurnoYa en cuatro servicios independientes: turnos, usuarios, notificaciones y pagos. Hoy el equipo son tres developers, hay una sola aplicación y un solo servidor. Le piden a Diego una recomendación.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="monolito decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué recomienda Diego?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Dividir ya en cuatro servicios, porque así cada módulo escala por separado y queda listo para cuando la app crezca.</button>
+<button class="quiz-opt" data-key="b" data-correct>Un monolito modular: una sola aplicación desplegable, con módulos de límites claros que luego se puedan separar si hace falta.</button>
+<button class="quiz-opt" data-key="c">Dejar todo el código en un solo bloque sin módulos, porque separar cualquier cosa agrega trabajo que tres personas no necesitan.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Cada servicio suma despliegue, red entre ellos, datos repartidos y monitoreo propios. Con tres personas, el tiempo se iría en operar la infraestructura y no en mejorar TurnoYa, para escalar un problema que todavía no existe. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. Un monolito modular da casi todo el orden con una fracción de la complejidad operativa. Si un módulo lo pide, se extrae después. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="c" hidden>Sin límites internos el código se enreda, cada cambio toca todo y, el día que haga falta separar algo, no habrá por dónde cortar. Una sola aplicación no es lo mismo que una aplicación sin orden. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="monolito" hidden>
+<h2>Monolito modular vs. microservicios</h2>
+<p class="lead">Un <strong>monolito</strong> se despliega como una sola pieza; los <strong>microservicios</strong> son varias aplicaciones chicas que se hablan por red. La diferencia más grande no es técnica sino de costo: cada servicio nuevo es otro programa que desplegar, vigilar y mantener sincronizado.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Aspecto</th><th scope="col">Monolito modular</th><th scope="col">Microservicios</th></tr></thead>
+<tbody>
+<tr><td>Despliegue</td><td>Una sola pieza.</td><td>Una pieza por servicio, cada una con su proceso.</td></tr>
+<tr><td>Comunicación</td><td>Llamada a una función: instantánea y no falla.</td><td>Llamada por red: tarda y puede fallar.</td></tr>
+<tr><td>Datos</td><td>Una base: una transacción cubre todo.</td><td>Una base por servicio: mantener todo coherente es difícil.</td></tr>
+<tr><td>Equipo ideal</td><td>Pocas personas, un solo ritmo.</td><td>Muchos equipos que necesitan desplegar sin esperarse.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Un problema de organización antes que técnico</strong>
+<p>Los microservicios resuelven sobre todo el trabajo de muchos equipos grandes sobre el mismo producto. Para un equipo de tres, casi siempre agregan costo sin dar nada a cambio. Lo habitual es empezar por un monolito modular y separar un módulo solo cuando hay una razón concreta.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="monolito-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Qué arquitectura sugiere cada situación?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un equipo de tres personas lanza la primera versión de la app.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Monolito modular</button>
+<button>Microservicios</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Veinte equipos necesitan publicar cambios sin esperarse entre sí.</span>
+<div class="quiz-classify-btns">
+<button>Monolito modular</button>
+<button data-correct>Microservicios</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una sola base garantiza que un turno y su pago se guarden juntos o ninguno.</span>
+<div class="quiz-classify-btns">
+<button>Microservicios</button>
+<button data-correct>Monolito modular</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El envío masivo de mensajes necesita escalar cincuenta veces más que el resto.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Microservicios</button>
+<button>Monolito modular</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Todavía no se sabe qué partes van a crecer ni cuánto.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Monolito modular</button>
+<button>Microservicios</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un módulo lo mantiene otra organización y se publica con su propio ciclo de versiones.</span>
+<div class="quiz-classify-btns">
+<button>Monolito modular</button>
+<button data-correct>Microservicios</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>El WhatsApp que tarda tres segundos</h2>
+<p class="lead">Al confirmar un turno, la API envía un WhatsApp de aviso antes de responder. El servicio de mensajes tarda unos tres segundos y a veces falla; cuando falla, el estudiante ve un error aunque el turno sí se guardó. Hay quejas de gente que reserva dos veces por las dudas.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="eventos decision5">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo lo rediseña Diego?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Guarda el turno, responde enseguida y publica «TurnoConfirmado»; un proceso aparte lo toma de una cola y envía el mensaje con reintentos.</button>
+<button class="quiz-opt" data-key="b">Envía el mensaje antes de guardar el turno, así si el servicio de mensajes falla se evita confirmar un turno que no avisó.</button>
+<button class="quiz-opt" data-key="c">Mantiene el envío dentro de la petición, pero baja el tiempo de espera máximo a medio segundo para que el error aparezca rápido.</button>
+</div>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. Lo secundario y lento sale de la petición: la respuesta es inmediata y el aviso llega después, con reintentos si falla. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="b" hidden>Ahora el estudiante no puede reservar cada vez que el servicio de mensajes esté caído: una función secundaria pasó a bloquear la principal, y puede enviarse un aviso de un turno que luego no se guarda. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Un error más rápido sigue siendo un error: el turno se guarda igual, el estudiante ve un fallo y el aviso se pierde. Acortar la espera no cambia que dos cosas distintas están atadas. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="eventos" hidden>
+<h2>Colas y eventos: no hacer esperar a quien no tiene que esperar</h2>
+<p class="lead">Una <strong>cola</strong> guarda mensajes hasta que otro proceso (el <em>consumidor</em>) los tome. Un <strong>evento</strong> es un mensaje que cuenta algo que <em>ya pasó</em> ("TurnoConfirmado"). Quien lo publica no sabe ni le importa quién lo escucha, y esa separación es lo que permite responder rápido.</p>
+<div class="code">
+<div class="code-header"><span>Python — publicar y consumir</span></div>
+<pre><code class="src"># En la petición HTTP (rápida): guardar y publicar el evento
+turno = reservar_turno.ejecutar(estudiante_id, fotocopiadora_id, inicio)
+cola.publicar("TurnoConfirmado", {"turno_id": turno.id})
+return {"id": turno.id}, 201            # el estudiante ya tiene su respuesta
+
+# En un proceso aparte (worker), que lee la cola:
+def al_recibir(evento):
+    if ya_enviado(evento["turno_id"]):  # idempotente: un reintento no duplica el aviso
+        return
+    enviar_whatsapp(evento["turno_id"])
+    marcar_enviado(evento["turno_id"])</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Costo o ventaja</th><th scope="col">Qué significa</th></tr></thead>
+<tbody>
+<tr><td>Respuesta rápida</td><td>El estudiante no espera por lo que no necesita para seguir.</td></tr>
+<tr><td>Consistencia eventual</td><td>El aviso llega unos segundos después del turno, no a la vez.</td></tr>
+<tr><td>Reintentos</td><td>Si el envío falla, la cola vuelve a intentarlo sin molestar a nadie.</td></tr>
+<tr><td>Mensajes repetidos</td><td>Con reintentos, un mensaje puede entregarse más de una vez.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Se conecta con el Nivel 2</strong>
+<p>Como un mensaje puede llegar dos veces, el consumidor tiene que ser idempotente: repetirlo no debe duplicar el efecto. Es la misma idea de la <code>Idempotency-Key</code> que viste con las APIs, aplicada ahora a las colas.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="eventos-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. Un evento se nombra en
+<select class="quiz-blank" data-correct="pasado">
+<option value="">— elige —</option>
+<option value="pasado">pasado ("TurnoConfirmado")</option>
+<option value="imperativo">imperativo ("ConfirmarTurno")</option>
+<option value="futuro">futuro ("TurnoSeConfirmará")</option>
+</select>.</p>
+<p>2. La pieza que guarda los mensajes hasta que alguien los procese es la
+<select class="quiz-blank" data-correct="cola">
+<option value="">— elige —</option>
+<option value="entidad">entidad</option>
+<option value="regla">regla de dominio</option>
+<option value="cola">cola</option>
+</select>.</p>
+<p>3. Como una cola puede entregar un mensaje dos veces, el consumidor debe ser
+<select class="quiz-blank" data-correct="idempotente">
+<option value="">— elige —</option>
+<option value="sincrono">síncrono</option>
+<option value="idempotente">idempotente</option>
+<option value="monolitico">monolítico</option>
+</select>.</p>
+<p>4. Que el aviso llegue unos segundos después del turno se llama consistencia
+<select class="quiz-blank" data-correct="eventual">
+<option value="">— elige —</option>
+<option value="inmediata">inmediata</option>
+<option value="transaccional">transaccional</option>
+<option value="eventual">eventual</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision5" hidden>
+<h2>200 consultas por minuto para la misma respuesta</h2>
+<p class="lead">En hora pico, unos 200 estudiantes por minuto abren la pantalla "horarios libres", y cada vez la API ejecuta una consulta pesada contra la base. La base se pone lenta y, con ella, también las reservas. Los horarios libres cambian apenas unas pocas veces por minuto.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-5" data-unlock="cache decision6">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Diego?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Guarda el resultado en cache sin vencimiento, porque los horarios cambian poco y así la base no se consulta nunca más.</button>
+<button class="quiz-opt" data-key="b">Sube la base de datos al plan más caro, porque agregar cache complica el código y hay que cuidar que no quede desactualizado.</button>
+<button class="quiz-opt" data-key="c" data-correct>Guarda el resultado en cache por 30 segundos y lo borra cuando alguien reserva o cancela, para no mostrar horarios viejos.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Sin vencimiento ni borrado, el cache muestra para siempre lo que estaba libre cuando se guardó: los estudiantes verían libres turnos ya tomados y fallarían al reservar. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Pagar más resuelve hoy y deja intacto el motivo: 200 consultas iguales por minuto para una respuesta que casi no cambia. Es un gasto fijo para evitar una complejidad que tiene solución chica. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Un tiempo de vida corto (TTL) limita cuánto puede estar desactualizado el dato, y borrarlo al cambiar evita mostrar horarios ya tomados. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="cache" hidden>
+<h2>Cache: responder de memoria lo que casi no cambia</h2>
+<p class="lead">Un <strong>cache</strong> es una copia rápida de un resultado costoso. Mientras la copia sirva, la base no se toca. El problema no es guardarla, sino saber cuándo deja de ser válida.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Qué significa</th></tr></thead>
+<tbody>
+<tr><td>Acierto (hit)</td><td>El dato estaba en el cache y se respondió de memoria.</td></tr>
+<tr><td>Fallo (miss)</td><td>No estaba: se consulta la base y se guarda el resultado.</td></tr>
+<tr><td>TTL</td><td>Tiempo de vida: tras ese tiempo la copia se descarta sola.</td></tr>
+<tr><td>Invalidación</td><td>Borrar la copia a propósito cuando el dato original cambia.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Cachear para mostrar, no para decidir</strong>
+<p>La pantalla "horarios libres" tolera mostrar un dato de hace 30 segundos. Pero el momento de reservar no: ahí la regla siempre consulta la fuente de verdad (la base). Cachear sirve para lecturas masivas que toleran un poco de atraso, no para validar reglas que deben ser exactas.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="cache-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada término de cache con lo que describe.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="p0">Hit</button>
+<button class="quiz-match-item" data-pair="p1">Miss</button>
+<button class="quiz-match-item" data-pair="p2">TTL</button>
+<button class="quiz-match-item" data-pair="p3">Invalidación</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="p3">Borrar la copia porque el dato original cambió.</button>
+<button class="quiz-match-item" data-pair="p2">Tiempo tras el cual la copia deja de valer.</button>
+<button class="quiz-match-item" data-pair="p1">No había copia: hay que consultar la base.</button>
+<button class="quiz-match-item" data-pair="p0">La respuesta salió del cache sin tocar la base.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision6" hidden>
+<h2>"Hacé el endpoint para cancelar turnos"</h2>
+<p class="lead">Diego le pide a una IA el caso de uso CancelarTurno con ese mismo mensaje. La respuesta es una función de ochenta líneas con SQL, validaciones y el envío de WhatsApp, todo junto dentro del controlador. Funciona, pero rompe todo lo que armó en este nivel. Rehace el prompt.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-6" data-unlock="ia repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué prompt arma Diego?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Uno más largo con el mismo pedido, sumando que el código sea limpio, elegante y siga las mejores prácticas de la industria.</button>
+<button class="quiz-opt" data-key="b" data-correct>Uno que describe las capas, la regla de dependencia y el puerto RepositorioDeTurnos, y pide solo el caso de uso, sin importar base ni framework.</button>
+<button class="quiz-opt" data-key="c">Uno que le pide el código directamente en el controlador, para después separarlo a mano en capas cuando esté funcionando.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>"Limpio" y "mejores prácticas" no son instrucciones que una IA pueda verificar: devuelve más de lo mismo con otro estilo. Sin decirle la estructura que esperás, va a elegir una por su cuenta. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. La IA respeta la estructura que le das: capas, dirección de dependencias y el puerto que debe usar. Sin eso mezcla todo, porque es lo más corto de escribir. Cerrás el recorrido del nivel. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="c" hidden>Separar después lo que nació mezclado es el trabajo más caro: hay que desenredar las reglas del SQL y del framework a mano. Es más barato indicarle la estructura desde el principio. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="ia" hidden>
+<h2>Patrones de diseño y arquitectura con IA</h2>
+<p class="lead">Un <strong>patrón de diseño</strong> es una solución con nombre a un problema que se repite. No se aplica para "tener patrones": se reconoce cuando el problema aparece. Y como una IA conoce muchos, nombrarlos en el prompt le acota mucho el resultado.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Patrón</th><th scope="col">Problema que resuelve</th><th scope="col">En TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Repository</td><td>Esconder dónde y cómo se guardan los datos detrás de una interfaz.</td><td>RepositorioDeTurnos, el puerto que viste.</td></tr>
+<tr><td>Adapter</td><td>Hacer que algo con otra interfaz encaje en la que tu código espera.</td><td>Envolver la API de WhatsApp en enviar_aviso().</td></tr>
+<tr><td>Strategy</td><td>Intercambiar distintas formas de hacer lo mismo.</td><td>Calcular el recargo por cancelar tarde de varias maneras.</td></tr>
+<tr><td>Observer</td><td>Avisar a varios interesados sin que quien avisa los conozca.</td><td>Los eventos como TurnoConfirmado.</td></tr>
+</tbody>
+</table>
+<p>Un prompt de arquitectura incluye cuatro cosas: la estructura, la regla de dependencia, lo que ya existe y lo que <em>no</em> debe inventar.</p>
+<div class="code">
+<div class="code-header"><span>Prompt — pedir un caso de uso respetando las capas</span></div>
+<pre><code class="src">Estoy construyendo TurnoYa con arquitectura limpia (Python).
+Capas: dominio/ (entidades y reglas), aplicacion/ (casos de uso y puertos),
+infraestructura/ (API, base de datos, WhatsApp).
+Regla de dependencia: dominio no importa nada; aplicacion solo importa dominio;
+infraestructura puede importar a ambas.
+
+Ya existe el puerto RepositorioDeTurnos con obtener(turno_id) y guardar(turno).
+Escribí SOLO el caso de uso CancelarTurno en aplicacion/cancelar_turno.py:
+- recibe el repositorio por el constructor
+- falla con ValueError si el turno no existe o ya fue atendido
+- no importes ninguna base de datos ni framework web
+- no inventes otros métodos del repositorio: usá solo los que te di</code></pre>
+</div>
+<div class="quiz quiz-match" data-quiz-id="patrones-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada patrón con el problema que resuelve.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="p0">Repository</button>
+<button class="quiz-match-item" data-pair="p1">Adapter</button>
+<button class="quiz-match-item" data-pair="p2">Strategy</button>
+<button class="quiz-match-item" data-pair="p3">Observer</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="p3">Avisar a varios interesados sin que quien avisa los conozca.</button>
+<button class="quiz-match-item" data-pair="p2">Cambiar entre varias formas de calcular algo.</button>
+<button class="quiz-match-item" data-pair="p1">Encajar una interfaz ajena en la que mi código espera.</button>
+<button class="quiz-match-item" data-pair="p0">Esconder dónde y cómo se guardan los datos.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas importaciones rompe la regla de dependencia de la arquitectura limpia?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un caso de uso de la capa de aplicación que importa una entidad del dominio.</button>
+<button class="quiz-opt" data-correct>Un archivo del dominio que importa la librería de la base de datos.</button>
+<button class="quiz-opt">Un adaptador de infraestructura que importa el puerto definido en aplicación.</button>
+<button class="quiz-opt">Una ruta de la API que importa y llama a un caso de uso de aplicación.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el dominio es el centro y no puede conocer detalles de afuera como la base. Las otras tres importaciones van de afuera hacia adentro, que es la dirección permitida." data-ko="La regla es que lo de adentro nunca importa lo de afuera. El dominio importando la base rompe esa dirección; las demás opciones van de afuera hacia adentro y están permitidas." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Con tres developers, partir una aplicación en microservicios suele reducir el trabajo, porque cada servicio es más chico.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: cada servicio suma despliegue, red, datos repartidos y monitoreo. Para un equipo chico el costo operativo casi siempre supera el beneficio." data-ko="Es falso: aunque cada servicio sea más chico, hay que desplegarlos, comunicarlos por red y mantener sus datos coherentes. Con tres personas, ese costo suele superar lo que se gana." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué riesgo trae cachear "horarios libres" sin vencimiento ni invalidación?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Que la base de datos reciba demasiadas consultas simultáneas en la hora de mayor demanda.</button>
+<button class="quiz-opt">Que el cache ocupe demasiada memoria del servidor por guardar demasiados horarios distintos.</button>
+<button class="quiz-opt">Que las reglas del dominio terminen dependiendo de la tecnología que se usó para el cache.</button>
+<button class="quiz-opt" data-correct>Que se muestren como libres turnos que ya fueron tomados, y el estudiante falle al reservarlos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: sin TTL ni invalidación, la copia envejece y muestra horarios que ya no existen. Ese es el costo clásico de un cache mal gestionado." data-ko="El riesgo típico es mostrar datos viejos: horarios que parecen libres pero ya fueron tomados. Las otras opciones describen problemas distintos que no son el central de este caso." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué el consumidor de una cola debería ser idempotente?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Porque por los reintentos un mensaje puede llegar más de una vez, y repetirlo no debe duplicar el efecto.</button>
+<button class="quiz-opt">Porque las colas siempre procesan mensajes en paralelo y necesitan un orden global estricto.</button>
+<button class="quiz-opt">Porque el productor del evento necesita conocer al consumidor para confirmar la entrega.</button>
+<button class="quiz-opt">Porque así el consumidor puede responder más rápido al estudiante que hizo la reserva.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: con reintentos, un mensaje puede llegar dos veces; el consumidor tiene que tolerarlo sin enviar dos avisos ni cobrar dos veces." data-ko="La razón es la entrega repetida: por los reintentos, un mensaje puede llegar más de una vez. No tiene que ver con el orden global, con que el productor conozca al consumidor, ni con acelerar la respuesta." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: la arquitectura de tu sistema</h2>
+<p class="lead">Retomá el mismo sistema real de los retos anteriores (o uno nuevo si preferís). Sin programar, escribí en no más de dos o tres líneas por punto: 1) las tres capas de tu sistema, con dos reglas del dominio, un caso de uso y dos detalles de infraestructura, 2) un puerto que definirías (su nombre y dos métodos) y quién lo implementaría, 3) si empezarías con un monolito modular o con microservicios, y por qué, según el tamaño de tu equipo, 4) una tarea que sacarías de la petición con un evento (nombrado en pasado) y qué pasaría si llegara dos veces, 5) un dato que cachearías (con su TTL y su invalidación) y uno que no, 6) un prompt de arquitectura para pedirle a una IA uno de tus casos de uso.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Capas, puertos, monolito, eventos, cache y prompt de un sistema real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>El dominio no nombra ninguna tecnología (base, framework, servicio externo); esos detalles están todos en infraestructura.</li>
+<li>El puerto lo define el núcleo según lo que necesita, no según lo que ofrece la tecnología que lo va a implementar.</li>
+<li>La decisión monolito/microservicios se justifica con el tamaño del equipo y un problema concreto, no con "es lo que usan las empresas grandes".</li>
+<li>El evento está nombrado en pasado, y se explica cómo evita el consumidor efectos duplicados si recibe el mensaje dos veces.</li>
+<li>El dato cacheado es de lectura masiva y tolera atraso; el dato que no se cachea necesita exactitud al instante, y se justifica por qué.</li>
+<li>El prompt incluye la estructura de capas, la regla de dependencia, lo que ya existe y una instrucción explícita de no inventar nada más.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Arquitectura limpia</td><td>Reglas del negocio en el centro; detalles (base, framework, servicios) afuera.</td></tr>
+<tr><td>Regla de dependencia</td><td>Los imports apuntan hacia adentro: el dominio no conoce a nadie.</td></tr>
+<tr><td>Dominio / Aplicación / Infraestructura</td><td>Reglas · casos de uso · detalles técnicos.</td></tr>
+<tr><td>Puerto</td><td>Descripción de lo que el núcleo necesita de afuera.</td></tr>
+<tr><td>Adaptador</td><td>Código de afuera que cumple un puerto con una tecnología concreta.</td></tr>
+<tr><td>Monolito modular</td><td>Una sola pieza con módulos de límites claros; punto de partida habitual.</td></tr>
+<tr><td>Microservicios</td><td>Varias aplicaciones por red: resuelven la organización de equipos grandes.</td></tr>
+<tr><td>Evento y cola</td><td>Mensaje de algo que ya pasó, guardado hasta que otro proceso lo tome.</td></tr>
+<tr><td>Consumidor idempotente</td><td>Repetir un mensaje no duplica su efecto.</td></tr>
+<tr><td>Cache, TTL, invalidación</td><td>Copia rápida con vencimiento; se borra cuando el dato original cambia.</td></tr>
+<tr><td>Patrón de diseño</td><td>Solución con nombre a un problema repetido: Repository, Adapter, Strategy, Observer.</td></tr>
+<tr><td>Prompt de arquitectura</td><td>Estructura + regla de dependencia + lo existente + lo que no debe inventar.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>⬡ La arquitectura hexagonal es de 2005</h3><p>Alistair Cockburn la describió con el nombre de "puertos y adaptadores". Robert C. Martin popularizó una versión parecida como "Clean Architecture" a partir de 2012. Las dos comparten la misma regla de dependencia.</p></div>
+<div class="info"><h3>🧠 "Solo hay dos cosas difíciles"</h3><p>Una frase atribuida a Phil Karlton dice que en informática solo hay dos cosas realmente difíciles: invalidar un cache y ponerle nombre a las cosas. Después de este nivel, ya sabés por qué la primera tiene fama.</p></div>
+<div class="info"><h3>🧭 Lo que viene en el Nivel 4</h3><p>Ya sabés organizar el código y decidir cuánto repartirlo. El próximo nivel trata de calidad y operación: escalabilidad, disponibilidad, observabilidad, seguridad básica, y cómo negociar la deuda técnica con la PO.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Nivel 3: Arquitectura y Patrones</h2>
+<p>Material de apoyo para el Club de Programación · Ruta Diseñador de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "ds-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

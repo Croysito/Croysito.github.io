@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo de dominio: entidades, atributos y relaciones | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // problema-proyecto-grado.html. Corre acá, antes que el resto de la
+  // página, para que el motor de quizzes de abajo ya encuentre el
+  // localStorage limpio si cambió el guia_intento.
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  var QUIZ_PREFIX = 'isw-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">ISW <span>Modelo de dominio</span></div>
+<p>Las cosas que EventoUAB debe recordar</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#entidades">Entidades</a>
+<a href="#atributos">Atributos</a>
+<a href="#relaciones">Relaciones y multiplicidad</a>
+<a href="#atributo-entidad">¿Atributo o entidad?</a>
+<a href="#razonamiento">Ejercicios de razonamiento</a>
+<a href="#vistas">Un concepto, cuatro vistas</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">📋 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Modelo de <span>dominio</span>: las cosas que el sistema debe recordar</h1>
+<p>EventoUAB ya tiene historias priorizadas y un diagrama de casos de uso con quién hace qué. Antes de decidir cómo se guarda o se programa algo, el equipo necesita ponerse de acuerdo en el vocabulario: qué cosas existen en el negocio (Club, Espacio, Reserva), qué se sabe de cada una y cómo se conectan. Esta guía enseña a armar ese modelo, con entidades, atributos y multiplicidad, a partir de los casos de uso que ya tenés.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Ya sabemos <em>quién</em> usa EventoUAB y <em>para qué</em>. Falta otra pregunta: ¿qué cosas tiene que recordar el sistema? Un <strong>modelo de dominio</strong> responde con un diagrama del vocabulario del negocio: las cosas que importan (entidades), qué se sabe de cada una (atributos) y cómo se conectan (relaciones).</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás sacar entidades candidatas de un caso de uso, distinguir entidades de atributos y de piezas del software, leer y escribir la multiplicidad de una relación, y decidir cuándo algo merece ser una entidad propia.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Encontrarás <strong>actividades cortas y autocorregibles</strong> —selección múltiple, clasificación, emparejamiento y completar espacios— repartidas a lo largo de la guía, y una sección de <strong>ejercicios de razonamiento</strong> donde se te da un escenario y debés predecir la respuesta antes de comprobarla.</p>
+</div>
+<div class="highlight">
+<strong>No es la base de datos ni el código</strong>
+<p>El modelo de dominio es una conversación con el negocio, no un diseño técnico. Por eso no tiene claves foráneas, ni tipos de datos, ni métodos: Bienestar Estudiantil tendría que poder leerlo sin ayuda.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>📦 Entidades</h3><p>Las cosas del negocio que se necesita recordar y distinguir una de otra.</p></div>
+<div class="info"><h3>🏷️ Atributos</h3><p>Los datos simples que describen a cada entidad.</p></div>
+<div class="info"><h3>🔗 Relaciones</h3><p>Cómo se conectan las entidades y cuántas de cada lado.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="entidades">
+<div class="card">
+<h2 class="section-title">Entidades: buscar sustantivos y filtrar</h2>
+<p class="lead">Una forma práctica de empezar es tomar un caso de uso, subrayar todos sus sustantivos y decidir, uno por uno, qué es cada cosa. Tomemos el flujo de "Reservar espacio" de la guía anterior.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Candidato</th><th scope="col">Decisión</th><th scope="col">Por qué</th></tr></thead>
+<tbody>
+<tr><td>Club</td><td>Entidad</td><td>El negocio necesita recordar qué club reservó.</td></tr>
+<tr><td>Espacio</td><td>Entidad</td><td>Hay varios y hay que distinguir uno de otro.</td></tr>
+<tr><td>Reserva</td><td>Entidad</td><td>Es el hecho central: un club ocupó un espacio en un horario.</td></tr>
+<tr><td>Fecha, hora</td><td>Atributo</td><td>Describen a la reserva; no se recuerdan por sí solos.</td></tr>
+<tr><td>Sistema, botón, base de datos</td><td>Fuera del dominio</td><td>Son piezas del software, no conceptos del negocio.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Dos preguntas para decidir</strong>
+<p><strong>1.</strong> ¿El negocio necesita recordar esta cosa y distinguirla de otras del mismo tipo? Si sí, es una entidad. <strong>2.</strong> ¿Es solo un dato que describe a otra cosa? Entonces es un atributo. Si es una pieza del software, no pertenece al modelo de dominio.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="entidad-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Qué es cada elemento dentro del análisis de EventoUAB?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Club"</span>
+<div class="quiz-classify-btns">
+<button>Atributo</button>
+<button data-correct>Entidad</button>
+<button>Fuera del dominio</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Capacidad" (cuántas personas entran en un espacio)</span>
+<div class="quiz-classify-btns">
+<button>Entidad</button>
+<button>Fuera del dominio</button>
+<button data-correct>Atributo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"La tabla reservas" de la base de datos</span>
+<div class="quiz-classify-btns">
+<button data-correct>Fuera del dominio</button>
+<button>Atributo</button>
+<button>Entidad</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Reserva"</span>
+<div class="quiz-classify-btns">
+<button data-correct>Entidad</button>
+<button>Atributo</button>
+<button>Fuera del dominio</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"Hora de inicio"</span>
+<div class="quiz-classify-btns">
+<button>Fuera del dominio</button>
+<button>Entidad</button>
+<button data-correct>Atributo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">"El botón Confirmar" de la pantalla de reservas</span>
+<div class="quiz-classify-btns">
+<button>Atributo</button>
+<button data-correct>Fuera del dominio</button>
+<button>Entidad</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="atributos">
+<div class="card">
+<h2 class="section-title">Atributos: qué guarda cada entidad</h2>
+<p class="lead">Los atributos son los datos simples que describen a una entidad: texto, número, fecha o sí/no. Cada atributo tiene que salir de algo que el negocio realmente usa, no de lo que "podría hacer falta algún día".</p>
+<table class="tabla">
+<thead><tr><th scope="col">Entidad</th><th scope="col">Atributos</th><th scope="col">Pregunta del negocio que responde</th></tr></thead>
+<tbody>
+<tr><td>Espacio</td><td>nombre, capacidad, tieneProyector</td><td>¿Cuál es y cuánta gente entra?</td></tr>
+<tr><td>Club</td><td>nombre, facultad</td><td>¿Qué club es y a qué facultad pertenece?</td></tr>
+<tr><td>Reserva</td><td>fecha, horaInicio, horaFin, estado</td><td>¿Cuándo es y en qué situación está?</td></tr>
+<tr><td>Estudiante</td><td>nombre, carnet, correo</td><td>¿Quién es y cómo se lo contacta?</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Tres cosas que no van como atributo</strong>
+<p><strong>Listas de otras entidades</strong> (un Club no tiene un atributo "reservas": eso es una relación). <strong>Datos que se calculan</strong> (la duración sale de horaInicio y horaFin). <strong>Claves técnicas</strong> (club_id o espacio_id son un asunto de la base de datos, no del negocio).</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="atributo-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un compañero escribe en la entidad Club el atributo "reservas" (una lista de las reservas del club). ¿Qué corresponde hacer?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Dejarlo, porque Club necesita acceso a sus reservas para mostrarlas en pantalla.</button>
+<button class="quiz-opt">Cambiarlo por "reserva_id", porque así queda más cerca de cómo lo guarda la base.</button>
+<button class="quiz-opt" data-correct>Quitarlo y dibujar una relación entre Club y Reserva, porque una lista no es un dato simple.</button>
+<button class="quiz-opt">Convertirlo en un método getReservas(), porque lo que hace falta es poder consultarlas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: una lista de otras entidades es una relación, y se dibuja como línea entre Club y Reserva. Un id es un detalle de la base de datos, y los métodos aparecen recién en el diseño de clases." data-ko="Una lista de entidades no es un dato simple: es una relación y se dibuja como línea. "reserva_id" es un detalle de la base y getReservas() un método de código; ninguno de los dos pertenece al modelo de dominio." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="relaciones">
+<div class="card">
+<h2 class="section-title">Relaciones y multiplicidad</h2>
+<p class="lead">Una relación conecta dos entidades con un verbo, y la <strong>multiplicidad</strong> dice cuántas de cada lado participan. Se lee en los dos sentidos.</p>
+<div class="diagrama-caja">
+<svg viewBox="0 0 890 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Modelo de dominio de EventoUAB: un Estudiante lidera de cero a muchos Clubes, un Club solicita de cero a muchas Reservas, y cada Reserva ocupa exactamente un Espacio.">
+<rect class="uml-caja" x="10" y="30" width="150" height="120" rx="4"></rect>
+<line class="uml-separador" x1="10" y1="62" x2="160" y2="62"></line>
+<text class="uml-titulo" x="85" y="52" text-anchor="middle">Estudiante</text>
+<text class="uml-texto mono" x="20" y="84">nombre</text>
+<text class="uml-texto mono" x="20" y="102">carnet</text>
+<text class="uml-texto mono" x="20" y="120">correo</text>
+<rect class="uml-caja" x="250" y="30" width="150" height="120" rx="4"></rect>
+<line class="uml-separador" x1="250" y1="62" x2="400" y2="62"></line>
+<text class="uml-titulo" x="325" y="52" text-anchor="middle">Club</text>
+<text class="uml-texto mono" x="260" y="84">nombre</text>
+<text class="uml-texto mono" x="260" y="102">facultad</text>
+<rect class="uml-caja" x="490" y="30" width="150" height="120" rx="4"></rect>
+<line class="uml-separador" x1="490" y1="62" x2="640" y2="62"></line>
+<text class="uml-titulo" x="565" y="52" text-anchor="middle">Reserva</text>
+<text class="uml-texto mono" x="500" y="84">fecha</text>
+<text class="uml-texto mono" x="500" y="102">horaInicio</text>
+<text class="uml-texto mono" x="500" y="120">horaFin</text>
+<text class="uml-texto mono" x="500" y="138">estado</text>
+<rect class="uml-caja" x="730" y="30" width="150" height="120" rx="4"></rect>
+<line class="uml-separador" x1="730" y1="62" x2="880" y2="62"></line>
+<text class="uml-titulo" x="805" y="52" text-anchor="middle">Espacio</text>
+<text class="uml-texto mono" x="740" y="84">nombre</text>
+<text class="uml-texto mono" x="740" y="102">capacidad</text>
+<text class="uml-texto mono" x="740" y="120">tieneProyector</text>
+
+<line class="uml-linea" x1="160" y1="90" x2="250" y2="90"></line>
+<text class="uml-mult" x="164" y="82">1</text><text class="uml-mult" x="222" y="82">0..*</text>
+<text class="uml-texto" x="205" y="108" text-anchor="middle" font-style="italic">lidera</text>
+<line class="uml-linea" x1="400" y1="90" x2="490" y2="90"></line>
+<text class="uml-mult" x="404" y="82">1</text><text class="uml-mult" x="462" y="82">0..*</text>
+<text class="uml-texto" x="445" y="108" text-anchor="middle" font-style="italic">solicita</text>
+<line class="uml-linea" x1="640" y1="90" x2="730" y2="90"></line>
+<text class="uml-mult" x="644" y="82">0..*</text><text class="uml-mult" x="712" y="82">1</text>
+<text class="uml-texto" x="685" y="108" text-anchor="middle" font-style="italic">ocupa</text>
+</svg>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Notación</th><th scope="col">Significa</th><th scope="col">En EventoUAB</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Exactamente uno.</td><td>Cada Reserva ocupa un solo Espacio.</td></tr>
+<tr><td>0..1</td><td>Cero o uno (opcional).</td><td>Un Club podría tener a lo sumo un asesor asignado.</td></tr>
+<tr><td>0..*</td><td>Cero o muchos.</td><td>Un Club puede tener ninguna o muchas Reservas.</td></tr>
+<tr><td>1..*</td><td>Uno o más (al menos uno).</td><td>Un evento exige al menos un responsable presente.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Leer en los dos sentidos</strong>
+<p>De izquierda a derecha: <em>un Club solicita cero o muchas Reservas</em>. De derecha a izquierda: <em>una Reserva es solicitada por exactamente un Club</em>. Si una de las dos lecturas suena rara para el negocio, la multiplicidad está mal.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="mult-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. Un Club puede tener
+<select class="quiz-blank" data-correct="cero">
+<option value="">— elige —</option>
+<option value="una">exactamente una reserva</option>
+<option value="dos">al menos dos reservas</option>
+<option value="cero">cero o muchas reservas</option>
+</select>.</p>
+<p>2. Cada Reserva ocupa
+<select class="quiz-blank" data-correct="uno">
+<option value="">— elige —</option>
+<option value="uno">exactamente un espacio</option>
+<option value="muchos">cero o muchos espacios</option>
+<option value="uno-mas">uno o más espacios</option>
+</select>.</p>
+<p>3. Si el negocio exige que toda Reserva tenga un Club, del lado Club la multiplicidad es
+<select class="quiz-blank" data-correct="uno">
+<option value="">— elige —</option>
+<option value="cero-muchos">0..*</option>
+<option value="cero-uno">0..1</option>
+<option value="uno">1</option>
+</select>.</p>
+<p>4. Un Espacio nuevo, sin ninguna reserva todavía, es válido porque del lado Reserva la multiplicidad es
+<select class="quiz-blank" data-correct="cero-muchos">
+<option value="">— elige —</option>
+<option value="uno">1</option>
+<option value="cero-muchos">0..*</option>
+<option value="uno-mas">1..*</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+<div class="highlight">
+<strong>Muchos a muchos: un aviso para más adelante</strong>
+<p>Si un Estudiante puede ser miembro de varios Clubes y un Club tiene varios miembros, la relación es 0..* de ambos lados. Cuando esa relación guarda datos propios (por ejemplo, la fecha de ingreso), conviene convertirla en una entidad intermedia, como Membresía. Lo verás en los ejercicios de abajo.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="atributo-entidad">
+<div class="card">
+<h2 class="section-title">¿Atributo o entidad? La decisión más común</h2>
+<p class="lead">El caso de uso de la guía anterior tenía un «extend»: <em>Pedir proyector o sonido</em>. Eso plantea una pregunta de modelado: ¿el proyector es un atributo de Espacio (tieneProyector) o una entidad propia (Equipo)?</p>
+<table class="tabla">
+<thead><tr><th scope="col">Si...</th><th scope="col">Entonces conviene</th></tr></thead>
+<tbody>
+<tr><td>Solo importa saber si existe o no, y no cambia por reserva.</td><td>Atributo (tieneProyector: sí/no).</td></tr>
+<tr><td>Hay varios, se cuentan, se asignan a una reserva o tienen datos propios.</td><td>Entidad propia (Equipo, relacionada con Reserva).</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Una pista del caso de uso</strong>
+<p>Como el estudiante puede <em>pedir</em> un proyector al reservar, no basta con un sí/no en el Espacio: el pedido depende de la Reserva. Cuando el modelo tiene que recordar "qué equipo se usó en cuál reserva", ya no es un atributo.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Ejercicios de razonamiento</h2>
+<p class="lead">Cada ejercicio presenta un escenario. Antes de elegir, pensá la respuesta y recién después comparala con las opciones.</p>
+<div class="quiz quiz-mc" data-quiz-id="razon-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Bienestar quiere saber cuántos proyectores hay y en qué reservas se usa cada uno. ¿Cómo se modela el proyector?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Como atributo booleano "usaProyector" de Reserva, que indica si ese evento lo pidió.</button>
+<button class="quiz-opt" data-correct>Como entidad Equipo relacionada con Reserva, porque se cuenta y se asigna por separado.</button>
+<button class="quiz-opt">Como atributo de texto en Espacio, con el nombre del equipo que tiene instalado.</button>
+<button class="quiz-opt">Fuera del modelo, porque es un accesorio y no un concepto central del negocio.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: para contar proyectores y saber en qué reserva se usó cada uno hace falta que cada uno sea reconocible, y eso lo hace una entidad. Los atributos solo dirían "sí" o "no", no "cuál"." data-ko="Para saber cuántos hay y cuál se usó en cada reserva, cada proyector debe poder distinguirse: eso es una entidad. Un booleano o un texto no permiten contar ni asignar, y dejarlo fuera ignora el pedido de Bienestar." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="razon-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un estudiante puede ser miembro de varios Clubes y cada Club tiene varios miembros. Además se quiere guardar la fecha en que cada estudiante ingresó. ¿Qué modelo corresponde?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Una relación 0..* de ambos lados entre Estudiante y Club, con la fecha de ingreso como atributo del Club.</button>
+<button class="quiz-opt">Un atributo "clubes" dentro de Estudiante, con una lista de nombres y la fecha de ingreso de cada uno.</button>
+<button class="quiz-opt" data-correct>Una entidad intermedia Membresía, con fecha de ingreso, relacionada con Estudiante y con Club.</button>
+<button class="quiz-opt">Un atributo "miembros" dentro de Club, con una lista de carnets y las fechas respectivas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la fecha de ingreso pertenece a la pareja Estudiante–Club, no a uno solo; por eso necesita una entidad propia que las conecte. Poner listas dentro de una entidad esconde una relación." data-ko="La fecha describe a la combinación de un estudiante con un club, así que ninguno de los dos la puede tener como atributo propio. Hace falta una entidad intermedia (Membresía). Las listas dentro de atributos esconden relaciones." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="razon-3">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Historia: "Como Bienestar, quiero ver el historial de reservas de un espacio". ¿Qué tiene que existir en el modelo para poder responderla?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un atributo "historial" en Espacio que acumule texto con las reservas pasadas.</button>
+<button class="quiz-opt" data-correct>Una relación entre Espacio y Reserva, y una fecha en cada Reserva, para listarlas en orden.</button>
+<button class="quiz-opt">Una entidad Historial separada, sin relación con Reserva, que se llene aparte.</button>
+<button class="quiz-opt">Nada: el historial se calcula en la pantalla y no pertenece al modelo de dominio.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: con la relación Espacio–Reserva se llega a todas las reservas de un espacio, y con la fecha de cada una se ordenan. El historial no es una entidad nueva: sale del modelo que ya existe." data-ko="El historial se obtiene recorriendo la relación Espacio–Reserva y ordenando por fecha. Un atributo de texto no sirve para consultar, una entidad suelta no se conecta con nada y decir que no pertenece al modelo ignora lo que la historia necesita." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="vistas">
+<div class="card">
+<h2 class="section-title">Un concepto, cuatro vistas</h2>
+<p class="lead">El modelo de dominio es una vista más de EventoUAB, y cada vista responde una pregunta distinta. Confundirlas es el error más frecuente: por eso el modelo de dominio no lleva claves ni métodos.</p>
+<div class="quiz quiz-match" data-quiz-id="vistas-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada vista con la pregunta que responde.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="p0">Casos de uso</button>
+<button class="quiz-match-item" data-pair="p1">Modelo de dominio</button>
+<button class="quiz-match-item" data-pair="p2">Modelo de datos (tablas)</button>
+<button class="quiz-match-item" data-pair="p3">Clases del código</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="p3">¿Qué objetos y métodos implementan el comportamiento?</button>
+<button class="quiz-match-item" data-pair="p2">¿Cómo se guardan esos datos en la base?</button>
+<button class="quiz-match-item" data-pair="p1">¿Qué conceptos maneja el negocio y cómo se relacionan?</button>
+<button class="quiz-match-item" data-pair="p0">¿Quién usa el sistema y para qué?</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+<div class="highlight">
+<strong>Por qué importa con la IA</strong>
+<p>Si le pedís a una IA "armá la base de datos de EventoUAB" sin darle el modelo de dominio, inventa nombres y relaciones a su manera. Con las entidades, atributos y multiplicidades escritos, el resultado ya está acotado: no puede inventar un "Evento" que nadie definió.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Un modelo de dominio bien hecho incluye las claves foráneas (como club_id) para que se vea cómo se conectan las entidades.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: las conexiones del modelo de dominio se expresan con relaciones y multiplicidad. Las claves foráneas son un detalle de la base de datos y no pertenecen a esta vista." data-ko="Es falso: en el modelo de dominio las entidades se conectan con líneas y multiplicidad. Las claves foráneas aparecen recién cuando se diseña la base de datos." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estos elementos es una entidad del modelo de dominio de EventoUAB?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La pantalla donde el estudiante elige fecha y hora de su reserva.</button>
+<button class="quiz-opt">El servidor donde se ejecuta la aplicación de reservas.</button>
+<button class="quiz-opt">La API que recibe los pedidos de reserva desde el navegador.</button>
+<button class="quiz-opt" data-correct>El Espacio, ya que Bienestar necesita distinguir uno de otro.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el Espacio es una cosa del negocio que hay que recordar y distinguir. La pantalla, el servidor y la API son piezas del software, no conceptos del dominio." data-ko="Una entidad es una cosa del negocio que se necesita recordar y distinguir. La pantalla, el servidor y la API son partes del software, y por eso quedan fuera del modelo de dominio." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En la relación Club–Reserva leída de Reserva a Club ("cada Reserva es solicitada por…"), ¿qué multiplicidad refleja la regla de que no hay reservas sin club?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>1, porque cada Reserva pertenece exactamente a un Club.</button>
+<button class="quiz-opt">0..1, porque algunas reservas podrían no tener un club asociado.</button>
+<button class="quiz-opt">0..*, porque una Reserva podría ser pedida por varios clubes a la vez.</button>
+<button class="quiz-opt">1..*, porque cada Reserva necesita al menos dos clubes que la respalden.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la regla dice que toda reserva tiene un club, y uno solo; eso es multiplicidad 1 de ese lado." data-ko="Si no hay reservas sin club, y cada una la pide un solo club, el lado Club es 1. Las demás opciones permiten reservas sin club o con varios, y contradicen la regla." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un modelo de dominio tiene la entidad Reserva con el atributo "duracion" guardado junto a horaInicio y horaFin. ¿Qué observación corresponde?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Que está bien, porque guardar la duración ahorra trabajo cada vez que se necesita.</button>
+<button class="quiz-opt">Que falta agregar también "duracionEnMinutos" para cubrir los otros formatos de hora.</button>
+<button class="quiz-opt" data-correct>Que sobra: se calcula de horaInicio y horaFin, y guardarla puede dejar datos contradictorios.</button>
+<button class="quiz-opt">Que debería ser una entidad propia llamada Duración, relacionada con cada Reserva.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un dato que se puede calcular de otros no se guarda; si alguien cambia la hora de fin y no la duración, el modelo queda contradictorio." data-ko="La duración se deduce de horaInicio y horaFin, así que guardarla es redundante y puede quedar desfasada. Agregar más formatos o convertirla en entidad multiplica el problema." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Modelo de dominio</td><td>Diagrama del vocabulario del negocio: entidades, atributos y relaciones. Sin claves ni métodos.</td></tr>
+<tr><td>Entidad</td><td>Cosa del negocio que se necesita recordar y distinguir de otras del mismo tipo.</td></tr>
+<tr><td>Atributo</td><td>Dato simple que describe a una entidad. No es una lista de entidades ni un dato calculable.</td></tr>
+<tr><td>Relación</td><td>Línea con un verbo que conecta dos entidades.</td></tr>
+<tr><td>Multiplicidad</td><td>1, 0..1, 0..* o 1..*: cuántos de cada lado. Se lee en los dos sentidos.</td></tr>
+<tr><td>¿Atributo o entidad?</td><td>Si hay varios, se cuentan, se asignan o tienen datos propios, es entidad.</td></tr>
+<tr><td>Entidad intermedia</td><td>Aparece cuando una relación muchos a muchos guarda datos propios (Membresía).</td></tr>
+<tr><td>Fuera del dominio</td><td>Pantallas, botones, tablas y servidores: piezas del software, no del negocio.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🗣️ Un lenguaje que entienda todo el equipo</h3><p>Eric Evans, en su libro Domain-Driven Design (2003), propuso que el equipo y el negocio hablen con las mismas palabras, y que esas palabras aparezcan igual en el modelo y en el código. A eso lo llamó "lenguaje ubicuo".</p></div>
+<div class="info"><h3>🤖 La IA copia el vocabulario que le des</h3><p>Si pegás tu modelo de dominio en el prompt, una IA usa esos nombres tal cual. Si no se lo das, inventa los suyos, y después hay que renombrar clases, tablas y variables en todo el proyecto.</p></div>
+<div class="info"><h3>🧭 Lo que viene en la próxima guía</h3><p>Ya sabemos qué cosas maneja el sistema. El siguiente paso es la arquitectura por capas: cómo organizar el código para que el modelo de dominio quede en el centro y no dependa de la pantalla ni de la base de datos.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Reforzamiento: Modelo de dominio</h2>
+<p>Material de apoyo para la asignatura de Ingeniería de Software.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "isw-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL); accedida directo, como siempre, no dispara nada nuevo. No
+     toca el motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return;
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

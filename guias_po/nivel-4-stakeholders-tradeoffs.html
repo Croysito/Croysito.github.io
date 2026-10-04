@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nivel 4: Stakeholders y Trade-offs | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">Club · <span>PO Nivel 4</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="stakeholders">Poder e interés</button>
+<button data-target="alcance">Negociar alcance</button>
+<button data-target="calidad">Presión vs. calidad</button>
+<button data-target="trio">PO, UX e ingeniería</button>
+<button data-target="deuda">Deuda técnica</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🤝 Club · Ruta Product Owner · Nivel 4</span>
+<h1 class="flow-h1">Con las personas: <span>stakeholders y trade-offs</span></h1>
+<p class="flow-lead">Hasta ahora ordenaste el backlog, fijaste rumbo y probaste ideas. Pero un producto lo construyen y lo piden personas, y cada una tiene su propia urgencia. Este nivel trata de lo que sucede cuando las expectativas chocan: a quién dedicarle atención, cómo negociar alcance sin romper la relación, qué se puede ceder bajo presión y qué no, cómo trabajar con diseño e ingeniería, y cómo explicar la deuda técnica a quien no programa.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Seguís acompañando a Lucía, PO de <strong>TurnoYa</strong>. Si todavía no hiciste el <a href="nivel-3-estrategia-metricas.html">Nivel 3</a>, conviene empezar por ahí. En cada decisión podés probar un camino equivocado, ver su consecuencia sin penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>Cinco personas quieren cosas distintas</h2>
+<p class="lead">TurnoYa ya tiene usuarios y ahora todos opinan. Don Julio pide cobro con QR, el director de Bienestar quiere un reporte mensual de uso, los estudiantes piden recordatorios, la empleada de la cafetería quiere bloquear horarios, y el contador de la universidad solo pregunta cuánto cuesta el hosting. Lucía tiene dos horas por semana para hablar con todos.</p>
+<div class="highlight">
+<strong>Lo que está en juego</strong>
+<p>El tiempo de un PO es limitado y las expectativas de cada persona son distintas. Si no decide a quién dedicarle qué, lo decide el azar, o quien más grite.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="stakeholders decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo reparte Lucía su atención?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Responde primero a quien escribe más seguido y más fuerte, porque esa persona es la que más necesita ser escuchada.</button>
+<button class="quiz-opt" data-key="b" data-correct>Ubica a cada persona según cuánto poder y cuánto interés tiene, y dedica más tiempo a quienes tienen ambos altos.</button>
+<button class="quiz-opt" data-key="c">Les da a todos el mismo tiempo cada semana, para que nadie sienta que lo trata distinto a los demás.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Quien más insiste no es necesariamente quien más pesa en las decisiones ni quien más resulta afectado. Si Lucía se guía por el volumen, el contador —que puede cortar el presupuesto con una firma— se entera tarde y sin voz. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. Es la matriz poder-interés: no se trata de jerarquizar personas sino de decidir cuánto esfuerzo de comunicación pide cada una. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="c" hidden>Repartir igual parece justo, pero desperdicia las dos horas: el mismo rato para quien apenas usa el producto que para quien lo decide todo. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="stakeholders" hidden>
+<h2>Stakeholders: poder, interés y cuánto esfuerzo merece cada uno</h2>
+<p class="lead">Un <strong>stakeholder</strong> es cualquier persona o grupo que afecta al producto o es afectado por él. Dos preguntas alcanzan para ubicarlo: ¿cuánto puede influir en las decisiones? y ¿cuánto le importa el producto en el día a día?</p>
+<table class="tabla">
+<thead><tr><th scope="col">Poder</th><th scope="col">Interés</th><th scope="col">Cómo se lo trata</th><th scope="col">En TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Alto</td><td>Alto</td><td>Gestionar de cerca: decidir con esa persona, hablar seguido.</td><td>Don Julio, que paga y usa el servicio todos los días.</td></tr>
+<tr><td>Alto</td><td>Bajo</td><td>Mantener satisfecho: resúmenes breves, sin sorpresas.</td><td>El contador de la universidad.</td></tr>
+<tr><td>Bajo</td><td>Alto</td><td>Mantener informado: novedades y espacio para dar su opinión.</td><td>Los estudiantes que reservan turnos.</td></tr>
+<tr><td>Bajo</td><td>Bajo</td><td>Monitorear: sin esfuerzo especial, pero sin olvidarlos.</td><td>Alguien de otra facultad que no usa el servicio.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>El mapa cambia con el tiempo</strong>
+<p>Si el contador empieza a revisar cada gasto de la app, su interés sube y pasa al primer cuadrante. Conviene revisar el mapa cada tanto, no armarlo una sola vez.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="stake-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Cómo conviene tratar a cada uno?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El rector, que se entera por informes anuales pero puede cortar el presupuesto del proyecto.</span>
+<div class="quiz-classify-btns">
+<button>Gestionar de cerca</button>
+<button>Monitorear</button>
+<button data-correct>Mantener satisfecho</button>
+<button>Mantener informado</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La empleada de la cafetería, que usa TurnoYa todos los días para atender pero no decide nada del producto.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Mantener informado</button>
+<button>Mantener satisfecho</button>
+<button>Gestionar de cerca</button>
+<button>Monitorear</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Don Julio, dueño de la fotocopiadora, que paga el servicio y revisa la app cada mañana.</span>
+<div class="quiz-classify-btns">
+<button>Monitorear</button>
+<button>Mantener informado</button>
+<button>Mantener satisfecho</button>
+<button data-correct>Gestionar de cerca</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un estudiante de otra facultad que no usa ni la fotocopiadora ni la cafetería del campus.</span>
+<div class="quiz-classify-btns">
+<button>Mantener satisfecho</button>
+<button data-correct>Monitorear</button>
+<button>Mantener informado</button>
+<button>Gestionar de cerca</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La persona que aprueba una vez al año el pago de las licencias, y rara vez abre la app.</span>
+<div class="quiz-classify-btns">
+<button>Mantener informado</button>
+<button>Gestionar de cerca</button>
+<button>Monitorear</button>
+<button data-correct>Mantener satisfecho</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Los estudiantes de primer año, que reservan turnos cada semana y piden mejoras por mensaje.</span>
+<div class="quiz-classify-btns">
+<button>Gestionar de cerca</button>
+<button data-correct>Mantener informado</button>
+<button>Monitorear</button>
+<button>Mantener satisfecho</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>"Quiero tarjeta y color, y la fecha no se mueve"</h2>
+<p class="lead">Don Julio llega con dos pedidos: pago con tarjeta e impresión a color en la app, ambos antes de fin de mes. La fecha de entrega no se mueve. El sprint ya está armado con recordatorios y historial de turnos, y Lucía sabe que, sumando lo nuevo, entra una sola de las dos cosas.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="alcance decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo responde Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Acepta las dos y le pide al equipo que se esfuerce, porque decirle que no a quien paga puede arruinar la relación.</button>
+<button class="quiz-opt" data-key="b">Le dice que no entra nada nuevo antes de fin de mes, porque el sprint ya está cerrado y comprometido.</button>
+<button class="quiz-opt" data-key="c" data-correct>Le pregunta qué necesidad resuelve cada pedido, le muestra que entra una sola y le propone elegir cuál se prioriza.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Aceptar todo sin recortar nada es prometer lo que no entra. Cuando el equipo no llegue, Don Julio recibirá una entrega incompleta y mal hecha, que daña más que un "esta no entra" dicho a tiempo. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Un no seco cierra la conversación sin descubrir si había una forma barata de cubrir la necesidad real, y deja a Don Julio fuera de una decisión que le importa. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Cuando algo entra, algo sale: mostrar ese costo y dejar que el stakeholder elija convierte un pedido en una decisión compartida. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="alcance" hidden>
+<h2>Negociar alcance: de la solución pedida a la necesidad real</h2>
+<p class="lead">Un stakeholder casi siempre llega con una <strong>solución</strong> ("quiero tarjeta"), no con el <strong>problema</strong> ("pierdo clientes que no traen efectivo"). Detrás del pedido hay una necesidad, y a veces existe una forma más barata de cubrirla.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Frase útil</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td>"¿Para qué lo necesitás?"</td><td>Descubre la necesidad detrás de la solución pedida.</td></tr>
+<tr><td>"Entra, y entonces sale esto otro."</td><td>Muestra el costo: el tiempo del equipo es fijo.</td></tr>
+<tr><td>"¿Qué pasa si esto llega dos semanas después?"</td><td>Revela si la fecha es una necesidad real o una costumbre.</td></tr>
+<tr><td>"Probemos algo más chico primero."</td><td>Ofrece una versión barata que ya sirve y permite aprender.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Una negociación, no un duelo</strong>
+<p>El objetivo no es ganar ni quedar bien con todos: es que la persona entienda qué entra, qué no y por qué, con datos a la vista. Un "no" explicado con alternativas se acepta mucho mejor que un "sí" que luego no se cumple.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="alcance-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada pedido con la necesidad real que podría esconder.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="p0">"Quiero pago con tarjeta."</button>
+<button class="quiz-match-item" data-pair="p1">"Quiero la app en rojo, el color de la UAB."</button>
+<button class="quiz-match-item" data-pair="p2">"Quiero un reporte en Excel todos los días."</button>
+<button class="quiz-match-item" data-pair="p3">"Quiero que nadie pueda cancelar un turno."</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="p3">Dejar de perder horas por turnos cancelados a último momento.</button>
+<button class="quiz-match-item" data-pair="p2">Decidir cuándo conviene contratar a otro empleado.</button>
+<button class="quiz-match-item" data-pair="p1">Que se note que es un servicio oficial de la universidad.</button>
+<button class="quiz-match-item" data-pair="p0">Que un estudiante sin efectivo no se vaya sin imprimir.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>La demo en una semana</h2>
+<p class="lead">La Dirección de Bienestar avisa que TurnoYa se mostrará ante el consejo universitario dentro de una semana. Tomás, el Scrum Master, trae el dilema del equipo: para llegar con la reserva completa tendrían que omitir las pruebas automáticas y la revisión de código de esa parte.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="calidad decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué decide Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Mantiene la Definition of Done y recorta el alcance: la demo muestra una versión más chica, pero terminada y probada.</button>
+<button class="quiz-opt" data-key="b">Autoriza saltear las pruebas esta vez, con la promesa de agregarlas apenas termine la demo del consejo.</button>
+<button class="quiz-opt" data-key="c">Le pide al equipo trabajar noches y fin de semana para llegar a todo sin recortar alcance ni calidad.</button>
+</div>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. Alcance y fecha se pueden negociar; la calidad no es la perilla que se baja. Una versión más chica que funciona vale más que una completa que falla. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="b" hidden>"Después las agregamos" casi nunca llega: el sprint siguiente trae otra urgencia. Y si la reserva falla en plena demo —justo lo que no se probó— el costo es mayor que el de mostrar menos. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Trabajar de más una semana trae cansancio y errores, y deja el precedente de que toda urgencia se resuelve con horas extra. El problema —demasiado alcance para el tiempo— sigue intacto. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="calidad" hidden>
+<h2>Presión de negocio vs. calidad: qué se negocia y qué no</h2>
+<p class="lead">Cuando el trabajo es más que el tiempo, hay tres perillas: alcance, fecha y calidad. Las dos primeras se pueden mover con acuerdo; la tercera, bajada "solo esta vez", se cobra después con intereses.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Perilla</th><th scope="col">Qué pasa si se toca</th><th scope="col">Cómo se maneja</th></tr></thead>
+<tbody>
+<tr><td>Alcance</td><td>La entrega tiene menos funciones.</td><td>Recortar lo menos valioso: MoSCoW y story map del Nivel 3 sirven para elegir qué sale.</td></tr>
+<tr><td>Fecha</td><td>La entrega llega más tarde.</td><td>Se negocia solo si la fecha no es una necesidad real, y se avisa con tiempo.</td></tr>
+<tr><td>Calidad</td><td>Aparecen errores, y cada cambio posterior cuesta más.</td><td>No se negocia: la Definition of Done es el piso común del equipo.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Una versión chica pero completa</strong>
+<p>Recortar alcance no significa entregar a medias. Mostrar solo reservar un turno de punta a punta, bien probado, convence más que mostrar diez pantallas donde la mitad falla.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="calidad-mc">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Con fecha fija y poco tiempo, ¿qué se ajusta primero?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La Definition of Done, porque es lo único del plan que el equipo controla sin depender de nadie.</button>
+<button class="quiz-opt">La fecha de entrega, porque cambiarla no necesita ninguna conversación con los interesados.</button>
+<button class="quiz-opt" data-correct>El alcance, quitando lo menos valioso de la entrega y manteniendo la Definition of Done.</button>
+<button class="quiz-opt">Las pruebas de las funciones secundarias, dado que los estudiantes casi nunca las usan.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el alcance es la perilla que se negocia con valor a la vista, y la Definition of Done se mantiene. Bajar las pruebas o forzar la fecha trasladan el costo al futuro." data-ko="La perilla que se mueve con criterio es el alcance, quitando lo menos valioso. La Definition of Done no se baja, y cambiar la fecha sin hablar con nadie genera su propio conflicto." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>Diseño y programación no se ponen de acuerdo</h2>
+<p class="lead">Valeria, la diseñadora UX, propuso un flujo de reserva en tres pasos, con un mapa de horarios que se actualiza en vivo. Diego, el developer, avisa que ese mapa agrega una semana de trabajo. Discuten en la daily y los dos terminan mirando a Lucía.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="trio decision5">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Elige ella misma el flujo final, porque como dueña del producto es quien tiene la última palabra sobre el diseño.</button>
+<button class="quiz-opt" data-key="b">Les pide que se pongan de acuerdo solos y que la llamen solo si no pueden, para no meterse en cuestiones técnicas.</button>
+<button class="quiz-opt" data-key="c" data-correct>Les plantea el problema y una meta medible, y les pide proponer opciones con su costo para elegir entre ellas.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>El PO define el problema y el resultado esperado; cómo resolverlo lo saben mejor quien diseña y quien programa. Si impone la solución, pierde las ideas del equipo y se hace responsable de un diseño que no domina. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Dejarlos sin un objetivo común convierte la charla en una pelea de gustos: cada uno defiende su solución sin criterio para decidir cuál es mejor. Ese criterio lo aporta el PO. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. El PO pone el qué y el para qué con una meta medible; UX e ingeniería exploran el cómo. Con el costo de cada opción a la vista, la decisión deja de ser pelea de gustos. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="trio" hidden>
+<h2>El PO, UX e ingeniería: tres miradas sobre el mismo problema</h2>
+<p class="lead">Un producto se decide mejor cuando tres miradas trabajan juntas desde el principio, no una después de la otra. Cada una responde a una pregunta distinta.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Rol</th><th scope="col">Su pregunta</th><th scope="col">Qué aporta</th></tr></thead>
+<tbody>
+<tr><td>Product Owner</td><td>¿Vale la pena resolver esto y cómo sabremos que funcionó?</td><td>Problema, valor, prioridad y criterio de éxito.</td></tr>
+<tr><td>Diseño UX</td><td>¿Cómo lo va a entender y usar la persona?</td><td>Flujos, pantallas y pruebas con usuarios.</td></tr>
+<tr><td>Ingeniería</td><td>¿Cómo se construye, qué cuesta y qué riesgos tiene?</td><td>Opciones técnicas, estimaciones y advertencias.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Pedir opciones, no una sola respuesta</strong>
+<p>Cuando surge un desacuerdo, conviene pedir dos o tres alternativas con su costo y su riesgo. Compararlas contra la meta acordada ordena la conversación: ya no se discute quién tiene razón, sino cuál se acerca más al resultado buscado.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="trio-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. Quien define el problema a resolver y cómo se medirá el éxito es el
+<select class="quiz-blank" data-correct="po">
+<option value="">— elige —</option>
+<option value="ux">diseñador UX</option>
+<option value="dev">developer</option>
+<option value="po">Product Owner</option>
+</select>.</p>
+<p>2. Quien estima cuánto cuesta y qué riesgos tiene construir cada opción es
+<select class="quiz-blank" data-correct="ing">
+<option value="">— elige —</option>
+<option value="ing">ingeniería</option>
+<option value="po">el Product Owner</option>
+<option value="stake">el stakeholder</option>
+</select>.</p>
+<p>3. Si UX e ingeniería discrepan, conviene que el PO pida
+<select class="quiz-blank" data-correct="opciones">
+<option value="">— elige —</option>
+<option value="voto">votar sin mirar los costos</option>
+<option value="opciones">opciones con su costo</option>
+<option value="ceder">que ceda quien hable menos</option>
+</select>.</p>
+<p>4. Entre dos diseños posibles, se elige comparándolos con
+<select class="quiz-blank" data-correct="meta">
+<option value="">— elige —</option>
+<option value="meta">la meta medible acordada</option>
+<option value="gusto">el gusto de quien más sabe</option>
+<option value="ultimo">la opinión del último en hablar</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision5" hidden>
+<h2>"Necesitamos un sprint entero sin funciones nuevas"</h2>
+<p class="lead">Diego y Tomás piden a Lucía dedicar todo el próximo sprint a ordenar el módulo de reservas: "cada cambio nos toma el doble y ya rompimos dos cosas". Lucía no sabe de código, y Don Julio espera los recordatorios.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-5" data-unlock="deuda repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo responde Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Les pide traducir la deuda a impacto —demora por historia y riesgo de errores— y la prioriza en el backlog como cualquier ítem.</button>
+<button class="quiz-opt" data-key="b">Acepta el sprint completo sin preguntar, porque el equipo conoce mejor que ella el código y sabrá decidir mejor.</button>
+<button class="quiz-opt" data-key="c">Lo rechaza, porque Don Julio paga por funciones visibles y un sprint sin funciones nuevas no le da valor.</button>
+</div>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. La deuda técnica se vuelve una decisión de producto cuando se explica en tiempo y riesgo, y se compara con el resto del backlog. Cerrás el recorrido del nivel. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="b" hidden>Que el equipo sepa más de código no quita que la prioridad sea del PO. Un sprint entero sin medir qué se gana es un cheque en blanco: tampoco se sabría después si valió la pena. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Rechazarlo en bloque ignora el interés que ya se está pagando: si cada cambio cuesta el doble, los recordatorios también saldrán el doble de caros y los errores seguirán apareciendo. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="deuda" hidden>
+<h2>Deuda técnica: el préstamo que se paga con intereses</h2>
+<p class="lead">La <strong>deuda técnica</strong> es el costo futuro de haber elegido una solución rápida o desordenada. Funciona como un préstamo: tomarlo permite llegar antes, pero mientras no se paga, cada cambio posterior cuesta más (los intereses).</p>
+<table class="tabla">
+<thead><tr><th scope="col">Idea</th><th scope="col">Qué significa</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Capital</td><td>Lo que habría que arreglar para eliminar el problema.</td><td>Reescribir la regla de horarios que está copiada en cinco lugares.</td></tr>
+<tr><td>Interés</td><td>El costo extra que se paga en cada cambio mientras no se arregla.</td><td>Cada historia nueva de reservas tarda el doble.</td></tr>
+<tr><td>Deliberada</td><td>Se tomó el atajo sabiendo que habría que volver.</td><td>Un servicio de mensajes rápido de poner, sabiendo que se cambiaría.</td></tr>
+<tr><td>Accidental</td><td>Se descubre después, al entender mejor el problema.</td><td>Una estructura que servía al inicio y quedó chica.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Cómo gestionarla sin frenar el producto</strong>
+<p>Dos formas funcionan: reservar un porcentaje fijo de cada sprint (por ejemplo, entre 15 % y 20 %), o poner cada ítem de deuda en el backlog con su costo de no hacerlo. En ambos casos compite con el resto por el mismo criterio de valor. Un sprint entero de limpieza solo se justifica con números a la vista.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="deuda-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Qué es cada situación del backlog de TurnoYa?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La misma regla de horarios está copiada en cinco lugares, y cada cambio hay que repetirlo cinco veces.</span>
+<div class="quiz-classify-btns">
+<button>Bug</button>
+<button data-correct>Deuda técnica</button>
+<button>Funcionalidad nueva</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Los estudiantes piden poder reservar un turno para dos personas a la vez.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Funcionalidad nueva</button>
+<button>Deuda técnica</button>
+<button>Bug</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Al cancelar un turno que ya pasó, la app muestra una pantalla en blanco.</span>
+<div class="quiz-classify-btns">
+<button>Deuda técnica</button>
+<button data-correct>Bug</button>
+<button>Funcionalidad nueva</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">No hay pruebas automáticas en la parte de pagos, así que cada cambio se prueba a mano.</span>
+<div class="quiz-classify-btns">
+<button>Funcionalidad nueva</button>
+<button>Bug</button>
+<button data-correct>Deuda técnica</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El botón de confirmar no responde cuando se toca dos veces seguidas.</span>
+<div class="quiz-classify-btns">
+<button>Funcionalidad nueva</button>
+<button data-correct>Bug</button>
+<button>Deuda técnica</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Se eligió un servicio de mensajes rápido de poner, sabiendo que habría que cambiarlo en seis meses.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Deuda técnica</button>
+<button>Funcionalidad nueva</button>
+<button>Bug</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Cuando un stakeholder pide una función concreta, lo primero que conviene hacer es estimarla y ponerla en el backlog.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: antes conviene preguntar qué necesidad hay detrás. A veces existe una forma más barata de cubrirla, o el pedido ni siquiera es la mejor solución." data-ko="Es falso: lo primero es entender la necesidad real detrás del pedido. Estimar y encolar la solución tal como llegó puede construir algo caro que no resuelve el problema." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué se dice que la deuda técnica "cobra intereses"?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque el código con deuda siempre falla en producción y genera costos de soporte cada mes.</button>
+<button class="quiz-opt">Porque el equipo debe pagar una multa al cliente cuando entrega código con atajos.</button>
+<button class="quiz-opt" data-correct>Porque cada cambio en esa parte del código cuesta más y arriesga más errores mientras no se corrija.</button>
+<button class="quiz-opt">Porque las herramientas de desarrollo cobran una tarifa mayor a medida que crece el proyecto.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: mientras la deuda siga ahí, cada cambio que la toca es más lento y riesgoso; ese costo extra es el interés." data-ko="El "interés" es el sobrecosto de cada cambio futuro en esa parte del código, más lento y con más riesgo de errores. No es una multa, una tarifa ni una falla garantizada." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un stakeholder con mucho poder pero poco interés en el día a día debería recibir:</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Resúmenes breves y sin sorpresas, para mantenerlo satisfecho sin saturarlo de detalle.</button>
+<button class="quiz-opt">Invitaciones a todas las dailies, para que no se pierda ninguna decisión que se tome.</button>
+<button class="quiz-opt">Ninguna comunicación, porque si no pregunta es que no le interesa lo que sucede.</button>
+<button class="quiz-opt">Los mismos mensajes que reciben los usuarios finales, para tratarlo como a cualquier otro.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: tiene poder para cambiar el rumbo, así que no puede enterarse tarde; pero con poco interés, necesita información breve y clara, no el detalle diario." data-ko="Con mucho poder y poco interés conviene mantenerlo satisfecho: información breve y sin sorpresas. Ignorarlo es riesgoso, y saturarlo de detalle (o tratarlo como usuario final) no ayuda." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: negociá con las personas de tu propio producto</h2>
+<p class="lead">Con un producto real (del club, de una materia, de un proyecto personal), escribí en no más de dos o tres líneas por punto: 1) un mapa con al menos cuatro stakeholders y cómo trataría a cada uno según su poder e interés, 2) un pedido literal de alguien, la necesidad que podría esconder y cómo responderías mostrando qué sale si eso entra, 3) una fecha fija con demasiado alcance: qué recortarías y qué no tocarías, 4) un desacuerdo entre diseño e ingeniería y cómo lo plantearías con una meta medible, 5) un ítem de deuda técnica traducido a impacto y cómo lo priorizarías.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Stakeholders, alcance, calidad, equipo y deuda técnica de un producto real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>Cada stakeholder está ubicado por poder e interés, y el tratamiento (de cerca, satisfecho, informado, monitoreado) coincide con esa ubicación.</li>
+<li>El pedido literal se separa de la necesidad real, y la respuesta muestra qué sale si algo entra, en lugar de un sí o un no sueltos.</li>
+<li>El recorte de alcance conserva una versión completa de punta a punta y no baja ninguna parte de la Definition of Done.</li>
+<li>El desacuerdo se plantea con un problema y una meta medible, y pide opciones con su costo en vez de imponer una solución.</li>
+<li>La deuda técnica se expresa en tiempo o riesgo (no en "el código es feo") y entra al backlog con el mismo criterio que el resto.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Stakeholder</td><td>Persona o grupo que afecta al producto o es afectado por él.</td></tr>
+<tr><td>Matriz poder-interés</td><td>Define cuánto esfuerzo de comunicación pide cada stakeholder.</td></tr>
+<tr><td>Solución vs. necesidad</td><td>Detrás del pedido hay un problema; preguntar "¿para qué?" lo revela.</td></tr>
+<tr><td>Cuando algo entra, algo sale</td><td>La capacidad del equipo es fija: toda adición muestra su costo.</td></tr>
+<tr><td>Alcance, fecha y calidad</td><td>Alcance y fecha se negocian; la calidad (DoD) no es una perilla.</td></tr>
+<tr><td>Versión chica y completa</td><td>Un recorrido de punta a punta bien probado vale más que muchas partes a medias.</td></tr>
+<tr><td>PO · UX · ingeniería</td><td>PO: qué y para qué; UX: cómo se usa; ingeniería: cómo se construye y cuánto cuesta.</td></tr>
+<tr><td>Pedir opciones</td><td>Dos o tres alternativas con costo, comparadas contra una meta medible.</td></tr>
+<tr><td>Deuda técnica</td><td>Costo futuro de un atajo: el capital se arregla, el interés se paga en cada cambio.</td></tr>
+<tr><td>Gestión de deuda</td><td>Porcentaje fijo de cada sprint o ítems en el backlog con su costo de no hacerlos.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🗺️ La matriz poder-interés tiene casi 35 años</h3><p>Aubrey Mendelow la propuso en 1991 para ayudar a las organizaciones a decidir a qué grupos prestar más atención. El esquema sigue usándose casi igual en la gestión de productos.</p></div>
+<div class="info"><h3>💳 La deuda técnica es una metáfora de Ward Cunningham</h3><p>Cunningham, uno de los autores del Manifiesto Ágil, la usó en 1992 para explicarles a los gerentes financieros por qué entregar rápido con código desordenado tenía un costo que se pagaba después.</p></div>
+<div class="info"><h3>🧭 Lo que viene en el Nivel 5</h3><p>Ya sabés negociar con personas y con el tiempo. El último nivel mira el cuadro grande: cómo se coordinan varios equipos (SAFe y LeSS, de forma conceptual), qué es Product Ops, y un caso integrador con el backlog completo de TurnoYa.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Nivel 4: Stakeholders y Trade-offs</h2>
+<p>Material de apoyo para el Club de Programación · Ruta Product Owner.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "po-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
