@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller: arma las capas en Node.js | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // modelo-dominio.html, con el parche de paramsAtenza() que también
+  // busca dentro de location.hash.
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  var QUIZ_PREFIX = 'isw-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">ISW · <span>Taller Node.js</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="requisitos">0. Qué necesitas</button>
+<button data-target="proyecto">1. Crear el proyecto</button>
+<button data-target="carpetas">2. Carpetas de las capas</button>
+<button data-target="dominio">3. El dominio</button>
+<button data-target="pruebas">4. Pruebas sin base de datos</button>
+<button data-target="vigilante">5. Un test que vigila la regla</button>
+<button data-target="sqlite">6. El adaptador de SQLite</button>
+<button data-target="errores">Errores frecuentes</button>
+<button data-target="ejercicios">Actividades de repaso</button>
+<button data-target="reto">Reto</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🛠️ Taller · complemento de la guía de arquitectura por capas</span>
+<h1 class="flow-h1">Arma las capas de EventoUAB <span>desde cero, en Node.js</span></h1>
+<p class="flow-lead">En la guía anterior viste el diagrama y el código ya hecho. Acá lo construyes tú, desde la carpeta vacía: qué comandos escribir, qué archivos crear, en qué carpeta va cada uno y cómo comprobar en cada paso que todo funciona. Al terminar tendrás un proyecto real con el dominio protegido, pruebas que corren sin base de datos y un adaptador de SQLite.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Si todavía no viste <a href="arquitectura-capas-dip.html">la guía de arquitectura por capas</a>, léela primero: acá no se vuelve a explicar el porqué, solo el cómo.</p>
+</section>
+
+<section class="flow-flat" id="requisitos">
+<h2>0. Qué necesitas antes de empezar</h2>
+<p class="lead">Tres cosas instaladas y una terminal abierta.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Herramienta</th><th scope="col">Para qué</th><th scope="col">Cómo comprobarla</th></tr></thead>
+<tbody>
+<tr><td>Node.js 22 o superior (LTS)</td><td>Ejecutar JavaScript fuera del navegador. Trae <code>npm</code> y un ejecutor de pruebas incluidos.</td><td>Escribe <code>node -v</code> en la terminal.</td></tr>
+<tr><td>Un editor de código</td><td>Crear los archivos. Sirve Visual Studio Code.</td><td>Que abra una carpeta y muestre su contenido.</td></tr>
+<tr><td>Una terminal</td><td>Escribir comandos. En Windows, PowerShell; en macOS o Linux, Terminal.</td><td>Que responda a <code>node -v</code> con un número de versión.</td></tr>
+</tbody>
+</table>
+<div class="code">
+<div class="code-header"><span>Terminal — comprobar la instalación</span></div>
+<pre><code class="src">node -v
+npm -v</code></pre>
+</div>
+<div class="highlight">
+<strong>Nada de frameworks</strong>
+<p>Este proyecto no usa Express ni ninguna otra librería web, a propósito: con una librería de más, la lección se mezcla con otra cosa. La única dependencia externa será la de SQLite, y solo en el último paso.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="proyecto">
+<h2>1. Crear la carpeta y el proyecto</h2>
+<p class="lead">Un proyecto de Node es una carpeta con un archivo <code>package.json</code> que describe qué es y qué comandos tiene. Lo creamos desde la terminal.</p>
+<div class="code">
+<div class="code-header"><span>Terminal — crear la carpeta y el package.json</span></div>
+<pre><code class="src">mkdir eventouab
+cd eventouab
+npm init -y</code></pre>
+</div>
+<p>El comando <code>npm init -y</code> crea el archivo con valores por defecto. Ábrelo en tu editor y déjalo así, con dos cambios importantes: <code>"type": "module"</code> (para poder usar <code>import</code> y <code>export</code>) y los dos <code>scripts</code>.</p>
+<div class="code">
+<div class="code-header"><span>package.json</span></div>
+<pre><code class="src">{
+  "name": "eventouab",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3"
+  }
+}</code></pre>
+</div>
+<div class="highlight">
+<strong>Por qué "type": "module"</strong>
+<p>Sin esa línea, Node trata los archivos <code>.js</code> como el formato antiguo y falla apenas ve un <code>import</code>. Es el error más común del taller (mira la tabla de errores al final).</p>
+</div>
+</section>
+
+<section class="flow-flat" id="carpetas">
+<h2>2. Crear las carpetas: una por capa</h2>
+<p class="lead">La estructura de carpetas es la arquitectura hecha visible: quien abre el proyecto debe ver las capas sin leer ningún archivo.</p>
+<div class="code">
+<div class="code-header"><span>Terminal — crear las carpetas (Windows, PowerShell)</span></div>
+<pre><code class="src">mkdir src\dominio, src\infraestructura, test</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Terminal — crear las carpetas (macOS o Linux)</span></div>
+<pre><code class="src">mkdir -p src/dominio src/infraestructura test</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Cómo debe quedar el proyecto al terminar</span></div>
+<pre><code class="src">eventouab/
+├── package.json
+├── src/
+│   ├── dominio/                 ← el centro: entidades, reglas y puertos
+│   │   ├── reserva.js
+│   │   ├── puertos.js
+│   │   └── reservarEspacio.js
+│   ├── infraestructura/         ← los detalles que pueden cambiar
+│   │   └── repoSqlite.js
+│   └── main.js                  ← arma las piezas y las pone a andar
+└── test/
+    ├── repoEnMemoria.js         ← adaptador de pruebas
+    ├── reservarEspacio.test.js
+    └── arquitectura.test.js</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Carpeta</th><th scope="col">Qué va adentro</th><th scope="col">Qué puede importar</th></tr></thead>
+<tbody>
+<tr><td><code>src/dominio</code></td><td>Entidades, reglas del negocio, casos de uso y puertos.</td><td>Solo archivos de su propia carpeta.</td></tr>
+<tr><td><code>src/infraestructura</code></td><td>Código que habla con la base de datos u otros servicios.</td><td>El dominio y las librerías externas.</td></tr>
+<tr><td><code>test</code></td><td>Pruebas y adaptadores que solo sirven para probar.</td><td>Cualquier cosa del proyecto.</td></tr>
+<tr><td><code>src/main.js</code></td><td>El punto de entrada: elige qué adaptador usar y arranca.</td><td>Todo. Es el único que conoce todas las piezas.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>main.js no pertenece a ninguna capa</strong>
+<p>Es el lugar donde se decide, por ejemplo, «usar SQLite» o «usar memoria». Esa decisión no corresponde al dominio ni a la infraestructura: por eso vive afuera de las dos carpetas.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="dominio">
+<h2>3. El dominio: tres archivos que no importan nada de afuera</h2>
+<p class="lead">Crea cada archivo dentro de <code>src/dominio</code> y copia su contenido. Para cada uno, fíjate en qué <code>import</code> tiene (o no).</p>
+<p><strong>3.1 La entidad.</strong> <code>src/dominio/reserva.js</code> no tiene ningún import. Además de guardar datos, defiende una regla: el fin debe ser posterior al inicio.</p>
+<div class="code">
+<div class="code-header"><span>src/dominio/reserva.js</span></div>
+<pre><code class="src">export class Reserva {
+  constructor(clubId, espacioId, inicio, fin) {
+    if (fin &lt;= inicio) throw new Error("El fin debe ser posterior al inicio");
+    this.clubId = clubId;
+    this.espacioId = espacioId;
+    this.inicio = inicio;
+    this.fin = fin;
+  }
+}</code></pre>
+</div>
+<p><strong>3.2 El puerto.</strong> <code>src/dominio/puertos.js</code> declara lo que el dominio necesita de afuera, sin decir cómo se hace. JavaScript no tiene interfaces, así que usamos una clase base cuyos métodos fallan si nadie los implementa.</p>
+<div class="code">
+<div class="code-header"><span>src/dominio/puertos.js</span></div>
+<pre><code class="src">export class RepositorioDeReservas {
+  hayConflicto(espacioId, inicio, fin) { throw new Error("no implementado"); }
+  guardar(reserva) { throw new Error("no implementado"); }
+}</code></pre>
+</div>
+<p><strong>3.3 El caso de uso.</strong> <code>src/dominio/reservarEspacio.js</code> importa solo a <code>reserva.js</code>, que está en la misma carpeta. El repositorio llega por el constructor: la clase no sabe cuál es.</p>
+<div class="code">
+<div class="code-header"><span>src/dominio/reservarEspacio.js</span></div>
+<pre><code class="src">import { Reserva } from "./reserva.js";
+
+export class ReservarEspacio {
+  constructor(repo) { this.repo = repo; }
+
+  ejecutar(clubId, espacioId, inicio, fin) {
+    const reserva = new Reserva(clubId, espacioId, inicio, fin);
+    if (this.repo.hayConflicto(espacioId, inicio, fin)) {
+      throw new Error("Espacio ocupado en ese horario");
+    }
+    this.repo.guardar(reserva);
+    return reserva;
+  }
+}</code></pre>
+</div>
+<div class="highlight">
+<strong>Detalle de Node: la extensión es obligatoria</strong>
+<p>En módulos ES, los imports de archivos propios llevan siempre la extensión: <code>"./reserva.js"</code>, no <code>"./reserva"</code>. Olvidarla produce el error <code>ERR_MODULE_NOT_FOUND</code>.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="pruebas">
+<h2>4. Probar las reglas sin base de datos</h2>
+<p class="lead">Todavía no existe ninguna base de datos y ya puedes probar la regla de solapamiento. Para eso hace falta un adaptador de pruebas: un repositorio que guarda en un arreglo.</p>
+<p><strong>4.1 El repositorio en memoria.</strong> Va en <code>test/</code> porque solo sirve para probar; el programa real nunca lo usará.</p>
+<div class="code">
+<div class="code-header"><span>test/repoEnMemoria.js</span></div>
+<pre><code class="src">import { RepositorioDeReservas } from "../src/dominio/puertos.js";
+
+export class RepoEnMemoria extends RepositorioDeReservas {
+  constructor() { super(); this.reservas = []; }
+
+  hayConflicto(espacioId, inicio, fin) {
+    return this.reservas.some(
+      (r) =&gt; r.espacioId === espacioId &amp;&amp; r.inicio &lt; fin &amp;&amp; r.fin &gt; inicio);
+  }
+
+  guardar(reserva) { this.reservas.push(reserva); }
+}</code></pre>
+</div>
+<p><strong>4.2 Las pruebas del caso de uso.</strong> Usan el ejecutor que ya trae Node (<code>node:test</code>), sin instalar nada.</p>
+<div class="code">
+<div class="code-header"><span>test/reservarEspacio.test.js</span></div>
+<pre><code class="src">import { test } from "node:test";
+import assert from "node:assert";
+import { ReservarEspacio } from "../src/dominio/reservarEspacio.js";
+import { RepoEnMemoria } from "./repoEnMemoria.js";
+
+const hora = (h) =&gt; new Date(`2026-10-10T${h}:00`);
+
+test("reserva un espacio libre", () =&gt; {
+  const caso = new ReservarEspacio(new RepoEnMemoria());
+  const reserva = caso.ejecutar(1, 7, hora("14"), hora("16"));
+  assert.strictEqual(reserva.espacioId, 7);
+});
+
+test("no permite reservar un horario que se solapa", () =&gt; {
+  const caso = new ReservarEspacio(new RepoEnMemoria());
+  caso.ejecutar(1, 7, hora("14"), hora("16"));
+  assert.throws(
+    () =&gt; caso.ejecutar(2, 7, hora("15"), hora("17")),
+    /Espacio ocupado/);
+});
+
+test("permite el mismo horario en otro espacio", () =&gt; {
+  const caso = new ReservarEspacio(new RepoEnMemoria());
+  caso.ejecutar(1, 7, hora("14"), hora("16"));
+  assert.doesNotThrow(() =&gt; caso.ejecutar(2, 8, hora("14"), hora("16")));
+});</code></pre>
+</div>
+<p><strong>4.3 Ejecuta las pruebas.</strong></p>
+<div class="code">
+<div class="code-header"><span>Terminal</span></div>
+<pre><code class="src">npm test</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Salida esperada (los tiempos varían)</span></div>
+<pre><code class="src">✔ reserva un espacio libre
+✔ no permite reservar un horario que se solapa
+✔ permite el mismo horario en otro espacio
+ℹ tests 3
+ℹ pass 3
+ℹ fail 0</code></pre>
+</div>
+<p>Los tres pasan en milisegundos, sin base de datos, sin red y sin librerías. Esa es la ganancia de que el dominio dependa de un puerto y no de SQLite.</p>
+</section>
+
+<section class="flow-flat" id="vigilante">
+<h2>5. Un test que vigila la regla de dependencia</h2>
+<p class="lead">Una regla de arquitectura que solo está escrita en un documento se rompe sola con el tiempo. Mejor convertirla en una prueba: este test lee los archivos del dominio y falla si alguno importa algo de afuera.</p>
+<div class="code">
+<div class="code-header"><span>test/arquitectura.test.js</span></div>
+<pre><code class="src">import { test } from "node:test";
+import assert from "node:assert";
+import { readdirSync, readFileSync } from "node:fs";
+
+test("el dominio no importa nada de afuera", () =&gt; {
+  const carpeta = "src/dominio";
+  for (const archivo of readdirSync(carpeta)) {
+    const codigo = readFileSync(`${carpeta}/${archivo}`, "utf8");
+    const imports = [...codigo.matchAll(/from\s+"([^"]+)"/g)].map((m) =&gt; m[1]);
+    for (const origen of imports) {
+      assert.ok(origen.startsWith("./"),
+        `${archivo} importa "${origen}", pero el dominio solo puede importar dentro del dominio`);
+    }
+  }
+});</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Terminal</span></div>
+<pre><code class="src">npm test</code></pre>
+</div>
+<p>Ahora ejecútalo con una violación. Agrega esta línea al principio de <code>src/dominio/reserva.js</code>, corre <code>npm test</code> y observa cómo falla:</p>
+<div class="code">
+<div class="code-header"><span>Línea que rompe la regla (bórrala después)</span></div>
+<pre><code class="src">import Database from "better-sqlite3";</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Salida esperada de la prueba que falla</span></div>
+<pre><code class="src">✖ el dominio no importa nada de afuera
+  AssertionError: reserva.js importa "better-sqlite3", pero el dominio
+  solo puede importar dentro del dominio</code></pre>
+</div>
+<p>Borra la línea y vuelve a correr <code>npm test</code>: deben pasar las cuatro pruebas.</p>
+</section>
+
+<section class="flow-flat" id="sqlite">
+<h2>6. El adaptador de SQLite y el punto de entrada</h2>
+<p class="lead">Recién ahora aparece una base de datos real, y lo hace en la capa de afuera, sin tocar una sola línea del dominio.</p>
+<p><strong>6.1 Instala la librería.</strong> Es la única dependencia externa del proyecto.</p>
+<div class="code">
+<div class="code-header"><span>Terminal</span></div>
+<pre><code class="src">npm install better-sqlite3</code></pre>
+</div>
+<p>Esto agrega la carpeta <code>node_modules</code> y una sección <code>dependencies</code> en <code>package.json</code>. Crea también un archivo <code>.gitignore</code> en la raíz para no subir a Git lo que no corresponde:</p>
+<div class="code">
+<div class="code-header"><span>.gitignore</span></div>
+<pre><code class="src">node_modules/
+*.db</code></pre>
+</div>
+<p><strong>6.2 El adaptador.</strong> <code>src/infraestructura/repoSqlite.js</code> importa el puerto del dominio: la flecha apunta hacia el centro.</p>
+<div class="code">
+<div class="code-header"><span>src/infraestructura/repoSqlite.js</span></div>
+<pre><code class="src">import { RepositorioDeReservas } from "../dominio/puertos.js";
+
+export class RepoSqlite extends RepositorioDeReservas {
+  constructor(db) { super(); this.db = db; }
+
+  hayConflicto(espacioId, inicio, fin) {
+    const fila = this.db
+      .prepare("SELECT 1 FROM reserva WHERE espacio_id = ? AND inicio &lt; ? AND fin &gt; ?")
+      .get(espacioId, fin.toISOString(), inicio.toISOString());
+    return fila !== undefined;
+  }
+
+  guardar(r) {
+    this.db
+      .prepare("INSERT INTO reserva VALUES (?, ?, ?, ?)")
+      .run(r.clubId, r.espacioId, r.inicio.toISOString(), r.fin.toISOString());
+  }
+}</code></pre>
+</div>
+<p><strong>6.3 El punto de entrada.</strong> <code>src/main.js</code> es el único archivo que conoce las dos capas: crea la base, elige el adaptador y se lo entrega al caso de uso.</p>
+<div class="code">
+<div class="code-header"><span>src/main.js</span></div>
+<pre><code class="src">import Database from "better-sqlite3";
+import { ReservarEspacio } from "./dominio/reservarEspacio.js";
+import { RepoSqlite } from "./infraestructura/repoSqlite.js";
+
+const db = new Database("eventouab.db");
+db.exec(`CREATE TABLE IF NOT EXISTS reserva (
+  club_id INTEGER, espacio_id INTEGER, inicio TEXT, fin TEXT)`);
+
+const caso = new ReservarEspacio(new RepoSqlite(db));
+const hora = (h) =&gt; new Date(`2026-10-10T${h}:00`);
+
+caso.ejecutar(1, 7, hora("14"), hora("16"));
+console.log("Reserva guardada.");
+
+try {
+  caso.ejecutar(2, 7, hora("15"), hora("17"));
+} catch (e) {
+  console.log("Rechazada:", e.message);
+}</code></pre>
+</div>
+<p><strong>6.4 Ejecuta el programa.</strong></p>
+<div class="code">
+<div class="code-header"><span>Terminal</span></div>
+<pre><code class="src">npm start</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Salida esperada la primera vez</span></div>
+<pre><code class="src">Reserva guardada.
+Rechazada: Espacio ocupado en ese horario</code></pre>
+</div>
+<p>Se crea el archivo <code>eventouab.db</code> en la carpeta. Si ejecutas <code>npm start</code> otra vez sin borrarlo, el programa termina con un error «Espacio ocupado en ese horario»: es correcto, porque la primera reserva ya quedó guardada y el horario está ocupado. Los datos persisten. Para empezar de cero, borra el archivo <code>eventouab.db</code>.</p>
+<div class="highlight">
+<strong>Lo que acabas de demostrar</strong>
+<p>Las mismas reglas corrieron con un arreglo en memoria (en las pruebas) y con SQLite (en el programa), sin cambiar ninguna línea de <code>src/dominio</code>. Si mañana Bienestar pide PostgreSQL, escribes <code>repoPostgres.js</code> y cambias una línea de <code>main.js</code>.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="errores">
+<h2>Errores frecuentes y cómo resolverlos</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Lo que ves</th><th scope="col">Causa probable</th><th scope="col">Solución</th></tr></thead>
+<tbody>
+<tr><td><code>Cannot use import statement outside a module</code></td><td>Falta <code>"type": "module"</code> en <code>package.json</code>.</td><td>Agrégalo y vuelve a ejecutar.</td></tr>
+<tr><td><code>ERR_MODULE_NOT_FOUND</code> con una ruta propia</td><td>Un <code>import</code> sin extensión o con la ruta mal escrita.</td><td>Escribe <code>"./reserva.js"</code> y revisa mayúsculas y carpetas.</td></tr>
+<tr><td><code>Cannot find package 'better-sqlite3'</code></td><td>No ejecutaste la instalación, o estás en otra carpeta.</td><td>Ve a la carpeta del proyecto y corre <code>npm install better-sqlite3</code>.</td></tr>
+<tr><td><code>no implementado</code></td><td>Tu adaptador no define uno de los métodos del puerto, o lo escribiste con otro nombre.</td><td>Revisa que se llamen exactamente <code>hayConflicto</code> y <code>guardar</code>.</td></tr>
+<tr><td><code>npm test</code> no encuentra pruebas</td><td>Los archivos de prueba no terminan en <code>.test.js</code> o no están en <code>test/</code>.</td><td>Renómbralos según la estructura del paso 2.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="ejercicios">
+<h2>Actividades de repaso</h2>
+<p class="lead">Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="carpeta-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿En qué carpeta va cada archivo?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>reservarEspacio.js</code>, el caso de uso.</span>
+<div class="quiz-classify-btns">
+<button>src/infraestructura</button>
+<button data-correct>src/dominio</button>
+<button>test</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>repoSqlite.js</code>, que escribe el INSERT.</span>
+<div class="quiz-classify-btns">
+<button data-correct>src/infraestructura</button>
+<button>test</button>
+<button>src/dominio</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>repoEnMemoria.js</code>, que guarda en un arreglo.</span>
+<div class="quiz-classify-btns">
+<button>src/dominio</button>
+<button>src/infraestructura</button>
+<button data-correct>test</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>puertos.js</code>, con RepositorioDeReservas.</span>
+<div class="quiz-classify-btns">
+<button data-correct>src/dominio</button>
+<button>test</button>
+<button>src/infraestructura</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>arquitectura.test.js</code>, que vigila los imports.</span>
+<div class="quiz-classify-btns">
+<button>src/infraestructura</button>
+<button data-correct>test</button>
+<button>src/dominio</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>reserva.js</code>, con la regla del fin posterior al inicio.</span>
+<div class="quiz-classify-btns">
+<button>test</button>
+<button>src/infraestructura</button>
+<button data-correct>src/dominio</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Al ejecutar <code>npm test</code> aparece «Cannot use import statement outside a module». ¿Qué falta?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Instalar la librería better-sqlite3 con npm, porque sin ella Node no entiende los import.</button>
+<button class="quiz-opt" data-correct>Agregar "type": "module" en package.json para que Node acepte import y export.</button>
+<button class="quiz-opt">Renombrar todos los archivos con la extensión .mjs en lugar de .js en cada carpeta.</button>
+<button class="quiz-opt">Mover los archivos de prueba a la carpeta src, donde Node espera encontrar los módulos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: sin esa línea Node interpreta los .js con el formato antiguo, que no admite import ni export." data-ko="El problema no es una librería ni la carpeta: Node necesita saber que el proyecto usa módulos ES, y eso se declara con type: module en package.json." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué <code>repoEnMemoria.js</code> está en <code>test/</code> y no en <code>src/</code>?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque Node solo permite ejecutar archivos de la carpeta test cuando se corre npm test.</button>
+<button class="quiz-opt">Porque cada adaptador de un proyecto debe guardarse en una carpeta distinta de los demás.</button>
+<button class="quiz-opt">Porque los arreglos no se pueden usar dentro de la carpeta donde viven las capas.</button>
+<button class="quiz-opt" data-correct>Porque solo sirve para probar: el programa real nunca lo usa, así que no forma parte de las capas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: es un adaptador de pruebas. El programa real usa repoSqlite, y por eso el repositorio en memoria queda junto a las pruebas." data-ko="Node no restringe qué carpeta ejecuta ni prohíbe arreglos. Se separa porque su único uso es probar: no forma parte del programa que corre en producción." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto">
+<h2>🎯 Reto: agrega una regla nueva, primero con la prueba</h2>
+<p class="lead">EventoUAB ahora pide que ninguna reserva dure más de cuatro horas. Sin tocar la infraestructura, escribe: 1) la prueba que falla (una reserva de cinco horas debe lanzar un error), 2) en qué archivo del dominio pondrás la regla y por qué ahí, 3) el cambio mínimo de código que hace pasar la prueba, 4) cómo confirmas con <code>npm test</code> que las pruebas anteriores siguen pasando y que el test de arquitectura no se rompió.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Una regla nueva del dominio, escrita primero como prueba.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>La prueba se escribe antes del cambio y se comprueba que falla por la razón correcta.</li>
+<li>La regla vive en <code>reserva.js</code> (la entidad que se defiende a sí misma), no en el adaptador ni en <code>main.js</code>.</li>
+<li>El cambio no agrega ningún import nuevo al dominio.</li>
+<li>No se modificó ningún archivo de <code>src/infraestructura</code>: la regla no depende de la base.</li>
+<li>Al final corren las cuatro pruebas anteriores más la nueva, todas en verde.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller: arma las capas de EventoUAB en Node.js</h2>
+<p>Material de apoyo para la asignatura de Ingeniería de Software.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "isw-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

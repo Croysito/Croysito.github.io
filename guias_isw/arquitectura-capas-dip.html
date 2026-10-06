@@ -106,7 +106,7 @@
 <div class="flow-beat" data-step="3">
 <span class="flow-beat-eyebrow">Paso 04 · Un puerto</span>
 <h3>El dominio declara lo que necesita</h3>
-<p>En vez de preguntar «¿cómo guardo esto en SQLite?», las reglas dicen qué necesitan, en su propio idioma: <strong>RepositorioDeReservas</strong>, con dos operaciones, <code>hay_conflicto(...)</code> y <code>guardar(...)</code>. Esa descripción es un <strong>puerto</strong>. No tiene una sola palabra de SQL y vive del lado del dominio, dentro del núcleo que ahora se marca con línea punteada.</p>
+<p>En vez de preguntar «¿cómo guardo esto en SQLite?», las reglas dicen qué necesitan, en su propio idioma: <strong>RepositorioDeReservas</strong>, con dos operaciones, <code>hayConflicto(...)</code> y <code>guardar(...)</code>. Esa descripción es un <strong>puerto</strong>. No tiene una sola palabra de SQL y vive del lado del dominio, dentro del núcleo que ahora se marca con línea punteada.</p>
 </div>
 
 <div class="flow-beat" data-step="4">
@@ -214,91 +214,111 @@
 
 <section class="flow-flat" id="codigo">
 <h2>Del diagrama al código</h2>
-<p class="lead">Así se ve la misma función antes y después. Los ejemplos están en Python, pero la idea es idéntica en Java, C# o JavaScript: lo que cambia es el lugar desde donde se importa cada cosa.</p>
+<p class="lead">Así se ve la misma función antes y después. Los ejemplos están en Node.js (JavaScript con módulos ES), pero la idea es idéntica en Python, Java o C#: lo que cambia es el lugar desde donde se importa cada cosa.</p>
 
-<div class="code">
-<div class="code-header"><span>Python — antes: reglas y SQL mezclados</span></div>
-<pre><code class="src"># reservas.py — todo junto
-import sqlite3                     # las reglas ya dependen de SQLite
-
-def reservar_espacio(club_id, espacio_id, inicio, fin):
-    con = sqlite3.connect("eventouab.db")
-    ocupado = con.execute(
-        "SELECT 1 FROM reserva WHERE espacio_id = ? AND inicio &lt; ? AND fin &gt; ?",
-        (espacio_id, fin, inicio)).fetchone()
-    if ocupado:                    # la regla, mezclada con la consulta
-        raise ValueError("Espacio ocupado en ese horario")
-    con.execute("INSERT INTO reserva VALUES (?, ?, ?, ?)",
-                (club_id, espacio_id, inicio, fin))</code></pre>
+<div class="highlight">
+<strong>¿Quieres armarlo tú, desde la carpeta vacía?</strong>
+<p>Esta sección muestra el código ya hecho. Para crear el proyecto paso a paso (comandos, carpetas, archivos, pruebas y la base SQLite), sigue el <a href="taller-capas-nodejs.html">taller de Node.js</a>.</p>
 </div>
 
 <div class="code">
-<div class="code-header"><span>Python — después: el dominio declara el puerto</span></div>
-<pre><code class="src"># dominio/reserva.py  (no importa nada de afuera)
-class Reserva:
-    def __init__(self, club_id, espacio_id, inicio, fin):
-        if fin &lt;= inicio:
-            raise ValueError("El fin debe ser posterior al inicio")
-        self.club_id = club_id
-        self.espacio_id = espacio_id
-        self.inicio = inicio
-        self.fin = fin
+<div class="code-header"><span>Node.js — antes: reglas y SQL mezclados</span></div>
+<pre><code class="src">// reservas.js — todo junto
+import Database from "better-sqlite3";   // las reglas ya dependen de SQLite
 
-# dominio/puertos.py  (lo que el dominio NECESITA, sin decir cómo)
-class RepositorioDeReservas:
-    def hay_conflicto(self, espacio_id, inicio, fin): ...
-    def guardar(self, reserva): ...
-
-# dominio/reservar_espacio.py  (el caso de uso recibe el puerto)
-class ReservarEspacio:
-    def __init__(self, repo):
-        self.repo = repo
-
-    def ejecutar(self, club_id, espacio_id, inicio, fin):
-        reserva = Reserva(club_id, espacio_id, inicio, fin)
-        if self.repo.hay_conflicto(espacio_id, inicio, fin):
-            raise ValueError("Espacio ocupado en ese horario")
-        self.repo.guardar(reserva)
-        return reserva</code></pre>
+export function reservarEspacio(clubId, espacioId, inicio, fin) {
+  const db = new Database("eventouab.db");
+  const ocupado = db
+    .prepare("SELECT 1 FROM reserva WHERE espacio_id = ? AND inicio &lt; ? AND fin &gt; ?")
+    .get(espacioId, fin, inicio);
+  if (ocupado) {                         // la regla, mezclada con la consulta
+    throw new Error("Espacio ocupado en ese horario");
+  }
+  db.prepare("INSERT INTO reserva VALUES (?, ?, ?, ?)")
+    .run(clubId, espacioId, inicio, fin);
+}</code></pre>
 </div>
 
 <div class="code">
-<div class="code-header"><span>Python — los adaptadores cumplen el puerto</span></div>
-<pre><code class="src"># infraestructura/repo_sqlite.py  (importa el puerto: la flecha apunta al dominio)
-class RepoSqlite(RepositorioDeReservas):
-    def __init__(self, conexion):
-        self.con = conexion
+<div class="code-header"><span>Node.js — después: el dominio declara el puerto</span></div>
+<pre><code class="src">// dominio/reserva.js  (no importa nada de afuera)
+export class Reserva {
+  constructor(clubId, espacioId, inicio, fin) {
+    if (fin &lt;= inicio) throw new Error("El fin debe ser posterior al inicio");
+    this.clubId = clubId;
+    this.espacioId = espacioId;
+    this.inicio = inicio;
+    this.fin = fin;
+  }
+}
 
-    def hay_conflicto(self, espacio_id, inicio, fin):
-        fila = self.con.execute(
-            "SELECT 1 FROM reserva WHERE espacio_id = ? AND inicio &lt; ? AND fin &gt; ?",
-            (espacio_id, fin, inicio)).fetchone()
-        return fila is not None
+// dominio/puertos.js  (lo que el dominio NECESITA, sin decir cómo)
+export class RepositorioDeReservas {
+  hayConflicto(espacioId, inicio, fin) { throw new Error("no implementado"); }
+  guardar(reserva) { throw new Error("no implementado"); }
+}
 
-    def guardar(self, r):
-        self.con.execute("INSERT INTO reserva VALUES (?, ?, ?, ?)",
-                         (r.club_id, r.espacio_id, r.inicio, r.fin))
+// dominio/reservarEspacio.js  (el caso de uso recibe el puerto)
+import { Reserva } from "./reserva.js";           // solo importa dentro del dominio
 
-# pruebas/repo_en_memoria.py  (otro adaptador: una lista, sin base de datos)
-class RepoEnMemoria(RepositorioDeReservas):
-    def __init__(self):
-        self.reservas = []
+export class ReservarEspacio {
+  constructor(repo) { this.repo = repo; }
 
-    def hay_conflicto(self, espacio_id, inicio, fin):
-        return any(r.espacio_id == espacio_id and r.inicio &lt; fin and r.fin &gt; inicio
-                   for r in self.reservas)
+  ejecutar(clubId, espacioId, inicio, fin) {
+    const reserva = new Reserva(clubId, espacioId, inicio, fin);
+    if (this.repo.hayConflicto(espacioId, inicio, fin)) {
+      throw new Error("Espacio ocupado en ese horario");
+    }
+    this.repo.guardar(reserva);
+    return reserva;
+  }
+}</code></pre>
+</div>
 
-    def guardar(self, reserva):
-        self.reservas.append(reserva)
+<div class="code">
+<div class="code-header"><span>Node.js — los adaptadores cumplen el puerto</span></div>
+<pre><code class="src">// infraestructura/repoSqlite.js  (importa el puerto: la flecha apunta al dominio)
+import { RepositorioDeReservas } from "../dominio/puertos.js";
 
-# La misma regla funciona con cualquiera de los dos:
-caso = ReservarEspacio(RepoEnMemoria())     # en las pruebas
-caso = ReservarEspacio(RepoSqlite(conexion)) # en producción</code></pre>
+export class RepoSqlite extends RepositorioDeReservas {
+  constructor(db) { super(); this.db = db; }
+
+  hayConflicto(espacioId, inicio, fin) {
+    const fila = this.db
+      .prepare("SELECT 1 FROM reserva WHERE espacio_id = ? AND inicio &lt; ? AND fin &gt; ?")
+      .get(espacioId, fin.toISOString(), inicio.toISOString());
+    return fila !== undefined;
+  }
+
+  guardar(r) {
+    this.db
+      .prepare("INSERT INTO reserva VALUES (?, ?, ?, ?)")
+      .run(r.clubId, r.espacioId, r.inicio.toISOString(), r.fin.toISOString());
+  }
+}
+
+// pruebas/repoEnMemoria.js  (otro adaptador: un arreglo, sin base de datos)
+import { RepositorioDeReservas } from "../dominio/puertos.js";
+
+export class RepoEnMemoria extends RepositorioDeReservas {
+  constructor() { super(); this.reservas = []; }
+
+  hayConflicto(espacioId, inicio, fin) {
+    return this.reservas.some(
+      (r) =&gt; r.espacioId === espacioId &amp;&amp; r.inicio &lt; fin &amp;&amp; r.fin &gt; inicio);
+  }
+
+  guardar(reserva) { this.reservas.push(reserva); }
+}
+
+// La misma regla funciona con cualquiera de los dos:
+const caso = new ReservarEspacio(new RepoEnMemoria());   // en las pruebas
+const caso = new ReservarEspacio(new RepoSqlite(db));    // en producción</code></pre>
 </div>
 
 <div class="highlight">
 <strong>Quién importa a quién</strong>
-<p>En el archivo «antes», las reglas importan <code>sqlite3</code>. En el «después», <code>dominio/</code> no importa nada de afuera; <code>infraestructura/</code> importa al dominio. Si en algún momento ves un <code>import</code> del dominio hacia la base, el framework o la pantalla, la dependencia volvió a apuntar al lado equivocado.</p>
+<p>En el archivo «antes», las reglas importan <code>better-sqlite3</code>. En el «después», <code>dominio/</code> no importa nada de afuera; <code>infraestructura/</code> importa al dominio. Si en algún momento ves un <code>import</code> del dominio hacia la base, el framework o la pantalla, la dependencia volvió a apuntar al lado equivocado.</p>
 </div>
 
 <div class="quiz quiz-classify" data-quiz-id="dep-classify">
@@ -306,42 +326,42 @@ caso = ReservarEspacio(RepoSqlite(conexion)) # en producción</code></pre>
 <p class="quiz-q">¿Cada import respeta que las dependencias apunten hacia el dominio?</p>
 <div class="quiz-classify-list">
 <div class="quiz-classify-row">
-<span class="quiz-classify-text"><code>dominio/reserva.py</code> hace <code>import sqlite3</code> para validar si el espacio existe.</span>
+<span class="quiz-classify-text"><code>dominio/reserva.js</code> hace <code>import Database from "better-sqlite3"</code> para validar si el espacio existe.</span>
 <div class="quiz-classify-btns">
 <button>Respeta la regla</button>
 <button data-correct>Viola la regla</button>
 </div>
 </div>
 <div class="quiz-classify-row">
-<span class="quiz-classify-text"><code>infraestructura/repo_sqlite.py</code> importa <code>RepositorioDeReservas</code> desde el dominio.</span>
+<span class="quiz-classify-text"><code>infraestructura/repoSqlite.js</code> importa <code>RepositorioDeReservas</code> desde el dominio.</span>
 <div class="quiz-classify-btns">
 <button data-correct>Respeta la regla</button>
 <button>Viola la regla</button>
 </div>
 </div>
 <div class="quiz-classify-row">
-<span class="quiz-classify-text"><code>presentacion/rutas.py</code> importa y llama a <code>ReservarEspacio</code>, que está en el dominio.</span>
+<span class="quiz-classify-text"><code>presentacion/rutas.js</code> importa y llama a <code>ReservarEspacio</code>, que está en el dominio.</span>
 <div class="quiz-classify-btns">
 <button>Viola la regla</button>
 <button data-correct>Respeta la regla</button>
 </div>
 </div>
 <div class="quiz-classify-row">
-<span class="quiz-classify-text"><code>dominio/reservar_espacio.py</code> importa <code>flask</code> para leer los datos del formulario.</span>
+<span class="quiz-classify-text"><code>dominio/reservarEspacio.js</code> importa <code>express</code> para leer los datos del formulario.</span>
 <div class="quiz-classify-btns">
 <button data-correct>Viola la regla</button>
 <button>Respeta la regla</button>
 </div>
 </div>
 <div class="quiz-classify-row">
-<span class="quiz-classify-text"><code>dominio/puertos.py</code> importa la entidad <code>Reserva</code> desde <code>dominio/reserva.py</code>.</span>
+<span class="quiz-classify-text"><code>dominio/puertos.js</code> importa la entidad <code>Reserva</code> desde <code>dominio/reserva.js</code>.</span>
 <div class="quiz-classify-btns">
 <button data-correct>Respeta la regla</button>
 <button>Viola la regla</button>
 </div>
 </div>
 <div class="quiz-classify-row">
-<span class="quiz-classify-text"><code>dominio/club.py</code> importa <code>repo_sqlite</code> para guardar el club directamente.</span>
+<span class="quiz-classify-text"><code>dominio/club.js</code> importa <code>repoSqlite</code> para guardar el club directamente.</span>
 <div class="quiz-classify-btns">
 <button>Respeta la regla</button>
 <button data-correct>Viola la regla</button>
