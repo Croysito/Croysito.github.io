@@ -1196,6 +1196,19 @@ text.scrolly-ghost{ font-family:'JetBrains Mono',monospace; font-size:8px; fill:
 .ctx-caption{ font-size:11.5px; color:var(--gris); margin-top:6px; line-height:1.5; }
 
 /* =========================================================
+   ARQUITECTURA POR CAPAS Y DIP (ISW, guía arquitectura-capas-dip.html —
+   mismo motor de scrollytelling que el diagrama de contexto). Reusa los
+   trazos .ctx-box, .ctx-flow, .ctx-frontera y .ctx-flow-label tal cual;
+   solo agrega la etiqueta de capa (.cap-tag) y el estado de alerta
+   (.cap-warn) para la caja y la flecha que violan la regla de
+   dependencia. */
+.cap-tag{ font-family:'JetBrains Mono',monospace; font-weight:700; fill:var(--gris); opacity:0; transition:opacity .3s ease; }
+.cap-tag.show{ opacity:1; fill:var(--azul2); }
+.ctx-box.show.cap-warn rect{ stroke:#d9534f; }
+.ctx-flow.show.cap-warn path{ stroke:#d9534f; }
+.ctx-flow.show.cap-warn polygon{ fill:#d9534f; }
+
+/* =========================================================
    DIAGRAMA DE TRANSACCIONES (piloto 1 de scrollytelling en BD II
    fuera de SQL/consola, guía transacciones.html — mismo motor
    .flow-* de joins-subconsultas.html, panel con un diagrama propio

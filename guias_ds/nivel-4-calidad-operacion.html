@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nivel 4: Calidad y Operación | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">Club · <span>DS Nivel 4</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="escalabilidad">Escalabilidad</button>
+<button data-target="disponibilidad">Disponibilidad</button>
+<button data-target="observabilidad">Observabilidad</button>
+<button data-target="seguridad">Seguridad básica</button>
+<button data-target="deuda">Deuda técnica con la PO</button>
+<button data-target="ia">Prompt de calidad con IA</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🛡️ Club · Ruta Diseñador de Sistemas · Nivel 4</span>
+<h1 class="flow-h1">Calidad y operación: <span>que el sistema aguante, se vea y se cuide solo</span></h1>
+<p class="flow-lead">Hasta acá diseñaste qué hace el sistema y cómo se organiza. Falta lo que decide si una aplicación sobrevive cuando la usa gente de verdad: que no se caiga el lunes a las 8:00, que se pueda saber qué está pasando adentro, que un estudiante no pueda ver datos ajenos, y que la deuda acumulada se pueda negociar con la PO sin pelear. Cada tema termina en una decisión, y el nivel cierra con cómo pedirle calidad a una IA con números y no con adjetivos.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Seguís acompañando a Diego en <strong>TurnoYa</strong>. Si todavía no hiciste el <a href="nivel-3-arquitectura-patrones.html">Nivel 3</a>, conviene empezar por ahí. Todo se explica desde cero: solo hace falta saber programar lo básico (los ejemplos están en Python). En cada decisión podés probar primero un camino equivocado, ver su consecuencia sin penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>El lunes a las 8:00</h2>
+<p class="lead">TurnoYa ya tiene unos 2.000 estudiantes registrados. Todos los lunes, entre las 8:00 y las 8:10, entran cientos a reservar el turno de la semana, y la app tarda ocho segundos en responder. Algunos reservan dos veces porque creen que no funcionó. Lucía pide una solución antes del próximo lunes y Tomás sugiere «un servidor más potente».</p>
+<div class="highlight">
+<strong>Lo que está en juego</strong>
+<p>Cuando algo es lento, la reacción natural es agregar capacidad. Pero agregarla sin saber dónde se pierde el tiempo cuesta dinero y a veces empeora el problema.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="escalabilidad decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Diego primero?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Contratar ya un servidor diez veces más grande y esperar al lunes para ver si alcanza.</button>
+<button class="quiz-opt" data-key="b" data-correct>Medir en qué parte de la petición se va el tiempo, y arreglar ese punto antes de sumar capacidad.</button>
+<button class="quiz-opt" data-key="c">Agregar más copias de la aplicación detrás de un balanceador, sin tocar nada más, para repartir las peticiones.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Sin saber dónde se pierde el tiempo, es apostar: si el problema es una consulta lenta, el servidor grande espera lo mismo, solo que más caro. Y el servidor más grande de todos tiene techo. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. Lo primero es medir: casi siempre hay un cuello de botella concreto, y arreglarlo rinde mucho más que agregar máquinas. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="c" hidden>Si lo que frena es una consulta lenta en la base, más copias de la app le mandan más consultas lentas a la misma base: el problema empeora. Hay que saber primero cuál es el cuello. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="escalabilidad" hidden>
+<h2>Escalabilidad: crecer sin rehacer todo</h2>
+<p class="lead">Un sistema es <strong>escalable</strong> cuando puede atender más carga sumando recursos, sin reescribirse. Pero antes de escalar hay que encontrar el <strong>cuello de botella</strong>: la parte más lenta de la cadena, que marca la velocidad de todo lo demás. En una app como TurnoYa, casi siempre es la base de datos.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Estrategia</th><th scope="col">Qué es</th><th scope="col">A favor</th><th scope="col">En contra</th></tr></thead>
+<tbody>
+<tr><td>Escalar hacia arriba</td><td>Pasar a una máquina más grande.</td><td>No cambia el código; se hace en minutos.</td><td>Tiene un techo y deja un único punto de falla.</td></tr>
+<tr><td>Escalar hacia los costados</td><td>Sumar más copias de la aplicación.</td><td>Casi no tiene techo y reparte el riesgo.</td><td>Exige que cada copia no guarde estado propio.</td></tr>
+<tr><td>Arreglar el cuello</td><td>Mejorar la parte más lenta (índice, consulta, cache).</td><td>Suele rendir más que las otras dos y cuesta poco.</td><td>Requiere medir para saber cuál es.</td></tr>
+</tbody>
+</table>
+<p>Para sumar copias, cada una tiene que ser <strong>sin estado</strong>: si una copia guarda algo en su propia memoria, el usuario que caiga en otra copia no lo encuentra.</p>
+<div class="code">
+<div class="code-header"><span>Python — sesión con estado local vs. sin estado</span></div>
+<pre><code class="src"># Con estado local: la sesión vive solo en ESTA copia de la aplicación
+sesiones = {}
+def iniciar_sesion(estudiante):
+    sesiones[estudiante.id] = crear_sesion()      # otra copia no la verá
+
+# Sin estado: la sesión viaja en un token firmado o vive en un almacén compartido
+def iniciar_sesion(estudiante):
+    token = firmar({"estudiante_id": estudiante.id, "vence": en_30_minutos()})
+    return token                                   # cualquier copia puede validarlo</code></pre>
+</div>
+<div class="highlight">
+<strong>Escalar es una decisión de costo y de riesgo</strong>
+<p>Un servidor más grande se paga todos los meses aunque el pico dure diez minutos por semana. Por eso importa saber cuándo se necesita la capacidad y cuánto durará, no solo cuánta hace falta.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="escala-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Qué conviene hacer en cada situación?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una sola consulta sin índice explica seis de los ocho segundos de cada respuesta.</span>
+<div class="quiz-classify-btns">
+<button>Escalar hacia arriba</button>
+<button data-correct>Arreglar el cuello</button>
+<button>Escalar hacia los costados</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La app ya está optimizada, usa casi todo el procesador de un servidor chico y suma dos usuarios nuevos por día.</span>
+<div class="quiz-classify-btns">
+<button>Arreglar el cuello</button>
+<button>Escalar hacia los costados</button>
+<button data-correct>Escalar hacia arriba</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Se espera multiplicar la carga por diez, y no puede haber una única máquina de la que dependa todo.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Escalar hacia los costados</button>
+<button>Escalar hacia arriba</button>
+<button>Arreglar el cuello</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El servidor tiene memoria de sobra, pero la base de datos se queda sin conexiones libres en cada pico.</span>
+<div class="quiz-classify-btns">
+<button>Escalar hacia arriba</button>
+<button data-correct>Arreglar el cuello</button>
+<button>Escalar hacia los costados</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cambiar el plan de hosting a uno con el doble de memoria resuelve el problema de hoy en cinco minutos.</span>
+<div class="quiz-classify-btns">
+<button>Escalar hacia los costados</button>
+<button>Arreglar el cuello</button>
+<button data-correct>Escalar hacia arriba</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Los picos del lunes duran diez minutos, el resto de la semana el servidor casi no se usa y la app no guarda estado propio.</span>
+<div class="quiz-classify-btns">
+<button>Escalar hacia arriba</button>
+<button data-correct>Escalar hacia los costados</button>
+<button>Arreglar el cuello</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>"No puede caerse nunca"</h2>
+<p class="lead">Don Julio llama a Lucía después de que TurnoYa estuvo media hora caído por una actualización: «esto tiene que funcionar el 100 % del tiempo, ¡yo cobro con esto!». Lucía le pide a Diego un compromiso que pueda decirle a Don Julio, y que el equipo realmente pueda cumplir.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="disponibilidad decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué propone Diego?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Prometer el 100 %, porque es lo que el cliente pide y decirlo da confianza para que siga usando el sistema sin dudar.</button>
+<button class="quiz-opt" data-key="b">Decirle que ningún sistema puede garantizar nada y que por eso el equipo no se compromete con ningún número concreto.</button>
+<button class="quiz-opt" data-key="c" data-correct>Acordar un objetivo medible, como 99,9 % por mes, traducirlo a minutos de caída permitidos y mostrar qué costaría cada nueve más.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Ningún sistema real llega al 100 %: hay actualizaciones, fallas del hosting y errores humanos. Prometerlo es garantizar un incumplimiento, y la confianza que se pierde ahí cuesta más que la que se ganó. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Es cierto que no hay garantías absolutas, pero sin un número no hay objetivo que diseñar, ni nada que medir, ni forma de saber si mejoramos o empeoramos. «No prometo nada» deja a Don Julio igual de inseguro. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Un objetivo medible se puede diseñar, vigilar y negociar: cada nueve extra cuesta más, y conviene que quien paga sepa qué compra. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="disponibilidad" hidden>
+<h2>Disponibilidad: cuánto tiempo funciona y cuánto prometemos</h2>
+<p class="lead">La <strong>disponibilidad</strong> es el porcentaje de tiempo en que el sistema responde bien. Se habla en «nueves»: cada nueve extra reduce la caída permitida diez veces, y suele costar mucho más que el anterior.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Disponibilidad</th><th scope="col">Caída permitida por mes (30 días)</th><th scope="col">Qué exige</th></tr></thead>
+<tbody>
+<tr><td>99 %</td><td>Unas 7,2 horas.</td><td>Un solo servidor bien cuidado alcanza.</td></tr>
+<tr><td>99,9 %</td><td>Unos 43 minutos.</td><td>Más de una copia, avisos automáticos y actualizaciones sin cortes.</td></tr>
+<tr><td>99,99 %</td><td>Unos 4 minutos.</td><td>Recuperación automática y varias zonas del proveedor. Es caro.</td></tr>
+</tbody>
+</table>
+<p>Tres siglas ayudan a hablar sin confundirse:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Sigla</th><th scope="col">Qué es</th><th scope="col">En TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>SLI</td><td>Lo que se mide.</td><td>Porcentaje de peticiones que respondieron bien en menos de un segundo.</td></tr>
+<tr><td>SLO</td><td>El objetivo interno para ese número.</td><td>«99,9 % por mes».</td></tr>
+<tr><td>SLA</td><td>El compromiso con el cliente, con consecuencias si no se cumple.</td><td>Un descuento en la cuota si baja del 99 %.</td></tr>
+</tbody>
+</table>
+<p>Para sobrevivir a una caída hay que evitar el <strong>punto único de falla</strong>: cualquier pieza sin respaldo cuya caída tira todo. Y el balanceador necesita una forma de saber si una copia está sana:</p>
+<div class="code">
+<div class="code-header"><span>Python — un chequeo de salud para el balanceador</span></div>
+<pre><code class="src"># GET /salud  — lo consulta el balanceador cada diez segundos
+def salud():
+    try:
+        base.ejecutar("SELECT 1")                  # ¿la base responde?
+        return {"estado": "ok"}, 200
+    except Exception:
+        return {"estado": "base_caida"}, 503       # deja de enviarle peticiones a esta copia</code></pre>
+</div>
+<div class="highlight">
+<strong>El SLO se pone más bajo que el SLA</strong>
+<p>Si el compromiso con el cliente es 99 %, el objetivo interno conviene que sea 99,9 %: así queda margen para absorber un mal mes antes de incumplir la promesa.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="disp-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada término con su descripción.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="p0">SLI</button>
+<button class="quiz-match-item" data-pair="p1">SLO</button>
+<button class="quiz-match-item" data-pair="p2">SLA</button>
+<button class="quiz-match-item" data-pair="p3">Punto único de falla</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="p3">Pieza sin respaldo cuya caída tumba todo el sistema.</button>
+<button class="quiz-match-item" data-pair="p2">Compromiso con el cliente, con consecuencias si no se cumple.</button>
+<button class="quiz-match-item" data-pair="p1">Objetivo interno que el equipo se propone para ese número.</button>
+<button class="quiz-match-item" data-pair="p0">El número que se mide, como el porcentaje de respuestas correctas.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>"Me falló al reservar" y no hay nada que mirar</h2>
+<p class="lead">Dos estudiantes le escriben a Lucía: «anoche no me dejó reservar». Diego abre el servidor y encuentra un único archivo de texto con miles de líneas de <code>print</code> mezcladas, sin hora ni usuario. No puede saber si fue un error, qué lo causó, ni si le pasó a más gente.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="observabilidad decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo mejora Diego la forma de ver el sistema?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Registra eventos con estructura y contexto, mide errores y tiempos, y avisa cuando algo afecta a los usuarios, no ante cada detalle.</button>
+<button class="quiz-opt" data-key="b">Imprime todo lo que pasa en cada función para no perderse nada, y revisa el archivo a mano cuando haya quejas de estudiantes.</button>
+<button class="quiz-opt" data-key="c">Espera a que los estudiantes se quejen y entonces revisa el servidor, porque son quienes mejor saben cuándo algo falla de verdad.</button>
+</div>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. Esa es la idea de observabilidad: poder entender qué pasa adentro mirando lo que el sistema emite, y enterarse antes que el usuario. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="b" hidden>Más texto sin estructura es más ruido: miles de líneas sin hora, usuario ni tipo no se pueden filtrar ni contar. Se guarda todo y no se encuentra nada. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Cuando alguien se queja, el daño ya está hecho, y se quejan muy pocos de los que fallaron. Enterarse antes que el usuario es justo lo que hay que lograr. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="observabilidad" hidden>
+<h2>Observabilidad: ver lo que pasa adentro</h2>
+<p class="lead">Un sistema es <strong>observable</strong> cuando se puede entender su estado interno mirando lo que emite hacia afuera. Se apoya en tres señales que responden preguntas distintas.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Señal</th><th scope="col">Pregunta que responde</th><th scope="col">Ejemplo en TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Log</td><td>¿Qué pasó exactamente en este caso?</td><td>«A las 8:02 el usuario 41 intentó reservar el horario 812 y falló por horario ocupado».</td></tr>
+<tr><td>Métrica</td><td>¿Cómo viene el sistema en general?</td><td>«El 3 % de las reservas de los últimos cinco minutos terminó en error».</td></tr>
+<tr><td>Traza</td><td>¿Por dónde pasó una petición y dónde se demoró?</td><td>«40 ms en la API, 900 ms en la base y 30 ms en el aviso».</td></tr>
+</tbody>
+</table>
+<p>Un log útil no es una frase suelta: es un registro con campos que se pueden buscar y contar.</p>
+<div class="code">
+<div class="code-header"><span>Python — log con estructura</span></div>
+<pre><code class="src">import json, time
+
+def registrar(evento, **campos):
+    print(json.dumps({"t": round(time.time()), "evento": evento, **campos}))
+
+registrar("reserva_fallida", turno_id=812, motivo="horario_ocupado", ms=240)
+# {"t": 1791315351, "evento": "reserva_fallida", "turno_id": 812, "motivo": "horario_ocupado", "ms": 240}</code></pre>
+</div>
+<div class="highlight">
+<strong>Alertar por síntomas, no por causas</strong>
+<p>Una buena alerta avisa de lo que siente el usuario («más del 2 % de las reservas fallan», «las respuestas pasan de dos segundos»), no de cualquier detalle técnico («la CPU llegó al 70 %»). Si todo alerta, nada se atiende; si solo suena lo que duele, cada aviso importa.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="observ-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿De qué señal es cada dato?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El 3 % de las reservas de los últimos cinco minutos terminó en error.</span>
+<div class="quiz-classify-btns">
+<button>Log</button>
+<button data-correct>Métrica</button>
+<button>Traza</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">A las 8:02, el usuario 41 intentó reservar el horario 812 y falló por «horario ocupado».</span>
+<div class="quiz-classify-btns">
+<button data-correct>Log</button>
+<button>Traza</button>
+<button>Métrica</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una petición pasó 40 ms en la API, 900 ms en la base y 30 ms en el servicio de avisos.</span>
+<div class="quiz-classify-btns">
+<button>Métrica</button>
+<button>Log</button>
+<button data-correct>Traza</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Tiempo promedio de respuesta de GET /turnos, calculado cada minuto.</span>
+<div class="quiz-classify-btns">
+<button>Traza</button>
+<button data-correct>Métrica</button>
+<button>Log</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Registro que dice que el pago del turno 790 fue rechazado por saldo insuficiente.</span>
+<div class="quiz-classify-btns">
+<button>Métrica</button>
+<button data-correct>Log</button>
+<button>Traza</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El recorrido de una reserva a través de la API, la base y el servicio de mensajes.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Traza</button>
+<button>Log</button>
+<button>Métrica</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>El turno que no era suyo</h2>
+<p class="lead">Un estudiante escribe, algo asustado: probando la aplicación cambió el número en la dirección <code>/turnos/812</code> por <code>/turnos/813</code> y vio el turno de otra persona, con nombre y teléfono. Nadie había pensado que alguien probaría eso.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="seguridad decision5">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo lo corrige Diego?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Cambia los números por códigos largos y difíciles de adivinar, para que nadie pueda encontrar el turno de otra persona.</button>
+<button class="quiz-opt" data-key="b" data-correct>Verifica en el servidor, en cada petición, que el turno pertenece a quien lo pide o que quien lo pide es personal autorizado.</button>
+<button class="quiz-opt" data-key="c">Oculta en la pantalla los botones que llevan a esas direcciones, para que ningún estudiante llegue a verlas.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Un código largo vuelve más difícil adivinar, pero no impide el acceso: se filtra en un enlace compartido, un registro o una captura. La regla sigue sin existir, solo está mejor escondida. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. El permiso se comprueba siempre en el servidor, porque es lo único que el usuario no controla. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="c" hidden>Ocultar un botón no protege nada: cualquiera puede escribir la dirección a mano o llamar a la API directo. Lo que corre en la pantalla del usuario no es seguridad. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="seguridad" hidden>
+<h2>Seguridad básica: lo que todo sistema necesita</h2>
+<p class="lead">Seguridad no es una función que se agrega al final: es una serie de hábitos de diseño. Hay que distinguir dos preguntas distintas: <strong>autenticación</strong> («¿quién sos?») y <strong>autorización</strong> («¿qué podés hacer?»). El caso del turno ajeno era un fallo de autorización, el más frecuente en aplicaciones web.</p>
+<div class="code">
+<div class="code-header"><span>Python — comprobar la propiedad en el servidor</span></div>
+<pre><code class="src">def obtener_turno(turno_id, usuario):
+    turno = repo.buscar(turno_id)
+    if turno is None:
+        raise NoEncontrado()
+    if turno.estudiante_id != usuario.id and not usuario.es_personal:
+        raise NoEncontrado()        # 404 y no 403: no confirma que el turno exista
+    return turno</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Riesgo</th><th scope="col">Cómo se ve en TurnoYa</th><th scope="col">Defensa básica</th></tr></thead>
+<tbody>
+<tr><td>Acceso roto</td><td>Ver el turno de otra persona cambiando el número de la dirección.</td><td>Comprobar la propiedad en el servidor, en cada petición.</td></tr>
+<tr><td>Inyección</td><td>Un texto del formulario pegado dentro de una consulta SQL.</td><td>Consultas parametrizadas, nunca texto concatenado.</td></tr>
+<tr><td>Secretos expuestos</td><td>La clave del servicio de mensajes subida al repositorio.</td><td>Variables de entorno, y rotar la clave que se filtró.</td></tr>
+<tr><td>Contraseñas débiles</td><td>Contraseñas guardadas tal como las escribió el usuario.</td><td>Guardar solo un hash con sal, como bcrypt o argon2.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Mínimo privilegio</strong>
+<p>Cada pieza debe poder hacer solo lo que necesita. La cuenta de la base de datos que usa la API para reservar no necesita poder borrar tablas, y el estudiante no necesita ver más que sus propios turnos. Lo que no se puede hacer, no se puede abusar.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="seg-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada riesgo con su defensa básica.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="p0">Acceso roto</button>
+<button class="quiz-match-item" data-pair="p1">Inyección</button>
+<button class="quiz-match-item" data-pair="p2">Secretos expuestos</button>
+<button class="quiz-match-item" data-pair="p3">Contraseñas débiles</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="p3">Guardar solo un hash con sal, nunca la contraseña tal cual.</button>
+<button class="quiz-match-item" data-pair="p2">Variables de entorno, fuera del repositorio, y rotar lo filtrado.</button>
+<button class="quiz-match-item" data-pair="p1">Consultas parametrizadas en lugar de concatenar texto.</button>
+<button class="quiz-match-item" data-pair="p0">Comprobar en el servidor que el recurso es de quien lo pide.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision5" hidden>
+<h2>Dos semanas de limpieza contra los recordatorios</h2>
+<p class="lead">La regla «un horario no se reserva dos veces» está copiada en cinco lugares del código de TurnoYa. Cada historia de reservas tarda el doble, y ya hubo dos errores por olvidar una de las copias. Diego quiere dos semanas para ordenarlo. Lucía, en cambio, tiene a Don Julio esperando los recordatorios.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-5" data-unlock="deuda decision6">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo lo plantea Diego?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Hace el cambio sin avisar, repartido dentro de las historias de recordatorios, para no tener que discutirlo con nadie en la daily.</button>
+<button class="quiz-opt" data-key="b">Le dice que hay que frenar todo hasta limpiar el código, porque el módulo de reservas está imposible de mantener así como está.</button>
+<button class="quiz-opt" data-key="c" data-correct>Le muestra la deuda en números, tiempo por historia y errores ya ocurridos, y propone un ítem acotado en el backlog con su costo.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Esconder trabajo hace que las historias de recordatorios salgan más lentas sin explicación, y que la PO pierda visibilidad de lo que pasa en su producto. Además deja al equipo sin respaldo cuando algo se complique. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>«Imposible de mantener» es una opinión, no un dato: Lucía no puede compararlo con el valor de los recordatorios. Sin impacto en tiempo ni en errores, la conversación es de gustos, y los gustos pierden contra un cliente que espera. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Una deuda negociable se expresa como cualquier otro ítem: qué cuesta no hacerla, qué cuesta hacerla y qué se gana. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="deuda" hidden>
+<h2>Deuda técnica: de queja a decisión de producto</h2>
+<p class="lead">La deuda técnica no se negocia con adjetivos («está feo») sino con consecuencias que la PO pueda comparar con el valor de otras cosas. El diseñador además deja la decisión escrita, para que el equipo sepa por qué se hizo así. Ese documento se llama <strong>ADR</strong> (registro de decisión de arquitectura).</p>
+<div class="code">
+<div class="code-header"><span>ADR — una decisión de diseño, escrita en una página</span></div>
+<pre><code class="src">ADR-007: Mover la regla de horarios a un solo módulo
+
+Contexto:     La regla «un horario no se reserva dos veces» está copiada en 5 lugares.
+              Cada historia de reservas tarda el doble y hubo 2 errores por olvidar una copia.
+Opciones:     (A) seguir copiando la regla.
+              (B) extraer un módulo único con la regla.
+              (C) reescribir todo el módulo de reservas.
+Decisión:     B, estimada en 3 semanas-persona, dentro de la reserva del 20 % del trimestre.
+Consecuencias: Las historias de reservas vuelven a su tiempo normal; se agrega una prueba
+              por cada regla; se desbloquea la sede nueva, que dependía de este cambio.</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Qué decir a la PO</th><th scope="col">Por qué funciona</th></tr></thead>
+<tbody>
+<tr><td>Cuánto más tarda cada historia por esta deuda.</td><td>Lo traduce a tiempo, que ella ya sabe comparar.</td></tr>
+<tr><td>Qué errores ya ocurrieron por la deuda.</td><td>Muestra que el riesgo no es hipotético.</td></tr>
+<tr><td>Qué se desbloquea si se paga.</td><td>Conecta la limpieza con algo que ella quiere.</td></tr>
+<tr><td>Dos o tres opciones con costos distintos.</td><td>Le da algo que decidir, no un ultimátum.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-classify" data-quiz-id="deuda-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Para convencer a la PO, ¿qué tipo de argumento es cada frase?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cada historia de reservas tarda el doble desde que la regla está repetida cinco veces.</span>
+<div class="quiz-classify-btns">
+<button>Argumento vacío</button>
+<button data-correct>Impacto concreto</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El código está feo y da vergüenza mostrárselo a alguien.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Argumento vacío</button>
+<button>Impacto concreto</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Hubo dos errores en producción por olvidar una de las copias de la regla.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Impacto concreto</button>
+<button>Argumento vacío</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Los grandes proyectos siempre dedican un sprint a limpiar, así que nosotros también deberíamos.</span>
+<div class="quiz-classify-btns">
+<button>Impacto concreto</button>
+<button data-correct>Argumento vacío</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Sin tocar esa regla, la sede nueva no puede salir este trimestre porque depende de ella.</span>
+<div class="quiz-classify-btns">
+<button>Argumento vacío</button>
+<button data-correct>Impacto concreto</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Yo no me siento tranquilo trabajando con este módulo tal como está.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Argumento vacío</button>
+<button>Impacto concreto</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision6" hidden>
+<h2>«Hacelo más rápido y más seguro»</h2>
+<p class="lead">Con el endpoint <code>GET /turnos/{id}</code> ya entendido, Diego le pide a una IA que lo mejore. Escribe: «hacé esta función más rápida y más segura». La IA devuelve una versión nueva que cambia la forma de la respuesta, agrega dos librerías que el proyecto no usa y elimina una validación «por redundante». El código se ve mejor, pero nadie sabe si es mejor.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-6" data-unlock="ia repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo corrige Diego el pedido?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Pide de nuevo con el código actual, objetivos medibles, lo que no se debe tocar y una explicación de cada cambio.</button>
+<button class="quiz-opt" data-key="b">Repite el pedido con más énfasis, «lo más rápido y seguro posible», porque la IA ya conoce las mejores prácticas de la industria.</button>
+<button class="quiz-opt" data-key="c">Le pega el repositorio completo y le pide que revise todo y arregle lo que encuentre, para que no quede nada sin revisar.</button>
+</div>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. Una IA responde al pedido que recibe: con números, límites y una explicación, el resultado se puede verificar. Cerrás el recorrido del nivel. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="b" hidden>«Rápido» y «seguro» sin números significan lo que la IA quiera: puede optimizar lo que no importa o quitar una validación creyéndola sobrante. Más énfasis no agrega criterio. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Con todo el repositorio y sin un objetivo, el resultado son cambios enormes, imposibles de revisar, sobre cosas que nadie pidió. Cuanto más amplio es el pedido, más inventa. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="ia" hidden>
+<h2>Pedirle calidad a una IA, con números</h2>
+<p class="lead">Los atributos de calidad (rapidez, seguridad, disponibilidad) son adjetivos hasta que se les pone un número. Una IA los puede ayudar a cumplir solo si el pedido los trae medidos, con lo que no debe tocar y con una forma de revisar lo que cambió.</p>
+<div class="code">
+<div class="code-header"><span>Prompt — mejorar un endpoint con objetivos medibles</span></div>
+<pre><code class="src">Tengo este endpoint de TurnoYa (Python, Flask): [pegar acá la función obtener_turno].
+
+Objetivos medibles:
+- p95 de GET /turnos/{id} menor a 300 ms con 2.000 usuarios concurrentes.
+- Solo el estudiante dueño del turno o el personal pueden leerlo; cualquier otro caso responde 404.
+
+Restricciones:
+- No cambies la ruta ni la forma de la respuesta JSON.
+- No agregues librerías nuevas.
+- No toques la capa de dominio ni quites validaciones existentes.
+
+Entregá: (1) los cambios como diff, (2) por qué cada cambio ayuda a uno de los objetivos,
+(3) qué pruebas agregarías. Si algo no se puede cumplir con esas restricciones,
+decilo en vez de inventar una solución.</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Parte del prompt</th><th scope="col">Qué evita</th></tr></thead>
+<tbody>
+<tr><td>Objetivos con número</td><td>Que optimice lo que no importa o que «mejore» sin criterio.</td></tr>
+<tr><td>Código y contexto real</td><td>Que invente funciones, rutas o tablas que no existen.</td></tr>
+<tr><td>Restricciones explícitas</td><td>Que cambie contratos, agregue dependencias o borre validaciones.</td></tr>
+<tr><td>Salida revisable</td><td>Un resultado que no se puede verificar: sin diff ni explicación, hay que creerle.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>La IA propone, vos verificás</strong>
+<p>Aun con un buen prompt, medí: corré la prueba de carga antes y después, y revisá el diff a mano. Una mejora que no se mide es una opinión.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="ia-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. Para que la IA no «mejore» sin criterio, el prompt trae objetivos con
+<select class="quiz-blank" data-correct="numero">
+<option value="">— elige —</option>
+<option value="adjetivos">adjetivos como «rápido» y «seguro»</option>
+<option value="numero">un número que se pueda medir</option>
+<option value="urgencia">la urgencia con que se lo pide</option>
+</select>.</p>
+<p>2. Para que no cambie el contrato ni agregue dependencias, se incluyen
+<select class="quiz-blank" data-correct="restricciones">
+<option value="">— elige —</option>
+<option value="ejemplos">más ejemplos de código ajeno</option>
+<option value="restricciones">restricciones explícitas</option>
+<option value="elogios">frases de aliento para que se esfuerce</option>
+</select>.</p>
+<p>3. Para poder revisar lo que cambió, se pide la salida como
+<select class="quiz-blank" data-correct="diff">
+<option value="">— elige —</option>
+<option value="diff">un diff con la explicación de cada cambio</option>
+<option value="archivo">el archivo reescrito completo, sin comentarios</option>
+<option value="resumen">un resumen de una línea</option>
+</select>.</p>
+<p>4. Después de recibir la respuesta, lo correcto es
+<select class="quiz-blank" data-correct="medir">
+<option value="">— elige —</option>
+<option value="confiar">confiar, porque el prompt era bueno</option>
+<option value="medir">medir antes y después y revisar el diff</option>
+<option value="otra">repetir el pedido hasta que se vea distinto</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Una API responde lento. ¿Cuál es el primer paso antes de agregar más servidores?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Pasar a la máquina más grande que ofrezca el proveedor, para descartar que sea un problema de capacidad.</button>
+<button class="quiz-opt" data-correct>Medir en qué parte de la petición se pierde el tiempo, para identificar el cuello de botella real.</button>
+<button class="quiz-opt">Reescribir la API completa en un lenguaje más rápido, porque la velocidad depende del lenguaje.</button>
+<button class="quiz-opt">Sumar copias de la aplicación hasta que el tiempo de respuesta baje a un nivel aceptable.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: sin medir no se sabe si lo que frena es la base, la red o el código. Agregar capacidad sin saberlo puede no servir o empeorar la parte lenta." data-ko="Todas las otras opciones agregan capacidad o reescriben sin saber qué falla. Lo primero siempre es medir para encontrar el cuello de botella real." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Un objetivo de disponibilidad del 99,9 % por mes permite, más o menos, una hora y media de caída.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el 0,1 % de un mes de 30 días son unos 43 minutos, no una hora y media. Cada nueve extra reduce la caída permitida diez veces." data-ko="Es falso: el 0,1 % de 43.200 minutos (un mes de 30 días) son unos 43 minutos. Una hora y media corresponde a un objetivo más flojo, cercano al 99,8 %." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué el permiso de acceso a un turno se comprueba en el servidor y no solo en la pantalla?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Porque la pantalla corre en el equipo del usuario, que puede saltarla escribiendo la dirección a mano.</button>
+<button class="quiz-opt">Porque el servidor es más rápido que el navegador para decidir quién puede ver cada turno de la lista.</button>
+<button class="quiz-opt">Porque las pantallas no pueden mostrar mensajes de error cuando el acceso a un recurso está prohibido.</button>
+<button class="quiz-opt">Porque el navegador no sabe cuál es el usuario que inició sesión en la aplicación web.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: todo lo que corre en el equipo del usuario puede saltearse. El servidor es lo único que el usuario no controla, y por eso ahí va la regla." data-ko="No es cuestión de velocidad ni de qué sabe el navegador: el problema es que el usuario controla su pantalla y puede esquivarla. Por eso el permiso se comprueba donde él no llega." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas frases convence mejor a una PO de dedicar tiempo a una deuda técnica?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">«Es la mejor práctica, y los equipos serios dedican siempre un tiempo fijo a limpiar su código.»</button>
+<button class="quiz-opt">«El módulo está muy desordenado y ya nadie del equipo se anima a tocarlo con tranquilidad hoy.»</button>
+<button class="quiz-opt">«Si no lo ordenamos ahora, después va a ser mucho peor y nos va a costar muchísimo más caro.»</button>
+<button class="quiz-opt" data-correct>«Cada historia tarda el doble y hubo dos errores; ordenarlo cuesta tres semanas y desbloquea la sede nueva.»</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: traduce la deuda a tiempo, errores y un beneficio concreto, tres cosas que la PO puede comparar con el resto del backlog." data-ko="Las otras frases son opiniones, comparaciones o advertencias sin números. La que convence trae el costo de no hacerlo, el costo de hacerlo y lo que se gana." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: calidad y operación de tu propio sistema</h2>
+<p class="lead">Con un sistema real (del club, de una materia, de un proyecto personal), escribí en no más de dos o tres líneas por punto: 1) dónde creés que está hoy el cuello de botella y cómo lo medirías antes de agregar capacidad, 2) un objetivo de disponibilidad con su traducción a minutos por mes, 3) qué tres cosas registrarías (log, métrica y traza o equivalente) y qué alerta te avisaría de un problema que sienta el usuario, 4) un recurso que hoy podría leer alguien que no debería y cómo lo comprobarías en el servidor, 5) un ítem de deuda técnica expresado con impacto, y el prompt que le darías a una IA para ayudarte a resolverlo.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Escalabilidad, disponibilidad, observabilidad, seguridad y deuda técnica de un sistema real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>El cuello de botella se plantea como hipótesis con una medición concreta (tiempos por parte de la petición), no como una certeza.</li>
+<li>El objetivo de disponibilidad trae el porcentaje y los minutos de caída permitidos por mes, y no una promesa de «100 %».</li>
+<li>Cada señal responde una pregunta distinta, y la alerta habla de lo que siente el usuario y no de un detalle técnico.</li>
+<li>La comprobación de acceso ocurre en el servidor y cubre el caso del usuario que cambia un identificador.</li>
+<li>La deuda se expresa en tiempo, errores o bloqueos, y el prompt trae objetivos medibles, restricciones y una salida revisable.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Cuello de botella</td><td>La parte más lenta de la cadena; se mide antes de escalar.</td></tr>
+<tr><td>Escalar hacia arriba / costados</td><td>Máquina más grande, o más copias; las copias deben ser sin estado.</td></tr>
+<tr><td>Disponibilidad</td><td>Porcentaje de tiempo que el sistema responde bien; se expresa en nueves.</td></tr>
+<tr><td>99 % · 99,9 % · 99,99 %</td><td>Unas 7,2 horas · 43 minutos · 4 minutos de caída por mes.</td></tr>
+<tr><td>SLI · SLO · SLA</td><td>Lo que se mide · el objetivo interno · el compromiso con el cliente.</td></tr>
+<tr><td>Punto único de falla</td><td>Pieza sin respaldo cuya caída tumba todo.</td></tr>
+<tr><td>Log · métrica · traza</td><td>Qué pasó en un caso · cómo viene todo · por dónde pasó una petición.</td></tr>
+<tr><td>Alertar por síntomas</td><td>Avisar de lo que siente el usuario, no de cada detalle técnico.</td></tr>
+<tr><td>Autenticación vs. autorización</td><td>¿Quién sos? vs. ¿qué podés hacer? Se comprueba en el servidor.</td></tr>
+<tr><td>Mínimo privilegio</td><td>Cada pieza puede hacer solo lo que necesita.</td></tr>
+<tr><td>ADR</td><td>Una página con contexto, opciones, decisión y consecuencias.</td></tr>
+<tr><td>Deuda técnica negociable</td><td>Se expresa en tiempo, errores y lo que desbloquea, no en adjetivos.</td></tr>
+<tr><td>Prompt de calidad</td><td>Objetivos con número, contexto real, restricciones y salida revisable.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🔢 Los cinco nueves</h3><p>Una disponibilidad de 99,999 % permite unos cinco minutos de caída al año. Es tan exigente que casi ningún servicio la promete, y los que lo hacen invierten enormes sumas para lograrla.</p></div>
+<div class="info"><h3>🔓 El fallo más común en la web</h3><p>El control de acceso roto, como el del turno ajeno, encabeza desde 2021 la lista OWASP de los diez riesgos más frecuentes en aplicaciones web. Casi siempre es un olvido, no un ataque sofisticado.</p></div>
+<div class="info"><h3>🧭 Lo que viene en el Nivel 5</h3><p>Ya sabés hacer que un sistema aguante y se cuide. El último nivel mira el cuadro grande: cómo pensar un sistema para decenas de miles de usuarios, cómo liderar revisiones de diseño y cómo planificar el trabajo técnico en el backlog, con la v2 de TurnoYa como caso integrador.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Nivel 4: Calidad y Operación</h2>
+<p>Material de apoyo para el Club de Programación · Ruta Diseñador de Sistemas.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "ds-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

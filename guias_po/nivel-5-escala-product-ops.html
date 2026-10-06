@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nivel 5: Escala, Product Ops y caso integrador | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">Club · <span>PO Nivel 5</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="escala">Escalar sin burocracia</button>
+<button data-target="dependencias">Dependencias entre equipos</button>
+<button data-target="ops">Product Ops</button>
+<button data-target="alineacion">Alinear a todos</button>
+<button data-target="integrador">Caso integrador</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🌐 Club · Ruta Product Owner · Nivel 5</span>
+<h1 class="flow-h1">El cuadro grande: <span>escala, Product Ops y un trimestre completo</span></h1>
+<p class="flow-lead">Último nivel de la ruta. Hasta acá trabajaste con un equipo y un producto. Pero los productos que funcionan crecen: aparecen más equipos, más sedes, más pedidos. Este nivel trata de lo que cambia cuando un PO ya no puede coordinar todo en persona: cuándo conviene escalar (y cuándo no), cómo se manejan las dependencias entre equipos, qué es Product Ops, cómo se alinea a todos detrás de un mismo objetivo. Cierra con un caso integrador que junta todo lo que recorriste en los cinco niveles.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Seguís acompañando a Lucía, PO de <strong>TurnoYa</strong>. Si todavía no hiciste el <a href="nivel-4-stakeholders-tradeoffs.html">Nivel 4</a>, conviene empezar por ahí: este nivel retoma varias de sus ideas. En cada decisión podés probar un camino equivocado, ver su consecuencia sin penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>Tres sedes, un solo producto</h2>
+<p class="lead">TurnoYa funcionó tan bien en la fotocopiadora y la cafetería que otras dos sedes piden usarlo. El equipo pasa de cuatro personas a doce, repartidas en tres equipos: Reservas, Pagos y Notificaciones. Hasta ahora Lucía ordenaba un backlog para un solo equipo; ahora recibe pedidos de tres sedes y de tres equipos, todos sobre la misma aplicación.</p>
+<div class="highlight">
+<strong>Lo que está en juego</strong>
+<p>Crecer trae un riesgo en cada dirección: partir el producto en pedazos que no encajan, o llenarlo de procesos y reuniones antes de que hagan falta.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="escala decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo organiza Lucía el trabajo de los tres equipos?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Que cada equipo tenga su propio producto, backlog y PO, y que cada sede decida sola, para que nadie dependa de nadie y cada uno avance a su ritmo.</button>
+<button class="quiz-opt" data-key="b" data-correct>Mantener un solo producto, un backlog y una PO, con los tres equipos tomando ítems del mismo backlog y sumando solo la coordinación necesaria.</button>
+<button class="quiz-opt" data-key="c">Adoptar de una vez el marco más completo, con todos los roles y planificaciones, para dejar el orden listo antes de que el producto siga creciendo.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Con tres productos, un estudiante que se muda de sede vería una app distinta, y cada arreglo habría que hacerlo tres veces. Se evitaron las dependencias a costa de perder un producto coherente. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. Un producto, un backlog y una voz que ordena las prioridades; los equipos son quienes se reparten el trabajo. Se agrega coordinación solo donde duele. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="c" hidden>Doce personas no necesitan toda esa estructura: gastarían más tiempo en reuniones y roles que en construir. Escalar se hace cuando el dolor aparece, no por adelantado. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="escala" hidden>
+<h2>Escalar: lo mínimo que haga falta</h2>
+<p class="lead">Un solo equipo de tres a nueve personas es la mejor opción mientras alcance. Cuando ya no alcanza, existen marcos que explican cómo coordinar varios equipos sobre un mismo producto. No hace falta conocerlos a fondo: alcanza con saber qué idea defiende cada uno.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Enfoque</th><th scope="col">Idea central</th><th scope="col">Cuándo encaja</th></tr></thead>
+<tbody>
+<tr><td>Un solo equipo</td><td>Un backlog, un PO, un sprint. Nada que coordinar.</td><td>Mientras el equipo entregue bien y el producto no exija más gente.</td></tr>
+<tr><td>LeSS</td><td>Pocos equipos comparten un backlog, un PO y un sprint común. Agrega lo mínimo.</td><td>Varios equipos sobre un mismo producto, con ganas de pocas reglas nuevas.</td></tr>
+<tr><td>SAFe</td><td>Agrupa muchos equipos en «trenes» con planificación conjunta cada trimestre y roles propios.</td><td>Organizaciones grandes que necesitan un ritmo y una estructura comunes.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>El PO sigue siendo uno por producto</strong>
+<p>En ambos enfoques, la idea es que haya una sola visión y un solo orden de prioridades por producto. Solo cuando el producto es muy grande se reparte el área entre varios «PO de área», que a su vez responden a una visión común. Dividir el backlog en tres no es escalar: es tener tres productos.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="escala-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Qué enfoque sugiere cada situación?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un equipo de cinco personas que entrega bien en cada sprint.</span>
+<div class="quiz-classify-btns">
+<button>LeSS</button>
+<button data-correct>Un solo equipo</button>
+<button>SAFe</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Tres equipos de una misma app que quieren un único backlog, una PO y las menos reglas nuevas posibles.</span>
+<div class="quiz-classify-btns">
+<button>Un solo equipo</button>
+<button>SAFe</button>
+<button data-correct>LeSS</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cuarenta equipos de una empresa que necesitan planificar juntos cada trimestre y alinear presupuestos.</span>
+<div class="quiz-classify-btns">
+<button data-correct>SAFe</button>
+<button>LeSS</button>
+<button>Un solo equipo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Dos personas que arman el prototipo de un club nuevo.</span>
+<div class="quiz-classify-btns">
+<button>LeSS</button>
+<button data-correct>Un solo equipo</button>
+<button>SAFe</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Siete equipos en una misma plataforma, que quieren evitar capas de coordinación extra.</span>
+<div class="quiz-classify-btns">
+<button>SAFe</button>
+<button>Un solo equipo</button>
+<button data-correct>LeSS</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una organización con muchas áreas de negocio, donde la dirección pide un ritmo común y roles definidos.</span>
+<div class="quiz-classify-btns">
+<button>LeSS</button>
+<button data-correct>SAFe</button>
+<button>Un solo equipo</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>Pagos está parado esperando a Reservas</h2>
+<p class="lead">El equipo de Pagos necesita que Reservas exponga el monto de cada turno para poder cobrarlo. Reservas lo tiene previsto para el sprint siguiente, así que Pagos pasó dos semanas sin poder avanzar. Notificaciones, a su vez, espera a los dos. Tomás lo detectó recién en la daily del miércoles.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="dependencias decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué cambia Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Pide que cada equipo avise por chat apenas necesite algo de otro, y que lo resuelvan entre ellos cuando surja el problema real.</button>
+<button class="quiz-opt" data-key="b">Decide ella el orden en que cada equipo entrega y les asigna qué ítem sigue, para evitar que se crucen entre sí y se pisen.</button>
+<button class="quiz-opt" data-key="c" data-correct>Hace visibles las dependencias antes del sprint, en una planificación conjunta, y ordena el trabajo para que lo necesario salga primero.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Avisar por chat descubre la dependencia cuando el equipo ya está bloqueado, que es justo lo que pasó. La falla no es la comunicación: es enterarse tarde. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Si todo el orden pasa por Lucía, ella se vuelve un cuello de botella y los equipos pierden la autonomía que justificaba tenerlos. La coordinación no debería depender de una sola persona. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Las dependencias se manejan mirándolas antes de empezar, con todos los equipos en la misma mesa. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="dependencias" hidden>
+<h2>Dependencias: verlas a tiempo y tener menos</h2>
+<p class="lead">Una <strong>dependencia</strong> aparece cuando un equipo no puede avanzar sin algo que otro todavía no entregó. Con un equipo no se nota; con tres, es la principal causa de tiempo perdido. Se atacan de dos maneras: viéndolas a tiempo y reduciendo cuántas hay.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Tipo</th><th scope="col">Ejemplo en TurnoYa</th><th scope="col">Cómo se maneja</th></tr></thead>
+<tbody>
+<tr><td>De entrega</td><td>Pagos necesita el monto del turno que expone Reservas.</td><td>Ordenar el trabajo para que lo que otros necesitan salga primero.</td></tr>
+<tr><td>De conocimiento</td><td>Solo Diego sabe cómo funciona el módulo de horarios.</td><td>Compartir el conocimiento: parejas, documentación corta.</td></tr>
+<tr><td>De fecha</td><td>La sede nueva abre el 1.º de marzo y todos deben llegar.</td><td>Hacerla visible en el roadmap compartido desde el principio.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>La mejor dependencia es la que no existe</strong>
+<p>Si los equipos se arman por capa técnica (uno de pantallas, uno de datos), casi toda función necesita a todos. Si se arman alrededor de un área de valor completa (reservas, cobros, avisos), cada equipo puede entregar algo útil de punta a punta. Es más difícil de armar, pero reduce dependencias de raíz.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="dependencias-fill">
+<span class="quiz-badge">Completar</span>
+<p>1. Cuando un equipo no puede avanzar sin algo que otro todavía no entregó, hay una
+<select class="quiz-blank" data-correct="dependencia">
+<option value="">— elige —</option>
+<option value="prioridad">prioridad</option>
+<option value="dependencia">dependencia</option>
+<option value="metrica">métrica</option>
+</select>.</p>
+<p>2. Lo más barato es descubrirla
+<select class="quiz-blank" data-correct="antes">
+<option value="">— elige —</option>
+<option value="despues">cuando el equipo ya quedó bloqueado</option>
+<option value="antes">antes del sprint, planificando juntos</option>
+<option value="final">al terminar el trimestre</option>
+</select>.</p>
+<p>3. Para tener menos dependencias, conviene formar equipos alrededor de
+<select class="quiz-blank" data-correct="valor">
+<option value="">— elige —</option>
+<option value="capa">una capa técnica, como pantallas o datos</option>
+<option value="rol">un único rol, como diseñadores</option>
+<option value="valor">un área de valor completa</option>
+</select>.</p>
+<p>4. La coordinación entre equipos no debería pasar toda por
+<select class="quiz-blank" data-correct="una-persona">
+<option value="">— elige —</option>
+<option value="tablero">un tablero compartido</option>
+<option value="una-persona">una sola persona</option>
+<option value="plan">una planificación conjunta</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>Cada PO con su propia plantilla</h2>
+<p class="lead">Con tres equipos aparecieron tres formas de hacer lo mismo: cada uno arma su roadmap en un formato distinto, cada uno cuenta de otra manera lo que es un «turno atendido», y a los mismos estudiantes les llegan tres encuestas parecidas. Lucía pierde horas cada semana reconciliando números que no coinciden.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="ops decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Dedica una función pequeña, aun a tiempo parcial, a ordenar herramientas, definiciones de métricas y rituales comunes, para que el resto decida con menos fricción.</button>
+<button class="quiz-opt" data-key="b">Elige una herramienta nueva que reemplace las planillas y obliga a todos a usarla, porque con la herramienta correcta el desorden desaparece solo.</button>
+<button class="quiz-opt" data-key="c">Pide que cada decisión de producto pase por ella antes de ejecutarse, para que haya un único criterio y ningún equipo decida por su cuenta.</button>
+</div>
+<p class="quiz-fb ok" data-key="a" hidden>Correcto. Eso es Product Ops: quitarle fricción al trabajo de producto con datos, procesos y herramientas compartidos, sin decidir por los equipos. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="b" hidden>Una herramienta sin acuerdos previos (qué cuenta como «turno atendido», quién carga qué) reproduce el mismo desorden dentro de una pantalla nueva. Primero se acuerdan las reglas, después se elige dónde viven. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Convertir a Lucía en filtro de cada decisión frena a los equipos y la satura. Ordenar no es aprobar: la ayuda tiene que sacar fricción, no sumar una cola de espera. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="ops" hidden>
+<h2>Product Ops: hacer que producto funcione mejor</h2>
+<p class="lead"><strong>Product Ops</strong> (operaciones de producto) es la función que cuida el funcionamiento del trabajo de producto: los datos, los procesos y las herramientas que usan los PO y los equipos. No decide qué se construye: se ocupa de que quien decide tenga a mano lo que necesita.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Área</th><th scope="col">Qué cuida</th><th scope="col">En TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>Datos</td><td>Definiciones únicas y tableros confiables.</td><td>Una sola fórmula para «turno atendido» y un tablero para los tres equipos.</td></tr>
+<tr><td>Procesos</td><td>Plantillas y cadencias comunes.</td><td>Un formato de roadmap y una revisión mensual compartida.</td></tr>
+<tr><td>Herramientas</td><td>Elegir y administrar dónde vive el trabajo.</td><td>Un solo lugar para el backlog y los tableros.</td></tr>
+<tr><td>Conocimiento</td><td>Que lo aprendido no se pierda ni se repita.</td><td>Un archivo de entrevistas con usuarios, para no encuestar tres veces a lo mismo.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Una función, no un jefe</strong>
+<p>Product Ops no aprueba decisiones ni dirige a los PO. Se mide por cuánto tiempo y fricción les ahorra a los demás. En un equipo chico lo hace una persona a tiempo parcial; en una empresa grande puede ser un área entera.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="ops-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada área de Product Ops con una tarea que le corresponde.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="p0">Datos</button>
+<button class="quiz-match-item" data-pair="p1">Procesos</button>
+<button class="quiz-match-item" data-pair="p2">Herramientas</button>
+<button class="quiz-match-item" data-pair="p3">Conocimiento</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="p3">Guardar las entrevistas a usuarios donde todos puedan encontrarlas.</button>
+<button class="quiz-match-item" data-pair="p2">Elegir y administrar la herramienta donde vive el backlog.</button>
+<button class="quiz-match-item" data-pair="p1">Fijar una plantilla común de roadmap y una revisión mensual.</button>
+<button class="quiz-match-item" data-pair="p0">Definir una sola fórmula para contar un «turno atendido».</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>"Dame un número para comparar equipos"</h2>
+<p class="lead">La Dirección de Bienestar quiere un solo indicador para saber qué equipo rinde más. Alguien propone un ranking con los puntos de velocity de cada sprint, porque es el único número que los tres equipos ya tienen. Lucía recuerda el Nivel 2: velocity mide cuánto estima completar cada equipo, en su propia escala.</p>
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="alineacion decision5">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué propone Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Aceptar el ranking de velocity, porque es el único número que ya existe en los tres equipos y permite ver rápido quién rinde más y quién menos.</button>
+<button class="quiz-opt" data-key="b" data-correct>Fijar un objetivo común de producto con un resultado medible, como los turnos completados por semana, y que cada equipo defina cómo aporta.</button>
+<button class="quiz-opt" data-key="c">Que cada equipo defina sus propias métricas y no las comparta, para evitar rivalidades entre ellos y con la Dirección de Bienestar.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Un punto de un equipo no vale lo mismo que uno de otro: cada uno estima en su escala. Si el número se vuelve objetivo, los puntos se inflan sin entregar más valor, y todos pierden. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Correcto. Un objetivo común mide si el producto mejora, y cada equipo tiene un resultado propio para lograrlo. Se compara el resultado, no el esfuerzo estimado. Seguí leyendo ↓</p>
+<p class="quiz-fb ko" data-key="c" hidden>Sin un objetivo compartido, cada equipo optimiza algo distinto y nadie ve si TurnoYa mejora como producto. Esconder los números no evita las comparaciones, solo evita aprender de ellas. Probá con otra opción.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="alineacion" hidden>
+<h2>Alinear a todos detrás de un mismo objetivo</h2>
+<p class="lead">Con varios equipos, lo que alinea no es una reunión más: es un objetivo que todos entienden y una forma de ver cómo aporta cada uno. Todo lo que ya recorriste en el Nivel 3 vuelve acá, ahora a una escala mayor.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Pregunta</th><th scope="col">Herramienta</th><th scope="col">En TurnoYa</th></tr></thead>
+<tbody>
+<tr><td>¿Hacia dónde vamos todos?</td><td>Objetivo de producto y North Star Metric.</td><td>Subir los turnos completados por semana bajando las ausencias de 15 % a 8 %.</td></tr>
+<tr><td>¿Quién aporta qué?</td><td>Resultados clave por equipo.</td><td>Pagos: cobrar un turno en dos clics. Notificaciones: avisos con dos horas de anticipación.</td></tr>
+<tr><td>¿Cuándo se ve cada cosa?</td><td>Un solo roadmap Now-Next-Later con un carril por equipo.</td><td>Las tres columnas, visibles para los tres equipos y para Bienestar.</td></tr>
+<tr><td>¿Cómo está cada equipo?</td><td>Velocity, solo como herramienta interna de cada uno.</td><td>Para planificar el próximo sprint, nunca para compararse.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Cuando una medida se vuelve objetivo</strong>
+<p>Una medida deja de ser buena apenas se la usa como meta: es la llamada ley de Goodhart. Si se premia a un equipo por puntos de velocity, los puntos suben; el valor entregado no necesariamente. Por eso los objetivos se miden en resultados para el usuario, no en actividad.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="alineacion-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Qué es cada enunciado?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Reducir las ausencias a turnos de 15 % a 8 % en toda la plataforma.</span>
+<div class="quiz-classify-btns">
+<button>Aporte de un equipo</button>
+<button data-correct>Objetivo común</button>
+<button>Señal engañosa</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Que Pagos reduzca de cuatro a dos los clics necesarios para cobrar un turno.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Aporte de un equipo</button>
+<button>Señal engañosa</button>
+<button>Objetivo común</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Que los puntos de velocity de Reservas pasen de 30 a 40 por sprint.</span>
+<div class="quiz-classify-btns">
+<button>Objetivo común</button>
+<button>Aporte de un equipo</button>
+<button data-correct>Señal engañosa</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Que Notificaciones logre que nueve de cada diez avisos lleguen con dos horas de anticipación.</span>
+<div class="quiz-classify-btns">
+<button>Señal engañosa</button>
+<button data-correct>Aporte de un equipo</button>
+<button>Objetivo común</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Subir los turnos completados por semana sumando las tres sedes.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Objetivo común</button>
+<button>Señal engañosa</button>
+<button>Aporte de un equipo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Que el equipo de Reservas supere al de Pagos en puntos por sprint.</span>
+<div class="quiz-classify-btns">
+<button>Aporte de un equipo</button>
+<button>Objetivo común</button>
+<button data-correct>Señal engañosa</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision5" hidden>
+<h2>El plan del trimestre</h2>
+<p class="lead">Es el momento de juntar todo. La meta del trimestre es bajar las ausencias de 15 % a 8 %. El trimestre da unas <strong>20 semanas-persona</strong> de capacidad, y Lucía quiere reservar el 20 % (4) para deuda técnica y errores. Sobre la mesa hay ocho ítems, sumando 27 semanas-persona en total:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Ítem</th><th scope="col">Pide</th><th scope="col">Esfuerzo</th><th scope="col">Nota</th></tr></thead>
+<tbody>
+<tr><td>Recordatorios por WhatsApp</td><td>Estudiantes</td><td>4</td><td>Es la hipótesis del Nivel 3 sobre ausencias.</td></tr>
+<tr><td>Pago con tarjeta, completo</td><td>Don Julio</td><td>8</td><td>Existe una versión chica de 3.</td></tr>
+<tr><td>Reporte mensual de uso</td><td>Bienestar</td><td>3</td><td>Mantener satisfecha a una persona con poder.</td></tr>
+<tr><td>Refactor de reglas de horarios</td><td>Equipo técnico</td><td>3</td><td>Deuda técnica: la regla está copiada en cinco lugares.</td></tr>
+<tr><td>Arreglar la pantalla en blanco al cancelar</td><td>Estudiantes</td><td>1</td><td>Error.</td></tr>
+<tr><td>Bloqueo de horarios</td><td>Cafetería</td><td>2</td><td>Evita turnos en horas sin atención.</td></tr>
+<tr><td>Sede nueva</td><td>Dirección</td><td>5</td><td>Necesita el refactor de horarios terminado.</td></tr>
+<tr><td>Modo oscuro</td><td>Un estudiante</td><td>1</td><td>Comodidad, no mueve ninguna métrica.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-5" data-unlock="integrador repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué plan arma Lucía?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Pago completo (8), sede nueva (5), reporte (3) y modo oscuro (1): lo que más piden los que más insisten, 17 semanas en total y sin reserva alguna.</button>
+<button class="quiz-opt" data-key="b">Los ocho ítems, con el pago completo, porque todos tienen un pedido real detrás; que el equipo ajuste el ritmo para llegar a todo.</button>
+<button class="quiz-opt" data-key="c" data-correct>Recordatorios, bloqueo, pago en versión chica y reporte (12), más el refactor y el error (4): 16 de 20, con la sede nueva para el trimestre siguiente.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Ese plan ignora la meta: no incluye los recordatorios, que son lo que más puede bajar las ausencias. Además deja afuera la deuda y arranca la sede nueva sin el refactor del que depende. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Son 27 semanas para 20 de capacidad: el equipo no puede «ajustar el ritmo» siete semanas, solo recortar la calidad o llegar tarde. Un plan que no recorta nada no es un plan. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Correcto. Todo parte de la meta, el pedido de Don Julio se recorta en vez de rechazarse, la deuda tiene su reserva, la dependencia se respeta y queda margen para imprevistos. Cerraste la ruta. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="integrador" hidden>
+<h2>Caso integrador: de dónde salió cada decisión</h2>
+<p class="lead">El plan de Lucía no salió de una sola técnica: cada ítem se resolvió con algo que ya conocés. Así quedó el trimestre completo.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Ítem</th><th scope="col">Semanas</th><th scope="col">Decisión</th><th scope="col">Qué nivel la sostiene</th></tr></thead>
+<tbody>
+<tr><td>Recordatorios por WhatsApp</td><td>4</td><td>Entra: mueve la meta.</td><td>Nivel 3 (hipótesis, North Star) y Nivel 2 (RICE).</td></tr>
+<tr><td>Bloqueo de horarios</td><td>2</td><td>Entra: barato y ayuda con las ausencias.</td><td>Nivel 2 (valor contra esfuerzo).</td></tr>
+<tr><td>Pago con tarjeta</td><td>3</td><td>Entra en versión chica, no se rechaza.</td><td>Nivel 4 (necesidad real, alcance).</td></tr>
+<tr><td>Reporte mensual de uso</td><td>3</td><td>Entra: se mantiene satisfecho a Bienestar.</td><td>Nivel 4 (matriz poder-interés).</td></tr>
+<tr><td>Refactor de horarios</td><td>3</td><td>Entra, dentro de la reserva del 20 %.</td><td>Nivel 4 (deuda técnica).</td></tr>
+<tr><td>Pantalla en blanco al cancelar</td><td>1</td><td>Entra, dentro de la reserva del 20 %.</td><td>Nivel 2 (Definition of Done).</td></tr>
+<tr><td>Sede nueva</td><td>5</td><td>Siguiente trimestre: depende del refactor.</td><td>Nivel 5 (dependencias).</td></tr>
+<tr><td>Modo oscuro</td><td>1</td><td>Más adelante: no mueve la meta.</td><td>Nivel 2 (MoSCoW: «podría»).</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>16 de 20, a propósito</strong>
+<p>Lucía no comprometió el 100 % de la capacidad. Las cuatro semanas libres no son desperdicio: son el margen para lo que siempre aparece (un error urgente, una estimación corta). Un plan con cero margen se rompe con el primer imprevisto.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="integrador-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada herramienta de la ruta con la decisión de Lucía en la que se usó.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="p0">North Star y meta</button>
+<button class="quiz-match-item" data-pair="p1">Negociar alcance</button>
+<button class="quiz-match-item" data-pair="p2">Gestión de deuda técnica</button>
+<button class="quiz-match-item" data-pair="p3">Mapa de dependencias</button>
+<button class="quiz-match-item" data-pair="p4">Matriz poder-interés</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="p4">Dar prioridad a un reporte breve para quien puede cortar el presupuesto.</button>
+<button class="quiz-match-item" data-pair="p2">Reservar cuatro semanas del trimestre para el refactor y el error.</button>
+<button class="quiz-match-item" data-pair="p0">Elegir los ítems según cuánto ayudan a bajar las ausencias.</button>
+<button class="quiz-match-item" data-pair="p3">Dejar la sede nueva para después de terminar el refactor.</button>
+<button class="quiz-match-item" data-pair="p1">Reducir el pago con tarjeta a una versión de tres semanas.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Cuando varios equipos trabajan sobre un mismo producto, lo recomendable es que cada uno tenga su propio backlog de producto y su propio PO.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un producto necesita una visión y un orden de prioridades. Con un backlog por equipo, en la práctica hay varios productos que tiran para lados distintos." data-ko="Es falso: partir el backlog en uno por equipo no es escalar, es tener varios productos. Lo recomendable es un backlog y una visión por producto, con los equipos tomando ítems de ahí." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué es mala idea comparar el velocity de distintos equipos para ver cuál rinde más?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque el velocity solo se puede calcular tras terminar el trimestre completo, y es tarde para actuar.</button>
+<button class="quiz-opt">Porque los equipos más grandes siempre tienen un velocity menor que los equipos más chicos.</button>
+<button class="quiz-opt" data-correct>Porque los puntos son una escala propia de cada equipo y, al volverse objetivo, se inflan.</button>
+<button class="quiz-opt">Porque la Dirección no puede entender qué significa un punto de historia en ninguno de los equipos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un punto de un equipo no equivale a uno de otro, y apenas la medida se vuelve meta, empieza a inflarse. Esa es la ley de Goodhart." data-ko="El problema de fondo es que cada equipo estima en su propia escala, y que una medida usada como objetivo se distorsiona. No tiene que ver con cuándo se calcula ni con el tamaño del equipo." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cómo se sabe si Product Ops está funcionando bien?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Por la cantidad de plantillas, reuniones y reportes nuevos que logró instalar en cada equipo.</button>
+<button class="quiz-opt">Por cuántas decisiones de producto aprueba cada semana antes de que los equipos las ejecuten.</button>
+<button class="quiz-opt" data-correct>Por cuánto tiempo y fricción les ahorra a los PO y a los equipos para decidir con buenos datos.</button>
+<button class="quiz-opt">Por la cantidad de herramientas distintas que administra y mantiene al día para toda la organización.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: Product Ops existe para que producto trabaje con menos fricción. Se mide por lo que libera, no por lo que agrega." data-ko="Más plantillas, más aprobaciones o más herramientas pueden ser, justamente, más fricción. Product Ops funciona bien cuando los demás pierden menos tiempo y deciden con mejores datos." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Pagos necesita un dato que expone Reservas. ¿En qué momento es más barato descubrir esa dependencia?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Cuando Pagos ya está bloqueado y avisa por chat, porque entonces el pedido es urgente y claro.</button>
+<button class="quiz-opt">Durante el sprint, apenas alguien de Pagos toque ese código por primera vez en la semana.</button>
+<button class="quiz-opt">Al terminar el trimestre, en la revisión, cuando se pueden comparar todos los resultados juntos.</button>
+<button class="quiz-opt" data-correct>En la planificación conjunta, antes de que empiece el sprint, con todos los equipos en la misma mesa.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: si la dependencia se ve antes de empezar, se puede reordenar el trabajo para que lo necesario salga primero y nadie quede esperando." data-ko="Enterarse con el equipo ya bloqueado, a mitad del sprint o al final del trimestre es siempre más caro. Lo barato es verla antes de empezar, planificando juntos." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: el trimestre de tu propio producto</h2>
+<p class="lead">Con un producto real (del club, de una materia, de un proyecto personal; si todavía tiene un solo equipo, imaginá que crece), escribí en no más de dos o tres líneas por punto: 1) si hoy hace falta escalar y por qué sí o por qué no, 2) dos dependencias concretas entre equipos o personas y cómo las verías antes del sprint, 3) una tarea de Product Ops que te ahorraría tiempo, 4) un objetivo común con un resultado clave para cada equipo, 5) un plan de un trimestre con la capacidad total, la reserva para deuda, lo que entra y lo que queda afuera con su razón.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Escala, dependencias, Product Ops, objetivo común y plan trimestral de un producto real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>La decisión de escalar o no se apoya en una señal concreta (equipo que ya no alcanza, dependencias, varias sedes) y no en que «suena profesional».</li>
+<li>Las dependencias nombran qué necesita un equipo de otro, y cómo se verían antes de empezar el sprint.</li>
+<li>La tarea de Product Ops saca fricción (una definición, una plantilla, un lugar único) y no agrega aprobaciones.</li>
+<li>El objetivo común se mide en resultado para el usuario, y los resultados clave por equipo apuntan a él en lugar de compararlos entre sí.</li>
+<li>El plan suma menos que la capacidad total, reserva un porcentaje para deuda y errores, y explica por qué cada ítem que queda afuera queda afuera.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Escalar</td><td>Sumar coordinación solo donde duele; un solo equipo mientras alcance.</td></tr>
+<tr><td>LeSS</td><td>Pocos equipos, un backlog, un PO, un sprint común, pocas reglas nuevas.</td></tr>
+<tr><td>SAFe</td><td>Marco grande para muchos equipos: trenes, planificación trimestral conjunta, roles propios.</td></tr>
+<tr><td>Un backlog por producto</td><td>Dividir el backlog por equipo no es escalar: es tener varios productos.</td></tr>
+<tr><td>Dependencia</td><td>Un equipo no avanza sin algo que otro todavía no entregó.</td></tr>
+<tr><td>Gestionar dependencias</td><td>Verlas antes del sprint y formar equipos alrededor de un área de valor completa.</td></tr>
+<tr><td>Product Ops</td><td>Datos, procesos, herramientas y conocimiento compartidos para producto.</td></tr>
+<tr><td>Objetivo común + KR por equipo</td><td>Todos apuntan al mismo resultado; cada equipo define cómo aporta.</td></tr>
+<tr><td>Ley de Goodhart</td><td>Una medida usada como meta deja de ser buena medida.</td></tr>
+<tr><td>Plan trimestral</td><td>Partir de la meta, reservar deuda, respetar dependencias y dejar margen.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🏗️ La ley de Conway</h3><p>En 1968, Melvin Conway observó que las organizaciones diseñan sistemas que copian su propia estructura de comunicación. Por eso cómo se arman los equipos termina marcando cómo queda el producto.</p></div>
+<div class="info"><h3>📏 Una ley con dos apellidos</h3><p>El economista Charles Goodhart formuló la idea en 1975 para política monetaria; la antropóloga Marilyn Strathern la resumió después en la frase que hoy se cita: cuando una medida se convierte en objetivo, deja de ser una buena medida.</p></div>
+<div class="info"><h3>🧭 Terminaste la ruta</h3><p>Recorriste mentalidad, descubrimiento, backlog y sprint, estrategia y métricas, stakeholders, y escala. Lo que sigue es practicarlo con un producto real. Si te interesa el lado técnico de las mismas decisiones, la ruta de Diseñador de Sistemas cuenta la otra mitad de la historia de TurnoYa.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Nivel 5: Escala, Product Ops y caso integrador</h2>
+<p>Material de apoyo para el Club de Programación · Ruta Product Owner.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "po-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>

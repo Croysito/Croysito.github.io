@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquitectura por capas y por qué invertir una dependencia | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // modelo-dominio.html, con el parche de paramsAtenza() que también
+  // busca dentro de location.hash.
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  var QUIZ_PREFIX = 'isw-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">ISW · <span>Arquitectura</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="capas-dip">Capas y dependencias, paso a paso</button>
+<button data-target="codigo">Del diagrama al código</button>
+<button data-target="vocabulario">Vocabulario</button>
+<button data-target="ejercicios">Actividades de repaso</button>
+<button data-target="reto">Reto: tu propio proyecto</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🔁 Guía de Aula Invertida</span>
+<h1 class="flow-h1">Arquitectura por capas <span>y por qué invertir una dependencia</span></h1>
+<p class="flow-lead">EventoUAB ya tiene historias, casos de uso y un modelo de dominio con Club, Espacio y Reserva. Falta decidir dónde vive cada cosa en el código. Si las reglas del negocio quedan mezcladas con la pantalla y con el SQL, cualquier cambio de tecnología las arrastra. Esta guía muestra cómo ordenar el código en capas y qué significa «invertir una dependencia» para que el modelo de dominio quede protegido en el centro.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Scrollea para empezar: el diagrama de EventoUAB se arma solo, paso a paso, y las flechas cambian de sentido mientras lees.</p>
+</section>
+
+<section class="flow-section" id="capas-dip">
+<div class="flow-grid">
+<div class="flow-beats">
+
+<div class="flow-beat" data-step="0">
+<span class="flow-beat-eyebrow">Paso 01 · El problema</span>
+<h3>Todo en un mismo archivo</h3>
+<p>La primera versión de «Reservar espacio» funciona. Pero está escrita como suele salir cuando hay apuro: la pantalla llama a una función que valida la regla («dos reservas no pueden solaparse») y, en esa misma función, escribe el SQL que consulta y guarda en la base.</p>
+<p>Dibujemos quién usa a quién. Cada flecha significa «depende de»: la pantalla depende de las reglas, y las reglas dependen de la base →</p>
+</div>
+
+<div class="flow-beat" data-step="1">
+<span class="flow-beat-eyebrow">Paso 02 · Capas</span>
+<h3>Agrupar por motivo de cambio</h3>
+<p>Una <strong>capa</strong> es un grupo de código que cambia por la misma razón. La <strong>presentación</strong> cambia cuando cambia la pantalla. La <strong>infraestructura</strong> (base de datos, correo, servicios externos) cambia cuando cambia la tecnología. En el medio, el <strong>dominio</strong>: las entidades del modelo (Club, Espacio, Reserva) y las reglas del negocio, que cambian solo cuando cambia el negocio mismo.</p>
+</div>
+
+<div class="flow-beat" data-step="2">
+<span class="flow-beat-eyebrow">Paso 03 · La dependencia que duele</span>
+<h3>Las reglas dependen de la base</h3>
+<p>Hay una flecha roja: el código del dominio importa la librería de la base. Tiene tres consecuencias concretas. Si Bienestar pide pasar de SQLite a PostgreSQL, hay que abrir y volver a probar las reglas. Para probar «no se pueden solapar dos reservas» hay que levantar una base real. Y lo que cambia seguido (la tecnología) arrastra a lo que cambia poco y más importa (las reglas).</p>
+</div>
+
+<div class="flow-beat" data-step="3">
+<span class="flow-beat-eyebrow">Paso 04 · Un puerto</span>
+<h3>El dominio declara lo que necesita</h3>
+<p>En vez de preguntar «¿cómo guardo esto en SQLite?», las reglas dicen qué necesitan, en su propio idioma: <strong>RepositorioDeReservas</strong>, con dos operaciones, <code>hay_conflicto(...)</code> y <code>guardar(...)</code>. Esa descripción es un <strong>puerto</strong>. No tiene una sola palabra de SQL y vive del lado del dominio, dentro del núcleo que ahora se marca con línea punteada.</p>
+</div>
+
+<div class="flow-beat" data-step="4">
+<span class="flow-beat-eyebrow">Paso 05 · Invertir</span>
+<h3>La base cumple el puerto, y la flecha se da vuelta</h3>
+<p>Ahora es la base la que se adapta: <strong>RepoSqlite</strong> implementa el puerto, y es su código el que importa al dominio. La flecha roja desapareció y apareció una nueva que apunta hacia el núcleo. Eso es <strong>invertir la dependencia</strong>: el principio DIP dice que las reglas de alto nivel no deben depender de los detalles de bajo nivel, y que ambos deben depender de una abstracción, acá el puerto.</p>
+<p>Ojo con una confusión frecuente: en la ejecución, las reglas siguen llamando a la base (piden <code>guardar</code>). Lo que se invirtió es la dependencia del código, quién importa a quién, no el flujo de datos.</p>
+</div>
+
+<div class="flow-beat" data-step="5">
+<span class="flow-beat-eyebrow">Paso 06 · Lo que se gana</span>
+<h3>Un segundo implementador: sin base de datos</h3>
+<p>Como el dominio solo conoce el puerto, se puede escribir otro adaptador que guarde las reservas en una lista en memoria. Con él, las reglas se prueban en milisegundos, sin levantar ninguna base. Y pasar a PostgreSQL ya no es reescribir nada: es sumar un tercer adaptador y elegir cuál se usa al arrancar la aplicación.</p>
+</div>
+
+<div class="flow-beat" data-step="6">
+<span class="flow-beat-eyebrow">Paso 07 · Cuándo no hace falta</span>
+<h3>No es una receta para todo</h3>
+<p>Si EventoUAB fuera un prototipo de una sola pantalla para una feria de fin de semana, tres capas y un puerto serían pura ceremonia. Conviene separar cuando aparece alguna señal: reglas que no son triviales, pruebas que cuestan mucho, o un cambio de tecnología a la vista. La regla para recordar, cuando sí aplica: <strong>los imports apuntan hacia el dominio</strong>.</p>
+</div>
+
+</div>
+
+<div class="flow-panel-wrap">
+<div class="flow-panel" id="capPanel">
+<div class="flow-panel-head"><span>Diagrama en vivo</span><span class="flow-panel-step" id="capPanelStep">Paso 1 / 7</span></div>
+
+<div class="ctx-diagram-wrap">
+<svg viewBox="0 0 340 326" aria-hidden="true">
+
+<rect class="ctx-frontera" id="capNucleo" x="82" y="84" width="170" height="130" rx="12" fill="none"/>
+
+<text class="cap-tag" id="capTag1" x="260" y="38" font-size="6.5">PRESENTACIÓN</text>
+<text class="cap-tag" id="capTag2" x="260" y="122" font-size="6.5">DOMINIO</text>
+<text class="cap-tag" id="capTag3" x="170" y="320" text-anchor="middle" font-size="6.5">INFRAESTRUCTURA</text>
+
+<g class="ctx-box" id="capBoxUi">
+<rect x="100" y="14" width="140" height="40" rx="6"/>
+<text x="170" y="31" text-anchor="middle" font-size="9" font-weight="700">PANTALLA</text>
+<text x="170" y="44" text-anchor="middle" font-size="7">formulario de reserva</text>
+</g>
+
+<g class="ctx-box" id="capBoxReglas">
+<rect x="100" y="94" width="140" height="48" rx="6"/>
+<text x="170" y="114" text-anchor="middle" font-size="9" font-weight="700">REGLAS</text>
+<text x="170" y="128" text-anchor="middle" font-size="7">Club · Espacio · Reserva</text>
+</g>
+
+<g class="ctx-box" id="capBoxPuerto">
+<rect x="90" y="172" width="160" height="34" rx="6"/>
+<text x="170" y="187" text-anchor="middle" font-size="9" font-weight="700">PUERTO</text>
+<text x="170" y="199" text-anchor="middle" font-size="7">RepositorioDeReservas</text>
+</g>
+
+<g class="ctx-box" id="capBoxBd">
+<rect x="20" y="262" width="140" height="40" rx="6"/>
+<text x="90" y="279" text-anchor="middle" font-size="9" font-weight="700">BASE DE DATOS</text>
+<text x="90" y="292" text-anchor="middle" font-size="7">SQLite</text>
+</g>
+
+<g class="ctx-box" id="capBoxMem">
+<rect x="180" y="262" width="140" height="40" rx="6"/>
+<text x="250" y="279" text-anchor="middle" font-size="9" font-weight="700">EN MEMORIA</text>
+<text x="250" y="292" text-anchor="middle" font-size="7">solo para pruebas</text>
+</g>
+
+<g class="ctx-flow" id="capFlowUi">
+<path d="M170,54 L170,94"/>
+<polygon points="170,94 164,83 176,83"/>
+</g>
+
+<g class="ctx-flow" id="capFlowOld">
+<path d="M100,118 L60,118 L60,262"/>
+<polygon points="60,262 54,251 66,251"/>
+</g>
+<text class="ctx-flow-label" id="capFlowOldLabel" x="54" y="190" text-anchor="end">SQL directo</text>
+
+<g class="ctx-flow" id="capFlowPuerto">
+<path d="M170,142 L170,172"/>
+<polygon points="170,172 164,161 176,161"/>
+</g>
+
+<g class="ctx-flow" id="capFlowBd">
+<path d="M110,262 L110,206"/>
+<polygon points="110,206 104,217 116,217"/>
+</g>
+<text class="ctx-flow-label" id="capFlowBdLabel" x="104" y="240" text-anchor="end">implementa</text>
+
+<g class="ctx-flow" id="capFlowMem">
+<path d="M230,262 L230,206"/>
+<polygon points="230,206 224,217 236,217"/>
+</g>
+<text class="ctx-flow-label" id="capFlowMemLabel" x="236" y="240" text-anchor="start">implementa</text>
+
+</svg>
+</div>
+
+<div class="ctx-caption" id="capCaption">PASO 1: la pantalla usa las reglas, y las reglas usan la base. Cada flecha dice «depende de».</div>
+
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="flow-flat" id="codigo">
+<h2>Del diagrama al código</h2>
+<p class="lead">Así se ve la misma función antes y después. Los ejemplos están en Python, pero la idea es idéntica en Java, C# o JavaScript: lo que cambia es el lugar desde donde se importa cada cosa.</p>
+
+<div class="code">
+<div class="code-header"><span>Python — antes: reglas y SQL mezclados</span></div>
+<pre><code class="src"># reservas.py — todo junto
+import sqlite3                     # las reglas ya dependen de SQLite
+
+def reservar_espacio(club_id, espacio_id, inicio, fin):
+    con = sqlite3.connect("eventouab.db")
+    ocupado = con.execute(
+        "SELECT 1 FROM reserva WHERE espacio_id = ? AND inicio &lt; ? AND fin &gt; ?",
+        (espacio_id, fin, inicio)).fetchone()
+    if ocupado:                    # la regla, mezclada con la consulta
+        raise ValueError("Espacio ocupado en ese horario")
+    con.execute("INSERT INTO reserva VALUES (?, ?, ?, ?)",
+                (club_id, espacio_id, inicio, fin))</code></pre>
+</div>
+
+<div class="code">
+<div class="code-header"><span>Python — después: el dominio declara el puerto</span></div>
+<pre><code class="src"># dominio/reserva.py  (no importa nada de afuera)
+class Reserva:
+    def __init__(self, club_id, espacio_id, inicio, fin):
+        if fin &lt;= inicio:
+            raise ValueError("El fin debe ser posterior al inicio")
+        self.club_id = club_id
+        self.espacio_id = espacio_id
+        self.inicio = inicio
+        self.fin = fin
+
+# dominio/puertos.py  (lo que el dominio NECESITA, sin decir cómo)
+class RepositorioDeReservas:
+    def hay_conflicto(self, espacio_id, inicio, fin): ...
+    def guardar(self, reserva): ...
+
+# dominio/reservar_espacio.py  (el caso de uso recibe el puerto)
+class ReservarEspacio:
+    def __init__(self, repo):
+        self.repo = repo
+
+    def ejecutar(self, club_id, espacio_id, inicio, fin):
+        reserva = Reserva(club_id, espacio_id, inicio, fin)
+        if self.repo.hay_conflicto(espacio_id, inicio, fin):
+            raise ValueError("Espacio ocupado en ese horario")
+        self.repo.guardar(reserva)
+        return reserva</code></pre>
+</div>
+
+<div class="code">
+<div class="code-header"><span>Python — los adaptadores cumplen el puerto</span></div>
+<pre><code class="src"># infraestructura/repo_sqlite.py  (importa el puerto: la flecha apunta al dominio)
+class RepoSqlite(RepositorioDeReservas):
+    def __init__(self, conexion):
+        self.con = conexion
+
+    def hay_conflicto(self, espacio_id, inicio, fin):
+        fila = self.con.execute(
+            "SELECT 1 FROM reserva WHERE espacio_id = ? AND inicio &lt; ? AND fin &gt; ?",
+            (espacio_id, fin, inicio)).fetchone()
+        return fila is not None
+
+    def guardar(self, r):
+        self.con.execute("INSERT INTO reserva VALUES (?, ?, ?, ?)",
+                         (r.club_id, r.espacio_id, r.inicio, r.fin))
+
+# pruebas/repo_en_memoria.py  (otro adaptador: una lista, sin base de datos)
+class RepoEnMemoria(RepositorioDeReservas):
+    def __init__(self):
+        self.reservas = []
+
+    def hay_conflicto(self, espacio_id, inicio, fin):
+        return any(r.espacio_id == espacio_id and r.inicio &lt; fin and r.fin &gt; inicio
+                   for r in self.reservas)
+
+    def guardar(self, reserva):
+        self.reservas.append(reserva)
+
+# La misma regla funciona con cualquiera de los dos:
+caso = ReservarEspacio(RepoEnMemoria())     # en las pruebas
+caso = ReservarEspacio(RepoSqlite(conexion)) # en producción</code></pre>
+</div>
+
+<div class="highlight">
+<strong>Quién importa a quién</strong>
+<p>En el archivo «antes», las reglas importan <code>sqlite3</code>. En el «después», <code>dominio/</code> no importa nada de afuera; <code>infraestructura/</code> importa al dominio. Si en algún momento ves un <code>import</code> del dominio hacia la base, el framework o la pantalla, la dependencia volvió a apuntar al lado equivocado.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="dep-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Cada import respeta que las dependencias apunten hacia el dominio?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>dominio/reserva.py</code> hace <code>import sqlite3</code> para validar si el espacio existe.</span>
+<div class="quiz-classify-btns">
+<button>Respeta la regla</button>
+<button data-correct>Viola la regla</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>infraestructura/repo_sqlite.py</code> importa <code>RepositorioDeReservas</code> desde el dominio.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Respeta la regla</button>
+<button>Viola la regla</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>presentacion/rutas.py</code> importa y llama a <code>ReservarEspacio</code>, que está en el dominio.</span>
+<div class="quiz-classify-btns">
+<button>Viola la regla</button>
+<button data-correct>Respeta la regla</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>dominio/reservar_espacio.py</code> importa <code>flask</code> para leer los datos del formulario.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Viola la regla</button>
+<button>Respeta la regla</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>dominio/puertos.py</code> importa la entidad <code>Reserva</code> desde <code>dominio/reserva.py</code>.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Respeta la regla</button>
+<button>Viola la regla</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>dominio/club.py</code> importa <code>repo_sqlite</code> para guardar el club directamente.</span>
+<div class="quiz-classify-btns">
+<button>Respeta la regla</button>
+<button data-correct>Viola la regla</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="vocabulario">
+<h2>El vocabulario de la guía</h2>
+<p class="lead">Distintos libros usan nombres distintos para lo mismo (capas, hexagonal, limpia, onion). No importan los nombres, importa la dirección de las flechas. Estos son los términos que usamos acá.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Qué es</th><th scope="col">En EventoUAB</th></tr></thead>
+<tbody>
+<tr><td>Capa de presentación</td><td>Lo que el usuario ve y toca.</td><td>El formulario de reserva y las rutas que lo reciben.</td></tr>
+<tr><td>Dominio</td><td>Entidades y reglas del negocio, sin detalles técnicos.</td><td>Club, Espacio, Reserva y «no se solapan».</td></tr>
+<tr><td>Infraestructura</td><td>Los detalles técnicos que pueden cambiar.</td><td>La base de datos y el envío de correos.</td></tr>
+<tr><td>Puerto</td><td>Lo que el dominio necesita de afuera, descrito sin tecnología.</td><td>RepositorioDeReservas.</td></tr>
+<tr><td>Adaptador</td><td>Código de afuera que cumple un puerto con una tecnología concreta.</td><td>RepoSqlite, RepoEnMemoria.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Conexión con el modelo de dominio</strong>
+<p>Esto conecta con el modelo de dominio de la guía anterior: las entidades que dibujaste (Club, Espacio, Reserva) son exactamente lo que vive en el centro de este diagrama. Todo lo demás existe para protegerlas de los cambios de tecnología.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="capas-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada término con su descripción.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="p0">Dominio</button>
+<button class="quiz-match-item" data-pair="p1">Infraestructura</button>
+<button class="quiz-match-item" data-pair="p2">Puerto</button>
+<button class="quiz-match-item" data-pair="p3">Adaptador</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="p3">Código de afuera que cumple un puerto con una tecnología.</button>
+<button class="quiz-match-item" data-pair="p2">Descripción de lo que el núcleo necesita de afuera, sin tecnología.</button>
+<button class="quiz-match-item" data-pair="p1">Detalles técnicos que cambian seguido, como la base o el correo.</button>
+<button class="quiz-match-item" data-pair="p0">Entidades y reglas del negocio, que no conocen detalles técnicos.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="ejercicios">
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué significa «invertir una dependencia» en el ejemplo de EventoUAB?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Que la base de datos se ejecuta antes que las reglas del negocio y no después.</button>
+<button class="quiz-opt">Que las reglas llaman a la base con una función auxiliar que oculta el SQL.</button>
+<button class="quiz-opt" data-correct>Que el código de la base importa la interfaz del dominio, y no el dominio a la base.</button>
+<button class="quiz-opt">Que la pantalla deja de llamar a las reglas y habla directo con la base de datos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la dependencia de código se da vuelta. Ahora la base (afuera) depende del puerto que define el dominio (adentro), y no al revés." data-ko="Invertir no cambia el orden en que se ejecuta nada ni oculta el SQL detrás de una función: cambia quién importa a quién. El código de la base pasa a importar el puerto del dominio." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Después de invertir la dependencia, las reglas del dominio ya no llaman a la base de datos cuando hay que guardar una reserva.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: en la ejecución las reglas siguen pidiendo guardar. Lo que cambió es que lo piden a través del puerto, sin importar ninguna base concreta." data-ko="Es falso: en la ejecución las reglas siguen pidiendo guardar() y alguien lo hace por ellas. Lo que se invirtió es la dependencia del código, no el flujo de las llamadas." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Bienestar pide pasar EventoUAB de SQLite a PostgreSQL. Con el puerto ya definido, ¿qué hay que escribir?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Un adaptador que cumpla RepositorioDeReservas con consultas de PostgreSQL, sin tocar las reglas.</button>
+<button class="quiz-opt">Una copia de ReservarEspacio con las consultas cambiadas, para guardar la versión anterior.</button>
+<button class="quiz-opt">Una nueva versión de la entidad Reserva que incluya el nombre de la nueva base de datos.</button>
+<button class="quiz-opt">Un nuevo conjunto de pruebas, porque las reglas del dominio dejan de valer al cambiar de base.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: se suma un adaptador nuevo que cumple el mismo puerto. Las reglas no se tocan ni se vuelven a escribir." data-ko="Las reglas no dependen de la base, así que no hay que copiarlas ni modificarlas. Basta con escribir un adaptador nuevo que cumpla el puerto con PostgreSQL." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿En cuál de estos casos separar en capas con puertos probablemente sea más ceremonia que ayuda?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un sistema con reglas de solapamiento complejas que el equipo necesita probar seguido.</button>
+<button class="quiz-opt">Una aplicación que hoy usa SQLite pero que Bienestar ya anunció que migrará a PostgreSQL.</button>
+<button class="quiz-opt">Un módulo de reservas que tres equipos distintos modificarán durante todo el semestre.</button>
+<button class="quiz-opt" data-correct>Un prototipo de una sola pantalla para una feria de fin de semana, que luego se descartará.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un prototipo descartable no justifica el costo de las capas. Las otras tres tienen una señal clara: reglas no triviales, cambio de tecnología a la vista o varios equipos tocando el mismo código." data-ko="Las capas valen la pena cuando hay una señal: reglas complejas, cambio de tecnología o varios equipos tocando lo mismo. Un prototipo descartable de una pantalla es el caso donde sobran." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="repaso-5">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Repasemos el diagrama de EventoUAB.</p>
+<p>1. Las entidades y las reglas del negocio viven en la capa de
+<select class="quiz-blank" data-correct="dominio">
+<option value="">— elige —</option>
+<option value="presentacion">presentación</option>
+<option value="dominio">dominio</option>
+<option value="infra">infraestructura</option>
+</select>.</p>
+<p>2. Lo que el dominio necesita de afuera se declara como un
+<select class="quiz-blank" data-correct="puerto">
+<option value="">— elige —</option>
+<option value="adaptador">adaptador</option>
+<option value="puerto">puerto</option>
+<option value="framework">framework</option>
+</select>.</p>
+<p>3. RepoSqlite, que cumple ese puerto con SQLite, es un
+<select class="quiz-blank" data-correct="adaptador">
+<option value="">— elige —</option>
+<option value="puerto">puerto</option>
+<option value="entidad">entidad</option>
+<option value="adaptador">adaptador</option>
+</select>.</p>
+<p>4. Con la dependencia invertida, los imports apuntan siempre hacia el
+<select class="quiz-blank" data-correct="dominio">
+<option value="">— elige —</option>
+<option value="dominio">dominio</option>
+<option value="base">la base de datos</option>
+<option value="pantalla">la pantalla</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto">
+<h2>🎯 Reto: las capas de tu propio proyecto</h2>
+<p class="lead">Con el producto que está construyendo tu equipo, escribe en dos o tres líneas por punto: 1) las tres capas con un archivo o módulo real de cada una, 2) una regla del negocio de tu dominio y en qué archivo vive hoy, 3) una tecnología que podría cambiar (base, framework, servicio externo) y qué tendrías que tocar si cambiara, 4) un puerto que le pondrías al dominio, con las dos o tres operaciones que necesita, 5) una razón honesta por la que, en tu caso, todavía no valdría la pena separarlo.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Capas, dependencias y puertos de un proyecto real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>Cada capa tiene al menos un archivo o módulo concreto, no solo una etiqueta.</li>
+<li>La regla de negocio elegida es del negocio (por ejemplo, «un espacio no se reserva dos veces») y no una pieza técnica.</li>
+<li>El cambio de tecnología se analiza con las flechas: dices qué archivos importarían ese detalle hoy y cuántos habría que tocar.</li>
+<li>El puerto está descrito en el idioma del dominio (guardar, buscar, hay conflicto), sin mencionar SQL ni librerías.</li>
+<li>La razón para no separar todavía es una señal real (tamaño, tiempo de vida, equipo) y no «me da pereza».</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet">
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Capa</td><td>Grupo de código que cambia por la misma razón.</td></tr>
+<tr><td>Dominio</td><td>Entidades y reglas del negocio; el centro que se protege.</td></tr>
+<tr><td>Dependencia</td><td>«Importa a»: si A importa a B, un cambio en B puede romper a A.</td></tr>
+<tr><td>Puerto</td><td>Lo que el dominio necesita de afuera, descrito sin tecnología.</td></tr>
+<tr><td>Adaptador</td><td>Código de afuera que cumple un puerto con una tecnología concreta.</td></tr>
+<tr><td>Invertir la dependencia (DIP)</td><td>Las reglas de alto nivel no dependen de detalles; ambos dependen de una abstracción.</td></tr>
+<tr><td>Regla práctica</td><td>Los imports apuntan hacia el dominio.</td></tr>
+<tr><td>Beneficio</td><td>Cambiar de tecnología sin tocar las reglas, y probarlas sin base de datos.</td></tr>
+<tr><td>Cuándo no</td><td>Prototipos descartables y sistemas sin reglas relevantes: más ceremonia que ayuda.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat">
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🔤 La «D» de SOLID</h3><p>El principio de inversión de dependencias es la quinta y última letra del acrónimo SOLID, un conjunto de cinco principios de diseño orientado a objetos que Robert C. Martin popularizó desde los años 90.</p></div>
+<div class="info"><h3>⬡ ¿Por qué «hexagonal»?</h3><p>Alistair Cockburn bautizó «arquitectura hexagonal» (o de puertos y adaptadores) a esta misma idea en 2005. El hexágono no tiene nada de especial: solo dejaba espacio para dibujar varios puertos por todos lados.</p></div>
+<div class="info"><h3>⬇️ La arquitectura clásica de tres capas</h3><p>La versión tradicional dibujaba presentación, lógica y datos apilados, con flechas siempre hacia abajo, justo el «problema» del primer paso. Invertir la dependencia de la capa de datos es lo que la volvió más flexible.</p></div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía: Arquitectura por capas y por qué invertir una dependencia</h2>
+<p>Material de apoyo para la asignatura de Ingeniería de Software.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "isw-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+/* ===== Nivel 1: flujo con panel fijo — arquitectura por capas y
+   dependencia invertida, construida en pasos. Prosa a la izquierda
+   (.flow-beat) + panel fijo a la derecha (#capPanel) que revela las
+   capas, la flecha que duele, el puerto, la flecha invertida y el
+   adaptador de pruebas, según qué paso cruza el centro del viewport.
+   No es una actividad calificada: no llama a marcarResuelto. ===== */
+(function(){
+  var capSteps = document.querySelectorAll('#capas-dip .flow-beat');
+  if (!capSteps.length) return;
+
+  var CAPTIONS = [
+    'PASO 1: la pantalla usa las reglas, y las reglas usan la base. Cada flecha dice «depende de».',
+    'CAPAS: se agrupa por motivo de cambio — presentación, dominio e infraestructura.',
+    'PROBLEMA: la flecha roja es el dominio importando la base. Cambiar de tecnología toca las reglas.',
+    'PUERTO: el dominio declara lo que necesita, sin una palabra de SQL. El núcleo queda protegido.',
+    'INVERSIÓN: la base implementa el puerto. La flecha roja se dio vuelta y ahora apunta al núcleo.',
+    'PRUEBAS: un segundo adaptador, en memoria, permite probar las reglas sin base de datos.',
+    'REGLA PRÁCTICA: los imports apuntan hacia el dominio — y solo se separa cuando hay una razón.'
+  ];
+
+  var capCurrentStep = -1;
+  function $(id){ return document.getElementById(id); }
+  function on(id, cond){ $(id).classList.toggle('show', cond); }
+  function warn(id, cond){ $(id).classList.toggle('cap-warn', cond); }
+
+  function capRender(step){
+    if (step === capCurrentStep) return;
+    capCurrentStep = step;
+
+    on('capBoxUi', true);
+    on('capBoxReglas', true);
+    on('capBoxBd', true);
+    on('capFlowUi', true);
+
+    var viejaVisible = step <= 3;
+    on('capFlowOld', viejaVisible);
+    on('capFlowOldLabel', viejaVisible);
+    var alerta = step >= 2 && step <= 3;
+    warn('capFlowOld', alerta);
+    warn('capBoxReglas', alerta);
+
+    on('capTag1', step >= 1);
+    on('capTag2', step >= 1);
+    on('capTag3', step >= 1);
+    $('capTag2').textContent = step >= 3 ? 'NÚCLEO' : 'DOMINIO';
+
+    on('capNucleo', step >= 3);
+    on('capBoxPuerto', step >= 3);
+    on('capFlowPuerto', step >= 3);
+
+    on('capFlowBd', step >= 4);
+    on('capFlowBdLabel', step >= 4);
+
+    on('capBoxMem', step >= 5);
+    on('capFlowMem', step >= 5);
+    on('capFlowMemLabel', step >= 5);
+
+    $('capCaption').textContent = CAPTIONS[step] || '';
+    $('capPanelStep').textContent = 'Paso ' + (step + 1) + ' / 7';
+    capSteps.forEach(function(el){
+      el.classList.toggle('is-active', Number(el.dataset.step) === step);
+    });
+  }
+
+  var capObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) capRender(Number(e.target.dataset.step));
+    });
+  }, { rootMargin: '-35% 0px -55% 0px', threshold: 0 });
+  capSteps.forEach(function(s){ capObserver.observe(s); });
+  capRender(0);
+})();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedida directo, como siempre, no dispara nada nuevo. No toca el
+     motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen (ver DEPLOY-GUIAS-SNIPPET.md en
+     el repo de atenza para el detalle de cada endpoint). -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+      referencia: id,
+      correcta: estado === 'ok',
+    }).catch(function () {});
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
