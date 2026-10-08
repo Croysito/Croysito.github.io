@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git en Equipo + IA Asistida con Responsabilidad | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // proceso-iterativo-scrum.html. Corre acá, antes que el resto de la
+  // página, para que el motor de quizzes de abajo ya encuentre el
+  // localStorage limpio si cambió el guia_intento.
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  var QUIZ_PREFIX = 'isw-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">ISW · <span>Git + IA</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="ramas">Una rama por historia</button>
+<button data-target="commits">Commits chicos</button>
+<button data-target="pr">Pull Request y revisión</button>
+<button data-target="conflictos">Conflictos de merge</button>
+<button data-target="ia-reglas">Código de una IA</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🌿 Ingeniería de Software · Trabajo en equipo</span>
+<h1 class="flow-h1">Git en equipo y <span>código de una IA</span></h1>
+<p class="flow-lead">Programar solo y programar en equipo son oficios distintos. En equipo, el código de todos tiene que convivir sin pisarse, y cada cambio tiene que poder revisarse antes de entrar. Esta guía recorre las decisiones de Git que un equipo toma todos los días — ramas, commits, Pull Requests, conflictos — y termina con la pregunta de estos tiempos: <strong>qué hacés cuando el código no lo escribió una persona, sino una IA</strong>.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Volvés al equipo de <strong>EventoUAB</strong>, ahora en pleno Sprint 1, con <strong>Valentina</strong> y <strong>Mateo</strong> programando las reservas de espacios. En cada decisión podés probar primero un camino equivocado, ver su consecuencia sin ninguna penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>Dos personas, un mismo archivo</h2>
+<p class="lead">Es martes del Sprint 1. Valentina está programando la historia "reservar un espacio" y Mateo la historia "cancelar una reserva". Las dos viven en el mismo archivo, <code>reservas.js</code>. Hasta ahora ambos hacían commits directo a <code>main</code>, y el viernes pasado la app dejó de arrancar porque un cambio a medias de uno pisó al otro.</p>
+<div class="highlight">
+<strong>El problema no es que programen mal</strong>
+<p>Es que los dos cambian el mismo código al mismo tiempo, y ninguno puede probar lo suyo sin cargar con lo a medias del otro. Hace falta una regla de equipo sobre dónde vive el trabajo en curso.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="ramas decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo organizan el trabajo en paralelo sobre el mismo archivo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Se turnan: antes de tocar el código se avisan por el chat del grupo y el otro espera a que el primero termine para empezar a editar.</button>
+<button class="quiz-opt" data-key="b" data-correct>Cada quien crea su propia rama desde main actualizado, trabaja ahí su historia, y recién la une a main cuando está revisada y probada.</button>
+<button class="quiz-opt" data-key="c">Cada quien trabaja en una copia aparte del proyecto en su computadora y, al terminar el sprint, juntan los archivos a mano en una sola carpeta.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Turnarse funciona hasta que alguien se olvida de avisar, y además convierte a dos personas en una sola: mientras una programa, la otra espera sin hacer nada. El equipo pierde justo lo que Git resuelve. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Juntar archivos a mano al final es la peor versión del problema: sin historial, sin forma de saber qué cambió cada quien, y con todos los choques descubiertos el último día. Git existe para evitar justo eso. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. Una rama es una línea de trabajo propia: lo a medias de uno no molesta al otro, y main queda siempre funcionando. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="ramas" hidden>
+<h2>Una rama por historia</h2>
+<p class="lead">Una <strong>rama</strong> es una línea paralela de commits que parte de un punto de <code>main</code>. El trabajo en curso vive ahí; <code>main</code> solo recibe cambios ya terminados. La regla práctica del equipo: <strong>una rama por historia de usuario</strong>, con un nombre que diga qué se está haciendo.</p>
+
+<div class="code">
+<div class="code-header"><span>Terminal — el ciclo de una rama</span></div>
+<pre><code class="src">git switch main                          # 1. parto de main...
+git pull                                 #    ...actualizado
+git switch -c feature/cancelar-reserva   # 2. creo mi rama y me paso a ella
+
+# ...programo, pruebo...
+
+git add src/reservas.js test/reservas.test.js
+git commit -m "Permite cancelar una reserva propia"   # 3. guardo un paso
+git push -u origin feature/cancelar-reserva           # 4. subo mi rama</code></pre>
+</div>
+
+<table class="tabla">
+<thead><tr><th scope="col">Comando</th><th scope="col">Qué hace</th></tr></thead>
+<tbody>
+<tr><td><code>git switch -c nombre</code></td><td>Crea una rama nueva y te pasa a ella.</td></tr>
+<tr><td><code>git add archivo</code></td><td>Marca qué cambios van a entrar en el próximo commit.</td></tr>
+<tr><td><code>git commit -m "..."</code></td><td>Guarda un paso en la historia de tu rama, con un mensaje.</td></tr>
+<tr><td><code>git push</code></td><td>Sube tus commits al repositorio compartido.</td></tr>
+<tr><td><code>git pull</code></td><td>Trae al tuyo los cambios nuevos del repositorio compartido.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Proteger main</strong>
+<p>En GitHub o GitLab se puede configurar <code>main</code> para que nadie pueda hacer push directo: todo entra por Pull Request. Es la forma de que la regla "main siempre funciona" no dependa de la memoria de nadie.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="git-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada comando de Git con lo que hace.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="switch"><code>git switch -c</code></button>
+<button class="quiz-match-item" data-pair="add"><code>git add</code></button>
+<button class="quiz-match-item" data-pair="commit"><code>git commit</code></button>
+<button class="quiz-match-item" data-pair="push"><code>git push</code></button>
+<button class="quiz-match-item" data-pair="pull"><code>git pull</code></button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="commit">Guardar un paso en la historia de tu rama, con un mensaje.</button>
+<button class="quiz-match-item" data-pair="pull">Traer a tu copia los cambios nuevos del repositorio compartido.</button>
+<button class="quiz-match-item" data-pair="switch">Crear una rama nueva y pasarte a ella.</button>
+<button class="quiz-match-item" data-pair="push">Subir tus commits al repositorio compartido.</button>
+<button class="quiz-match-item" data-pair="add">Marcar qué cambios entran en el próximo commit.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>El commit de 23 archivos</h2>
+<p class="lead">Valentina lleva tres días en su rama sin hacer un solo commit. Hoy tiene la reserva funcionando, pero también reformateó medio proyecto, renombró dos funciones y arregló un error de ortografía en el login. Mateo le pregunta cómo va a guardar todo eso.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="commits decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo guarda Valentina su trabajo en Git?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Seguir un día más sin commitear y hacer un único commit al final con el mensaje "cambios del sprint", así la historia queda más limpia.</button>
+<button class="quiz-opt" data-key="b">Hacer un commit por cada archivo modificado, todos con el mensaje "update", para que haya muchos commits y se note que el equipo trabajó.</button>
+<button class="quiz-opt" data-key="c" data-correct>Hacer commits chicos, cada uno con un solo cambio lógico y un mensaje que diga qué cambia y por qué, aunque sean varios en una misma hora.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Un commit gigante es una caja negra: si mañana la reserva falla, nadie puede saber cuál de los 23 archivos la rompió, y deshacer solo esa parte es imposible. "Más limpia" para quien mira la lista, más ciega para quien debe encontrar un bug. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Dividir por archivo no es dividir por intención: el cambio de reserva y el de ortografía del login pueden tocar el mismo archivo, y una función renombrada toca muchos. Y "update" no le dice nada a nadie. La cantidad de commits no mide el trabajo. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Exacto. Un commit, un cambio lógico: si el renombre rompe algo, se deshace solo ese commit y la reserva queda intacta. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="commits" hidden>
+<h2>Commits chicos, mensajes que sirven</h2>
+<p class="lead">El historial de commits es la bitácora del proyecto. Dentro de un mes, cuando algo falle, alguien va a leer esa lista para entender qué pasó. Un buen commit hace dos cosas: <strong>contiene un solo cambio lógico</strong> y <strong>tiene un mensaje que explica qué cambia</strong> (y, si no es obvio, por qué).</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Regla</th><th scope="col">Ejemplo en EventoUAB</th></tr></thead>
+<tbody>
+<tr><td>Un cambio lógico por commit</td><td>El renombre de funciones va aparte de la reserva nueva.</td></tr>
+<tr><td>Mensaje en infinitivo o imperativo, corto</td><td>"Rechaza reservas con fin anterior al inicio"</td></tr>
+<tr><td>Dice el qué, no el "arreglé cosas"</td><td>"Corrige choque falso entre reservas contiguas"</td></tr>
+<tr><td>El proyecto funciona después de cada commit</td><td>No se commitea una función a medias que rompe el arranque.</td></tr>
+</tbody>
+</table>
+
+<div class="code">
+<div class="code-header"><span>Terminal — separar un trabajo mezclado en commits chicos</span></div>
+<pre><code class="src">git add src/reservas.js                      # solo la reserva nueva
+git commit -m "Agrega reserva de un espacio por franja horaria"
+
+git add src/espacios.js src/reservas.js      # solo el renombre
+git commit -m "Renombra buscar() a buscarEspacioLibre()"
+
+git add src/login.js
+git commit -m "Corrige ortografía del mensaje de error del login"</code></pre>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="commits-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Este mensaje de commit es útil o pobre?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">arreglos</span>
+<div class="quiz-classify-btns">
+<button>Útil</button>
+<button data-correct>Pobre</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Rechaza reservas con fin anterior al inicio</span>
+<div class="quiz-classify-btns">
+<button data-correct>Útil</button>
+<button>Pobre</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">cambios varios del finde</span>
+<div class="quiz-classify-btns">
+<button>Útil</button>
+<button data-correct>Pobre</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Agrega botón de cancelar en la lista de reservas</span>
+<div class="quiz-classify-btns">
+<button>Pobre</button>
+<button data-correct>Útil</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">asdf</span>
+<div class="quiz-classify-btns">
+<button data-correct>Pobre</button>
+<button>Útil</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Corrige choque falso entre reservas contiguas</span>
+<div class="quiz-classify-btns">
+<button data-correct>Útil</button>
+<button>Pobre</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>"Ya lo probé en mi máquina"</h2>
+<p class="lead">Mateo terminó la historia "cancelar una reserva". En su computadora funciona. Quedan dos días de sprint y el equipo tiene prisa. Tiene que decidir cómo hace llegar su trabajo a <code>main</code>.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="pr decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo integra Mateo su historia?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Abre un Pull Request chico con una descripción que explique qué cambia, cómo probarlo y qué criterios de aceptación cubre, y pide la revisión de otra persona.</button>
+<button class="quiz-opt" data-key="b">Hace merge directo a main, porque ya lo probó en su computadora y esperar una revisión retrasaría la entrega del sprint al resto del equipo.</button>
+<button class="quiz-opt" data-key="c">Espera a terminar todas las historias del sprint y abre un solo Pull Request gigante para que el equipo lo revise de una vez antes de la demo.</button>
+</div>
+<p class="quiz-fb ko" data-key="b" hidden>"Funciona en mi máquina" es el comienzo de muchos bugs, no el final: faltan los datos de otro, la versión de otra librería, el caso que Mateo no pensó. Sin revisión, el equipo se entera del error en la demo. Y lo que "ahorró" en espera lo paga multiplicado en arreglos. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Un PR con todo el sprint adentro no se puede revisar de verdad: nadie lee 40 archivos con atención y la gente termina aprobando por cansancio. Además, cualquier error aparece justo cuando ya no queda tiempo de corregirlo. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="a" hidden>Exacto. Un PR chico es fácil de leer, y la descripción le dice al revisor qué mirar. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="pr" hidden>
+<h2>Pull Request: pedir que otro mire antes de entrar</h2>
+<p class="lead">Un <strong>Pull Request</strong> (PR) es la solicitud de unir tu rama a <code>main</code>. No es un trámite: es el momento donde otra persona del equipo lee tu cambio, lo prueba y comenta. Funciona si el PR es chico y si la descripción le ahorra trabajo al revisor.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Quién</th><th scope="col">Qué le toca</th></tr></thead>
+<tbody>
+<tr><td>Autor</td><td>Abrir un PR chico, describir qué cambia y cómo probarlo, y responder los comentarios sin tomarlos como ataque.</td></tr>
+<tr><td>Revisor</td><td>Leer el código, correr el cambio y contrastarlo con los criterios de aceptación de la historia. Una persona distinta del autor.</td></tr>
+</tbody>
+</table>
+
+<div class="code">
+<div class="code-header"><span>Descripción de un buen PR</span></div>
+<pre><code class="src">## Qué cambia
+Permite cancelar una reserva propia hasta 2 horas antes del inicio.
+
+## Cómo probarlo
+1. Reservar el salón 2 para mañana a las 10:00.
+2. Entrar a "Mis reservas" y tocar "Cancelar".
+3. Confirmar que el horario vuelve a aparecer libre.
+
+## Criterios de aceptación (historia #14)
+- [x] Solo el club que reservó puede cancelar.
+- [x] No se puede cancelar con menos de 2 horas de anticipación.
+- [ ] Se notifica a Bienestar Estudiantil (queda para otra historia).</code></pre>
+</div>
+
+<div class="highlight">
+<strong>Un PR pequeño se revisa; uno enorme se aprueba</strong>
+<p>Como regla de equipo: si un PR toca más de unos 10 archivos o mezcla más de una historia, se parte. Revisar bien no depende de la voluntad del revisor, depende del tamaño de lo que le dan.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>Las marcas raras en el archivo</h2>
+<p class="lead">Valentina fusionó su rama con la última versión de <code>main</code> y Git frena con un aviso: <em>CONFLICT in reservas.js</em>. Mateo, que ya integró su historia, cambió la misma función que ella tocó. Dentro del archivo aparecen líneas con <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> y <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>.</p>
+
+<div class="code">
+<div class="code-header"><span>reservas.js — con el conflicto sin resolver</span></div>
+<pre><code class="src">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD                      // lo que hay hoy en main (cambio de Mateo)
+  if (reserva.club !== usuario.club) {
+    throw new Error("Solo el club dueño puede modificar la reserva");
+  }
+=======                              // lo que trae mi rama (cambio de Valentina)
+  if (!reserva.activa) {
+    throw new Error("La reserva ya no está vigente");
+  }
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/reservar-espacio</code></pre>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="conflictos decision5">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Valentina con ese conflicto?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Se queda con su versión de todo el archivo, borra las marcas del conflicto y sigue, porque su cambio es el que tiene que entrar en el sprint.</button>
+<button class="quiz-opt" data-key="b" data-correct>Lee los dos lados del conflicto, habla con Mateo, combina a mano lo que corresponda y corre las pruebas antes de hacer el commit de resolución.</button>
+<button class="quiz-opt" data-key="c">Borra su rama, clona el repositorio de nuevo desde cero y vuelve a escribir su historia sobre la versión nueva de main para evitar el conflicto.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Quedarse con "lo mío" borra en silencio el control de club que escribió Mateo: la app volvería a permitir que cualquier club modifique la reserva de otro. Un conflicto no es una pelea entre dos versiones; casi siempre las dos son necesarias. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Rehacer todo desde cero tira a la basura horas de trabajo, y no evita el problema: cuando intente integrar la versión rehecha, el mismo choque reaparece, porque Mateo y ella siguen cambiando la misma función. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. Las dos condiciones son válidas: la solución es conservar ambas, y las pruebas confirman que no se rompió nada. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="conflictos" hidden>
+<h2>Resolver un conflicto sin perder trabajo ajeno</h2>
+<p class="lead">Git marca un <strong>conflicto</strong> cuando dos ramas cambiaron las mismas líneas y no puede decidir solo cuál gana. Es normal, no una falla. Lo que importa es el criterio con el que se resuelve.</p>
+
+<div class="code">
+<div class="code-header"><span>reservas.js — conflicto resuelto conservando ambos controles</span></div>
+<pre><code class="src">  if (reserva.club !== usuario.club) {
+    throw new Error("Solo el club dueño puede modificar la reserva");
+  }
+  if (!reserva.activa) {
+    throw new Error("La reserva ya no está vigente");
+  }</code></pre>
+</div>
+
+<table class="tabla">
+<thead><tr><th scope="col">Paso</th><th scope="col">Qué se hace</th></tr></thead>
+<tbody>
+<tr><td>1. Leer</td><td>Entender qué quiso hacer cada lado, no solo cuál se ve más largo.</td></tr>
+<tr><td>2. Hablar</td><td>Preguntarle a quien hizo el otro cambio si no queda claro. Cinco minutos de charla evitan un bug.</td></tr>
+<tr><td>3. Combinar</td><td>Editar el archivo a mano y borrar todas las marcas <code>&lt;&lt;&lt;</code>, <code>===</code> y <code>&gt;&gt;&gt;</code>.</td></tr>
+<tr><td>4. Probar</td><td>Correr las pruebas: un archivo sin marcas puede igual estar mal combinado.</td></tr>
+<tr><td>5. Commitear</td><td>Recién ahí <code>git add</code> y el commit de resolución.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>La mejor resolución es no llegar al conflicto</strong>
+<p>Ramas cortas (uno o dos días), <code>git pull</code> a menudo desde main y PRs chicos hacen que los conflictos sean raros y pequeños. Los conflictos enormes casi siempre vienen de ramas que vivieron semanas sin sincronizarse.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision5" hidden>
+<h2>"Se lo pedí a la IA y funcionó"</h2>
+<p class="lead">Mateo necesita una función que diga si dos reservas chocan en el mismo espacio. Le pide a una IA: <em>"escribime en JavaScript una función que diga si dos reservas se pisan"</em>. Le devuelve esto, lo pega en el proyecto y lo prueba con dos reservas que se solapan: <code>true</code>. Perfecto.</p>
+
+<div class="code">
+<div class="code-header"><span>JavaScript — la función que devolvió la IA</span></div>
+<pre><code class="src">// reservas.js
+export function hayChoque(a, b) {
+  return a.inicio &lt;= b.fin &amp;&amp; b.inicio &lt;= a.fin;
+}</code></pre>
+</div>
+
+<div class="highlight">
+<strong>Lo que el equipo escribió en el criterio de aceptación</strong>
+<p>"Un club puede reservar un espacio que empieza justo cuando otra reserva termina (por ejemplo, 10:00–12:00 y luego 12:00–14:00)."</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-5" data-unlock="ia-reglas repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Mateo con el código de la IA antes de abrir el PR?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Pega la función en el proyecto: corre sin errores y devuelve el resultado correcto con el ejemplo que probó, así que ya está lista para el PR.</button>
+<button class="quiz-opt" data-key="b">Le pide a la misma IA que revise su propia función y, si responde que está bien, abre el PR confiando en esa segunda opinión sin más pruebas.</button>
+<button class="quiz-opt" data-key="c" data-correct>La trata como el PR de un desconocido: escribe primero las pruebas desde los criterios de aceptación, incluido el borde, y recién ahí la integra.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Su ejemplo solapado pasa, pero el criterio de aceptación habla de reservas contiguas, y ese caso no lo probó. Con <code>&lt;=</code>, la reserva 10:00–12:00 y la de 12:00–14:00 devuelven <code>true</code>: el sistema rechazaría reservas legítimas pegadas una a otra. "Corre sin errores" no es lo mismo que "hace lo que se pidió". Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Una IA que se revisa a sí misma comparte los mismos puntos ciegos con que escribió el código: suele responder "se ve correcto" con total seguridad. La revisión que vale es la que viene de afuera del texto del modelo — un caso concreto que se ejecuta de verdad. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Exacto. La prueba del borde (12:00 contra 12:00) falla enseguida y muestra el bug que la demo feliz escondía. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="ia-reglas" hidden>
+<h2>Código de una IA: tu nombre va en el commit</h2>
+<p class="lead">Cuando Mateo corre las pruebas escritas desde los criterios, la función de la IA falla justo en el caso que el equipo había anotado. Se corrige cambiando <code>&lt;=</code> por <code>&lt;</code>. Nadie "culpa" a la IA: en el historial de Git, el que hizo el commit es Mateo, y es él quien responde por lo que entra a <code>main</code>.</p>
+
+<div class="code">
+<div class="code-header"><span>Node.js — la prueba que encuentra el bug</span></div>
+<pre><code class="src">import test from "node:test";
+import assert from "node:assert/strict";
+import { hayChoque } from "./reservas.js";
+
+const a = { inicio: 10, fin: 12 };
+
+test("reservas solapadas chocan", () => {
+  assert.equal(hayChoque(a, { inicio: 11, fin: 13 }), true);
+});
+
+test("reservas contiguas NO chocan", () => {
+  // con la versión de la IA (&lt;=) esta prueba falla: devuelve true
+  assert.equal(hayChoque(a, { inicio: 12, fin: 14 }), false);
+});</code></pre>
+</div>
+
+<div class="code">
+<div class="code-header"><span>JavaScript — la versión corregida</span></div>
+<pre><code class="src">export function hayChoque(a, b) {
+  return a.inicio &lt; b.fin &amp;&amp; b.inicio &lt; a.fin;   // &lt; en vez de &lt;=
+}</code></pre>
+</div>
+
+<table class="tabla">
+<thead><tr><th scope="col">Práctica</th><th scope="col">Cómo se ve en el equipo</th></tr></thead>
+<tbody>
+<tr><td>Dar contexto real</td><td>Pasarle a la IA la historia, los criterios de aceptación y el lenguaje del proyecto, no una frase suelta.</td></tr>
+<tr><td>Leer antes de pegar</td><td>Poder explicar cada línea. Si no la entendés, no entra al PR.</td></tr>
+<tr><td>Probar con los criterios</td><td>Las pruebas salen de lo que el usuario pidió, incluidos los bordes, no de lo que la IA devolvió.</td></tr>
+<tr><td>Cuidar los secretos</td><td>Nunca pegarle claves, tokens ni datos personales reales: lo que se pega a un chat sale de tu control.</td></tr>
+<tr><td>Declararlo en el PR</td><td>Anotar qué partes vinieron de una IA, para que el revisor mire con más atención justo esas.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Un secreto en Git no se borra</strong>
+<p>Si un token o una contraseña llega a un commit, borrar el archivo después no alcanza: queda en el historial. La única salida es revocar esa clave y generar otra. Por eso el <code>.env</code> va en <code>.gitignore</code> desde el primer commit, y por eso tampoco se pega en una conversación con una IA.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="ia-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Se lo podés pegar a una IA, o no?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El mensaje de error que muestra la terminal cuando falla una prueba.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Puedo pegarlo</button>
+<button>No pegarlo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El contenido de tu archivo .env con la clave de la base de datos.</span>
+<div class="quiz-classify-btns">
+<button>Puedo pegarlo</button>
+<button data-correct>No pegarlo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una función de 15 líneas del proyecto, sin datos personales ni claves.</span>
+<div class="quiz-classify-btns">
+<button>No pegarlo</button>
+<button data-correct>Puedo pegarlo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una exportación real de la tabla de estudiantes, con nombres y carnets.</span>
+<div class="quiz-classify-btns">
+<button>Puedo pegarlo</button>
+<button data-correct>No pegarlo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El token personal de GitHub, "para que la IA suba el código por mí".</span>
+<div class="quiz-classify-btns">
+<button data-correct>No pegarlo</button>
+<button>Puedo pegarlo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La historia de usuario y sus criterios de aceptación.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Puedo pegarlo</button>
+<button>No pegarlo</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué conviene una rama por historia en lugar de trabajar todos directo sobre main?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque Git no deja que dos personas hagan commit al mismo repositorio si no están en ramas distintas desde el principio.</button>
+<button class="quiz-opt">Porque cada rama necesita su propia copia del servidor de producción para poder probar los cambios sin interferir con los demás.</button>
+<button class="quiz-opt">Porque las ramas hacen que el código se ejecute más rápido que cuando todo está en una sola línea de historia de commits.</button>
+<button class="quiz-opt" data-correct>Porque main se mantiene siempre funcionando y cada cambio entra recién cuando fue revisado y probado, sin pisar el trabajo de otros.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la rama aísla el trabajo en curso. Lo a medias de cada quien no rompe a los demás, y main solo recibe lo que ya pasó revisión." data-ko="La razón no es técnica de Git ni de velocidad: es organizativa. La rama aísla el trabajo en curso para que main siga funcionando y solo reciba cambios ya revisados y probados." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Si el código lo generó una IA y las pruebas pasan, la responsabilidad por un bug en producción es de la IA y no del equipo que lo integró.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: quien hace el commit y aprueba el PR responde por el código. Y que las pruebas pasen solo garantiza lo que las pruebas cubren." data-ko="Es falso: la IA no firma commits ni aprueba PRs. Quien lo integró responde por él, y que las pruebas pasen solo garantiza lo que esas pruebas realmente cubren." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Llega un PR de 40 archivos con la descripción "varios arreglos". ¿Qué le ayudaría más al revisor?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Partirlo en PRs chicos, cada uno con un solo propósito y una descripción de cómo probarlo.</button>
+<button class="quiz-opt">Aprobarlo confiando en el autor, porque revisar 40 archivos con atención llevaría demasiado tiempo en un sprint.</button>
+<button class="quiz-opt">Sumarle más archivos del sprint para que la revisión sea una sola y se vea el panorama completo del producto.</button>
+<button class="quiz-opt">Ponerle un título más largo al PR, sin tocar su contenido, para que se entienda mejor qué se hizo en total.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un PR se revisa bien cuando es chico y viene con instrucciones de prueba. Uno enorme termina aprobándose por cansancio, no por haberlo entendido." data-ko="Lo que ayuda es el tamaño y la claridad: PRs chicos, de un solo propósito y con cómo probarlos. Uno enorme se aprueba por cansancio, y confiar en el autor no es revisar." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: las reglas Git de tu propio equipo</h2>
+<p class="lead">Ahora con el repositorio real de tu proyecto. Escribí, en no más de un párrafo por punto: 1) cómo nombran las ramas y cuándo se puede (o no) hacer push a main, 2) cómo es un buen commit y un buen PR en tu equipo, quién revisa y qué mira, 3) tu regla para usar código de una IA: qué datos nunca se le pasan y cómo se prueba lo que devuelve.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Convenciones de Git y regla de IA de tu proyecto real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>El nombre de las ramas sigue un patrón concreto (por ejemplo <code>feature/…</code>) y dice que main no recibe push directo.</li>
+<li>Se define cuántos archivos o historias puede tener un PR como máximo antes de partirlo.</li>
+<li>El revisor es siempre una persona distinta del autor, y se dice qué mira (criterios de aceptación, pruebas).</li>
+<li>La regla de IA nombra datos que nunca se pegan (claves, <code>.env</code>, datos personales reales).</li>
+<li>La regla de IA exige una prueba escrita desde los criterios de aceptación, no solo "probar que corre".</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Rama</td><td>Línea paralela de commits para el trabajo en curso. Una por historia, de vida corta.</td></tr>
+<tr><td>main protegida</td><td>Siempre funciona. Solo recibe cambios por Pull Request, no por push directo.</td></tr>
+<tr><td>Commit</td><td>Un paso guardado en la historia. Un cambio lógico, con mensaje que dice qué cambia.</td></tr>
+<tr><td>Pull Request</td><td>Pedido de unir una rama a main. Chico, descrito, con cómo probarlo y qué criterios cubre.</td></tr>
+<tr><td>Revisión</td><td>La hace una persona distinta del autor: lee, corre el cambio y lo contrasta con los criterios.</td></tr>
+<tr><td>Conflicto de merge</td><td>Dos ramas cambiaron las mismas líneas. Se leen ambos lados, se habla, se combina y se prueba.</td></tr>
+<tr><td>Código de una IA</td><td>Se trata como un PR de un desconocido: se lee, y se prueba contra los criterios, incluidos los bordes.</td></tr>
+<tr><td>Secretos</td><td>Nunca en un commit ni en un chat con una IA. Si se filtran, se revocan.</td></tr>
+<tr><td>Responsabilidad</td><td>Quien hace el commit y aprueba el PR responde por el código, lo haya escrito quien lo haya escrito.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🐧 Git nació en pocas semanas</h3><p>Linus Torvalds empezó a escribir Git en abril de 2005, cuando el kernel de Linux se quedó sin su herramienta de control de versiones. En unos días ya se usaba para gestionar el propio desarrollo de Git. Hoy es el estándar de casi toda la industria.</p></div>
+<div class="info"><h3>🔎 git blame no es para culpar</h3><p>El comando <code>git blame</code> muestra, línea por línea, qué commit y qué persona la cambió por última vez. Con commits chicos y mensajes claros sirve para entender el porqué de una línea, no para señalar a alguien.</p></div>
+<div class="info"><h3>🧭 Lo que viene en la próxima guía</h3><p>Ya sabés cómo entra el código al proyecto. El próximo paso es decidir cuándo una historia está de verdad terminada: probar contra los criterios de aceptación y acordar una Definition of Done.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Git en Equipo + IA Asistida con Responsabilidad</h2>
+<p>Guía de aula invertida · Ingeniería de Software.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "isw-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL); accedida directo, como siempre, no dispara nada nuevo. No
+     toca el motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return;
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
