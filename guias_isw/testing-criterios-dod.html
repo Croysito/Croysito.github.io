@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testing contra Criterios de Aceptación y Definition of Done | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // problema-proyecto-grado.html. Corre acá, antes que el resto de la
+  // página, para que el motor de quizzes de abajo ya encuentre el
+  // localStorage limpio si cambió el guia_intento.
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  var QUIZ_PREFIX = 'isw-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">ISW <span>Testing · DoD</span></div>
+<p>Cómo saber que una historia está terminada de verdad</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#criterio-a-prueba">Del criterio a la prueba</a>
+<a href="#familias">Normal, inválido y borde</a>
+<a href="#codigo">Las pruebas en código</a>
+<a href="#borde">Por qué importa el borde</a>
+<a href="#dod">Definition of Done</a>
+<a href="#razonamiento">Ejercicios de razonamiento</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">📋 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Testing contra <span>Criterios de Aceptación</span> y Definition of Done</h1>
+<p>Valentina terminó la historia "reservar un espacio" de EventoUAB, la probó una vez y funcionó. ¿Está terminada? Esta guía parte de los criterios de aceptación que ya escribiste, los convierte en casos de prueba normales, inválidos y de borde, y fija la lista de chequeo del equipo —la Definition of Done— que decide cuándo una historia se puede cerrar.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Es viernes del Sprint 1 en EventoUAB. Valentina abre el calendario, reserva el auditorio de 14:00 a 16:00 y la reserva aparece en "mis reservas". Dice: <em>"Listo, lo probé y anda."</em> Mateo, que está por revisar su Pull Request, le hace una sola pregunta: <em>"¿Probaste qué pasa con exactamente 4 horas?"</em> Valentina no lo probó.</p>
+<p>Esa pregunta es el tema de la guía. <strong>Probar que algo funciona una vez no es lo mismo que comprobar que cumple lo que prometía la historia.</strong> Lo primero lo hace cualquiera con un clic; lo segundo requiere partir de los criterios de aceptación y recorrerlos con intención.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás convertir cada criterio de aceptación en casos de prueba <strong>normales, inválidos y de borde</strong>, escribirlos como pruebas automáticas en Node.js, entender por qué los casos de borde atrapan errores que los demás dejan pasar, y distinguir los <strong>criterios de aceptación</strong> de una historia de la <strong>Definition of Done</strong> de todo el equipo.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Encontrarás <strong>actividades cortas y autocorregibles</strong> —selección múltiple, clasificación, emparejamiento y completar espacios— repartidas a lo largo de la guía, y una sección de <strong>ejercicios de razonamiento</strong> donde se te da un escenario y debés decidir antes de comprobar.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🎯 Del criterio al caso</h3><p>Cada "Dado / Cuando / Entonces" ya es, casi literal, una prueba.</p></div>
+<div class="info"><h3>🧪 Tres familias</h3><p>Normal, inválido y de borde: qué cubre cada una y cuál suele olvidarse.</p></div>
+<div class="info"><h3>✅ Definition of Done</h3><p>La lista que el equipo acuerda una vez y aplica a todas las historias.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="criterio-a-prueba">
+<div class="card">
+<h2 class="section-title">Del criterio a la prueba</h2>
+<p class="lead">En la guía de historias de usuario escribiste criterios con el formato <strong>Dado / Cuando / Entonces</strong>. Ese formato no es casualidad: tiene la misma forma que una prueba automática, que siempre hace tres cosas en orden.</p>
+<table class="tabla">
+<thead><tr><th scope="col">En el criterio</th><th scope="col">En la prueba</th><th scope="col">Ejemplo en EventoUAB</th></tr></thead>
+<tbody>
+<tr><td><strong>Dado</strong> que...</td><td>Preparar: dejar el sistema en el estado inicial.</td><td>El auditorio está libre de 14:00 a 16:00.</td></tr>
+<tr><td><strong>Cuando</strong>...</td><td>Ejecutar: llamar a la función con la acción.</td><td>El club pide reservar de 14:00 a 16:00.</td></tr>
+<tr><td><strong>Entonces</strong>...</td><td>Comprobar: afirmar el resultado esperado.</td><td>La reserva queda registrada y el espacio ocupado.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Un criterio no alcanza con un solo caso</strong>
+<p>Los criterios dicen <em>qué</em> debe cumplirse. Para comprobarlo hace falta pensar <em>con qué datos</em>: un criterio como "una reserva dura como máximo 4 horas" se prueba con más de un valor, y los valores que importan son los que están justo en el límite.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="aaa-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada parte del criterio con lo que hace en una prueba.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="dado">Dado</button>
+<button class="quiz-match-item" data-pair="cuando">Cuando</button>
+<button class="quiz-match-item" data-pair="entonces">Entonces</button>
+<button class="quiz-match-item" data-pair="borde">Caso de borde</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="cuando">Ejecutar: llamar a la función con la acción que describe el criterio.</button>
+<button class="quiz-match-item" data-pair="borde">Probar justo en el valor exacto donde la regla cambia de aceptar a rechazar.</button>
+<button class="quiz-match-item" data-pair="dado">Preparar: dejar el sistema en el estado inicial que plantea el criterio.</button>
+<button class="quiz-match-item" data-pair="entonces">Comprobar: afirmar que el resultado coincide con lo que promete el criterio.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="familias">
+<div class="card">
+<h2 class="section-title">Normal, inválido y de borde</h2>
+<p class="lead">Para cada criterio conviene pensar tres familias de casos. Un equipo apurado suele escribir solo la primera; la mayoría de los errores que llegan a producción viven en las otras dos.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Familia</th><th scope="col">Qué prueba</th><th scope="col">En "reservar un espacio"</th></tr></thead>
+<tbody>
+<tr><td><strong>Normal</strong></td><td>El camino feliz: datos correctos, todo sale bien.</td><td>Reservar el auditorio de 14:00 a 16:00 estando libre.</td></tr>
+<tr><td><strong>Inválido</strong></td><td>Datos o situaciones que el sistema debe rechazar con un error claro.</td><td>Reservar un horario ya ocupado; fin anterior al inicio.</td></tr>
+<tr><td><strong>Borde</strong></td><td>Valores justo en el límite de una regla, donde cambia la respuesta.</td><td>Exactamente 4 horas; empezar justo cuando termina otra reserva.</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Cómo encontrar los bordes</strong>
+<p>Buscá en cada criterio un número, un límite o una comparación ("máximo", "al menos", "antes de", "no se solapan"). Probá el valor exacto, uno apenas por debajo y uno apenas por encima. Si el criterio no tiene ningún límite, probablemente tampoco tenga casos de borde — y está bien.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="familias-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">La regla es "una reserva no puede durar más de 4 horas ni solaparse con otra". ¿A qué familia pertenece cada caso de prueba?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Reservar el auditorio de 14:00 a 16:00 cuando está libre.</span>
+<div class="quiz-classify-btns">
+<button>Borde</button>
+<button data-correct>Normal</button>
+<button>Inválido</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Reservar de 10:00 a 14:00, exactamente el máximo permitido de 4 horas.</span>
+<div class="quiz-classify-btns">
+<button>Normal</button>
+<button>Inválido</button>
+<button data-correct>Borde</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Reservar con una hora de fin anterior a la hora de inicio.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Inválido</button>
+<button>Normal</button>
+<button>Borde</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Pedir de 16:00 a 18:00 un espacio que otro club tiene de 15:00 a 17:00.</span>
+<div class="quiz-classify-btns">
+<button>Borde</button>
+<button>Normal</button>
+<button data-correct>Inválido</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Pedir de 16:00 a 18:00 un espacio que otro club libera justo a las 16:00.</span>
+<div class="quiz-classify-btns">
+<button>Inválido</button>
+<button data-correct>Borde</button>
+<button>Normal</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cancelar una reserva propia que existe y todavía no empezó.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Normal</button>
+<button>Borde</button>
+<button>Inválido</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="codigo">
+<div class="card">
+<h2 class="section-title">Las pruebas en código</h2>
+<p class="lead">Probar a mano cada caso en cada cambio no escala. Una prueba automática guarda el caso como código y lo vuelve a correr en segundos. Esta es la función que escribió Valentina, con las tres reglas de la historia: fin posterior al inicio, máximo 4 horas y sin solapamiento.</p>
+
+<div class="code">
+<div class="code-header"><span>Node.js — reservas.js</span></div>
+<pre><code class="src">const DURACION_MAX_HORAS = 4;
+
+export function reservar(reservas, espacioId, inicio, fin) {
+  if (fin &lt;= inicio) {
+    throw new Error("La hora de fin debe ser posterior al inicio");
+  }
+  const horas = (fin - inicio) / 3600000;
+  if (horas &gt; DURACION_MAX_HORAS) {
+    throw new Error("Máximo 4 horas por reserva");
+  }
+  const choca = reservas.some(
+    (r) =&gt; r.espacioId === espacioId &amp;&amp; r.inicio &lt; fin &amp;&amp; r.fin &gt; inicio
+  );
+  if (choca) {
+    throw new Error("Espacio ocupado en ese horario");
+  }
+  const nueva = { espacioId, inicio, fin };
+  reservas.push(nueva);
+  return nueva;
+}</code></pre>
+</div>
+
+<p>Y estas son las pruebas, una por cada caso que pensamos arriba. Cada una sigue el mismo orden: preparar, ejecutar, comprobar. Usan el corredor de pruebas que ya trae Node (<code>node:test</code>), sin instalar nada.</p>
+
+<div class="code">
+<div class="code-header"><span>Node.js — reservas.test.js</span></div>
+<pre><code class="src">import { test } from "node:test";
+import assert from "node:assert/strict";
+import { reservar } from "./reservas.js";
+
+const h = (hora, min = 0) =&gt; new Date(2026, 9, 20, hora, min);
+
+test("normal: espacio libre, la reserva queda registrada", () =&gt; {
+  const reservas = [];                                    // Dado
+  reservar(reservas, "auditorio", h(14), h(16));          // Cuando
+  assert.equal(reservas.length, 1);                       // Entonces
+});
+
+test("inválido: horario ya ocupado, se rechaza y no se duplica", () =&gt; {
+  const reservas = [{ espacioId: "auditorio", inicio: h(14), fin: h(16) }];
+  assert.throws(() =&gt; reservar(reservas, "auditorio", h(15), h(17)), /ocupado/);
+  assert.equal(reservas.length, 1);
+});
+
+test("inválido: fin anterior al inicio", () =&gt; {
+  assert.throws(() =&gt; reservar([], "auditorio", h(16), h(14)), /posterior/);
+});
+
+test("borde: exactamente 4 horas se acepta", () =&gt; {
+  const reservas = [];
+  reservar(reservas, "auditorio", h(10), h(14));
+  assert.equal(reservas.length, 1);
+});
+
+test("borde: 4 horas y 1 minuto se rechaza", () =&gt; {
+  assert.throws(() =&gt; reservar([], "auditorio", h(10), h(14, 1)), /Máximo/);
+});
+
+test("borde: empieza justo cuando termina otra, no es choque", () =&gt; {
+  const reservas = [{ espacioId: "auditorio", inicio: h(14), fin: h(16) }];
+  reservar(reservas, "auditorio", h(16), h(18));
+  assert.equal(reservas.length, 2);
+});
+
+test("borde: inicio y fin iguales se rechaza", () =&gt; {
+  assert.throws(() =&gt; reservar([], "auditorio", h(14), h(14)), /posterior/);
+});</code></pre>
+</div>
+
+<div class="code">
+<div class="code-header"><span>Terminal — node --test</span></div>
+<pre><code class="src">✔ normal: espacio libre, la reserva queda registrada
+✔ inválido: horario ya ocupado, se rechaza y no se duplica
+✔ inválido: fin anterior al inicio
+✔ borde: exactamente 4 horas se acepta
+✔ borde: 4 horas y 1 minuto se rechaza
+✔ borde: empieza justo cuando termina otra, no es choque
+✔ borde: inicio y fin iguales se rechaza
+ℹ tests 7   ℹ pass 7   ℹ fail 0</code></pre>
+</div>
+
+<div class="highlight">
+<strong>Cada prueba nace de un criterio</strong>
+<p>Fijate que ninguna prueba menciona clases ni detalles internos: todas hablan del comportamiento que prometía la historia. Si mañana el equipo reescribe <code>reservar</code> por dentro, las mismas pruebas siguen sirviendo — y avisan si el comportamiento cambió.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="casos-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Valentina probó "reservar" una sola vez, con un espacio libre, y salió bien. Mirando los criterios de la historia, ¿qué le falta cubrir?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Nada: si el caso normal funciona, los demás se deducen y no hace falta comprobarlos por separado.</button>
+<button class="quiz-opt" data-correct>El horario ya ocupado y la duración máxima, porque también son criterios y cada uno tiene su propio caso.</button>
+<button class="quiz-opt">Repetir el mismo caso normal muchas veces más, hasta descartar que falle de forma intermitente.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: cada criterio de la historia pide su propia comprobación. El caso normal solo cubre el primero; el horario ocupado y el máximo de horas quedan sin probar." data-ko="Que el caso normal funcione no dice nada sobre las otras reglas: son criterios distintos y se rompen por separado. Repetir el mismo caso tampoco agrega información. Faltan el horario ocupado y la duración máxima." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="borde-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Criterio: "una reserva dura como máximo 4 horas". Armá el caso de borde para ese límite.</p>
+<p>Dado un espacio
+<select class="quiz-blank" data-correct="libre">
+<option value="">— elige —</option>
+<option value="ocupado">ya reservado en ese horario</option>
+<option value="libre">libre en ese horario</option>
+<option value="inexistente">que no existe en el sistema</option>
+</select>, cuando el club pide una reserva de
+<select class="quiz-blank" data-correct="cuatro">
+<option value="">— elige —</option>
+<option value="una">1 hora</option>
+<option value="diez">10 horas</option>
+<option value="cuatro">exactamente 4 horas</option>
+</select>, entonces el sistema
+<select class="quiz-blank" data-correct="acepta">
+<option value="">— elige —</option>
+<option value="acepta">la acepta y la registra</option>
+<option value="rechaza">la rechaza con un mensaje</option>
+<option value="revision">la acepta y la marca para revisión</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="borde">
+<div class="card">
+<h2 class="section-title">Por qué importa el borde</h2>
+<p class="lead">Una prueba que pasa te dice algo concreto: ese caso funciona. No te dice que todo funciona. Para ver por qué los casos de borde pesan tanto, hagamos un experimento: introducir a propósito un error chico y ver qué prueba lo detecta.</p>
+
+<div class="highlight">
+<strong>El experimento</strong>
+<p>Un cambio de una sola línea en <code>reservar</code>, del tipo que se cuela en un apuro o lo sugiere una IA sin que nadie lo note: <code>horas &gt; DURACION_MAX_HORAS</code> pasa a <code>horas &gt;= DURACION_MAX_HORAS</code>. Parece inocente, pero ahora una reserva de exactamente 4 horas se rechaza.</p>
+</div>
+
+<table class="tabla">
+<thead><tr><th scope="col">Prueba</th><th scope="col">Con el error</th></tr></thead>
+<tbody>
+<tr><td>normal: espacio libre, la reserva queda registrada</td><td>✔ pasa</td></tr>
+<tr><td>inválido: horario ya ocupado</td><td>✔ pasa</td></tr>
+<tr><td>inválido: fin anterior al inicio</td><td>✔ pasa</td></tr>
+<tr><td><strong>borde: exactamente 4 horas se acepta</strong></td><td><strong>✖ falla</strong></td></tr>
+<tr><td>borde: 4 horas y 1 minuto se rechaza</td><td>✔ pasa</td></tr>
+<tr><td>borde: empieza justo cuando termina otra</td><td>✔ pasa</td></tr>
+<tr><td>borde: inicio y fin iguales</td><td>✔ pasa</td></tr>
+</tbody>
+</table>
+
+<p>Resultado real de correr las siete pruebas contra el código modificado: seis siguen en verde y <strong>solo el borde exacto de 4 horas detecta el error</strong>. Con un cambio parecido en la regla de solapamiento (<code>r.fin &gt; inicio</code> por <code>r.fin &gt;= inicio</code>), el único que falla es el caso "empieza justo cuando termina otra".</p>
+
+<div class="highlight">
+<strong>La lección práctica</strong>
+<p>Un equipo que solo escribió el caso normal y los inválidos habría visto todo en verde y habría entregado un error. Los errores de comparación (<code>&lt;</code> contra <code>&lt;=</code>) solo se manifiestan <em>en el límite exacto</em>, no en valores intermedios. Por eso cada límite del criterio merece su caso.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="borde-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Alguien cambia <code>&gt;</code> por <code>&gt;=</code> en la regla de duración máxima y los casos normal e inválidos siguen en verde. ¿Qué conclusión es correcta?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">No hay problema real: la mayoría de las pruebas sigue pasando y eso alcanza para confiar en el cambio.</button>
+<button class="quiz-opt">Las pruebas están mal escritas, porque un cambio en el código siempre debería romper todos los casos.</button>
+<button class="quiz-opt" data-correct>Para eso existen los casos de borde: solo ellos detectan un error justo en el límite exacto de la regla.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: los errores de comparación solo se ven en el valor exacto del límite. Sin un caso de borde, ese cambio habría pasado todas las pruebas sin que nadie lo notara." data-ko="Un cambio no rompe todos los casos, solo los que dependen de lo que cambió. Y que la mayoría pase no alcanza: el error vive en el límite exacto, y únicamente el caso de borde lo ejercita." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="dod">
+<div class="card">
+<h2 class="section-title">Definition of Done</h2>
+<p class="lead">Los criterios de aceptación dicen cuándo <em>esta historia</em> hace lo que prometía. Pero una historia puede cumplirlos todos y seguir sin estar lista para entregarse: sin revisar, sin integrar, sin pruebas. Para eso existe la <strong>Definition of Done</strong> (DoD): una lista de chequeo que el equipo acuerda una vez y aplica a <em>todas</em> sus historias.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col"></th><th scope="col">Criterios de aceptación</th><th scope="col">Definition of Done</th></tr></thead>
+<tbody>
+<tr><td><strong>Pertenece a</strong></td><td>Una historia concreta.</td><td>Todo el equipo, para todas las historias.</td></tr>
+<tr><td><strong>Responde</strong></td><td>¿Hace lo que el usuario necesitaba?</td><td>¿Está bien hecha y lista para entregarse?</td></tr>
+<tr><td><strong>La define</strong></td><td>El Product Owner con el equipo, por historia.</td><td>El equipo, de común acuerdo, una vez.</td></tr>
+<tr><td><strong>Ejemplo en EventoUAB</strong></td><td>"Una reserva de más de 4 horas se rechaza."</td><td>"El código pasó por Pull Request con al menos una revisión."</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Una DoD razonable para EventoUAB</strong>
+<p>Una historia está <strong>terminada</strong> cuando: (1) cumple todos sus criterios de aceptación; (2) tiene pruebas automáticas para sus casos normales, inválidos y de borde, y pasan; (3) el código fue revisado por al menos otra persona en un Pull Request; (4) está integrada a <code>main</code> sin romper nada; y (5) se probó en el ambiente de pruebas.</p>
+</div>
+
+<div class="highlight">
+<strong>La DoD no se negocia historia por historia</strong>
+<p>Si "revisado" se salta cuando hay apuro, deja de ser parte de la definición de terminado y se vuelve un deseo. Una historia que no cumple la DoD no está terminada: vuelve al tablero, no cuenta para la velocidad del sprint, y es mejor mostrarla así en la Review que mostrarla como completa.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="dod-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Cada condición es un criterio de aceptación de una historia, o un ítem de la Definition of Done del equipo?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Al cancelar una reserva, el espacio vuelve a aparecer libre en el calendario.</span>
+<div class="quiz-classify-btns">
+<button>Definition of Done</button>
+<button data-correct>Criterio de aceptación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Todo el código pasó por revisión en un Pull Request antes de integrarse.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Definition of Done</button>
+<button>Criterio de aceptación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Las pruebas automáticas pasan en la rama principal después de integrar.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Definition of Done</button>
+<button>Criterio de aceptación</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Si el club no existe en el sistema, se muestra un mensaje de error claro.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Criterio de aceptación</button>
+<button>Definition of Done</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La historia fue desplegada y probada en el ambiente de pruebas del equipo.</span>
+<div class="quiz-classify-btns">
+<button>Criterio de aceptación</button>
+<button data-correct>Definition of Done</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una reserva de más de 4 horas es rechazada con un mensaje que explica el máximo.</span>
+<div class="quiz-classify-btns">
+<button>Definition of Done</button>
+<button data-correct>Criterio de aceptación</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="dod-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Una historia cumple todos sus criterios de aceptación, pero nadie revisó el código ni lo integró a <code>main</code>. Según la DoD del equipo, ¿en qué estado está?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Todavía no está terminada: la DoD exige más cosas además de los criterios de la propia historia.</button>
+<button class="quiz-opt">Está terminada, porque los criterios de aceptación son lo único que define cuándo se cierra una historia.</button>
+<button class="quiz-opt">Está terminada, y la revisión puede hacerse después, durante el siguiente sprint, sin afectar nada.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: los criterios son una parte de lo que significa terminado, no todo. La DoD agrega lo que se exige de cualquier historia: revisión, integración, pruebas." data-ko="Cumplir los criterios solo prueba que la historia hace lo prometido. La DoD agrega revisión, integración y pruebas; si faltan, la historia no está terminada, y dejarlas para el siguiente sprint acumula riesgo sin que nadie lo vea." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Ejercicios de razonamiento</h2>
+<p class="lead">En estas preguntas no se te pide recordar una definición: se te da un escenario y debés razonar la respuesta antes de comprobarla.</p>
+
+<div class="highlight">
+<strong>Escenario</strong>
+<p>Mateo escribió el criterio de "cancelar una reserva": <em>"Dado que el club tiene una reserva futura, cuando la cancela, entonces el espacio queda libre."</em> Ahora arma sus casos de prueba.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Cuál de estos casos es un caso <strong>inválido</strong> (y no uno normal ni uno de borde)?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Cancelar una reserva propia con mucha anticipación y verificar que el espacio vuelve a quedar libre.</button>
+<button class="quiz-opt">Cancelar una reserva que empieza en este mismo minuto y verificar qué hace el sistema en ese límite.</button>
+<button class="quiz-opt" data-correct>Cancelar una reserva que no existe o ya fue cancelada y verificar que se responde con un error claro.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: cancelar algo que no existe es una situación que el sistema debe rechazar con un error claro, justo lo que caracteriza a un caso inválido." data-ko="El primero es el caso normal (camino feliz). El segundo es de borde: está justo en el límite entre 'futura' y 'ya empezó'. Un caso inválido es el que el sistema debe rechazar: cancelar una reserva inexistente o ya cancelada." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Otro escenario</strong>
+<p>El equipo tiene 30 pruebas para "reservar un espacio". Al mirarlas, todas son variantes del caso normal: distintos clubes, distintos espacios, distintos horarios, siempre libres y siempre de 1 o 2 horas.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué se puede decir del riesgo de que haya errores sin detectar?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Es bajo, porque tener 30 pruebas es una cantidad suficiente para confiar en que todo funciona.</button>
+<button class="quiz-opt" data-correct>Sigue alto: muchas pruebas del mismo tipo no cubren los errores de límite ni los datos inválidos.</button>
+<button class="quiz-opt">Es bajo, porque probar con distintos clubes y espacios equivale a probar todos los bordes.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la cantidad no reemplaza la variedad. Treinta variantes del camino feliz comprueban lo mismo treinta veces; los límites y los datos inválidos siguen sin probarse." data-ko="El número de pruebas no mide cuánto se cubre. Variar club o espacio no toca los límites de la regla (horas máximas, solapamiento) ni los datos inválidos: esos casos siguen sin ejercitarse y el riesgo sigue igual." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué los casos de borde suelen encontrar errores que los casos normales dejan pasar?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque usan datos más grandes, que hacen ejecutar más líneas de código en cada corrida de pruebas.</button>
+<button class="quiz-opt" data-correct>Porque los errores de comparación (<code>&lt;</code> contra <code>&lt;=</code>) solo se manifiestan justo en el límite, no en valores intermedios.</button>
+<button class="quiz-opt">Porque el caso normal nunca llega a ejecutar la regla de negocio y el de borde sí lo hace siempre.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un valor intermedio da el mismo resultado con &lt; que con &lt;=; solo el valor exacto del límite los distingue." data-ko="El caso normal sí ejecuta la regla, y el tamaño de los datos no es el motivo. La diferencia está en que un error de comparación solo cambia el resultado en el valor exacto del límite." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">La Definition of Done es distinta para cada historia y la escribe el Product Owner junto con los criterios de aceptación.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: lo que se escribe por historia son los criterios de aceptación. La DoD la acuerda el equipo una vez y aplica a todas las historias." data-ko="Es falso: eso describe a los criterios de aceptación. La DoD es una lista común que el equipo acuerda una vez y aplica a todas sus historias por igual." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué diferencia hay entre los criterios de aceptación y la Definition of Done?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Los criterios los revisa el equipo de desarrollo y la DoD la revisa solamente el Product Owner al final.</button>
+<button class="quiz-opt">No hay diferencia: son dos nombres para la misma lista de condiciones que se aplica en cada sprint.</button>
+<button class="quiz-opt" data-correct>Los criterios son propios de cada historia; la DoD es una lista común que aplica a todas las historias del equipo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: los criterios responden si la historia hace lo que el usuario necesitaba; la DoD, si está bien hecha y lista para entregarse." data-ko="Son dos cosas distintas con alcances distintos: los criterios pertenecen a una historia y la DoD a todo el equipo. Una historia necesita cumplir ambos para considerarse terminada." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Faltando poco para cerrar el sprint, una prueba automática falla en <code>main</code>. La historia cumple sus criterios y la DoD incluye "las pruebas pasan". ¿Qué corresponde?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>No darla por terminada hasta resolver el fallo, aunque el comportamiento visible ya funcione.</button>
+<button class="quiz-opt">Marcarla como terminada igual y anotar el fallo para resolverlo en el sprint siguiente.</button>
+<button class="quiz-opt">Desactivar esa prueba para que no bloquee y cerrar la historia con los demás criterios.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la DoD no se negocia por apuro. Con una prueba fallando, la historia no está terminada, aunque el usuario ya vea que funciona." data-ko="Cerrarla con el fallo anotado, o apagar la prueba, vacía a la DoD de sentido: deja de ser una definición de terminado y pasa a ser una sugerencia. Mientras la prueba falle, la historia no está terminada." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Criterio → prueba</td><td>Dado = preparar, Cuando = ejecutar, Entonces = comprobar. Cada criterio genera uno o más casos.</td></tr>
+<tr><td>Caso normal</td><td>El camino feliz: datos correctos y resultado esperado.</td></tr>
+<tr><td>Caso inválido</td><td>Datos o situaciones que el sistema debe rechazar con un error claro.</td></tr>
+<tr><td>Caso de borde</td><td>El valor exacto del límite de una regla (y apenas por encima o por debajo). Detecta errores de comparación.</td></tr>
+<tr><td>Criterios de aceptación</td><td>Condiciones de una historia concreta: ¿hace lo que el usuario necesitaba?</td></tr>
+<tr><td>Definition of Done</td><td>Lista común del equipo, aplicada a toda historia: ¿está bien hecha y lista para entregarse? No se negocia por apuro.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📏 El análisis de valores límite es de los años 70</h3><p>La técnica de probar justo en los límites de una regla se popularizó con el libro <em>The Art of Software Testing</em>, de Glenford Myers (1979), y sigue siendo una de las más enseñadas en testing.</p></div>
+<div class="info"><h3>📘 La DoD está en la Scrum Guide</h3><p>Scrum define a la Definition of Done como el compromiso del Incremento: si un elemento no la cumple, no puede presentarse en la Sprint Review ni considerarse parte del producto entregado.</p></div>
+<div class="info"><h3>🧭 Lo que viene en la próxima guía</h3><p>Con historias terminadas de verdad, llega el momento de mirar la evidencia: cómo adaptar el backlog a partir de lo que reveló el sprint, y cuándo ayuda (y cuándo estorba) un patrón como Repository con inyección de dependencias.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Reforzamiento: Testing contra Criterios de Aceptación y Definition of Done</h2>
+<p>Material de apoyo para la asignatura de Ingeniería de Software.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "isw-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL); accedida directo, como siempre, no dispara nada nuevo. No
+     toca el motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return;
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
