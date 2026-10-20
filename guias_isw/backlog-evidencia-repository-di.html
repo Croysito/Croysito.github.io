@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adaptar el Backlog con Evidencia + Repository/DI | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // proceso-iterativo-scrum.html. Corre acá, antes que el resto de la
+  // página, para que el motor de quizzes de abajo ya encuentre el
+  // localStorage limpio si cambió el guia_intento.
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  var QUIZ_PREFIX = 'isw-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">ISW · <span>Backlog + Repository</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="evidencia">Backlog vivo: evidencia vs. opinión</button>
+<button data-target="velocidad">Velocidad y pronóstico</button>
+<button data-target="repository">Repository</button>
+<button data-target="di">Inyección de dependencias</button>
+<button data-target="cuando">Cuándo ayuda y cuándo estorba</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🔁 Ingeniería de Software · Adaptar con evidencia</span>
+<h1 class="flow-h1">Decidir con lo que <span>mostró el sprint</span></h1>
+<p class="flow-lead">Un backlog no se escribe una vez y se obedece: se corrige con lo que el equipo aprende en cada sprint. Esta guía recorre dos tipos de decisión que aparecen justo después de una Review y una Retro. Primero, <strong>cómo reordenar el backlog y cuánto comprometer</strong> usando datos en vez de impresiones. Después, una decisión técnica que sale de esos mismos datos: <strong>cuándo vale la pena un Repository y la inyección de dependencias, y cuándo solo suman archivos</strong>.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Terminó el Sprint 1 de <strong>EventoUAB</strong>. Estás con <strong>Camila</strong> (Product Owner), <strong>Valentina</strong> y <strong>Mateo</strong> en la Retro. En cada decisión podés probar primero un camino equivocado, ver su consecuencia sin ninguna penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>Lo que mostró el piloto</h2>
+<p class="lead">En la Review del Sprint 1, tres clubes (Robótica, Teatro y Debate) usaron la app durante una semana. Camila volvió a la Retro con esto anotado, y con el backlog tal como estaba antes del piloto: 1) Notificar a Bienestar de cada reserva (8 puntos), 2) Calendario visual con colores (8 puntos), 3) Reservas semanales (5 puntos).</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Qué apareció en la Review y la Retro</th><th scope="col">De dónde salió</th></tr></thead>
+<tbody>
+<tr><td>Robótica y Debate crearon a mano la misma reserva del mismo salón, mismo horario, cuatro semanas seguidas.</td><td>Registro de reservas del piloto</td></tr>
+<tr><td>Ningún club abrió ni mencionó las notificaciones a Bienestar.</td><td>Observación durante la Review</td></tr>
+<tr><td>Un docente dijo: "yo les pondría un calendario más lindo, con colores".</td><td>Comentario suelto</td></tr>
+<tr><td>Las pruebas de Valentina y Mateo fallaron tres veces porque ambos usaban el mismo archivo <code>reservas.db</code>.</td><td>Retro del equipo</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="evidencia decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Camila con el backlog después de la Review?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Lo deja intacto: se acordó con Bienestar en el Planning, y cambiar el orden después de una sola Review le restaría seriedad al plan.</button>
+<button class="quiz-opt" data-key="b">Agrega al tope todo lo que se dijo en la Review, incluido el calendario con colores, y le pide al equipo que lo estime hoy mismo.</button>
+<button class="quiz-opt" data-key="c" data-correct>Separa lo observado de lo opinado, sube las reservas semanales (se repiten a mano), baja las notificaciones hasta tener evidencia y le explica el cambio a Bienestar.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>El backlog es una lista de hipótesis sobre qué le sirve al usuario, y el piloto acaba de probar una. Si la primera evidencia real no puede mover nada, el Planning dejó de ser una apuesta y pasó a ser un dogma. Mantener el orden por "seriedad" tiene un costo concreto: el equipo construiría primero lo que nadie pidió. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Anotar todo con la misma prioridad trata un comentario suelto igual que un patrón repetido cuatro semanas seguidas. El backlog crece y el equipo vuelve a decidir por quién habló más fuerte, no por lo que pasó. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Exacto. Cambiar el orden con una razón visible no rompe el plan: es el plan funcionando. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="evidencia" hidden>
+<h2>Backlog vivo: evidencia vs. opinión</h2>
+<p class="lead">Un ítem del backlog es una apuesta: "creemos que esto le sirve a este usuario". Cada sprint trae datos que confirman o desmienten esa apuesta. La disciplina es <strong>distinguir lo que alguien observó de lo que alguien supone</strong>, y dejar que lo primero pese más al ordenar.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Fuente</th><th scope="col">Ejemplo en EventoUAB</th><th scope="col">Qué ayuda a decidir</th></tr></thead>
+<tbody>
+<tr><td>Uso real del producto</td><td>La misma reserva repetida a mano cuatro semanas</td><td>Qué historia falta o está mal resuelta</td></tr>
+<tr><td>Observación en la Review</td><td>Nadie tocó las notificaciones</td><td>Qué valor se había sobreestimado</td></tr>
+<tr><td>Retrospectiva</td><td>Pruebas que se pisan por compartir un archivo</td><td>Qué deuda técnica frena al equipo</td></tr>
+<tr><td>Números del sprint</td><td>Puntos terminados, defectos que volvieron</td><td>Cuánto se puede comprometer</td></tr>
+<tr><td>Opinión o pedido</td><td>"Yo pondría un calendario más lindo"</td><td>Una pista para investigar, no una orden</td></tr>
+</tbody>
+</table>
+
+<p>Con esa lectura, el backlog de Camila queda así. Nada se borró: lo que bajó sigue visible, con la razón anotada, por si más adelante llega evidencia a favor.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Antes del piloto</th><th scope="col">Después del piloto</th><th scope="col">Razón anotada</th></tr></thead>
+<tbody>
+<tr><td>1. Notificar a Bienestar (8)</td><td>3. Notificar a Bienestar (8)</td><td>Ningún club lo usó; validar antes de construir</td></tr>
+<tr><td>2. Calendario con colores (8)</td><td>4. Calendario con colores (8)</td><td>Solo una opinión, sin dato de uso</td></tr>
+<tr><td>3. Reservas semanales (5)</td><td>1. Reservas semanales (5)</td><td>Repetición manual observada en 2 de 3 clubes</td></tr>
+<tr><td>—</td><td>2. Pruebas que no compartan archivo (3)</td><td>Falló tres veces en el sprint; frena el desarrollo</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Un pedido también es información</strong>
+<p>Que Bienestar quiera notificaciones es un dato valioso sobre el contexto. Lo que no es, todavía, es evidencia de que los clubes las necesiten. Por eso se baja la prioridad y se agrega una pregunta concreta para el próximo piloto, en vez de descartarlo.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="evidencia-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Es evidencia observada o una opinión?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cuatro semanas seguidas, el club de Robótica creó a mano la misma reserva.</span>
+<div class="quiz-classify-btns">
+<button>Opinión</button>
+<button data-correct>Evidencia</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Creo que a los clubes les va a gustar más un calendario con colores.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Opinión</button>
+<button>Evidencia</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Los tres clubes completaron una reserva sin pedir ayuda al equipo.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Evidencia</button>
+<button>Opinión</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una persona de Bienestar cree que los clubes querrán avisos por correo.</span>
+<div class="quiz-classify-btns">
+<button>Evidencia</button>
+<button data-correct>Opinión</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Las pruebas del equipo fallaron tres veces por compartir reservas.db.</span>
+<div class="quiz-classify-btns">
+<button>Opinión</button>
+<button data-correct>Evidencia</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Seguro, más adelante, van a querer cobrar por reservar los salones.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Opinión</button>
+<button>Evidencia</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>¿Cuántos puntos entran al Sprint 2?</h2>
+<p class="lead">El backlog ya está reordenado. Ahora toca el Planning del Sprint 2. En el Sprint 1 el equipo planificó 24 puntos (seis historias) y terminó 15 (cuatro historias que cumplen la Definition of Done). Las otras dos, de 5 y 4 puntos, quedaron "casi listas": con el código escrito, pero sin pruebas ni revisión. Bienestar espera la app completa dentro de cuatro sprints más.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="velocidad decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cuántos puntos comprometen para el Sprint 2?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Alrededor de 15, lo que de verdad terminaron, y antes de sumar nada revisan por qué las dos historias quedaron a medias.</button>
+<button class="quiz-opt" data-key="b">Otra vez 24: ya conocen el proyecto y no hay curva de aprendizaje, y las dos historias a medias se pueden contar como casi hechas.</button>
+<button class="quiz-opt" data-key="c">Unos 30, para recuperar los 9 puntos que quedaron afuera y llegar a la fecha original que se le prometió a Bienestar.</button>
+</div>
+<p class="quiz-fb ko" data-key="b" hidden>Repetir el plan que ya falló una vez no es optimismo, es ignorar el dato. Y "casi hecho" no es un estado: una historia sin pruebas ni revisión puede esconder días de trabajo. Si el Sprint 2 arranca con la misma meta, probablemente termine con el mismo resultado. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Comprometer más para compensar lo que no salió es el camino al apuro: se recortan pruebas y revisión, aparecen defectos, y el Sprint 3 se llena de arreglos. Una fecha que no coincide con la capacidad real se negocia con datos; no se tapa con horas. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="a" hidden>Exacto. Lo que el equipo terminó de verdad es el mejor predictor de lo que va a terminar. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="velocidad" hidden>
+<h2>Velocidad y pronóstico</h2>
+<p class="lead">La <strong>velocidad</strong> (velocity) es la cantidad de puntos de historias <em>terminadas</em> en un sprint. Solo cuenta lo que cumple la Definition of Done: una historia con la mitad del trabajo hecho suma cero. Con la velocidad de los últimos sprints, el equipo pronostica cuánto comprometer y cuándo llegaría al final del backlog.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Sprint</th><th scope="col">Puntos planificados</th><th scope="col">Puntos terminados (DoD)</th></tr></thead>
+<tbody>
+<tr><td>Sprint 1</td><td>24</td><td>15</td></tr>
+<tr><td>Sprint 2</td><td>15 (compromiso)</td><td>—</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Con un solo sprint, la velocidad es una pista débil</strong>
+<p>Un único dato todavía es ruido, pero sigue siendo mejor que una esperanza. Cuando haya tres sprints se usa el promedio, y se desconfía de cualquier número que haga felices a todos antes de mirar los datos. Y la velocidad no es una meta ni se compara entre equipos: se usa solo para planificar.</p>
+</div>
+
+<p>Para saber si la fecha es realista se divide lo que falta por la velocidad. Con 60 puntos restantes en el backlog y 15 por sprint, el equipo necesita 4 sprints. Si Bienestar quiere la app en 3, la conversación correcta es de alcance ("¿qué sale de la lista?"), no de horas extra.</p>
+
+<div class="quiz quiz-fill" data-quiz-id="velocidad-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Un equipo terminó 12, 15 y 18 puntos en sus tres primeros sprints.</p>
+<p>1. Su velocidad promedio es de
+<select class="quiz-blank" data-correct="15">
+<option value="">— elige —</option>
+<option value="12">12</option>
+<option value="15">15</option>
+<option value="45">45</option>
+</select> puntos por sprint.</p>
+<p>2. Si el backlog tiene 60 puntos pendientes, necesita aproximadamente
+<select class="quiz-blank" data-correct="4">
+<option value="">— elige —</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="3">3</option>
+</select> sprints más.</p>
+<p>3. Una historia de 5 puntos con el código escrito pero sin pruebas ni revisión suma
+<select class="quiz-blank" data-correct="cero">
+<option value="">— elige —</option>
+<option value="mitad">la mitad de sus puntos</option>
+<option value="todos">todos sus puntos</option>
+<option value="cero">cero puntos</option>
+</select> a la velocidad.</p>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>"¿Y si lo ordenamos con un Repository?"</h2>
+<p class="lead">La historia que encabeza el Sprint 2 es "reservas semanales": un club pide el mismo salón y horario durante varias semanas. Si alguna de esas semanas choca con otra reserva, no se crea ninguna. Hoy la lógica de reservas arma sus consultas SQL directo, en seis lugares de <code>reservas.js</code>. Valentina propone un <strong>Repository</strong>. Mateo duda: <em>"¿no es meterle ingeniería de más a algo que funciona?"</em></p>
+
+<div class="code">
+<div class="code-header"><span>JavaScript — cómo está hoy (acoplado a la base de datos)</span></div>
+<pre><code class="src">import { db } from "./db.js";
+
+export function reservarSemanal({ club, espacioId, inicio, fin, semanas }) {
+  const existentes = db
+    .prepare("SELECT inicio, fin FROM reservas WHERE espacio_id = ?")
+    .all(espacioId);            // ← la consulta vive dentro de la regla
+  // ...regla: revisar choques semana por semana...
+  db.prepare("INSERT INTO reservas ...").run(/* ... */);
+}</code></pre>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="repository decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace el equipo con la propuesta de Valentina?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Aplican Repository a todo el proyecto antes de seguir (clubes, espacios, usuarios y reservas), para que quede consistente y sin mezclas de estilos.</button>
+<button class="quiz-opt" data-key="b" data-correct>Lo introducen solo para las reservas, junto con la historia nueva y el ítem de pruebas, porque ahí la Retro mostró el dolor y ahí vive la lógica a probar.</button>
+<button class="quiz-opt" data-key="c">No tocan nada: el SQL directo funciona, y las pruebas pueden seguir compartiendo el archivo si cada una limpia la tabla al terminar.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Refactorizar tres tablas que nunca dieron problemas consume parte del sprint sin que ningún usuario lo note, y sin ningún dato que diga que valía la pena. Es hacer el trabajo por si acaso. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Las pruebas ya fallaron tres veces por esto. "Limpiar al terminar" depende de que nadie se olvide, y de que las pruebas no corran al mismo tiempo: el ejecutor de pruebas de Node corre los archivos en paralelo, así que dos archivos pueden pisarse igual. La Retro ya mostró que el dolor es real. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. El patrón entra donde hay dolor medido y no en el resto del proyecto. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="repository" hidden>
+<h2>Repository: el bibliotecario de tus datos</h2>
+<p class="lead">Pensalo como una biblioteca. Vos le pedís al bibliotecario <em>"dame los libros del estante 3"</em> y <em>"guardá este libro"</em>. No te importa si el catálogo es un fichero de papel o una computadora: él sabe cómo, y vos solo hacés el pedido. Un <strong>Repository</strong> es ese bibliotecario: el resto del programa le pide reservas y él se ocupa de dónde y cómo se guardan.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col"></th><th scope="col">Sin Repository</th><th scope="col">Con Repository</th></tr></thead>
+<tbody>
+<tr><td>Quién sabe de SQL</td><td>La regla de reservas, mezclada con su lógica</td><td>Solo el repositorio</td></tr>
+<tr><td>Para probar la regla</td><td>Hace falta una base de datos real</td><td>Alcanza con una lista en memoria</td></tr>
+<tr><td>Lo que la regla pide</td><td>Escribe una consulta SQL</td><td>Dice <code>delEspacio(1)</code> o <code>guardar(r)</code></td></tr>
+</tbody>
+</table>
+
+<p>El "contrato" son solo dos pedidos. JavaScript no tiene interfaces: el equipo lo escribe y lo respeta.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Pedido</th><th scope="col">Qué hace</th></tr></thead>
+<tbody>
+<tr><td><code>delEspacio(espacioId)</code></td><td>Devuelve las reservas de ese espacio.</td></tr>
+<tr><td><code>guardar(reserva)</code></td><td>Guarda una reserva nueva.</td></tr>
+</tbody>
+</table>
+
+<p>La versión más simple posible del bibliotecario es una lista dentro de la memoria. Son ocho líneas y sirve para las pruebas:</p>
+
+<div class="code">
+<div class="code-header"><span>JavaScript — reservas-memoria.js (el bibliotecario de las pruebas)</span></div>
+<pre><code class="src">export class ReservasEnMemoria {
+  #datos = [];                                   // una lista, nada más
+  delEspacio(espacioId) {
+    return this.#datos.filter((r) =&gt; r.espacioId === espacioId);
+  }
+  guardar(reserva) {
+    this.#datos.push(reserva);
+  }
+}</code></pre>
+</div>
+
+<details>
+<summary><strong>Ver el otro bibliotecario: el de SQLite (la app real)</strong></summary>
+<div class="code">
+<div class="code-header"><span>JavaScript — reservas-sqlite.js (con better-sqlite3)</span></div>
+<pre><code class="src">export class ReservasSqlite {
+  constructor(db) {
+    this.db = db;
+    db.exec(`CREATE TABLE IF NOT EXISTS reservas (
+      id INTEGER PRIMARY KEY, club TEXT, espacio_id INTEGER, inicio INTEGER, fin INTEGER)`);
+  }
+  delEspacio(espacioId) {
+    return this.db
+      .prepare("SELECT club, espacio_id AS espacioId, inicio, fin FROM reservas WHERE espacio_id = ?")
+      .all(espacioId);
+  }
+  guardar(r) {
+    this.db
+      .prepare("INSERT INTO reservas (club, espacio_id, inicio, fin) VALUES (?, ?, ?, ?)")
+      .run(r.club, r.espacioId, r.inicio, r.fin);
+  }
+}</code></pre>
+</div>
+<p>Tiene exactamente los mismos dos pedidos. Solo cambia lo que hay adentro.</p>
+</details>
+
+<div class="highlight">
+<strong>La idea en una frase</strong>
+<p>Dos bibliotecarios distintos (memoria y SQLite), el mismo mostrador (<code>delEspacio</code> y <code>guardar</code>). Quien hace el pedido no se entera de cuál lo atendió.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>¿De dónde saca el servicio su repositorio?</h2>
+<p class="lead">Valentina ya tiene los dos repositorios. Falta escribir <code>ReservasService</code>, la clase con la regla de "reservas semanales". Ahora hay que decidir cómo consigue el repositorio que va a usar.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="di decision5">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo obtiene <code>ReservasService</code> su repositorio?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Lo crea dentro de su propio constructor con <code>new ReservasSqlite(db)</code>, así quien use el servicio no se preocupa por armar nada.</button>
+<button class="quiz-opt" data-key="b">Lo toma de una variable global <code>repo</code> que cada prueba reemplaza con <code>setRepo()</code> antes de empezar y deja como estaba al terminar.</button>
+<button class="quiz-opt" data-key="c" data-correct>Lo recibe por el constructor, <code>new ReservasService(repo)</code>; un solo lugar decide al arrancar la app cuál usar, y las pruebas pasan el de memoria.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Con esa línea adentro, el servicio queda soldado a SQLite: no hay forma de probarlo sin una base de datos, y volvemos exactamente al problema que el Repository venía a resolver. La comodidad de "no armar nada" se paga en cada prueba. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Funciona, pero el estado compartido es frágil: si una prueba se olvida de restaurar la variable, la siguiente corre con un repositorio ajeno y falla (o peor, pasa por casualidad). Con dos pruebas corriendo a la vez, se pisan entre sí. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Exacto. Cada instancia trae su propio repositorio, y nada global puede interferir entre pruebas. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="di" hidden>
+<h2>Inyección de dependencias: que se lo pasen</h2>
+<p class="lead">Es una idea sencilla: en vez de que un objeto <strong>cree</strong> lo que necesita, <strong>se lo pasan desde afuera</strong>. Como cuando el cajero no fabrica su propia caja registradora: se la dan al empezar el turno. No requiere ningún framework; alcanza con un parámetro del constructor.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Sin inyección</th><th scope="col">Con inyección</th></tr></thead>
+<tbody>
+<tr><td><code>this.repo = new ReservasSqlite(db)</code><br>El servicio se arma su propio bibliotecario, y siempre es el de SQLite.</td><td><code>this.repo = repo</code><br>El servicio usa el bibliotecario que le entreguen.</td></tr>
+</tbody>
+</table>
+
+<p>Así queda el servicio completo para la regla "no reservar un horario ocupado". Son pocas líneas y no menciona SQLite en ningún lado:</p>
+
+<div class="code">
+<div class="code-header"><span>JavaScript — la regla, sin saber de dónde vienen los datos</span></div>
+<pre><code class="src">export class ReservasService {
+  constructor(repo) {
+    this.repo = repo;                  // ← llega de afuera
+  }
+
+  reservar(nueva) {
+    const ocupado = this.repo
+      .delEspacio(nueva.espacioId)
+      .some((r) =&gt; hayChoque(r, nueva));
+    if (ocupado) return false;
+    this.repo.guardar(nueva);
+    return true;
+  }
+}</code></pre>
+</div>
+
+<p>Y quien decide cuál bibliotecario usar es un solo lugar, el <code>main.js</code> (la <strong>raíz de composición</strong>). Las pruebas hacen la misma elección, pero con el de memoria:</p>
+
+<div class="code">
+<div class="code-header"><span>JavaScript — la app real vs. la prueba</span></div>
+<pre><code class="src">// main.js — la app real
+const servicio = new ReservasService(new ReservasSqlite(db));
+
+// en una prueba
+const servicio = new ReservasService(new ReservasEnMemoria());</code></pre>
+</div>
+
+<div class="code">
+<div class="code-header"><span>Node.js — la prueba, sin base de datos</span></div>
+<pre><code class="src">test("no deja reservar un horario ocupado", () =&gt; {
+  const servicio = new ReservasService(new ReservasEnMemoria());
+
+  assert.equal(servicio.reservar({ espacioId: 1, inicio: 10, fin: 12 }), true);
+  assert.equal(servicio.reservar({ espacioId: 1, inicio: 11, fin: 13 }), false);  // choca
+  assert.equal(servicio.reservar({ espacioId: 1, inicio: 12, fin: 14 }), true);   // contigua: no choca
+});</code></pre>
+</div>
+
+<div class="highlight">
+<strong>Lo que se gana</strong>
+<p>La prueba corre en milisegundos, sin archivo de base de datos que otro pueda pisar. Y la misma regla funciona con SQLite en la app real sin cambiar una sola línea del servicio.</p>
+</div>
+
+<details>
+<summary><strong>Ver la regla completa de "reservas semanales" (la historia del Sprint 2)</strong></summary>
+<div class="code">
+<div class="code-header"><span>JavaScript — reservarSemanal: todo o nada</span></div>
+<pre><code class="src">const SEMANA = 7 * 24 * 60 * 60 * 1000;
+
+reservarSemanal({ club, espacioId, inicio, fin, semanas }) {
+  const nuevas = [];
+  for (let i = 0; i &lt; semanas; i++) {
+    const r = { club, espacioId, inicio: inicio + i * SEMANA, fin: fin + i * SEMANA };
+    const choque = this.repo.delEspacio(espacioId).some((x) =&gt; hayChoque(x, r));
+    if (choque) return { ok: false, semana: i + 1 };
+    nuevas.push(r);
+  }
+  nuevas.forEach((r) =&gt; this.repo.guardar(r));   // recién acá se guarda: todo o nada
+  return { ok: true, creadas: nuevas.length };
+}</code></pre>
+</div>
+<p>Si alguien cambiara esto para guardar cada semana sobre la marcha, una prueba con el repositorio en memoria lo detectaría enseguida: quedarían guardadas las semanas anteriores al choque.</p>
+</details>
+
+<div class="quiz quiz-match" data-quiz-id="di-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada concepto con su descripción.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="repo">Repository</button>
+<button class="quiz-match-item" data-pair="di">Inyección de dependencias</button>
+<button class="quiz-match-item" data-pair="raiz">Raíz de composición</button>
+<button class="quiz-match-item" data-pair="memoria">Repositorio en memoria</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="memoria">Versión del contrato para pruebas, rápida y sin archivos compartidos.</button>
+<button class="quiz-match-item" data-pair="repo">Objeto que se usa como una colección y esconde cómo se guardan los datos.</button>
+<button class="quiz-match-item" data-pair="raiz">Único lugar de la app donde se arman y conectan las piezas.</button>
+<button class="quiz-match-item" data-pair="di">Pasarle a un objeto lo que necesita en vez de que lo cree adentro.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision5" hidden>
+<h2>"Hagamos lo mismo con los clubes"</h2>
+<p class="lead">Mateo, ya convencido, quiere aplicar el patrón a <code>listarClubes()</code>, la función que llena el desplegable de clubes. Es un único <code>SELECT</code>, se llama desde un solo lugar, no tiene ninguna regla de negocio y nunca causó una prueba fallida.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-5" data-unlock="cuando repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace el equipo con <code>listarClubes()</code>?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>La deja con su consulta directa y anota en el backlog qué señal los haría reconsiderar: que aparezca una regla de negocio o un segundo lugar que la use.</button>
+<button class="quiz-opt" data-key="b">Crean ClubesRepository con su contrato, una versión en memoria y un servicio, por consistencia: que todo el proyecto siga el mismo patrón.</button>
+<button class="quiz-opt" data-key="c">Escriben un BaseRepository genérico con guardar, buscar, listar y borrar para cualquier tabla, y lo reutilizan en todas las entidades que vengan.</button>
+</div>
+<p class="quiz-fb ko" data-key="b" hidden>Para una consulta sin lógica, el patrón agrega tres archivos y un salto más para leer el código, a cambio de nada que alguien vaya a notar o probar. La consistencia por sí sola no justifica el costo; el patrón se paga cuando resuelve un problema que el equipo tiene. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Un repositorio genérico se escribe antes de conocer los casos reales, y cada tabla termina necesitando algo distinto (reservas con rangos de fechas, usuarios con credenciales). El resultado es una abstracción que no encaja con ninguna y que todos tienen que esquivar. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="a" hidden>Exacto. No es "nunca"; es "todavía no". Si la señal aparece, el cambio se hace en ese momento, con evidencia. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="cuando" hidden>
+<h2>Cuándo ayuda y cuándo estorba</h2>
+<p class="lead">Un patrón de diseño no es un objetivo: es una herramienta para un dolor concreto. Un Repository con inyección de dependencias cuesta algo (más archivos, dos implementaciones que mantener, un salto más para leer el código), y ese costo tiene que quedar compensado por algo visible. La misma lógica de la primera mitad de la guía: <strong>decidir con evidencia, no con costumbre</strong>.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Ayuda cuando...</th><th scope="col">Estorba cuando...</th></tr></thead>
+<tbody>
+<tr><td>Hay reglas de negocio que querés probar sin una base de datos.</td><td>Es un CRUD sin lógica: leer y guardar sin decidir nada.</td></tr>
+<tr><td>El mismo acceso a datos lo usan varios lugares.</td><td>Hay un solo lugar que lo usa y no se prevé otro.</td></tr>
+<tr><td>Hay una razón real para cambiar la fuente (otro motor, una API).</td><td>Nadie va a cambiar la fuente en el horizonte del proyecto.</td></tr>
+<tr><td>Las pruebas actuales ya duelen: lentas, frágiles o que se pisan.</td><td>No hay pruebas que se beneficien, o ya son rápidas y estables.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Anotar la señal para reconsiderar</strong>
+<p>Decidir "no por ahora" es parte del diseño, no una omisión. Lo que lo vuelve una decisión de equipo es dejarlo escrito en el backlog o en un ADR corto: qué se decidió, por qué, y qué cambio en el proyecto haría volver a pensarlo. Así, quien llegue después sabe que fue elegido y no olvidado.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="repo-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Un Repository con inyección ayuda o estorba en este caso?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Reglas de negocio de las reservas que se quieren probar sin base de datos.</span>
+<div class="quiz-classify-btns">
+<button>Estorba</button>
+<button data-correct>Ayuda</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una lista de clubes que se lee con un solo SELECT desde un único lugar.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Estorba</button>
+<button>Ayuda</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Un script de una sola vez para importar los datos de otro año.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Estorba</button>
+<button>Ayuda</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El mismo acceso a reservas lo usan la API, el reporte y los avisos.</span>
+<div class="quiz-classify-btns">
+<button>Estorba</button>
+<button data-correct>Ayuda</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Hay una decisión tomada de pasar de SQLite a PostgreSQL el próximo semestre.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Ayuda</button>
+<button>Estorba</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Una tabla de configuración con tres valores fijos que nunca cambian.</span>
+<div class="quiz-classify-btns">
+<button>Ayuda</button>
+<button data-correct>Estorba</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Al reordenar el backlog después de una Review, ¿qué debería pesar más?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Lo que pidió con más insistencia la persona de mayor jerarquía que asistió, porque es quien finalmente aprueba el proyecto.</button>
+<button class="quiz-opt">El orden original acordado en el Planning, porque cambiarlo después resta credibilidad al equipo frente a Bienestar.</button>
+<button class="quiz-opt" data-correct>Lo que se observó del uso real del producto y de la Retro, con la razón del cambio anotada junto a cada ítem movido.</button>
+<button class="quiz-opt">La cantidad de comentarios que recibió cada idea durante la Review, sin importar si alguien la usó o solo la mencionó.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la evidencia de uso pesa más que la opinión o el rango de quien la dice. Y anotar la razón del cambio mantiene al equipo honesto y al stakeholder informado." data-ko="El criterio es la evidencia: lo observado del uso real y de la Retro. Ni la jerarquía de quien opina, ni el orden previo, ni la cantidad de comentarios reemplazan un dato de comportamiento." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Para decidir si conviene un Repository, hay que mirar primero qué problema concreto tiene el proyecto, y no si el patrón "se usa en la industria".</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt" data-correct>Verdadero</button>
+<button class="quiz-opt">Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el patrón se justifica por un dolor medido (pruebas que se pisan, lógica que no se puede probar), no por la costumbre. Sin dolor, suma archivos sin sumar valor." data-ko="Es verdadero: lo que justifica un Repository es un problema concreto del proyecto. Que sea popular no lo vuelve necesario, y sin dolor solo suma archivos." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué se gana al pasar el repositorio por el constructor en lugar de crearlo dentro del servicio?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Que el servicio se ejecute más rápido, porque el repositorio ya viene armado y no hay que crearlo cada vez.</button>
+<button class="quiz-opt" data-correct>Que el servicio no sabe qué hay detrás, así que las pruebas le pasan una versión en memoria y la app real una de SQLite.</button>
+<button class="quiz-opt">Que ya no hace falta escribir pruebas del servicio, porque el repositorio inyectado se encarga de comprobar sus reglas.</button>
+<button class="quiz-opt">Que el equipo pueda usar un framework de contenedor, requisito indispensable de cualquier inyección de dependencias.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el servicio queda desacoplado, y cada contexto (prueba o app real) elige el repositorio que corresponde en un único lugar." data-ko="Lo que se gana es desacoplamiento: el servicio no conoce la fuente de datos, y cada contexto le pasa la suya. No hay mejora de velocidad, no reemplaza las pruebas y no exige ningún framework." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: tu backlog y tu patrón</h2>
+<p class="lead">Ahora con el proyecto real de tu equipo. Escribí, en no más de un párrafo por punto: 1) una evidencia concreta del último sprint (de uso, de la Retro o de tus números) que justifique mover un ítem de lugar en tu backlog, y qué ítem bajaría por falta de evidencia, 2) tu velocidad de los sprints que llevás y cuántos puntos vas a comprometer en el próximo, 3) un lugar de tu código donde un Repository con inyección ayudaría y otro donde estorbaría, con la señal que usaste para decidir.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">Reordenar con evidencia y decidir un patrón en tu proyecto real.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>La evidencia es algo observado (un dato, un registro, una falla repetida), no una opinión ni un "creo que".</li>
+<li>Se nombra qué ítem baja o sale y la razón queda anotada, en lugar de descartarlo sin explicación.</li>
+<li>La velocidad se calcula con puntos de historias terminadas según la Definition of Done, no con las planificadas.</li>
+<li>El compromiso del próximo sprint parte de esa velocidad y no de la fecha deseada.</li>
+<li>El lugar donde el patrón ayuda se justifica con un dolor concreto (pruebas que se pisan, lógica sin poder probar), y el lugar donde estorba, con la ausencia de ese dolor.</li>
+<li>Para el caso donde estorba, se anota la señal que haría reconsiderarlo.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Backlog vivo</td><td>Lista de apuestas que se corrige con lo que muestra cada sprint. Lo que baja no se borra: queda con la razón anotada.</td></tr>
+<tr><td>Evidencia vs. opinión</td><td>Evidencia es lo observado (uso, registros, fallas repetidas). Un pedido o un "creo que" es una pista para investigar.</td></tr>
+<tr><td>Velocidad</td><td>Puntos de historias terminadas (con DoD) por sprint. Sirve para planificar, no es una meta ni se compara entre equipos.</td></tr>
+<tr><td>Pronóstico</td><td>Puntos pendientes divididos por la velocidad. Si la fecha no da, se negocia el alcance, no las horas.</td></tr>
+<tr><td>Repository</td><td>Objeto que se usa como una colección del dominio y esconde cómo se guarda. El contrato lo escribe el equipo.</td></tr>
+<tr><td>Inyección de dependencias</td><td>Pasarle a un objeto lo que necesita en vez de crearlo adentro. Alcanza con un parámetro del constructor.</td></tr>
+<tr><td>Raíz de composición</td><td>El único lugar (por ejemplo, main.js) donde se arman y conectan las piezas de la app.</td></tr>
+<tr><td>Ayuda cuando...</td><td>Hay reglas que probar sin base de datos, varios usos del mismo acceso, o un cambio real de fuente a la vista.</td></tr>
+<tr><td>Estorba cuando...</td><td>Es un CRUD sin lógica, con un solo uso y sin dolor medido. Se anota la señal para reconsiderarlo.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🌦 "El clima de ayer"</h3><p>Extreme Programming (XP) llama "el clima de ayer" a la regla de planificar con lo que el equipo terminó en el sprint anterior. Igual que el pronóstico del tiempo, la mejor predicción de mañana es lo que pasó hoy.</p></div>
+<div class="info"><h3>📚 Un patrón con más de veinte años</h3><p>El Repository se describe en <em>Patterns of Enterprise Application Architecture</em> (Martin Fowler, 2002) y en <em>Domain-Driven Design</em> (Eric Evans, 2003). Casi todos los lenguajes y frameworks lo tienen hoy en alguna forma.</p></div>
+<div class="info"><h3>🧭 Lo que viene en la próxima guía</h3><p>El repositorio en memoria que usaste es un "doble de prueba" simple. En la próxima guía profundizamos en pruebas unitarias, mocks, cobertura y pruebas de regresión, y hacemos un recorrido breve por los microservicios.</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Adaptar el Backlog con Evidencia + Repository/DI</h2>
+<p>Guía de aula invertida · Ingeniería de Software.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "isw-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL); accedida directo, como siempre, no dispara nada nuevo. No
+     toca el motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return;
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
