@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Examen — Consultas en vivo | Base de Datos II</title>
+<meta name="robots" content="noindex, nofollow">
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* ===== Estilos propios del examen: no toca guia.css. ===== */
+body{ padding-top:0; }
+[hidden]{ display:none !important; }
+.examen-topbar{
+  position:sticky; top:0; z-index:80; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  padding:12px 24px; background:var(--blanco); border-bottom:2px solid var(--verde);
+}
+.examen-topbar .titulo{ font-family:'Fraunces',serif; font-weight:700; font-size:18px; }
+.examen-topbar .badge-caso{ background:var(--verde); color:#fff; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:600; }
+.examen-topbar .badge-nombre{ font-size:13px; opacity:.8; }
+.examen-topbar .espaciador{ flex:1; }
+#examenTimer{ font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; padding:6px 14px; border-radius:8px; background:var(--highlightBg); }
+#examenTimer.alerta{ background:#c0392b; color:#fff; }
+#examenTimer.agotado{ background:#c0392b; color:#fff; }
+.examen-theme-btn{
+  width:auto; margin:0; padding:8px 12px; border:1px solid var(--borde,#ccc); border-radius:8px;
+  background:var(--blanco); color:inherit; cursor:pointer; font-size:16px; line-height:1;
+}
+.examen-theme-btn:hover{ border-color:var(--verde); }
+
+.pantalla{ max-width:760px; margin:60px auto; padding:0 20px; }
+.pantalla .card{ padding:32px; }
+.pantalla label{ display:block; font-weight:600; margin:16px 0 6px; }
+.pantalla input[type="text"]{
+  width:100%; padding:12px 14px; border-radius:8px; border:2px solid var(--borde,#ccc);
+  font-size:16px; font-family:'DM Sans',sans-serif; background:var(--blanco); color:inherit;
+}
+.pantalla button.primario{
+  margin-top:24px; background:var(--verde); color:#fff; border:none; padding:14px 26px;
+  border-radius:10px; font-weight:700; font-size:16px; cursor:pointer;
+}
+.pantalla button.primario:hover{ background:var(--verde2); }
+.pantalla button.primario:disabled{ opacity:.5; cursor:not-allowed; }
+
+/* El nombre y el botón siempre a la vista, aunque la tarjeta sea más alta que la ventana. */
+.inicio-accion{ position:sticky; bottom:0; background:var(--blanco); padding:4px 0 16px; margin-top:8px; border-top:1px solid var(--borde,#ddd); }
+.parte-titulo{ font-family:'Fraunces',serif; font-size:24px; margin:34px 0 0; padding-bottom:8px; border-bottom:3px solid var(--verde); }
+.pie-inicio{ margin:8px 0 0; font-size:12px; opacity:.75; }
+.pie-inicio a{ margin-left:10px; color:var(--verde); font-weight:600; }
+.paso{ position:relative; margin:28px 0; }
+.paso-header{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.paso-num{ display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; background:var(--verde); color:#fff; font-weight:700; flex-shrink:0; }
+.paso.completado .paso-num{ background:#2e7d32; }
+.paso-estado{ font-size:13px; padding:3px 10px; border-radius:14px; background:var(--highlightBg); }
+.paso.completado .paso-estado{ background:#d4edda; color:#1e7e34; }
+
+.paso-overlay{
+  position:absolute; inset:0; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:12px; background:rgba(120,120,120,.55); backdrop-filter:blur(2px); border-radius:12px; text-align:center; padding:20px;
+}
+.paso-overlay p{ color:#fff; font-weight:600; font-size:16px; margin:0; text-shadow:0 1px 3px rgba(0,0,0,.4); }
+.paso-overlay button{ background:#fff; color:#333; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:600; }
+.paso-overlay .clave-form{ display:flex; gap:8px; }
+.paso-overlay .clave-form input{ padding:8px 10px; border-radius:8px; border:none; font-size:14px; }
+.paso.desbloqueado .paso-overlay{ display:none; }
+.paso:not(.desbloqueado) .paso-contenido{ filter:blur(2px); pointer-events:none; user-select:none; min-height:160px; }
+
+.verif-box{ margin-top:12px; padding:12px 16px; border-radius:8px; font-weight:600; }
+.verif-box.ok{ background:#d4edda; color:#1e7e34; }
+.verif-box.info{ background:var(--highlightBg); }
+.verif-box.fail{ background:#f8d7da; color:#a02330; }
+.acciones-entrega{ margin-top:12px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.btn-entregar{ background:var(--verde); color:#fff; border:none; padding:10px 18px; border-radius:8px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:14px; }
+.btn-entregar:hover:not(:disabled){ background:var(--verde2); }
+.btn-entregar:disabled{ opacity:.45; cursor:not-allowed; }
+.btn-entregar.confirmar{ background:#c0392b; }
+
+.certificado{ border:3px solid var(--verde); border-radius:14px; padding:28px; margin-top:30px; }
+.certificado table{ width:100%; border-collapse:collapse; margin:14px 0; }
+.certificado td, .certificado th{ padding:8px 10px; border-bottom:1px solid var(--borde,#ddd); text-align:left; }
+.certificado button{ background:var(--verde); color:#fff; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; margin-top:10px; }
+
+.banner-tiempo{ position:fixed; top:0; left:0; right:0; z-index:200; background:#c0392b; color:#fff; text-align:center; padding:10px; font-weight:700; }
+.aviso-pantalla{
+  position:fixed; top:0; left:0; right:0; z-index:300; display:flex; gap:14px; justify-content:center; align-items:center; flex-wrap:wrap;
+  background:#c0392b; color:#fff; padding:10px 16px; font-weight:700; font-size:14px;
+}
+.aviso-pantalla button{ background:#fff; color:#c0392b; border:none; padding:6px 14px; border-radius:8px; cursor:pointer; font-weight:700; }
+.aviso-incidente{
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960; padding:12px 22px; border-radius:10px;
+  font-size:14px; font-weight:600; color:#fff; background:#c0392b; box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center;
+}
+.aviso-incidente.ok{ background:var(--verde,#78b159); }
+
+.sql-result-table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+.sql-result-table th,.sql-result-table td{ padding:8px 10px; text-align:left; border:1px solid rgba(255,255,255,.15); }
+.sql-result-table thead th{ background:rgba(255,255,255,.08); color:#8fd48a; }
+.sql-result-table td em{ color:#7d8899; font-style:italic; }
+.sql-status{ margin:4px 0 10px; color:#8fd48a; }
+.db-toolbar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:18px 0 8px; padding:16px 20px; background:var(--highlightBg); border-left:6px solid var(--verde); border-radius:8px; }
+.db-toolbar button{ background:var(--verde); color:white; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:14px; }
+.db-toolbar button:hover{ background:var(--verde2); }
+
+.esquema-panel{ margin-top:14px; display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; }
+.esquema-tabla{ border:1px solid var(--borde,#ccc); border-radius:8px; padding:10px 12px; font-size:13px; background:var(--blanco); }
+.esquema-tabla strong{ display:block; margin-bottom:6px; color:var(--verde); font-family:'JetBrains Mono',monospace; }
+.esquema-tabla div{ font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.55; }
+.esquema-tabla .tipo{ opacity:.6; }
+
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+
+<body>
+
+<div id="avisoPantalla" class="aviso-pantalla" hidden>
+  <span>⛶ Saliste de la pantalla completa. Vuelve para continuar el examen.</span>
+  <button type="button" id="btnVolverPantalla">Volver a pantalla completa</button>
+</div>
+
+<!-- ============================================================
+     PANTALLA: INICIO
+     ============================================================ -->
+<div id="pantallaInicio" class="pantalla">
+  <div class="card">
+    <h1 class="section-title">📝 Examen — Consultas en vivo</h1>
+    <p class="lead">Base de Datos II · Universidad Adventista de Bolivia</p>
+    <div class="highlight">
+      <strong>Qué vas a hacer</strong>
+      <p>Cargar <strong>tu propia base de datos</strong> del proyecto (el DDL y el DML que ya construiste a partir del Product Backlog) y resolver <strong>4 reportes</strong> con consultas SQL sobre ella. Corre PostgreSQL real (WebAssembly) en tu propio navegador — nada se comparte con tus compañeros.</p>
+    </div>
+    <div class="highlight">
+      <strong>✋ Qué se puede copiar y qué no</strong>
+      <p>En la <strong>Parte 1</strong> (DDL y DML) puedes <strong>pegar</strong> tu código. En los <strong>4 reportes</strong> el copiar y pegar está deshabilitado: las consultas se escriben a mano. Los reportes solo leen datos (no puedes modificar tu base desde ahí).</p>
+    </div>
+    <div class="highlight" id="avisoSupervision"></div>
+    <div class="highlight">
+      <strong>⏱ Dos partes · 2 horas para los reportes</strong>
+      <p><strong>Parte 1:</strong> cargas tu DDL y tu DML, sin cronómetro. <strong>Parte 2:</strong> los 4 reportes; el cronómetro de 2 horas arranca cuando presionas "Comenzar" al final de la Parte 1 y sigue corriendo aunque cierres o recargues la pestaña — no se puede pausar. Si recargas, tu progreso queda guardado y tu base de datos se reconstruye sola.</p>
+    </div>
+
+    <div class="inicio-accion">
+      <label for="campoNombre">Tu nombre completo</label>
+      <input type="text" id="campoNombre" placeholder="Nombre y apellido">
+      <button type="button" class="primario" id="btnContinuar" disabled>Continuar →</button>
+      <p id="avisoInicio" style="margin:10px 0 0;color:#a02330;font-weight:600;"></p>
+      <p class="pie-inicio"><span id="versionInicio"></span> <a href="#" id="resetInicio" hidden>↺ Borrar el progreso guardado de esta prueba</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CONTENEDOR DEL EXAMEN (oculto hasta "Continuar")
+     ============================================================ -->
+<div id="contenedorExamen" hidden>
+
+<div class="examen-topbar">
+  <span class="titulo">Examen BD II</span>
+  <span class="badge-caso">Consultas en vivo</span>
+  <span class="badge-nombre" id="badgeNombre"></span>
+  <span class="badge-nombre" id="versionExamen"></span>
+  <span class="espaciador"></span>
+  <span id="examenTimer">⏱ --:--:--</span>
+  <button id="resetPruebaBtn" class="examen-theme-btn" hidden title="Borra el progreso guardado de esta prueba y recarga">↺ Reiniciar prueba</button>
+  <button id="themeBtn" class="examen-theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="main" style="margin-left:0;max-width:900px;margin-inline:auto;">
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Cómo funciona</h2>
+<p><strong>Contexto:</strong> el sistema del Encuentro de Promociones de Colegios Adventistas. Trabajas con las tablas que tú mismo diseñaste: campos de misión, colegios, participantes (estudiantes y acompañantes), comprobantes de pago, disciplinas, cupos y la regla de subvención de la edición.</p>
+<ol>
+<li><strong>Paso 1 — DDL:</strong> pega solo el script que crea tus tablas, llaves y relaciones, y ejecútalo.</li>
+<li><strong>Paso 2 — DML:</strong> pega solo el script que inserta tus datos y ejecútalo. Los pasos 1 y 2 están habilitados desde el inicio: pega ambos y verifícalos (el DML se ejecuta siempre sobre tu DDL del Paso 1).</li>
+<li><strong>Botón "Comenzar":</strong> presiónalo solo cuando todo esté creado correctamente. Arranca el cronómetro, pasa a pantalla completa y habilita los reportes.</li>
+<li><strong>Reportes 1 a 4:</strong> se habilitan todos al presionar «Comenzar» y puedes resolverlos en el orden que quieras. Escribe la consulta a mano, ejecútala, revisa el resultado y, cuando estés conforme, toca <strong>"Entregar consulta"</strong>. Una consulta entregada ya no se puede modificar.</li>
+</ol>
+<div class="highlight">
+<strong>⚠️ Usa los nombres de tus propias tablas y columnas</strong>
+<p>El examen no impone nombres: lo que se evalúa es tu razonamiento sobre <em>tu</em> modelo. Si no recuerdas un nombre, abre "📋 Ver mis tablas y columnas" aquí abajo — así no necesitas salir de esta pestaña.</p>
+</div>
+<div class="db-toolbar">
+<button type="button" id="esquemaBtn">📋 Ver mis tablas y columnas</button>
+<button type="button" id="reconstruirBtn">🔁 Reconstruir mi base de datos</button>
+<span class="db-estado" id="dbEstado">Base de datos vacía — pega tu DDL (Paso 1) y tu DML (Paso 2).</span>
+</div>
+<div id="esquemaPanel" class="esquema-panel" hidden></div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Disponible durante todo el examen, solo para consultar (<code>SELECT</code>). No se entrega ni se evalúa — úsala para explorar tus propios datos.</p>
+<div class="editor-panel" id="panelPruebas">
+<div class="editor-header"><span>🧪 Escribe cualquier consulta</span><button type="button" class="code-btn run">▶ Ejecutar</button></div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" placeholder="Por ejemplo: SELECT * FROM colegio;"></textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+</div>
+</section>
+
+<div class="container"><h2 class="parte-titulo">Parte 1 — Prepara tu base de datos</h2></div>
+<div id="pasosParte1"></div>
+
+<!-- ===== BOTÓN COMENZAR (cierra la Parte 1) ===== -->
+<section class="container" id="bloqueComenzar">
+<div class="card comenzar-card">
+<h2 class="section-title">¿Todo listo para los reportes?</h2>
+<div class="highlight">
+<strong>⚠️ Presiona "Comenzar" únicamente cuando hayas creado todo correctamente</strong>
+<p>Tu DDL y tu DML deben estar verificados (pasos 1 y 2 en verde). Al presionarlo: <strong>arranca el cronómetro de 2 horas</strong>, el examen pasa a <strong>pantalla completa</strong> y se habilitan los 4 reportes. Desde ese momento, salir de la pestaña o de la pantalla completa queda registrado. Podrás volver a corregir los pasos 1 y 2 si lo necesitas, pero el reloj no se detiene.</p>
+</div>
+<div class="acciones-entrega">
+<button type="button" class="btn-entregar" id="btnComenzarReportes" disabled>▶ Comenzar</button>
+<span id="comenzarAyuda">Verifica el Paso 1 y el Paso 2 para habilitarlo.</span>
+</div>
+</div>
+</section>
+
+<div id="parte2" hidden>
+<div class="container"><h2 class="parte-titulo">Parte 2 — Los 4 reportes</h2></div>
+<div id="pasosParte2"></div>
+
+<!-- ===== CERTIFICADO FINAL ===== -->
+<section class="container" id="certificadoSeccion" hidden>
+<div class="certificado card">
+<h2 class="section-title">✅ Examen entregado</h2>
+<p>Este resumen confirma qué pasos entregaste. Tu profesor revisa cada consulta contra tu propio modelo de datos.</p>
+<table>
+<thead><tr><th>Paso</th><th>Estado</th><th>Hora</th></tr></thead>
+<tbody id="tablaCertificado"></tbody>
+</table>
+<p><strong>Estudiante:</strong> <span id="certNombre"></span></p>
+<p id="certAtenza"></p>
+<button type="button" id="btnCopiarSql">📋 Copiar todo mi examen (SQL de los 7 pasos)</button>
+</div>
+</section>
+
+</div><!-- /parte2 -->
+
+</div>
+</div>
+
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+<div id="errorPagina" class="banner-tiempo" hidden></div>
+
+<script>
+/* =========================================================================
+   DEFINICIÓN DE LOS PASOS
+   Los 4 reportes son los del enunciado. Como cada estudiante usa su propio
+   modelo, NO hay verificación automática de resultados: el motor solo exige
+   que la consulta ejecute sin error y que el estudiante la entregue; la nota
+   la pone el profesor revisando el SQL entregado (ver la rúbrica .md).
+   "id" es el data-quiz-id que se carga en el manifest del panel de ATENZA.
+   ========================================================================= */
+const PASOS = [
+  { id:"ddl", tipo:"prep", titulo:"DDL — Tus tablas, llaves y relaciones",
+    etiqueta:"Tu script de creación de tablas", boton:"▶ Ejecutar y verificar", alto:260,
+    placeholder:"-- Pega aquí tu script DDL (CREATE TABLE, PRIMARY KEY, FOREIGN KEY...).",
+    enunciado:`<p>Pega el código <strong>DDL</strong> con el que creaste las tablas, llaves primarias, llaves foráneas y relaciones de tu modelo, y ejecútalo. Solo DDL: los <code>INSERT</code> van en el paso siguiente.</p>` },
+  { id:"dml", tipo:"prep", titulo:"DML — Tus datos de prueba",
+    etiqueta:"Tu script de inserción de datos", boton:"▶ Ejecutar y verificar", alto:260,
+    placeholder:"-- Pega aquí tu script DML (INSERT INTO ...).",
+    enunciado:`<p>Pega el código <strong>DML</strong> con el que insertaste los datos de prueba en tus tablas y ejecútalo. Solo <code>INSERT</code>. Se ejecuta sobre las tablas que crea tu DDL del Paso 1, así que ese script tiene que estar pegado arriba.</p>` },
+  { id:"r1", tipo:"reporte", titulo:"Reporte 1 — Participantes por campo, colegio y tipo",
+    etiqueta:"Tu consulta", boton:"▶ Ejecutar", alto:170,
+    placeholder:"-- Escribe aquí tu consulta del Reporte 1.",
+    enunciado:`<p>Elabore una consulta que muestre la lista de participantes del evento con su <strong>nombre</strong>, <strong>apellido</strong> y <strong>talla de polera</strong>. La lista debe estar agrupada por <strong>campo de misión</strong> (Central, Oriente, Occidente), luego por <strong>colegio</strong> y dentro de cada colegio por <strong>tipo de participante</strong> (estudiante o encargado/acompañante). Ordene alfabéticamente por apellido dentro de cada grupo.</p>` },
+  { id:"r2", tipo:"reporte", titulo:"Reporte 2 — Pagos y subvención de acompañantes por colegio",
+    etiqueta:"Tu consulta", boton:"▶ Ejecutar", alto:220,
+    placeholder:"-- Escribe aquí tu consulta del Reporte 2.",
+    enunciado:`<p>Elabore una consulta que muestre, para cada colegio, las siguientes columnas:</p>
+<ul>
+<li>campo de misión y nombre del colegio;</li>
+<li>cantidad de <strong>estudiantes con inscripción activa</strong>, es decir, con el pago aprobado por secretaría;</li>
+<li>cantidad <strong>total de acompañantes</strong> registrados;</li>
+<li>cantidad de acompañantes <strong>subvencionados</strong> según la regla de subvención configurada para la edición;</li>
+<li>cantidad de acompañantes que <strong>deben pagar</strong>;</li>
+<li><strong>monto total</strong> de los comprobantes aprobados.</li>
+</ul>
+<p>Ordene los resultados por campo de misión y, dentro de cada campo, por cantidad de estudiantes pagados de mayor a menor.</p>` },
+  { id:"r3", tipo:"reporte", titulo:"Reporte 3 — Inscritos por disciplina y cumplimiento de cupos",
+    etiqueta:"Tu consulta", boton:"▶ Ejecutar", alto:220,
+    placeholder:"-- Escribe aquí tu consulta del Reporte 3.",
+    enunciado:`<p>Elabore una consulta que muestre, para cada disciplina y cada colegio inscrito en ella: el <strong>área</strong>, el nombre de la <strong>disciplina</strong>, la <strong>modalidad</strong> (individual o por equipos), el nombre del <strong>colegio</strong>, la cantidad de <strong>estudiantes inscritos</strong>, el <strong>cupo mínimo</strong> y el <strong>cupo máximo</strong>. Agregue una columna <strong>«Estado»</strong> que muestre uno de estos valores:</p>
+<ul>
+<li>«Habilitado», si la cantidad de inscritos está dentro de los cupos;</li>
+<li>«No alcanza el mínimo», si tiene menos inscritos que el cupo mínimo;</li>
+<li>«Excede el máximo», si tiene más inscritos que el cupo máximo.</li>
+</ul>
+<p>Si una disciplina no tiene definido algún cupo, ese límite no se aplica. Muestre solo los colegios que tengan al menos un estudiante inscrito en la disciplina. Ordene por área, disciplina y colegio.</p>` },
+  { id:"r4a", tipo:"reporte", titulo:"Reporte 4 (parte 1) — Estudiantes activos sin disciplina",
+    etiqueta:"Tu consulta (detalle)", boton:"▶ Ejecutar", alto:200,
+    placeholder:"-- Escribe aquí tu consulta de detalle del Reporte 4.",
+    enunciado:`<p>Elabore una consulta que muestre a los estudiantes con <strong>inscripción activa</strong> (pago aprobado) que <strong>no estén inscritos en ninguna disciplina</strong>. Muestre el campo de misión, el colegio, el apellido, el nombre, el curso y el lote o comprobante con el que fueron inscritos. Agrupe los resultados por campo de misión y colegio.</p>
+<p><em>La segunda consulta de este reporte (el conteo por colegio) va en el paso siguiente.</em></p>` },
+  { id:"r4b", tipo:"reporte", titulo:"Reporte 4 (parte 2) — Conteo por colegio",
+    etiqueta:"Tu consulta (conteo)", boton:"▶ Ejecutar", alto:170,
+    placeholder:"-- Escribe aquí tu consulta de conteo del Reporte 4.",
+    enunciado:`<p>Elabore una <strong>segunda consulta</strong> que muestre <strong>cuántos estudiantes de cada colegio</strong> están en la situación del Reporte 4: inscripción activa (pago aprobado) y sin ninguna disciplina asignada.</p>` },
+];
+const N = PASOS.length; // 7
+
+/* =========================================================================
+   CONFIGURACIÓN GENERAL
+   ========================================================================= */
+const DURACION_MS = 2 * 60 * 60 * 1000;
+const CLAVE_PROFESOR = "bd2-2026-roy"; // ⚠️ Cambiala antes de rendir el examen si querés otra.
+// Mínimos de cordura para dar por buenos el DDL y el DML (el modelo es de cada estudiante).
+const MIN_TABLAS = 5, MIN_FKS = 3, MIN_TABLAS_CON_DATOS = 5, MIN_FILAS_TOTALES = 20;
+const MAX_FILAS_VISIBLES = 200;
+const STORAGE_PREFIX = "examen-bd2-evento-";
+
+// Se resuelve cuando termina la reconstrucción de la base al (re)entrar; los editores esperan a esto.
+let baseLista = Promise.resolve();
+let estado = null; // { nombre, claveStorage, comenzado, inicio, pasoActual, sql[N], sqlAprobado[2], timestamps[N], vias[N], atenzaFinalizado }
+let temporizadorInterval = null;
+const ultimaEjecucionOk = {}; // n -> código que ejecutó bien por última vez
+
+const REGEX_DIACRITICOS = new RegExp(String.fromCharCode(91,0x0300,45,0x036f,93), "g");
+function slug(s){
+  return s.normalize("NFD").replace(REGEX_DIACRITICOS, "").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+}
+function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* =========================================================================
+   ATENZA — control de pérdida de foco en vivo
+   Solo actúa si el examen se abrió desde un lanzamiento de ATENZA
+   (?atenza_token=...&guia_intento=...). Mismo contrato que el bloque de las
+   guías nativas: /respuesta, /incidente y /finalizar. Diferencias a propósito:
+   - Cada paso entregado se reporta con texto_libre = su SQL (corrección manual).
+   - Pantalla completa se pide al tocar "Comenzar" (fin de la Parte 1: hay gesto del usuario).
+   - El control de foco se enciende recién al comenzar (estado.comenzado): en la Parte 1
+     el estudiante necesita salir a buscar su DDL y DML.
+   - visibilitychange + blur de un mismo cambio de pestaña cuentan UN incidente.
+   ========================================================================= */
+const ATENZA = (function () {
+  const API = "https://api-atenza.atenzabo.com";
+
+  function leerParams() {
+    const candidatos = [location.search];
+    const pos = location.hash.indexOf("?");
+    if (pos !== -1) candidatos.push(location.hash.slice(pos));
+    for (const c of candidatos) {
+      const p = new URLSearchParams(c);
+      if (p.get("atenza_token") && p.get("guia_intento")) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  const params = leerParams();
+  // ?prueba=1 simula una sesión supervisada (pantalla completa, incidentes, avisos)
+  // sin hablar con ATENZA: las llamadas se anotan en la consola del navegador.
+  const valorPrueba = new URLSearchParams(location.search).get("prueba");
+  const modoPrueba = valorPrueba !== null && valorPrueba !== "0" && valorPrueba !== "false";
+  const token = params.get("atenza_token") || (modoPrueba ? "prueba" : null);
+  const intento = params.get("guia_intento") || (modoPrueba ? "prueba" : null);
+  const activo = !!(token && intento);
+
+  let comenzado = false, terminado = false, finalizando = false, ultimoIncidente = 0;
+  let pendientes = []; // respuestas que fallaron por red, se reintentan
+  let controlActivo = () => true;
+
+  function post(path, body) {
+    if (modoPrueba && !params.get("atenza_token")) {
+      console.log("[ATENZA modo prueba]", path, body);
+      return Promise.resolve({ ok: true, status: 200 });
+    }
+    return fetch(API + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    const el = document.createElement("div");
+    el.className = "aviso-incidente" + (ok ? " ok" : "");
+    el.textContent = texto;
+    if (onClick) { el.style.cursor = "pointer"; el.addEventListener("click", () => { el.remove(); onClick(); }); }
+    else setTimeout(() => el.remove(), 4500);
+    document.body.appendChild(el);
+  }
+
+  // La barra roja solo aparece cuando el control ya está activo: en los pasos 1 y 2
+  // el estudiante sale a buscar su código y no debe verla.
+  function actualizarAvisoPantalla() {
+    document.getElementById("avisoPantalla").hidden = !(activo && comenzado && !terminado && controlActivo() && !document.fullscreenElement);
+  }
+  function pedirPantallaCompleta() {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {}).then(actualizarAvisoPantalla);
+    }
+    actualizarAvisoPantalla();
+  }
+
+  function incidente(detalle) {
+    if (!activo || !comenzado || terminado || !controlActivo()) return;
+    const t = Date.now();
+    if (t - ultimoIncidente < 1500) return;
+    ultimoIncidente = t;
+    post("/api/guias/intentos/" + intento + "/incidente", { detalle }).catch(() => {});
+    avisar("⚠️ Se registró una salida del examen.", false);
+  }
+
+  document.addEventListener("visibilitychange", () => { if (document.hidden) incidente("visibilitychange"); });
+  window.addEventListener("blur", () => incidente("blur"));
+  document.addEventListener("fullscreenchange", () => {
+    actualizarAvisoPantalla();
+    if (!document.fullscreenElement) incidente("salida_pantalla_completa");
+  });
+  window.addEventListener("beforeunload", (e) => {
+    if (activo && comenzado && !terminado) { e.preventDefault(); e.returnValue = ""; }
+  });
+
+  async function enviarRespuesta(r) {
+    const res = await post("/api/guias/intentos/" + intento + "/respuesta", r);
+    if (!res.ok) throw new Error("http " + res.status);
+  }
+  async function vaciarPendientes() {
+    const lista = pendientes; pendientes = [];
+    for (const r of lista) { try { await enviarRespuesta(r); } catch (_) { pendientes.push(r); } }
+  }
+
+  return {
+    activo,
+    modoPrueba,
+    intento,
+    // Solo con un lanzamiento real: en modo prueba el estado se amarra al nombre, para poder repetir.
+    intentoReal: (params.get("atenza_token") && params.get("guia_intento")) ? intento : null,
+    setControl(fn) { controlActivo = fn; },
+    // Se llama al tocar "Comenzar". Pasa a pantalla completa solo si el control ya
+    // corresponde (estudiante que recarga estando en el Reporte 1 o más adelante).
+    comenzar() {
+      if (!activo) return;
+      comenzado = true;
+      if (controlActivo()) pedirPantallaCompleta(); else actualizarAvisoPantalla();
+    },
+    // Se llama al verificarse el Paso 2, justo después del clic del estudiante en "Ejecutar".
+    // Si el navegador rechaza la petición (el permiso del clic dura pocos segundos),
+    // queda la barra roja con el botón para entrar.
+    activarControl() {
+      if (!activo || !comenzado) return;
+      pedirPantallaCompleta();
+    },
+    volverAPantallaCompleta() { pedirPantallaCompleta(); },
+    async reportarRespuesta(id, sql) {
+      if (!activo) return;
+      const r = { referencia: id, texto_libre: sql };
+      try { await vaciarPendientes(); await enviarRespuesta(r); } catch (_) { pendientes.push(r); }
+    },
+    async finalizar(alTerminar) {
+      if (!activo || terminado || finalizando) return;
+      finalizando = true;
+      try {
+        await vaciarPendientes();
+        const res = await post("/api/guias/intentos/" + intento + "/finalizar", {});
+        if (!res.ok) throw new Error("http " + res.status);
+        terminado = true;
+        if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        actualizarAvisoPantalla();
+        avisar("✅ ¡Examen enviado! Ya puedes cerrar esta pestaña.", true);
+        if (alTerminar) alTerminar(true);
+      } catch (_) {
+        avisar("⚠️ No se pudo enviar tu examen — toca para reintentar.", false, () => { finalizando = false; this.finalizar(alTerminar); });
+        finalizando = false;
+        if (alTerminar) alTerminar(false);
+      }
+    },
+  };
+})();
+
+/* =========================================================================
+   PGlite: mismo patrón que los talleres de la materia.
+   ========================================================================= */
+const PGLITE_CDN = "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.5.4/dist/index.js";
+let pgliteReadyPromise = null;
+
+function cargarPGlite(){
+  if (!pgliteReadyPromise) {
+    pgliteReadyPromise = (async () => {
+      try {
+        const { PGlite } = await import(PGLITE_CDN);
+        return new PGlite();
+      } catch (e) {
+        pgliteReadyPromise = null; // que un fallo de red no quede guardado: el siguiente intento vuelve a descargar
+        throw e;
+      }
+    })();
+  }
+  return pgliteReadyPromise;
+}
+function reiniciarPGlite(){ pgliteReadyPromise = null; }
+
+// Si algo inesperado falla, que se vea en pantalla en vez de dejar el examen "muerto" sin explicación.
+window.addEventListener("error", (ev) => {
+  const el = document.getElementById("errorPagina");
+  if (!el) return;
+  el.hidden = false;
+  el.textContent = "⚠️ Error inesperado en la página: " + (ev.message || "desconocido") + ". Recarga; si sigue, avisa a tu profesor (tu progreso está guardado).";
+});
+
+function mensajeError(e){ return (e && e.message) ? e.message : String(e); }
+
+async function ejecutarSQL(codigo){
+  try {
+    const db = await cargarPGlite();
+    return { resultados: await db.exec(codigo), error: null };
+  } catch (e) {
+    return { resultados: null, error: mensajeError(e) };
+  }
+}
+// Para los reportes y la zona de pruebas: una transacción de solo lectura que
+// siempre se revierte, así una consulta nunca puede alterar la base armada.
+async function ejecutarSoloLectura(codigo){
+  let db;
+  try { db = await cargarPGlite(); } catch (e) { return { resultados:null, error:"No se pudo cargar el motor de PostgreSQL: " + mensajeError(e) }; }
+  try {
+    await db.exec("BEGIN READ ONLY");
+    return { resultados: await db.exec(codigo), error: null };
+  } catch (e) {
+    return { resultados: null, error: mensajeError(e) };
+  } finally {
+    try { await db.exec("ROLLBACK"); } catch (_) {}
+  }
+}
+async function filas(sql){
+  const db = await cargarPGlite();
+  const r = await db.exec(sql);
+  return (r[r.length-1].rows) || [];
+}
+async function vaciarEsquema(){
+  const db = await cargarPGlite();
+  await db.exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
+}
+
+function formatearValor(v){ if (v===null||v===undefined) return "<em>NULL</em>"; return escapeHtml(v); }
+function renderizarResultados(resultados){
+  const conColumnas = (resultados || []).filter(r => r.fields && r.fields.length);
+  if (!conColumnas.length) return '<p class="sql-status">✅ Ejecutado. No se generó ningún resultado.</p>';
+  return conColumnas.map(r => {
+    const columnas = r.fields.map(f => f.name);
+    let html = '<table class="sql-result-table"><thead><tr>' + columnas.map(c => `<th scope="col">${escapeHtml(c)}</th>`).join("") + "</tr></thead><tbody>";
+    const total = (r.rows || []).length;
+    if (!total) html += `<tr><td colspan="${columnas.length}"><em>(0 filas)</em></td></tr>`;
+    else r.rows.slice(0, MAX_FILAS_VISIBLES).forEach(fila => { html += "<tr>" + columnas.map(c => `<td>${formatearValor(fila[c])}</td>`).join("") + "</tr>"; });
+    html += "</tbody></table>";
+    if (total > MAX_FILAS_VISIBLES) html += `<p class="sql-status">Mostrando las primeras ${MAX_FILAS_VISIBLES} de ${total} filas.</p>`;
+    else if (total) html += `<p class="sql-status">${total} fila${total===1?"":"s"}.</p>`;
+    return html;
+  }).join("");
+}
+function contarFilasUltimoSelect(resultados){
+  const conColumnas = (resultados || []).filter(r => r.fields && r.fields.length);
+  return conColumnas.length ? (conColumnas[conColumnas.length-1].rows || []).length : null;
+}
+
+/* ===== Editor: botón ejecutar + (opcional) bloqueo de portapapeles ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
+function conectarEditor(panel, { bloquear, ejecutar, alTerminar, alEditar }){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En los reportes el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  if (bloquear) ["copy","cut","paste","drop"].forEach(evt => textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); }));
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart, fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0,inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      if (alEditar) alEditar(textarea.value);
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (bloquear && teclaCtrl && ["c","v","x"].includes(e.key.toLowerCase())) { e.preventDefault(); avisarBloqueo(); }
+  });
+  textarea.addEventListener("input", () => { if (alEditar) alEditar(textarea.value); });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe alguna sentencia SQL antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando PostgreSQL real (WebAssembly)… la primera vez puede tardar varios segundos.";
+    runBtn.disabled = true;
+    let resultado;
+    try {
+      await baseLista;
+      resultado = await ejecutar(codigo);
+      if (resultado.error) { outputBody.textContent = "❌ Error de PostgreSQL: " + resultado.error; output.classList.add("error"); }
+      else outputBody.innerHTML = renderizarResultados(resultado.resultados);
+    } catch (e) {
+      resultado = { resultados:null, error:mensajeError(e) };
+      outputBody.textContent = "No se pudo ejecutar: " + mensajeError(e);
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+    if (alTerminar) await alTerminar({ ...resultado, codigo });
+  };
+}
+
+/* =========================================================================
+   VERIFICACIONES DE CORDURA (DDL y DML) — el modelo es de cada estudiante,
+   así que solo se exige un mínimo razonable; el detalle lo revisa el profesor.
+   ========================================================================= */
+async function verificarDDL(){
+  const tablas = await filas("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' ORDER BY table_name");
+  if (tablas.length < MIN_TABLAS) return { ok:false, motivo:`Tu script creó ${tablas.length} tabla(s) y se esperan al menos ${MIN_TABLAS} para modelar el evento completo. ¿Pegaste el script completo?` };
+  const sinPk = await filas(`SELECT t.table_name FROM information_schema.tables t WHERE t.table_schema='public' AND t.table_type='BASE TABLE' AND NOT EXISTS (SELECT 1 FROM information_schema.table_constraints tc WHERE tc.table_schema='public' AND tc.table_name=t.table_name AND tc.constraint_type='PRIMARY KEY')`);
+  if (sinPk.length) return { ok:false, motivo:"Estas tablas no tienen PRIMARY KEY: " + sinPk.map(r => r.table_name).join(", ") + "." };
+  const fks = await filas("SELECT count(*)::int AS n FROM information_schema.table_constraints WHERE table_schema='public' AND constraint_type='FOREIGN KEY'");
+  const nFk = Number(fks[0].n);
+  if (nFk < MIN_FKS) return { ok:false, motivo:`Tu modelo tiene ${nFk} FOREIGN KEY y se esperan al menos ${MIN_FKS}. Revisa las relaciones entre tus tablas.` };
+  return { ok:true, resumen:`${tablas.length} tablas, ${nFk} llaves foráneas.` };
+}
+
+async function verificarDML(){
+  const conteo = await filas(`SELECT table_name, (xpath('/row/c/text()', query_to_xml(format('select count(*) as c from %I.%I', table_schema, table_name), false, true, '')))[1]::text::int AS n FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' ORDER BY table_name`);
+  const conDatos = conteo.filter(r => Number(r.n) > 0);
+  const total = conteo.reduce((a, r) => a + Number(r.n), 0);
+  if (conDatos.length < MIN_TABLAS_CON_DATOS) {
+    const vacias = conteo.filter(r => Number(r.n) === 0).map(r => r.table_name);
+    return { ok:false, motivo:`Solo ${conDatos.length} tabla(s) tienen datos y se esperan al menos ${MIN_TABLAS_CON_DATOS}.` + (vacias.length ? " Siguen vacías: " + vacias.join(", ") + "." : "") };
+  }
+  if (total < MIN_FILAS_TOTALES) return { ok:false, motivo:`Tu base tiene ${total} filas en total y se esperan al menos ${MIN_FILAS_TOTALES} para que los reportes tengan sentido.` };
+  return { ok:true, resumen:`${total} filas en ${conDatos.length} tablas.` };
+}
+
+/* =========================================================================
+   PERSISTENCIA Y RECUPERACIÓN
+   ========================================================================= */
+function guardarEstado(){ localStorage.setItem(estado.claveStorage, JSON.stringify(estado)); }
+function cargarEstadoGuardado(clave){
+  try { const raw = localStorage.getItem(clave); return raw ? normalizarEstado(JSON.parse(raw)) : null; } catch (_) { return null; }
+}
+// Los estados guardados por versiones anteriores del examen (sin "Comenzar") se descartan:
+// solo existen en navegadores de prueba y mezclarlos con el flujo nuevo dejaba pasos bloqueados
+// o el cronómetro ya vencido.
+function normalizarEstado(e){
+  if (!e || typeof e !== "object" || typeof e.comenzado !== "boolean" || !Array.isArray(e.sqlAprobado)) return null;
+  e.sql = Array.isArray(e.sql) ? e.sql : Array(N).fill("");
+  e.timestamps = Array.isArray(e.timestamps) ? e.timestamps : Array(N).fill(null);
+  e.vias = Array.isArray(e.vias) ? e.vias : Array(N).fill(null);
+  return e;
+}
+let guardadoTimer = null;
+function guardarBorrador(n, valor){
+  estado.sql[n-1] = valor;
+  clearTimeout(guardadoTimer);
+  guardadoTimer = setTimeout(guardarEstado, 400);
+}
+// Reconstruye desde cero con el DDL y DML ya aprobados.
+async function reconstruirBaseDeDatos(){
+  reiniciarPGlite();
+  try { await vaciarEsquema(); } catch (e) { return { ok:false, paso:0, error:mensajeError(e) }; }
+  for (let i = 1; i <= 2; i++) {
+    if (estado.timestamps[i-1] && (i === 1 || estado.timestamps[0]) && estado.sqlAprobado[i-1] && estado.sqlAprobado[i-1].trim()) {
+      const { error } = await ejecutarSQL(estado.sqlAprobado[i-1]);
+      if (error) return { ok:false, paso:i, error };
+    }
+  }
+  return { ok:true };
+}
+
+/* =========================================================================
+   CONSTRUCCIÓN DE LA INTERFAZ DE LOS PASOS
+   ========================================================================= */
+function construirPasos(){
+  const html = PASOS.map((p, i) => {
+    const n = i + 1;
+    const overlay = ""; // sin candados: la Parte 1 está abierta desde el nombre y la Parte 2 se abre completa con "Comenzar"
+    const acciones = p.tipo === "reporte"
+      ? `<div class="acciones-entrega"><button type="button" class="btn-entregar" disabled>📤 Entregar consulta</button><span class="entrega-ayuda">Ejecútala primero; luego podrás entregarla.</span></div>`
+      : "";
+    return `<section class="paso desbloqueado" id="paso-${n}" data-paso="${n}" data-quiz-id="${p.id}">
+${overlay}
+<div class="paso-contenido card">
+<div class="paso-header"><span class="paso-num">${n}</span><h2 class="section-title" style="margin:0;">${p.titulo}</h2><span class="paso-estado">pendiente</span></div>
+<div class="highlight"><strong>Enunciado</strong>${p.enunciado}</div>
+<div class="editor-panel">
+<div class="editor-header"><span>🗄️ ${p.etiqueta}</span><button type="button" class="code-btn run">${p.boton}</button></div>
+<textarea class="editor" spellcheck="false" style="min-height:${p.alto}px" placeholder="${p.placeholder}"></textarea>
+<div class="output" hidden><div class="output-head">Resultado</div><div class="output-body"></div></div>
+</div>
+${acciones}
+<div class="verif-box" hidden></div>
+</div>
+</section>`;
+  });
+  document.getElementById("pasosParte1").innerHTML = html.slice(0, 2).join("");
+  document.getElementById("pasosParte2").innerHTML = html.slice(2).join("");
+}
+
+function cajaVerif(n, clase, texto){
+  const caja = document.querySelector(`#paso-${n} .verif-box`);
+  caja.hidden = false;
+  caja.className = "verif-box " + clase;
+  caja.textContent = texto;
+}
+
+async function ejecutarPaso(n, codigo){
+  if (n === 1) {
+    try { await vaciarEsquema(); } catch (e) { return { resultados:null, error:mensajeError(e) }; }
+    return ejecutarSQL(codigo);
+  }
+  if (n === 2) {
+    try { await vaciarEsquema(); } catch (e) { return { resultados:null, error:mensajeError(e) }; }
+    // El Paso 1 puede no estar verificado todavía: se usa el DDL aprobado o, si no, lo que haya pegado.
+    const ddlSql = estado.sqlAprobado[0] || estado.sql[0];
+    if (!ddlSql || !ddlSql.trim()) return { resultados:null, error:"Pega primero tu DDL en el Paso 1: tu DML necesita que las tablas existan." };
+    const ddl = await ejecutarSQL(ddlSql);
+    if (ddl.error) return { resultados:null, error:"Antes de cargar tus datos hay que crear las tablas, y tu DDL del Paso 1 dio error: " + ddl.error };
+    return ejecutarSQL(codigo);
+  }
+  return ejecutarSoloLectura(codigo);
+}
+
+async function terminarEjecucion(n, { error, codigo, resultados }){
+  guardarBorrador(n, codigo);
+  guardarEstado();
+  const paso = PASOS[n-1];
+  if (error) {
+    cajaVerif(n, "fail", "❌ Corrige el error de arriba y vuelve a ejecutar.");
+    if (paso.tipo === "reporte") { delete ultimaEjecucionOk[n]; actualizarBotonEntrega(n); }
+    return;
+  }
+  if (paso.tipo === "prep") {
+    cajaVerif(n, "info", "⏳ Verificando…");
+    let veredicto;
+    try { veredicto = n === 1 ? await verificarDDL() : await verificarDML(); }
+    catch (e) { veredicto = { ok:false, motivo:"Error interno de verificación (avísale a tu profesor): " + mensajeError(e) }; }
+    if (veredicto.ok) {
+      estado.sqlAprobado[n-1] = codigo;
+      // Corregir el DDL con el DML ya cargado borra los datos (se recrea el esquema):
+      // se vuelve a cargar el DML aprobado para que los reportes no queden sin datos.
+      let extra = "";
+      if (n === 1 && estado.timestamps[1] && estado.sqlAprobado[1]) {
+        const re = await ejecutarSQL(estado.sqlAprobado[1]);
+        extra = re.error
+          ? " ⚠️ Tu DML ya no encaja con este DDL (" + re.error + "): corrígelo y vuelve a ejecutar el Paso 2."
+          : " Tu DML se volvió a cargar sobre las tablas nuevas.";
+      }
+      cajaVerif(n, extra.includes("⚠️") ? "info" : "ok", "✅ Paso " + n + " verificado. " + veredicto.resumen + extra);
+      marcarPasoCompletado(n, "auto");
+      document.getElementById("dbEstado").textContent =
+        (estado.timestamps[0] && estado.timestamps[1]) ? "✅ Base de datos lista."
+        : n === 1 ? "Tablas creadas. Falta verificar los datos (Paso 2)."
+        : "Datos cargados. Falta verificar tu DDL (Paso 1).";
+    } else {
+      cajaVerif(n, "fail", "❌ " + veredicto.motivo);
+    }
+    return;
+  }
+  // reporte
+  ultimaEjecucionOk[n] = codigo;
+  const nFilas = contarFilasUltimoSelect(resultados);
+  if (nFilas === null) { cajaVerif(n, "fail", "❌ Tu código no devolvió ningún resultado: escribe una consulta SELECT."); delete ultimaEjecucionOk[n]; }
+  else if (nFilas === 0) cajaVerif(n, "info", "⚠️ Se ejecutó pero devolvió 0 filas. Si es lo esperado con tus datos, puedes entregarla; si no, revisa los filtros.");
+  else cajaVerif(n, "ok", "✅ Se ejecutó sin errores (" + nFilas + " fila" + (nFilas === 1 ? "" : "s") + "). Revisa el resultado y, cuando estés conforme, entrégala.");
+  actualizarBotonEntrega(n);
+}
+
+function actualizarBotonEntrega(n){
+  const sec = document.getElementById("paso-" + n);
+  const btn = sec.querySelector(".btn-entregar");
+  if (!btn) return;
+  const ta = sec.querySelector(".editor");
+  const lista = ultimaEjecucionOk[n] !== undefined && ultimaEjecucionOk[n] === ta.value.trim() && !estado.timestamps[n-1];
+  btn.disabled = !lista;
+  btn.classList.remove("confirmar");
+  btn.textContent = "📤 Entregar consulta";
+  sec.querySelector(".entrega-ayuda").textContent = lista ? "Una vez entregada, no podrás modificarla." : "Ejecútala primero; si cambias el código, vuelve a ejecutarla.";
+}
+
+function conectarEntrega(n){
+  const sec = document.getElementById("paso-" + n);
+  const btn = sec.querySelector(".btn-entregar");
+  if (!btn) return;
+  let revertir = null;
+  btn.addEventListener("click", () => {
+    if (!btn.classList.contains("confirmar")) {
+      btn.classList.add("confirmar");
+      btn.textContent = "⚠️ ¿Seguro? Toca de nuevo para entregar";
+      revertir = setTimeout(() => actualizarBotonEntrega(n), 4000);
+      return;
+    }
+    clearTimeout(revertir);
+    const ta = sec.querySelector(".editor");
+    estado.sql[n-1] = ta.value.trim();
+    marcarPasoCompletado(n, "entrega");
+    cajaVerif(n, "ok", "📤 Consulta entregada.");
+  });
+}
+
+function bloquearPaso(n){
+  const sec = document.getElementById("paso-" + n);
+  sec.querySelector(".editor").readOnly = true;
+  sec.querySelector(".code-btn.run").disabled = true;
+  const btn = sec.querySelector(".btn-entregar");
+  if (btn) { btn.disabled = true; btn.classList.remove("confirmar"); btn.textContent = "📤 Entregada"; const a = sec.querySelector(".entrega-ayuda"); if (a) a.textContent = ""; }
+}
+
+function marcarPasoUI(n, completado){
+  const sec = document.getElementById("paso-" + n);
+  sec.classList.add("desbloqueado");
+  if (completado) {
+    sec.classList.add("completado");
+    sec.querySelector(".paso-estado").textContent = PASOS[n-1].tipo === "reporte" ? "📤 entregado" : "✅ verificado";
+    // Los pasos 1 y 2 siguen editables (se pueden corregir); los reportes entregados no.
+    if (PASOS[n-1].tipo === "reporte") bloquearPaso(n);
+  }
+}
+
+function marcarPasoCompletado(n, via){
+  const prep = PASOS[n-1].tipo === "prep";
+  const primeraVez = !estado.timestamps[n-1];
+  estado.timestamps[n-1] = new Date().toLocaleTimeString();
+  estado.vias[n-1] = via;
+  if (prep && via === "clave") estado.sqlAprobado[n-1] = estado.sql[n-1];
+  if (estado.pasoActual === n) estado.pasoActual = n + 1;
+  guardarEstado();
+  marcarPasoUI(n, true);
+  // Se reporta a ATENZA lo que el estudiante realmente escribió (en DDL/DML, el último
+  // script aprobado). Un salto con clave del profesor no se reporta: no hay respuesta que corregir.
+  const sqlAReportar = prep ? estado.sqlAprobado[n-1] : estado.sql[n-1];
+  if (via !== "clave" && sqlAReportar && sqlAReportar.trim()) ATENZA.reportarRespuesta(PASOS[n-1].id, sqlAReportar);
+  if (prep) {
+    // Los pasos 1 y 2 se pueden verificar en cualquier orden; los reportes siguen cuando ambos estén listos.
+    const ambos = !!(estado.timestamps[0] && estado.timestamps[1]);
+    if (ambos && estado.pasoActual < 3) { estado.pasoActual = 3; guardarEstado(); }
+    actualizarBotonComenzar();
+    if (ambos && primeraVez && !estado.comenzado) document.getElementById("bloqueComenzar").scrollIntoView({ behavior:"smooth", block:"center" });
+    return;
+  }
+  if (estado.timestamps.slice(2).every(Boolean)) {
+    mostrarCertificado();
+    ATENZA.finalizar(ok => { if (ok) { estado.atenzaFinalizado = true; guardarEstado(); actualizarCertAtenza(); } });
+  }
+}
+
+function actualizarBotonComenzar(){
+  const btn = document.getElementById("btnComenzarReportes");
+  const listo = !!(estado.timestamps[0] && estado.timestamps[1]);
+  btn.disabled = !listo || estado.comenzado;
+  btn.classList.remove("confirmar");
+  btn.textContent = "▶ Comenzar";
+  document.getElementById("comenzarAyuda").textContent = listo
+    ? "Presiónalo solo si tu DDL y tu DML ya están creados correctamente."
+    : "Verifica el Paso 1 y el Paso 2 para habilitarlo.";
+}
+
+function mostrarParte2(){
+  document.getElementById("parte2").hidden = false;
+  document.getElementById("bloqueComenzar").hidden = true;
+}
+
+function conectarComenzar(){
+  const btn = document.getElementById("btnComenzarReportes");
+  let revertir = null;
+  btn.addEventListener("click", () => {
+    if (estado.comenzado) return;
+    if (!btn.classList.contains("confirmar")) {
+      btn.classList.add("confirmar");
+      btn.textContent = "⚠️ ¿Todo creado correctamente? Toca de nuevo para comenzar";
+      revertir = setTimeout(actualizarBotonComenzar, 5000);
+      return;
+    }
+    clearTimeout(revertir);
+    estado.comenzado = true;
+    estado.inicio = Date.now();
+    guardarEstado();
+    btn.disabled = true;
+    ATENZA.activarControl(); // sigue dentro del gesto del clic: pasa a pantalla completa
+    mostrarParte2();
+    iniciarTemporizador();
+    document.getElementById("parte2").scrollIntoView({ behavior:"smooth", block:"start" });
+  });
+}
+
+function actualizarCertAtenza(){
+  const el = document.getElementById("certAtenza");
+  if (!ATENZA.activo) { el.textContent = ""; return; }
+  el.innerHTML = estado.atenzaFinalizado ? "<strong>ATENZA:</strong> ✅ examen enviado." : "<strong>ATENZA:</strong> ⏳ enviando… (si no se confirma, toca el aviso rojo para reintentar).";
+}
+
+function mostrarCertificado(){
+  const sec = document.getElementById("certificadoSeccion");
+  sec.hidden = false;
+  document.getElementById("certNombre").textContent = estado.nombre;
+  const tbody = document.getElementById("tablaCertificado");
+  tbody.innerHTML = "";
+  PASOS.forEach((p, i) => {
+    const ok = estado.timestamps[i];
+    const texto = !ok ? "—" : (p.tipo === "reporte" ? "📤 entregado" : "✅ verificado") + (estado.vias[i] === "clave" ? " (clave del profesor)" : "");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${i+1}. ${p.titulo}</td><td>${texto}</td><td>${ok||"—"}</td>`;
+    tbody.appendChild(tr);
+  });
+  actualizarCertAtenza();
+  sec.scrollIntoView({ behavior:"smooth" });
+}
+
+document.getElementById("btnCopiarSql").addEventListener("click", () => {
+  const partes = ["Examen BD II — Consultas en vivo", "Estudiante: " + estado.nombre, ""];
+  PASOS.forEach((p, i) => {
+    partes.push(`-- ===== Paso ${i+1}: ${p.titulo} =====`);
+    partes.push((p.tipo === "prep" ? estado.sqlAprobado[i] || estado.sql[i] : estado.sql[i]) || "-- (vacío)");
+    partes.push("");
+  });
+  const texto = partes.join("\n");
+  navigator.clipboard.writeText(texto).then(
+    () => mostrarAvisoPortapapeles("Copiado. Pégalo donde tu profesor te indique."),
+    () => mostrarAvisoPortapapeles("No se pudo copiar automáticamente.")
+  );
+});
+
+/* ===== Visor de esquema (para no tener que salir de la pestaña) ===== */
+async function pintarEsquema(){
+  const panel = document.getElementById("esquemaPanel");
+  panel.innerHTML = "<p>Cargando…</p>";
+  try {
+    const cols = await filas(`
+      SELECT c.table_name, c.column_name, c.data_type,
+       EXISTS (SELECT 1 FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage k ON k.constraint_name=tc.constraint_name AND k.table_schema=tc.table_schema
+               WHERE tc.constraint_type='PRIMARY KEY' AND tc.table_schema='public' AND k.table_name=c.table_name AND k.column_name=c.column_name) AS pk,
+       (SELECT string_agg(DISTINCT ccu.table_name, ', ') FROM information_schema.table_constraints tc
+          JOIN information_schema.key_column_usage k ON k.constraint_name=tc.constraint_name AND k.table_schema=tc.table_schema
+          JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name=tc.constraint_name AND ccu.constraint_schema=tc.table_schema
+          WHERE tc.constraint_type='FOREIGN KEY' AND tc.table_schema='public' AND k.table_name=c.table_name AND k.column_name=c.column_name) AS fk
+      FROM information_schema.columns c
+      JOIN information_schema.tables t ON t.table_schema=c.table_schema AND t.table_name=c.table_name AND t.table_type='BASE TABLE'
+      WHERE c.table_schema='public' ORDER BY c.table_name, c.ordinal_position`);
+    if (!cols.length) { panel.innerHTML = "<p>Todavía no hay tablas: ejecuta primero el Paso 1.</p>"; return; }
+    const porTabla = {};
+    cols.forEach(c => (porTabla[c.table_name] ||= []).push(c));
+    panel.innerHTML = Object.entries(porTabla).map(([t, cs]) =>
+      `<div class="esquema-tabla"><strong>${escapeHtml(t)}</strong>` +
+      cs.map(c => `<div>${c.pk ? "🔑 " : ""}${escapeHtml(c.column_name)} <span class="tipo">${escapeHtml(c.data_type)}</span>${c.fk ? " → " + escapeHtml(c.fk) : ""}</div>`).join("") +
+      `</div>`).join("");
+  } catch (e) {
+    panel.innerHTML = "<p>No se pudo leer el esquema: " + escapeHtml(mensajeError(e)) + "</p>";
+  }
+}
+
+/* =========================================================================
+   INICIO Y FLUJO DEL EXAMEN
+   ========================================================================= */
+function nuevoEstado(nombre, clave){
+  return { nombre, claveStorage: clave, comenzado: false, inicio: null, pasoActual: 1,
+           sql: Array(N).fill(""), sqlAprobado: ["", ""], timestamps: Array(N).fill(null), vias: Array(N).fill(null), atenzaFinalizado:false };
+}
+function claveParaEstudiante(nombre){
+  // Con ATENZA, el estado se amarra al intento (no al nombre): recargar y escribir
+  // otro nombre no reinicia el cronómetro. Sin ATENZA, se amarra al nombre.
+  return STORAGE_PREFIX + (ATENZA.intentoReal ? "i-" + ATENZA.intentoReal : "n-" + slug(nombre));
+}
+
+const params = new URLSearchParams(location.search);
+const VERSION_EXAMEN = "v5 · 20/10/2026";
+document.getElementById("versionInicio").textContent = VERSION_EXAMEN;
+document.getElementById("versionExamen").textContent = VERSION_EXAMEN;
+
+// Borrar el progreso guardado: solo en pruebas (sin lanzamiento real de ATENZA). Con un
+// intento real no se ofrece, porque reiniciaría el cronómetro del estudiante.
+function borrarProgresoGuardado(){
+  Object.keys(localStorage).filter(k => k.startsWith(STORAGE_PREFIX)).forEach(k => localStorage.removeItem(k));
+}
+const puedeReiniciar = !ATENZA.intentoReal;
+if (puedeReiniciar && params.get("reiniciar") === "1") {
+  borrarProgresoGuardado();
+  const limpia = new URLSearchParams(location.search); limpia.delete("reiniciar");
+  history.replaceState(null, "", location.pathname + (limpia.toString() ? "?" + limpia : "") + location.hash);
+  params.delete("reiniciar");
+}
+if (puedeReiniciar && ATENZA.modoPrueba) {
+  const enlace = document.getElementById("resetInicio");
+  enlace.hidden = false;
+  enlace.addEventListener("click", (e) => { e.preventDefault(); borrarProgresoGuardado(); location.reload(); });
+}
+const campoNombre = document.getElementById("campoNombre");
+const btnContinuar = document.getElementById("btnContinuar");
+const avisoInicio = document.getElementById("avisoInicio");
+
+document.getElementById("avisoSupervision").innerHTML = ATENZA.activo
+  ? (ATENZA.modoPrueba && !params.get("atenza_token") ? "<strong>🧪 MODO PRUEBA (?prueba=1)</strong><p>Simula la supervisión: nada se envía a ATENZA, las llamadas se ven en la consola del navegador (F12).</p>" : "") + "<strong>🖥️ Examen supervisado</strong><p>En la Parte 1 puedes salir de la pestaña para traer tu DDL y DML. Cuando presiones <strong>«Comenzar»</strong>, el examen pasa a <strong>pantalla completa</strong> y, desde ahí, salir de la pestaña o de la pantalla completa queda <strong>registrado</strong> y lo ve tu profesor.</p>"
+  : "<strong>ℹ️ Sin supervisión de ATENZA</strong><p>Esta página se abrió sin un lanzamiento de ATENZA: no se registra el control de foco ni se envía nada al panel. (Si eres estudiante en un examen real, vuelve a abrirlo desde el link que te dio tu profesor.)</p>";
+
+const estUrl = params.get("est");
+if (estUrl) { campoNombre.value = estUrl; campoNombre.disabled = true; }
+// Con ATENZA y un intento ya empezado en este navegador, se retoma con el mismo nombre.
+if (ATENZA.intentoReal) {
+  const previo = cargarEstadoGuardado(STORAGE_PREFIX + "i-" + ATENZA.intentoReal);
+  if (previo) { campoNombre.value = previo.nombre; campoNombre.disabled = true; }
+}
+function validar(){ btnContinuar.disabled = !campoNombre.value.trim(); }
+campoNombre.addEventListener("input", validar);
+validar();
+
+btnContinuar.addEventListener("click", async () => {
+  const nombre = campoNombre.value.trim();
+  if (!nombre) return;
+  btnContinuar.disabled = true;
+  avisoInicio.textContent = "";
+  const clave = claveParaEstudiante(nombre);
+  estado = cargarEstadoGuardado(clave);
+  if (!estado) { estado = nuevoEstado(nombre, clave); guardarEstado(); }
+  ATENZA.setControl(() => estado && estado.comenzado);
+  ATENZA.comenzar(); // sigue dentro del gesto del clic (no hubo ningún await antes)
+  // Al ocultar la pantalla de inicio, el navegador mueve el foco y hace scroll
+  // automático, dejando la barra superior sticky tapando el encabezado.
+  if (document.activeElement) document.activeElement.blur();
+  document.getElementById("pantallaInicio").hidden = true;
+  await iniciarExamen();
+  window.scrollTo(0, 0);
+});
+
+document.getElementById("btnVolverPantalla").addEventListener("click", () => ATENZA.volverAPantallaCompleta());
+
+async function iniciarExamen(){
+  document.getElementById("contenedorExamen").hidden = false;
+  document.getElementById("badgeNombre").textContent = estado.nombre;
+  construirPasos();
+
+  for (let i = 1; i <= N; i++) {
+    const ta = document.querySelector(`#paso-${i} .editor`);
+    if (estado.sql[i-1]) ta.value = estado.sql[i-1];
+  }
+
+  for (let i = 1; i <= N; i++) {
+    if (estado.timestamps[i-1]) marcarPasoUI(i, true);
+    else if (i === estado.pasoActual) document.getElementById("paso-" + i).classList.add("desbloqueado");
+  }
+  if (estado.comenzado) mostrarParte2();
+  if (estado.timestamps.slice(2).every(Boolean)) {
+    mostrarCertificado();
+    if (!estado.atenzaFinalizado) ATENZA.finalizar(ok => { if (ok) { estado.atenzaFinalizado = true; guardarEstado(); actualizarCertAtenza(); } });
+  }
+
+  conectarEditor(document.getElementById("panelPruebas"), { bloquear:true, ejecutar: ejecutarSoloLectura });
+  for (let i = 1; i <= N; i++) {
+    const n = i;
+    const tipo = PASOS[n-1].tipo;
+    conectarEditor(document.querySelector(`#paso-${n} .editor-panel`), {
+      bloquear: tipo === "reporte",
+      ejecutar: (codigo) => ejecutarPaso(n, codigo),
+      alTerminar: (res) => terminarEjecucion(n, res),
+      alEditar: (valor) => { guardarBorrador(n, valor); if (tipo === "reporte") actualizarBotonEntrega(n); },
+    });
+    conectarEntrega(n);
+    if (tipo === "reporte" && !estado.timestamps[n-1]) actualizarBotonEntrega(n);
+  }
+
+  document.querySelectorAll(".paso-overlay .btn-clave").forEach(btn => {
+    const overlay = btn.closest(".paso-overlay");
+    const form = overlay.querySelector(".clave-form");
+    const input = form.querySelector("input");
+    btn.addEventListener("click", () => { form.hidden = !form.hidden; if (!form.hidden) input.focus(); });
+    form.querySelector(".clave-ok").addEventListener("click", () => {
+      const n = Number(btn.closest(".paso").dataset.paso);
+      if (input.value !== CLAVE_PROFESOR) {
+        input.value = "";
+        input.placeholder = "Clave incorrecta";
+      } else if (n - 1 !== estado.pasoActual) {
+        input.value = "";
+        input.placeholder = "Solo el paso siguiente";
+      } else {
+        // Desbloquear el paso n = dar por pasado el paso anterior (con lo que el estudiante dejó escrito).
+        marcarPasoCompletado(n - 1, "clave");
+      }
+    });
+  });
+
+  document.getElementById("reconstruirBtn").addEventListener("click", () => { baseLista = reconstruirYMostrar("🔁 Reconstruyendo…"); });
+  document.getElementById("esquemaBtn").addEventListener("click", async () => {
+    const panel = document.getElementById("esquemaPanel");
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) await pintarEsquema();
+  });
+
+  conectarComenzar();
+  actualizarBotonComenzar();
+  if (estado.comenzado) iniciarTemporizador();
+  else document.getElementById("examenTimer").textContent = "📝 Parte 1 · sin cronómetro";
+
+  if (ATENZA.modoPrueba && !ATENZA.intentoReal) {
+    const btn = document.getElementById("resetPruebaBtn");
+    btn.hidden = false;
+    btn.addEventListener("click", () => { borrarProgresoGuardado(); location.reload(); });
+  }
+
+  // Lo último: la interfaz ya está viva, así que si la reconstrucción tarda o falla
+  // (p. ej. sin internet para bajar PostgreSQL) el estudiante no queda con todo bloqueado.
+  if (estado.timestamps[0] || estado.timestamps[1]) baseLista = reconstruirYMostrar("🔁 Reconstruyendo tu base de datos a partir de tu progreso guardado…");
+}
+
+async function reconstruirYMostrar(mensajeInicial){
+  const el = document.getElementById("dbEstado");
+  el.textContent = mensajeInicial;
+  try {
+    const r = await reconstruirBaseDeDatos();
+    el.textContent = r.ok
+      ? (estado.timestamps[1] ? "✅ Base de datos reconstruida." : "Tablas recreadas. Falta cargar los datos (Paso 2).")
+      : "⚠️ Hubo un problema reconstruyendo el paso " + r.paso + " (" + r.error + "). Corrígelo en la Parte 1 o avisa a tu profesor.";
+  } catch (e) {
+    el.textContent = "⚠️ No se pudo reconstruir la base: " + mensajeError(e) + ". Revisa tu conexión y toca '🔁 Reconstruir mi base de datos'.";
+  }
+}
+
+/* ===== Temporizador ===== */
+function iniciarTemporizador(){
+  actualizarTemporizador();
+  temporizadorInterval = setInterval(actualizarTemporizador, 1000);
+}
+function actualizarTemporizador(){
+  const el = document.getElementById("examenTimer");
+  const restante = DURACION_MS - (Date.now() - estado.inicio);
+  if (restante <= 0) {
+    el.textContent = "⏰ Tiempo terminado";
+    el.classList.add("agotado");
+    clearInterval(temporizadorInterval);
+    bloquearTodo();
+    cerrarPorTiempo();
+    return;
+  }
+  const s = Math.floor(restante/1000);
+  const h = String(Math.floor(s/3600)).padStart(2,"0");
+  const m = String(Math.floor((s%3600)/60)).padStart(2,"0");
+  const ss = String(s%60).padStart(2,"0");
+  el.textContent = "⏱ " + h + ":" + m + ":" + ss;
+  el.classList.toggle("alerta", restante < 10*60*1000);
+}
+// Al vencer el tiempo se envía a ATENZA también lo que quedó a medio escribir
+// (sin entregar), para que el profesor pueda verlo, y se cierra el intento.
+async function cerrarPorTiempo(){
+  if (estado.atenzaFinalizado) return;
+  for (let i = 0; i < N; i++) {
+    if (!estado.timestamps[i] && estado.sql[i] && estado.sql[i].trim()) await ATENZA.reportarRespuesta(PASOS[i].id, estado.sql[i]);
+  }
+  ATENZA.finalizar(ok => { if (ok) { estado.atenzaFinalizado = true; guardarEstado(); } });
+}
+function bloquearTodo(){
+  document.querySelectorAll(".editor").forEach(t => t.readOnly = true);
+  document.querySelectorAll(".code-btn.run, .btn-entregar").forEach(b => b.disabled = true);
+  if (document.querySelector(".banner-tiempo")) return;
+  const banner = document.createElement("div");
+  banner.className = "banner-tiempo";
+  banner.textContent = "⏰ El tiempo del examen terminó. Lo que entregaste quedó guardado.";
+  document.body.prepend(banner);
+}
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  themeBtn.textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+</script>
+
+</body>
+</html>
