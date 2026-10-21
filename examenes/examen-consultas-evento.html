@@ -1157,11 +1157,11 @@ function actualizarTemporizador(){
   const el = document.getElementById("examenTimer");
   const restante = DURACION_MS - (Date.now() - estado.inicio);
   if (restante <= 0) {
-    el.textContent = "⏰ Tiempo terminado";
+    // Solo aviso: no se bloquea nada ni se cierra el intento; el profesor decide cuándo termina.
+    const pasado = Math.floor(-restante/1000);
+    el.textContent = "⏰ Tiempo terminado (+" + String(Math.floor(pasado/60)).padStart(2,"0") + ":" + String(pasado%60).padStart(2,"0") + ")";
     el.classList.add("agotado");
-    clearInterval(temporizadorInterval);
-    bloquearTodo();
-    cerrarPorTiempo();
+    avisarTiempoTerminado();
     return;
   }
   const s = Math.floor(restante/1000);
@@ -1179,6 +1179,16 @@ async function cerrarPorTiempo(){
     if (!estado.timestamps[i] && estado.sql[i] && estado.sql[i].trim()) await ATENZA.reportarRespuesta(PASOS[i].id, estado.sql[i]);
   }
   ATENZA.finalizar(ok => { if (ok) { estado.atenzaFinalizado = true; guardarEstado(); } });
+}
+function avisarTiempoTerminado(){
+  if (document.getElementById("avisoTiempo")) return;
+  const banner = document.createElement("div");
+  banner.id = "avisoTiempo";
+  banner.className = "banner-tiempo";
+  banner.style.cursor = "pointer";
+  banner.textContent = "⏰ El tiempo del examen terminó. Tu profesor te dirá cuándo dejar de trabajar. (toca para cerrar este aviso)";
+  banner.addEventListener("click", () => banner.remove());
+  document.body.prepend(banner);
 }
 function bloquearTodo(){
   document.querySelectorAll(".editor").forEach(t => t.readOnly = true);
