@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testing profundo y panorama de microservicios | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // problema-proyecto-grado.html. Corre acá, antes que el resto de la
+  // página, para que el motor de quizzes de abajo ya encuentre el
+  // localStorage limpio si cambió el guia_intento.
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  var QUIZ_PREFIX = 'isw-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">ISW <span>Testing profundo</span></div>
+<p>Pruebas unitarias, dobles, cobertura, regresión y microservicios</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#piramide">La pirámide de pruebas</a>
+<a href="#dobles">Stubs, fakes y espías</a>
+<a href="#cobertura">Cobertura</a>
+<a href="#regresion">Regresión</a>
+<a href="#microservicios">Panorama: microservicios</a>
+<a href="#razonamiento">Ejercicios de razonamiento</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">📋 Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>Testing profundo: <span>unitarias, mocks, cobertura</span> y regresión</h1>
+<p>Ya sabés escribir pruebas a partir de los criterios de aceptación. Ahora el sistema crece: hay base de datos, hay correos, hay otros servicios. Esta guía enseña a probar cada pieza por separado sin depender de las demás, a leer un informe de cobertura sin dejarse engañar, a blindar un bug corregido para que no vuelva y, al final, a ver cómo cambia todo esto si el sistema se parte en microservicios.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Camila, la Product Owner de EventoUAB, pidió algo nuevo para el Sprint 3: <em>"Cuando una reserva queda confirmada, el club tiene que recibir un correo."</em> Valentina lo implementa y se encuentra con un problema práctico: para probar <code>reservar</code> ahora necesitaría una base de datos <strong>y</strong> un servidor de correo funcionando. Cada corrida de pruebas mandaría correos de verdad.</p>
+<p>Mateo le propone otro camino: <em>"No pruebes todo junto. Probá la regla sola, y reemplazá lo que no te interesa por un sustituto de mentira."</em> Ese es el hilo de la guía: <strong>aislar lo que se prueba</strong> para que las pruebas sean rápidas, repetibles y fáciles de diagnosticar.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás ubicar cada prueba en la <strong>pirámide</strong> (unitaria, de integración, extremo a extremo), elegir entre <strong>stub, fake y espía</strong> según lo que quieras comprobar, interpretar un informe de <strong>cobertura</strong> sabiendo qué NO te dice, convertir un bug en una <strong>prueba de regresión</strong>, y explicar cómo cambia la estrategia de pruebas al pasar a <strong>microservicios</strong>.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Encontrarás <strong>actividades cortas y autocorregibles</strong> —selección múltiple, clasificación, emparejamiento y completar espacios— repartidas a lo largo de la guía, y una sección de <strong>ejercicios de razonamiento</strong> donde se te da un escenario y debés decidir antes de comprobar.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🔺 Pirámide</h3><p>Muchas pruebas rápidas y chicas, pocas lentas y grandes.</p></div>
+<div class="info"><h3>🎭 Dobles de prueba</h3><p>Sustitutos que reemplazan la base de datos o el correo.</p></div>
+<div class="info"><h3>📊 Cobertura</h3><p>Qué código ejecutaron las pruebas, y qué no comprobaron.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="piramide">
+<div class="card">
+<h2 class="section-title">La pirámide de pruebas</h2>
+<p class="lead">No todas las pruebas son iguales. Se distinguen por <em>cuánto del sistema recorren</em>, y de eso dependen su velocidad, su costo y qué tan fácil es saber qué se rompió.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Nivel</th><th scope="col">Qué recorre</th><th scope="col">Ejemplo en EventoUAB</th><th scope="col">Velocidad</th></tr></thead>
+<tbody>
+<tr><td><strong>Unitaria</strong></td><td>Una función o clase sola; lo demás se reemplaza.</td><td><code>ReservasService.reservar</code> con un repositorio en memoria.</td><td>Milisegundos</td></tr>
+<tr><td><strong>De integración</strong></td><td>Varias piezas reales juntas.</td><td>El servicio con el repositorio SQLite de verdad.</td><td>Décimas de segundo a segundos</td></tr>
+<tr><td><strong>Extremo a extremo</strong></td><td>La aplicación entera, como la usaría una persona.</td><td>Abrir el navegador, reservar un espacio y ver la confirmación.</td><td>Segundos a minutos</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Por qué es una pirámide</strong>
+<p>Conviene tener <strong>muchas</strong> pruebas unitarias en la base (rápidas, baratas, señalan la línea exacta que falló), <strong>algunas</strong> de integración en el medio y <strong>pocas</strong> de extremo a extremo arriba (lentas, frágiles, pero las únicas que comprueban que todo encaja). Invertir la pirámide —casi todo extremo a extremo— produce una suite que tarda mucho, falla por motivos ajenos al código y nadie quiere correr.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="pir-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿En qué nivel de la pirámide está cada prueba de EventoUAB?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Comprueba la regla de solapamiento llamando a <code>reservar</code> con un repositorio en memoria.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Unitaria</button>
+<button>De integración</button>
+<button>Extremo a extremo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Abre el sitio en un navegador automatizado, completa el formulario de reserva y espera el mensaje de éxito.</span>
+<div class="quiz-classify-btns">
+<button>Unitaria</button>
+<button>De integración</button>
+<button data-correct>Extremo a extremo</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Guarda una reserva en un archivo SQLite real y la vuelve a leer con el repositorio de verdad.</span>
+<div class="quiz-classify-btns">
+<button>Extremo a extremo</button>
+<button data-correct>De integración</button>
+<button>Unitaria</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Verifica que una hora de fin anterior al inicio lanza un error, sin tocar ninguna base de datos.</span>
+<div class="quiz-classify-btns">
+<button>De integración</button>
+<button>Extremo a extremo</button>
+<button data-correct>Unitaria</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Levanta la API completa con su base de datos y hace una petición HTTP real a la ruta de reservas.</span>
+<div class="quiz-classify-btns">
+<button>Unitaria</button>
+<button data-correct>De integración</button>
+<button>Extremo a extremo</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="dobles">
+<div class="card">
+<h2 class="section-title">Stubs, fakes y espías</h2>
+<p class="lead">Para que una prueba sea unitaria, lo que rodea al código se reemplaza por un <strong>doble de prueba</strong>, como los dobles de las películas. Este es el servicio de EventoUAB con la nueva regla de Camila: depende de un repositorio y de un notificador, ambos recibidos de afuera (la inyección de dependencias de la guía anterior).</p>
+
+<div class="code">
+<div class="code-header"><span>Node.js — reservas-service.js</span></div>
+<pre><code class="src">export class ReservasService {
+  constructor(repo, notificador) {
+    this.repo = repo;
+    this.notificador = notificador;
+  }
+
+  reservar(nueva) {
+    if (nueva.fin &lt;= nueva.inicio) {
+      throw new Error("La hora de fin debe ser posterior al inicio");
+    }
+    const ocupado = this.repo
+      .delEspacio(nueva.espacioId)
+      .some((r) =&gt; r.inicio &lt; nueva.fin &amp;&amp; r.fin &gt; nueva.inicio);
+    if (ocupado) return false;
+    this.repo.guardar(nueva);
+    this.notificador.enviarConfirmacion(nueva.club);
+    return true;
+  }
+}</code></pre>
+</div>
+
+<p>Hay tres tipos de doble, y cada uno responde a una pregunta distinta:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Doble</th><th scope="col">Qué hace</th><th scope="col">Úsalo cuando querés comprobar...</th></tr></thead>
+<tbody>
+<tr><td><strong>Stub</strong></td><td>Devuelve respuestas fijas, enlatadas.</td><td>Cómo reacciona tu código ante una situación concreta (espacio ocupado, error de la base).</td></tr>
+<tr><td><strong>Fake</strong></td><td>Una implementación real pero simplificada (una lista en memoria en vez de SQLite).</td><td>Un comportamiento que depende del estado: guardar varias cosas y consultarlas.</td></tr>
+<tr><td><strong>Espía (mock)</strong></td><td>Anota cómo lo llamaron para preguntarlo después.</td><td>Que el código <em>hizo</em> algo hacia afuera: enviar un correo, llamar a otro servicio.</td></tr>
+</tbody>
+</table>
+
+<div class="code">
+<div class="code-header"><span>Node.js — reservas-service.test.js</span></div>
+<pre><code class="src">import { test } from "node:test";
+import assert from "node:assert/strict";
+import { ReservasService } from "./reservas-service.js";
+
+// Fake: una implementación real pero simple, en memoria
+class ReservasEnMemoria {
+  constructor() { this.todas = []; }
+  delEspacio(id) { return this.todas.filter((r) =&gt; r.espacioId === id); }
+  guardar(r) { this.todas.push(r); }
+}
+
+// Espía: no hace nada útil, solo anota cómo lo llamaron
+class NotificadorEspia {
+  constructor() { this.llamadas = []; }
+  enviarConfirmacion(club) { this.llamadas.push(club); }
+}
+
+test("stub: con el espacio ocupado, rechaza", () =&gt; {
+  const repoStub = {
+    delEspacio: () =&gt; [{ espacioId: 1, inicio: 10, fin: 12 }],  // respuesta enlatada
+    guardar: () =&gt; { throw new Error("no debería guardar"); },
+  };
+  const servicio = new ReservasService(repoStub, new NotificadorEspia());
+  assert.equal(servicio.reservar({ espacioId: 1, club: "Robótica", inicio: 11, fin: 13 }), false);
+});
+
+test("fake: dos reservas contiguas conviven", () =&gt; {
+  const servicio = new ReservasService(new ReservasEnMemoria(), new NotificadorEspia());
+  assert.equal(servicio.reservar({ espacioId: 1, club: "A", inicio: 10, fin: 12 }), true);
+  assert.equal(servicio.reservar({ espacioId: 1, club: "B", inicio: 12, fin: 14 }), true);
+});
+
+test("espía: una reserva exitosa avisa una sola vez al club", () =&gt; {
+  const notificador = new NotificadorEspia();
+  const servicio = new ReservasService(new ReservasEnMemoria(), notificador);
+  servicio.reservar({ espacioId: 1, club: "Robótica", inicio: 10, fin: 12 });
+  assert.deepEqual(notificador.llamadas, ["Robótica"]);
+});
+
+test("espía: una reserva rechazada no avisa a nadie", () =&gt; {
+  const notificador = new NotificadorEspia();
+  const servicio = new ReservasService(new ReservasEnMemoria(), notificador);
+  servicio.reservar({ espacioId: 1, club: "A", inicio: 10, fin: 12 });
+  servicio.reservar({ espacioId: 1, club: "B", inicio: 11, fin: 13 });
+  assert.deepEqual(notificador.llamadas, ["A"]);
+});</code></pre>
+</div>
+
+<div class="highlight">
+<strong>Ninguna prueba manda un correo ni abre una base de datos</strong>
+<p>Corren juntas en milisegundos y dan el mismo resultado en cualquier computadora. Fijate también en el stub: su <code>guardar</code> lanza un error. Si el servicio guardara una reserva que debía rechazar, la prueba fallaría sola.</p>
+</div>
+
+<div class="highlight">
+<strong>Cuidado con el exceso de espías</strong>
+<p>Un espía comprueba <em>qué hizo</em> el código hacia afuera. Úsalo para efectos reales (el correo salió, y una sola vez). No lo uses para verificar el orden de llamadas internas ni cuántas veces se consultó el repositorio: esas pruebas se rompen cada vez que reorganizás el código por dentro aunque el comportamiento siga siendo correcto. Preferí comprobar el <em>resultado</em> sobre el <em>procedimiento</em>.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="dobles-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada doble de prueba con lo que lo caracteriza.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="stub">Stub</button>
+<button class="quiz-match-item" data-pair="fake">Fake</button>
+<button class="quiz-match-item" data-pair="espia">Espía</button>
+<button class="quiz-match-item" data-pair="unitaria">Prueba unitaria</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="espia">Registra las llamadas que recibe para poder preguntar después qué ocurrió.</button>
+<button class="quiz-match-item" data-pair="unitaria">Prueba una pieza sola, con sus dependencias reemplazadas por dobles.</button>
+<button class="quiz-match-item" data-pair="stub">Devuelve siempre una respuesta fija, preparada de antemano por la prueba.</button>
+<button class="quiz-match-item" data-pair="fake">Funciona de verdad pero en versión simple, como una lista en memoria.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="dobles-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Elegí el doble adecuado para cada necesidad de prueba.</p>
+<p>Para probar cómo reacciona el servicio cuando el repositorio ya devuelve un horario ocupado, uso un
+<select class="quiz-blank" data-correct="stub">
+<option value="">— elige —</option>
+<option value="espia">espía</option>
+<option value="stub">stub</option>
+<option value="fake">fake</option>
+</select>; para comprobar que el club recibió exactamente un correo, uso un
+<select class="quiz-blank" data-correct="espia">
+<option value="">— elige —</option>
+<option value="espia">espía</option>
+<option value="fake">fake</option>
+<option value="stub">stub</option>
+</select>; y para guardar varias reservas seguidas y consultarlas después, uso un
+<select class="quiz-blank" data-correct="fake">
+<option value="">— elige —</option>
+<option value="stub">stub</option>
+<option value="espia">espía</option>
+<option value="fake">fake</option>
+</select>.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="dobles-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Una prueba verifica que <code>reservar</code> llamó a <code>repo.delEspacio</code> exactamente dos veces y en cierto orden. Mateo reorganiza el código por dentro, el comportamiento sigue igual y la prueba falla. ¿Qué pasó?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La prueba hizo bien su trabajo: cualquier cambio interno debe obligar a revisar el comportamiento del sistema completo.</button>
+<button class="quiz-opt">El repositorio en memoria tiene un defecto que hay que corregir antes de seguir con cualquier otra prueba del servicio.</button>
+<button class="quiz-opt" data-correct>La prueba está atada al procedimiento interno y no al resultado, así que se rompe aunque el comportamiento sea correcto.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: comprobar cuántas veces y en qué orden se llamó algo interno ata la prueba a la implementación. Una buena prueba verifica el resultado observable, y sobrevive a una reorganización interna." data-ko="El comportamiento no cambió, así que no hay nada que revisar en el sistema ni en el repositorio. El problema es la prueba: verifica el procedimiento interno en vez del resultado, y por eso se rompe ante cualquier reorganización." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="cobertura">
+<div class="card">
+<h2 class="section-title">Cobertura: qué dice y qué no dice</h2>
+<p class="lead">La <strong>cobertura</strong> es el porcentaje de código que las pruebas ejecutaron al correr. Node la calcula sin instalar nada: <code>node --test --experimental-test-coverage</code>. Es una herramienta útil, pero se interpreta mal con mucha facilidad.</p>
+
+<p>Esta es una prueba de Valentina para "tener cobertura". Ejecuta <code>reservar</code> pero no comprueba absolutamente nada:</p>
+<div class="code">
+<div class="code-header"><span>Node.js — cobertura.test.js</span></div>
+<pre><code class="src">test("camino feliz, pero sin comprobar nada", () =&gt; {
+  const s = new ReservasService(
+    { delEspacio: () =&gt; [], guardar() {} },
+    { enviarConfirmacion() {} }
+  );
+  s.reservar({ espacioId: 1, club: "A", inicio: 10, fin: 12 });   // ← ni un assert
+});</code></pre>
+</div>
+
+<div class="code">
+<div class="code-header"><span>Terminal — informe de cobertura</span></div>
+<pre><code class="src">Solo la prueba sin asserts:
+  file                | line % | branch % | funcs % | uncovered lines
+  reservas-service.js |  89.47 |    60.00 |   66.67 | 9-10
+
+Las 4 pruebas con asserts de la sección anterior:
+  reservas-service.js |  89.47 |    85.71 |  100.00 | 9-10
+
+Esas 4 + la prueba de "fin anterior al inicio":
+  reservas-service.js | 100.00 |   100.00 |  100.00 |</code></pre>
+</div>
+
+<p>Mirá la primera línea: <strong>una prueba que no comprueba nada alcanza el mismo 89,47 % de líneas</strong> que las cuatro pruebas bien escritas. El informe no distingue entre ejecutar el código y verificarlo. La columna "uncovered lines" sí es valiosa: señala las líneas 9-10, el error de "fin anterior al inicio", que ninguna prueba había tocado todavía.</p>
+
+<p>Para ver la diferencia real, repetimos el experimento de la guía anterior: cambiar <code>r.fin &gt; nueva.inicio</code> por <code>r.fin &gt;= nueva.inicio</code> en la regla de solapamiento, a propósito.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Qué se corre contra el código con el error</th><th scope="col">Resultado</th></tr></thead>
+<tbody>
+<tr><td>La prueba sin asserts</td><td>✔ pasa (no detecta nada)</td></tr>
+<tr><td>Las 5 pruebas con asserts</td><td>✖ falla <em>"fake: dos reservas contiguas conviven"</em> (4 pasan, 1 falla)</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Cómo leer la cobertura</strong>
+<p>Una cobertura <strong>baja</strong> es información confiable: ese código no está probado. Una cobertura <strong>alta</strong> no garantiza nada: solo dice que el código se ejecutó, no que alguien comprobara su resultado. Úsala para encontrar lo que falta, no como meta. Un equipo que persigue "100 %" por sí mismo termina escribiendo pruebas sin asserts, justo como la de arriba.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="cob-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">El informe de cobertura marca 100 % y aun así se cuela un error de comparación. ¿Cuál es la explicación más probable?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Alguna prueba ejecuta esa línea pero no comprueba el resultado en el valor exacto del límite, así que no detecta el error.</button>
+<button class="quiz-opt">El informe de cobertura está mal calculado, porque con 100 % ninguna línea debería quedar sin comprobar.</button>
+<button class="quiz-opt">Falta ejecutar más veces la misma prueba, hasta que el error de comparación aparezca en alguna de las corridas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la cobertura mide qué código se ejecutó, no qué se verificó. Una línea cubierta con un assert débil o ausente deja pasar el error." data-ko="El informe no está mal: mide ejecución, no verificación. Repetir la misma prueba tampoco ayuda, porque ejecuta siempre lo mismo. El hueco está en un assert que no comprueba el límite exacto." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="cob-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Completá lo que le pasó a la prueba sin asserts de Valentina.</p>
+<p>Cuando mido la cobertura de una prueba que ejecuta <code>reservar</code> sin comprobar nada, las líneas ejecutadas figuran como
+<select class="quiz-blank" data-correct="cubiertas">
+<option value="">— elige —</option>
+<option value="sin">sin cubrir</option>
+<option value="cubiertas">cubiertas</option>
+<option value="falla">con error</option>
+</select>; si alguien cambia <code>&gt;</code> por <code>&gt;=</code>, esa prueba
+<select class="quiz-blank" data-correct="sigue">
+<option value="">— elige —</option>
+<option value="falla">falla enseguida</option>
+<option value="sigue">sigue pasando</option>
+<option value="aviso">muestra un aviso en el informe</option>
+</select>; la cobertura mide
+<select class="quiz-blank" data-correct="ejecuto">
+<option value="">— elige —</option>
+<option value="correcto">si el resultado es correcto</option>
+<option value="calidad">la calidad de las pruebas</option>
+<option value="ejecuto">qué código se ejecutó</option>
+</select>.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="regresion">
+<div class="card">
+<h2 class="section-title">Pruebas de regresión</h2>
+<p class="lead">Una <strong>regresión</strong> es algo que antes funcionaba y dejó de funcionar después de un cambio. Es el bug más frustrante, porque ya lo habías resuelto. Las pruebas automáticas existen, en buena parte, para atraparlas.</p>
+
+<p>Escenario: en un apuro, alguien "simplifica" la regla de solapamiento y deja <code>r.fin &gt;= nueva.inicio</code>. Una reserva que empieza justo cuando termina otra pasa a rechazarse. Si corrés la suite, el error aparece solo:</p>
+<div class="code">
+<div class="code-header"><span>Terminal — node --test</span></div>
+<pre><code class="src">✔ stub: con el espacio ocupado, rechaza
+✖ fake: dos reservas contiguas conviven
+✔ espía: una reserva exitosa avisa una sola vez al club
+✔ espía: una reserva rechazada no avisa a nadie
+✔ inválido: fin anterior al inicio lanza error
+ℹ tests 5   ℹ pass 4   ℹ fail 1</code></pre>
+</div>
+
+<p>Otro cambio del mismo estilo —avisar al club también cuando la reserva se rechaza— hace fallar a <em>"espía: una reserva rechazada no avisa a nadie"</em>, y solo a esa. Cada error cae en la prueba que describe justo esa regla, y eso es lo que hace útil una suite de pruebas pequeñas y específicas.</p>
+
+<div class="highlight">
+<strong>Cuando el bug se escapa: el ciclo de regresión</strong>
+<p>Si un error llega a producción, no alcanza con corregirlo. Hay un orden que evita que vuelva: <strong>1)</strong> escribí una prueba que reproduzca el bug y comprobá que <em>falla</em>; <strong>2)</strong> corregí el código; <strong>3)</strong> verificá que esa prueba pasa <em>y</em> que toda la suite sigue en verde; <strong>4)</strong> dejá la prueba en el repositorio para siempre. El paso 1 importa: una prueba que nunca se vio fallar no prueba que detecte el bug.</p>
+</div>
+
+<div class="highlight">
+<strong>Dónde encaja en la Definition of Done</strong>
+<p>La DoD de la guía anterior ya exigía "las pruebas pasan en <code>main</code> después de integrar". Es exactamente esta defensa: correr la suite completa en cada integración convierte cada regresión en un aviso inmediato, en vez de un reclamo del usuario semanas después.</p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="reg-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Reconstruí el ciclo para corregir un bug sin que vuelva a aparecer.</p>
+<p>Primero escribo una prueba que reproduce el bug y compruebo que
+<select class="quiz-blank" data-correct="falla">
+<option value="">— elige —</option>
+<option value="pasa">pasa</option>
+<option value="falla">falla</option>
+<option value="cubre">sube la cobertura</option>
+</select>; después
+<select class="quiz-blank" data-correct="corrijo">
+<option value="">— elige —</option>
+<option value="borro">borro la prueba</option>
+<option value="corrijo">corrijo el código</option>
+<option value="espero">espero al siguiente sprint</option>
+</select>; luego confirmo que
+<select class="quiz-blank" data-correct="suite">
+<option value="">— elige —</option>
+<option value="suite">toda la suite sigue pasando</option>
+<option value="nueva">solo la prueba nueva pasa</option>
+<option value="manual">funciona al probarlo a mano</option>
+</select>; y finalmente
+<select class="quiz-blank" data-correct="queda">
+<option value="">— elige —</option>
+<option value="queda">dejo la prueba en el repositorio</option>
+<option value="quito">quito la prueba para no alargar la suite</option>
+<option value="anoto">anoto el bug en un documento aparte</option>
+</select>.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="reg-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">Un usuario reporta un bug. Valentina lo corrige directamente y lo prueba a mano una vez. ¿Qué le falta para que sea una corrección con protección contra regresión?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Nada más: si el usuario confirma que ya funciona, el bug está resuelto y no hay motivo para escribir una prueba.</button>
+<button class="quiz-opt" data-correct>Una prueba automática que reproduzca el bug y quede en la suite, para que avise si vuelve a aparecer.</button>
+<button class="quiz-opt">Volver a probarlo a mano varias veces, de forma que se confirme que no reaparece durante la semana siguiente.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: lo que protege contra una regresión es una prueba automática que reproduce el bug y se corre en cada integración. Probar a mano solo confirma el momento." data-ko="Que el usuario lo vea funcionando hoy no impide que otro cambio lo rompa mañana. Repetir pruebas a mano tampoco escala. Hace falta una prueba automática que quede en la suite." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="microservicios">
+<div class="card">
+<h2 class="section-title">Panorama: microservicios</h2>
+<p class="lead">Hasta acá EventoUAB es una sola aplicación. Muchas empresas, en cambio, parten el sistema en <strong>microservicios</strong>: servicios pequeños e independientes (reservas, notificaciones, usuarios...), cada uno con su propio código, su propia base de datos y su propio despliegue, que se hablan entre sí por red. No es un tema para dominar en una guía; sí para entender por qué cambia la forma de probar.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col"></th><th scope="col">Una sola aplicación (monolito)</th><th scope="col">Microservicios</th></tr></thead>
+<tbody>
+<tr><td><strong>Cómo se hablan las piezas</strong></td><td>Llamadas a funciones dentro del mismo programa.</td><td>Peticiones por red (HTTP, colas de mensajes).</td></tr>
+<tr><td><strong>Pruebas unitarias</strong></td><td>Igual que hasta ahora.</td><td>Igual: cada servicio se prueba por dentro con dobles.</td></tr>
+<tr><td><strong>Pruebas de integración</strong></td><td>Piezas reales en el mismo proceso.</td><td>Hay que acordar el <strong>contrato</strong> entre servicios: qué pide uno y qué responde el otro.</td></tr>
+<tr><td><strong>Extremo a extremo</strong></td><td>Levantar una aplicación.</td><td>Levantar varios servicios juntos: más lento, más frágil, más caro.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>La pieza nueva: la prueba de contrato</strong>
+<p>Si el servicio de reservas llama al de notificaciones, ambos equipos deben ponerse de acuerdo en el formato del mensaje. En una <strong>prueba de contrato</strong> el consumidor declara qué espera recibir y el proveedor verifica, en su propia suite, que realmente lo cumple. Así detectan un cambio incompatible sin levantar ambos servicios juntos. Es la versión en red del "doble" que ya conocés: un acuerdo escrito que reemplaza al servicio real.</p>
+</div>
+
+<div class="highlight">
+<strong>¿Conviene para EventoUAB?</strong>
+<p>Casi seguro que no, todavía. Los microservicios ayudan cuando hay <strong>varios equipos</strong> que necesitan desplegar sin esperarse, o partes del sistema con carga muy distinta. Con un equipo pequeño agregan problemas nuevos (red, versiones, contratos, más pruebas lentas) sin resolver un dolor que el equipo tenga. Es el mismo criterio que con Repository: se incorpora donde la evidencia muestra el problema, no por anticipado.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="micro-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Para cada situación, ¿partir el sistema en microservicios ayuda o estorba?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Cuatro estudiantes trabajan en una sola aplicación y no tienen problemas para desplegar.</span>
+<div class="quiz-classify-btns">
+<button>Ayuda</button>
+<button data-correct>Estorba</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Tres equipos distintos pisan el mismo código y se bloquean entre sí cada vez que despliegan.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Ayuda</button>
+<button>Estorba</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El envío de correos recibe mil veces más carga que el resto y necesita escalar por separado.</span>
+<div class="quiz-classify-btns">
+<button>Estorba</button>
+<button data-correct>Ayuda</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Se quiere hacer más rápida una suite de pruebas que ya es lenta, sin cambiar nada más.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Estorba</button>
+<button>Ayuda</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Ejercicios de razonamiento</h2>
+<p class="lead">En estas preguntas no se te pide recordar una definición: se te da un escenario y debés razonar la respuesta antes de comprobarla.</p>
+
+<div class="highlight">
+<strong>Escenario</strong>
+<p>La suite de EventoUAB tiene 120 pruebas, casi todas de extremo a extremo con navegador. Tarda 25 minutos y falla a menudo "por nada": a veces el navegador no carga a tiempo. Nadie la corre antes de integrar.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Qué cambio de estrategia tiene más sentido?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Agregar todavía más pruebas de extremo a extremo, para que cada falla ocasional quede cubierta por otra prueba equivalente.</button>
+<button class="quiz-opt" data-correct>Mover las reglas a muchas pruebas unitarias rápidas y dejar pocas de extremo a extremo para los flujos principales.</button>
+<button class="quiz-opt">Dejar de correr la suite antes de integrar, y revisar los resultados una sola vez al final de cada sprint.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: es la pirámide invertida. Las reglas se comprueban mejor y más rápido con pruebas unitarias; las de extremo a extremo se reservan para pocos flujos críticos." data-ko="Más pruebas lentas empeoran el problema, y dejar de correrlas en cada integración elimina justo la defensa contra regresiones. La salida es reequilibrar hacia la base de la pirámide." hidden></p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Otro escenario</strong>
+<p>Mateo revisa un Pull Request que sube la cobertura de 62 % a 94 %. Al leer las pruebas nuevas, ve que la mayoría llama a funciones y no tiene ningún <code>assert</code>.</p>
+</div>
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Razonamiento</span>
+<p class="quiz-q">¿Cómo debería responder en la revisión?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Pedir que cada prueba compruebe un resultado concreto, porque sin asserts la cobertura sube pero el riesgo no baja.</button>
+<button class="quiz-opt">Aprobarlo sin más: pasar de 62 % a 94 % es una mejora medible que ya cumple lo que el equipo buscaba.</button>
+<button class="quiz-opt">Pedir que la cobertura llegue a 100 %, ya que ese número es la mejor señal de que el código está probado.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: una prueba sin asserts ejecuta el código pero no verifica nada. La cobertura sube, el riesgo sigue igual, y por eso hay que pedir comprobaciones reales." data-ko="El número por sí solo engaña: se puede subir ejecutando código sin comprobarlo, y perseguir 100 % empuja a repetir el truco. Lo que importa es que cada prueba compruebe un resultado." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Por qué la base de la pirámide de pruebas debe tener muchas pruebas unitarias?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque comprueban el sistema entero como lo usaría una persona, y eso evita escribir otros tipos de prueba.</button>
+<button class="quiz-opt">Porque no necesitan asserts, así que son las más fáciles de escribir y las que más cobertura aportan.</button>
+<button class="quiz-opt" data-correct>Porque son rápidas, baratas y señalan con precisión qué regla falló cuando algo se rompe.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la velocidad y la precisión de las pruebas unitarias permiten correrlas a cada cambio y encontrar la causa sin buscar mucho." data-ko="Comprobar el sistema entero es lo que hacen las de extremo a extremo. Y toda prueba válida necesita asserts. La ventaja de las unitarias es rapidez, bajo costo y diagnóstico preciso." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Un informe de cobertura del 100 % garantiza que el código no tiene errores.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la cobertura solo dice que el código se ejecutó. Si las pruebas no comprueban resultados, el 100 % convive con errores." data-ko="Es falso: la cobertura mide ejecución, no verificación. Una prueba sin asserts también deja las líneas como cubiertas y no detecta ningún error." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Querés comprobar que, al rechazar una reserva, el sistema no envía ningún correo. ¿Qué doble usás para el notificador?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un stub que devuelve siempre la misma respuesta, para controlar el resultado del repositorio.</button>
+<button class="quiz-opt" data-correct>Un espía que anota las llamadas, para comprobar después que no hubo ninguna.</button>
+<button class="quiz-opt">Un fake con una lista de reservas en memoria, para guardar los datos entre pruebas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: para comprobar que algo se hizo (o no se hizo) hacia afuera, el espía registra las llamadas y permite preguntar después." data-ko="El stub devuelve respuestas fijas y el fake simula un almacenamiento; ninguno anota qué se llamó. Para verificar que no hubo envíos hace falta un espía que registre las llamadas." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Se corrige un bug reportado por un usuario. ¿Qué es lo primero que debería hacerse?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Escribir una prueba que reproduzca el bug y confirmar que falla, antes de tocar el código.</button>
+<button class="quiz-opt">Corregir el código lo antes posible, para que el usuario deje de tener el problema cuanto antes.</button>
+<button class="quiz-opt">Revisar el informe de cobertura, para saber qué porcentaje del sistema ya estaba probado.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: una prueba que se vio fallar demuestra que detecta el bug; después, al pasar, demuestra que la corrección funciona, y queda protegiendo contra su regreso." data-ko="Corregir primero deja sin saber si la prueba posterior realmente detecta el bug, y la cobertura no dice nada sobre este caso. Se empieza reproduciendo el bug con una prueba que falla." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Pirámide de pruebas</td><td>Muchas unitarias (rápidas), algunas de integración, pocas de extremo a extremo (lentas y frágiles).</td></tr>
+<tr><td>Prueba unitaria</td><td>Prueba una pieza sola, con sus dependencias reemplazadas por dobles.</td></tr>
+<tr><td>Stub</td><td>Respuestas fijas: para ver cómo reacciona tu código ante una situación.</td></tr>
+<tr><td>Fake</td><td>Implementación simple pero real (lista en memoria): para comportamientos con estado.</td></tr>
+<tr><td>Espía (mock)</td><td>Anota las llamadas: para comprobar que se hizo algo hacia afuera. No abusar de él para el orden interno.</td></tr>
+<tr><td>Cobertura</td><td>Qué código se ejecutó. Baja = información confiable; alta = no garantiza nada sin asserts.</td></tr>
+<tr><td>Regresión</td><td>Algo que funcionaba y dejó de funcionar. Se previene con una prueba que reproduce el bug (primero falla), se corrige, y queda en la suite.</td></tr>
+<tr><td>Prueba de contrato</td><td>En microservicios, acuerdo verificable entre el servicio que pide y el que responde.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🔺 La pirámide viene de Mike Cohn</h3><p>La idea de la pirámide de pruebas se atribuye a Mike Cohn, en su libro <em>Succeeding with Agile</em> (2009), y sigue siendo la referencia para equilibrar tipos de prueba.</p></div>
+<div class="info"><h3>🧬 Existen las pruebas de mutación</h3><p>El experimento de cambiar <code>&gt;</code> por <code>&gt;=</code> a propósito está automatizado en herramientas de <em>mutation testing</em> (como Stryker): modifican el código y miden cuántos cambios detectan tus pruebas.</p></div>
+<div class="info"><h3>🧭 Lo que viene en la próxima guía</h3><p>Con la suite bajo control, toca refactorizar: cambiar la estructura del código sin cambiar su comportamiento, y apoyarte en estas mismas pruebas para saber que no rompiste nada.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Reforzamiento: Testing profundo y panorama de microservicios</h2>
+<p>Material de apoyo para la asignatura de Ingeniería de Software.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "isw-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL); accedida directo, como siempre, no dispara nada nuevo. No
+     toca el motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return;
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
