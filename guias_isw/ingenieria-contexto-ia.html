@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ingeniería de Contexto: que la IA no adivine nada | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<script>
+(function () {
+  // Limpieza de progreso por intento de ATENZA — mismo criterio que
+  // proceso-iterativo-scrum.html. Corre acá, antes que el resto de la
+  // página, para que el motor de quizzes de abajo ya encuentre el
+  // localStorage limpio si cambió el guia_intento.
+  function paramsAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+  var guiaIntentoId = paramsAtenza().get('guia_intento');
+  if (!guiaIntentoId) return;
+  var QUIZ_PREFIX = 'isw-quiz-' + location.pathname + '-';
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf(QUIZ_PREFIX) === 0 && k !== claveIntentoActual; })
+      .forEach(function (k) { localStorage.removeItem(k); });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+<style>
+/* Estilos propios de esta guía. La plantilla CONTEXTO.md y el paquete que
+   arma el sandbox se copian y se pegan en la herramienta de IA del
+   estudiante, así que a diferencia del resto del sitio los bloques .code de
+   acá SÍ se pueden seleccionar y copiar. */
+.code pre,.code pre *{ user-select:text; -webkit-user-select:text; -ms-user-select:text; }
+.ctx-armador{ background:var(--grisClaro); border:1px solid var(--borde); border-radius:12px; padding:22px; margin:25px 0; }
+.ctx-arm-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px 22px; }
+.ctx-arm-check{ display:flex; align-items:flex-start; gap:9px; font-size:14px; font-weight:500; cursor:pointer; line-height:1.4; }
+.ctx-arm-check input{ accent-color:var(--verde); width:17px; height:17px; margin-top:2px; flex:none; }
+.ctx-arm-meter{ margin:20px 0 10px; padding:14px 16px; border-radius:8px; border-left:5px solid var(--amarillo); background:rgba(255,212,59,.14); font-size:15px; }
+.ctx-arm-meter.ok{ border-left-color:var(--verde); background:var(--highlightBg); }
+.ctx-arm-meter.mal{ border-left-color:#dc3545; background:rgba(220,53,69,.10); }
+.ctx-arm-lista{ list-style:none; margin:12px 0 18px; padding:0; display:flex; flex-direction:column; gap:7px; }
+.ctx-arm-lista li{ font-size:14px; padding:8px 12px; border-radius:8px; border:1px solid var(--borde); background:var(--blanco); display:flex; gap:10px; align-items:flex-start; }
+.ctx-arm-lista li.cubierto{ border-color:var(--verde); background:var(--highlightBg); }
+.ctx-arm-lista li.adivina{ border-color:#dc3545; background:rgba(220,53,69,.07); }
+.ctx-arm-lista .ico{ flex:none; width:22px; text-align:center; }
+.ctx-arm-salida{ width:100%; min-height:190px; padding:12px; border:1px solid var(--borde); border-radius:8px; background:var(--blanco); color:var(--texto); font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.55; resize:vertical; }
+.ctx-arm-barra{ display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+.ctx-arm-barra span{ font-size:13px; color:var(--gris); }
+.tag-exploratoria{ display:inline-block; font-size:12px; font-weight:700; padding:3px 10px; border-radius:999px; background:var(--highlightBg); color:var(--texto); border:1px solid var(--verde); margin-bottom:10px; }
+</style>
+</head>
+
+
+<body class="flow-mode">
+
+<div class="flow-topbar">
+<button class="flow-icon-btn" id="flowMenuBtn" aria-label="Abrir índice de la guía">☰</button>
+<span class="flow-brand">ISW · <span>Contexto + IA</span></span>
+<div class="flow-progress-track"><div class="flow-progress-fill" id="flowFill"></div></div>
+<button class="flow-icon-btn" id="flowThemeBtn" aria-label="Cambiar entre tema claro y oscuro">🌙</button>
+</div>
+
+<div class="flow-menu-overlay" id="flowMenuOverlay"></div>
+<nav class="flow-menu-panel" id="flowMenuPanel" aria-label="Índice de la guía">
+<h3>Índice</h3>
+<div class="flow-menu-list">
+<button data-target="top">🏠 Introducción</button>
+<button data-target="contexto">Qué es la ingeniería de contexto</button>
+<button data-target="backlog">El backlog como contexto</button>
+<button data-target="casos">Casos de uso como contexto</button>
+<button data-target="clases">Diagrama de clases como contexto</button>
+<button data-target="estados">Diagrama de estados como contexto</button>
+<button data-target="huecos">Los huecos y el control</button>
+<button data-target="armador">🧪 Armador de contexto</button>
+<button data-target="detectar">Detectar lo que inventó la IA</button>
+<button data-target="repaso">Actividades de repaso</button>
+<button data-target="reto">Reto Final</button>
+<button data-target="cheatsheet">Cheat Sheet</button>
+</div>
+</nav>
+
+<main class="flow-body">
+
+<section class="flow-intro" id="top">
+<span class="flow-badge">🧭 Ingeniería de Software · Programar con IA</span>
+<h1 class="flow-h1">Ingeniería de contexto: <span>que la IA no adivine nada</span></h1>
+<p class="flow-lead">Una IA que programa no sabe lo que tu equipo decidió. Todo lo que no esté escrito en lo que le das, lo <strong>adivina</strong> — y lo hace con total seguridad. La buena noticia: tu equipo ya produjo, sprint tras sprint, justo la información que ella necesita (el backlog, los casos de uso, el diagrama de clases, el diagrama de estados). Esta guía enseña a convertir esos artefactos en <strong>contexto</strong>, para que la IA ejecute y vos conserves el control de las decisiones.</p>
+<p class="flow-sub">👁 <span id="viewCount">—</span> vistas · Ing. Roy Carrasco, Facultad de Ingeniería de Sistemas · UAB</p>
+<p class="flow-sub" style="margin-top:26px;">Volvés al equipo de <strong>EventoUAB</strong>, ya en el Sprint 3. <strong>Valentina</strong> va a rehacer una historia con un asistente de código y <strong>Camila</strong> (la PO) es quien decide qué reglas de negocio valen. En cada decisión podés probar primero un camino equivocado, ver su consecuencia sin ninguna penalidad, y recién después se desbloquea el correcto.</p>
+</section>
+
+<section class="flow-flat" id="decision1">
+<h2>Dos líneas y un módulo que no es nuestro</h2>
+<p class="lead">La historia #14, «Cancelar una reserva», vuelve al tablero del Sprint 3: la primera versión no distinguía estados y Camila pidió rehacerla bien. Valentina abre su asistente de código y escribe lo primero que se le ocurre: <em>«Hacé el módulo para cancelar reservas de EventoUAB en JavaScript»</em>. En diez segundos tiene esto:</p>
+
+<div class="code">
+<div class="code-header"><span>JavaScript — lo que devolvió la IA</span></div>
+<pre><code class="src">// cancelarReserva.js
+import { db } from "./db.js";
+import { enviarCorreo } from "./correo.js";
+
+export async function cancelarReserva(reservaId, usuario) {
+  const reserva = await db.reservas.findById(reservaId);
+  if (reserva.userId !== usuario.id &amp;&amp; usuario.rol !== "admin") {
+    throw new Error("No autorizado");
+  }
+  reserva.status = "CANCELLED";
+  reserva.motivo = usuario.motivo;
+  reserva.penalidad = reserva.precio * 0.2;
+  await db.reservas.save(reserva);
+  await enviarCorreo(usuario.email, "Reserva cancelada");
+  return reserva;
+}</code></pre>
+</div>
+
+<p>Compila, se lee prolijo y hasta suena razonable. Pero Valentina lo mira con calma y se da cuenta de que casi nada de eso existe en EventoUAB:</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Lo que escribió la IA</th><th scope="col">La realidad del proyecto</th></tr></thead>
+<tbody>
+<tr><td><code>db.reservas.findById</code>, <code>./db.js</code></td><td>No hay ese módulo ni esa API de base de datos.</td></tr>
+<tr><td><code>reserva.userId</code>, <code>usuario.rol === "admin"</code></td><td>Una reserva pertenece a un <strong>club</strong>, y no existe el rol «admin».</td></tr>
+<tr><td><code>reserva.status = "CANCELLED"</code></td><td>El atributo se llama <code>estado</code> y sus valores van en español.</td></tr>
+<tr><td><code>reserva.motivo</code>, <code>reserva.penalidad</code>, <code>reserva.precio</code></td><td>Nadie pidió motivos ni cobros; las reservas no tienen precio.</td></tr>
+<tr><td><code>enviarCorreo(...)</code></td><td>Notificar a Bienestar es otra historia, no esta.</td></tr>
+<tr><td>(no hay nada sobre las 2 horas)</td><td>La regla central de la historia ni aparece.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>La IA no falló: rellenó</strong>
+<p>Un prompt de dos líneas deja decenas de decisiones abiertas. La IA no puede preguntar «¿cómo se llama el dueño de la reserva?», así que elige una respuesta verosímil. Lo verosímil casi nunca coincide con lo que tu equipo acordó.</p>
+</div>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-1" data-unlock="contexto decision2">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo sigue Valentina?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Corrige a mano cada cosa rara que encuentre, línea por línea, y sigue con el resto de la función tal como la dejó la IA.</button>
+<button class="quiz-opt" data-key="b">Le pide que lo rehaga «mejor y más profesional», repitiendo la misma consigna sin sumar información, hasta que salga algo que se vea bien.</button>
+<button class="quiz-opt" data-key="c" data-correct>Entiende que la IA rellenó los huecos del prompt, y le da como entrada lo que el equipo ya decidió y documentó, en vez de dejarla suponer.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Parchar lo que se ve es apagar un incendio cada vez: Valentina corrige lo que reconoce como raro, pero lo inventado que suena plausible se queda. Y la próxima vez que pida otra función, la IA volverá a inventar. El problema está en la entrada, no solo en la salida. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>«Mejor y más profesional» no agrega ni un dato nuevo: la IA volverá a rellenar los mismos huecos, solo que con otro estilo. Puede salir un código más elegante y igual de ajeno al proyecto. Repetir la consigna no reemplaza darle información. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Exacto. El defecto es de información, no de modelo. Lo que importa es qué recibe la IA, no cuántas veces se lo pidas. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="contexto" hidden>
+<h2>Qué es la ingeniería de contexto</h2>
+<p class="lead">El <strong>prompt</strong> es la instrucción («hacé esto»). El <strong>contexto</strong> es todo lo demás que el modelo tiene delante cuando responde: los documentos, los nombres, las reglas, los ejemplos. La <strong>ingeniería de contexto</strong> es decidir qué información recibe, con qué forma y en qué orden, para que haga la tarea <em>sin suponer</em>.</p>
+
+<table class="tabla">
+<thead><tr><th scope="col"></th><th scope="col">Escribir un prompt</th><th scope="col">Ingeniería de contexto</th></tr></thead>
+<tbody>
+<tr><td>Pregunta</td><td>¿Cómo se lo pido?</td><td>¿Qué necesita saber para no tener que adivinar?</td></tr>
+<tr><td>Material</td><td>Una frase o un párrafo.</td><td>Historia, casos de uso, modelo, estados, límites y convenciones.</td></tr>
+<tr><td>Quién decide</td><td>La IA, en lo que no dijiste.</td><td>El equipo, y queda por escrito.</td></tr>
+<tr><td>Resultado</td><td>Código que se ve bien.</td><td>Código que se puede comprobar contra un artefacto.</td></tr>
+</tbody>
+</table>
+
+<h3 style="margin:28px 0 8px;">Tu equipo ya tiene el material</h3>
+<p>No hay que inventar documentos nuevos. Cada artefacto que el curso te hizo producir cubre un tipo distinto de hueco:</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Artefacto</th><th scope="col">Qué decide</th><th scope="col">Qué inventaría la IA si falta</th></tr></thead>
+<tbody>
+<tr><td>Backlog: historia, criterios y DoD</td><td>Qué hacer y cuándo está terminado.</td><td>Reglas de negocio, bordes y alcance.</td></tr>
+<tr><td>Casos de uso</td><td>Quién lo usa y qué pasa en cada rama.</td><td>Actores, pasos y flujos alternativos.</td></tr>
+<tr><td>Diagrama de clases</td><td>Cómo se llaman las cosas y cómo se relacionan.</td><td>Clases, atributos y relaciones.</td></tr>
+<tr><td>Diagrama de estados</td><td>Qué se puede hacer en cada momento.</td><td>Transiciones y estados que no existen.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Tres reglas para armar el contexto</strong>
+<p><strong>Relevante:</strong> solo lo que la tarea necesita; el ruido compite con lo importante. <strong>Exacto:</strong> los mismos nombres que el código final, copiados y no parafraseados. <strong>Verificable:</strong> cada línea del resultado tiene que poder rastrearse hasta un artefacto.</p>
+</div>
+
+<div class="highlight">
+<strong>El control sigue siendo tuyo</strong>
+<p>El artefacto es la fuente de verdad y el código es su consecuencia. Si el código y el artefacto discrepan, alguno de los dos está mal, y quien lo decide es una persona del equipo, no el modelo. Eso es lo que significa que el programador mantenga el control.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision2" hidden>
+<h2>¿Cuánto del backlog le paso?</h2>
+<p class="lead">Valentina ya entendió que debe dar contexto. Lo primero que piensa es el backlog: ahí está la historia #14 y todo lo que Camila pidió. El tablero del producto tiene 38 historias entre «Ver disponibilidad», «Lista de espera», «Notificar a Bienestar» y varias más. ¿Qué pega en el chat?</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-2" data-unlock="backlog decision3">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué parte del backlog le da a la IA?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Pega la historia #14 completa: el «Como… quiero… para…», sus criterios de aceptación con los bordes y la DoD del equipo, sin el resto del tablero.</button>
+<button class="quiz-opt" data-key="b">Exporta el backlog completo con las 38 historias, así la IA ve todo el producto y «entiende el panorama general» antes de escribir una sola línea de código.</button>
+<button class="quiz-opt" data-key="c">Pega solo el título «Cancelar una reserva», porque es corto y la IA ya sabe cómo funciona cancelar algo en cualquier sistema por sentido común.</button>
+</div>
+<p class="quiz-fb ko" data-key="b" hidden>Más no es mejor. Con las 38 historias, la IA ve «Lista de espera» y «Notificar a Bienestar» y puede decidir adelantar esa parte «ya que está». El contexto irrelevante compite con el importante y arrastra la función hacia otras historias. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>«Sentido común» es justo el nombre elegante de adivinar. Cuántas horas de anticipación, quién puede cancelar y qué pasa en el borde no se deducen del título: están solo en los criterios de aceptación que Valentina dejó afuera. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="a" hidden>Exacto. La historia, sus criterios y la DoD son lo que esta tarea necesita, y nada más. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="backlog" hidden>
+<h2>El backlog como contexto: el qué y el cuándo está listo</h2>
+<p class="lead">Una historia bien escrita ya es medio prompt. Los <strong>criterios de aceptación</strong> son las reglas que el código debe cumplir y que la prueba va a comprobar; la <strong>Definition of Done</strong> dice qué más hace falta para llamarla terminada. Y hay una sección que casi nadie escribe y que más protege: <strong>lo que NO entra en esta historia</strong>.</p>
+
+<div class="code">
+<div class="code-header"><span>Contexto — la historia, copiada tal cual del backlog</span></div>
+<pre><code class="src">Historia #14 — Cancelar una reserva
+Como estudiante responsable de un club, quiero cancelar una reserva
+que ya no voy a usar, para liberar el espacio.
+
+Criterios de aceptación
+- Solo el club que hizo la reserva puede cancelarla.
+- No se puede cancelar con menos de 2 horas de anticipación.
+  Justo 2 horas antes sí se puede.
+- Solo se puede cancelar una reserva confirmada.
+
+Fuera de esta historia
+- Notificar a Bienestar Estudiantil (historia #22).
+- Cobros, penalidades o motivos de cancelación.
+
+Definition of Done
+- Una prueba automática por cada criterio, incluido el borde.
+- PR revisado por otra persona del equipo.</code></pre>
+</div>
+
+<div class="highlight">
+<strong>Lo que no se hace también es contexto</strong>
+<p>Una IA que escribe código tiende a ser servicial de más: agrega notificaciones, validaciones, campos «por si acaso». Decirle explícitamente qué queda afuera es la forma más barata de evitarlo, y le sirve al revisor para detectar cuando se pasó.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision3" hidden>
+<h2>«Y encima me agregó un administrador»</h2>
+<p class="lead">Con la historia en el chat, la nueva versión ya valida las 2 horas. Pero Valentina nota otra cosa: la IA le dejó un parámetro <code>esAdmin</code> «para que Bienestar pueda cancelar cualquier reserva». Nadie pidió eso. La historia dice quién cancela, pero no dice quién <em>más</em> existe en el sistema, y la IA tuvo que imaginarse a los actores.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-3" data-unlock="casos decision4">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo evita Valentina que la IA invente actores y pasos?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Agrega al prompt la frase «no inventes roles ni funciones que no te pedí» y confía en que esa advertencia general alcanza para que se limite a lo pedido.</button>
+<button class="quiz-opt" data-key="b" data-correct>Pasa el caso de uso: quién es el actor, la precondición, el flujo principal y los alternativos, para que sepa quién hace qué y qué pasa en cada rama.</button>
+<button class="quiz-opt" data-key="c">Le pide a la IA que liste todos los roles que podrían existir en un sistema de reservas y se queda con los que le parezcan razonables al equipo.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Una prohibición sin referencia no funciona: «no inventes roles» no le dice cuáles roles sí existen, y para la IA un administrador es perfectamente razonable. Decirle lo que no haga sirve; decirle lo que sí hay sirve mucho más. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>Eso traslada una decisión del equipo a un modelo que no conoce a Bienestar ni a los clubes de la UAB. Su lista será larga, genérica y verosímil, y «los que parezcan razonables» termina siendo un juicio sin criterio. Los roles los define el producto, no la IA. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. Un caso de uso nombra a los actores que existen y fija el camino de cada rama; ya no hay lugar para el administrador inventado. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="casos" hidden>
+<h2>Casos de uso como contexto: quién y qué rama</h2>
+<p class="lead">El diagrama de casos de uso fija el <strong>alcance</strong> (qué hace el sistema y quién lo usa). Su descripción textual fija el <strong>comportamiento</strong>: el flujo principal y los alternativos son, casi uno a uno, las ramas del código y las pruebas.</p>
+
+<div class="code">
+<div class="code-header"><span>Contexto — descripción del caso de uso «Cancelar reserva»</span></div>
+<pre><code class="src">Actores del sistema: Estudiante (responsable de un club) y Bienestar.
+Actor de este caso: Estudiante. Bienestar no participa.
+
+Precondición: el estudiante inició sesión.
+
+Flujo principal
+1. El estudiante elige una reserva de su club.
+2. El sistema verifica que sea del club y que falten 2 horas o más.
+3. El estudiante confirma.
+4. El sistema marca la reserva como cancelada y libera el espacio.
+
+Flujos alternativos
+2a. La reserva es de otro club: se rechaza.
+2b. Faltan menos de 2 horas: se rechaza.
+2c. La reserva no está confirmada: se rechaza.
+
+Postcondición: el espacio queda libre en ese horario.</code></pre>
+</div>
+
+<table class="tabla">
+<thead><tr><th scope="col">Parte del caso de uso</th><th scope="col">Dónde termina en el código</th></tr></thead>
+<tbody>
+<tr><td>Actores</td><td>Quién llama a la función y qué datos recibe; no hay ningún rol extra.</td></tr>
+<tr><td>Flujo principal</td><td>El camino feliz de la función.</td></tr>
+<tr><td>Flujos alternativos</td><td>Cada <code>if</code> que lanza un error, y una prueba por rama.</td></tr>
+<tr><td>Postcondición</td><td>Lo que la prueba comprueba al final.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="decision4" hidden>
+<h2>Los nombres que la IA se inventa</h2>
+<p class="lead">Ahora el flujo es correcto, pero los nombres siguen sueltos: la IA escribe <code>reserva.status</code>, <code>reserva.userId</code> y <code>usuario.club</code> porque nadie le dijo cómo se llaman las cosas. En el proyecto, el diagrama de clases (el modelo de dominio) ya lo resolvió: Estudiante, Club, Reserva y Espacio, con sus atributos. Valentina tiene ese diagrama dibujado en el repositorio.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-4" data-unlock="clases decision5">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo le pasa el diagrama de clases a la IA?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Le muestra una captura de pantalla del diagrama y confía en que la IA lea bien cada nombre y cada relación de la imagen sin equivocarse.</button>
+<button class="quiz-opt" data-key="b">Le describe el modelo con sus propias palabras en un párrafo: «una reserva tiene fecha, horas y un estado, y pertenece a un club».</button>
+<button class="quiz-opt" data-key="c" data-correct>Lo pasa como texto (Mermaid): clases, atributos con nombres exactos y relaciones con multiplicidad, y le pide que no agregue ni renombre nada.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Algunos modelos leen imágenes, pero una letra mal interpretada (<code>horaInicio</code> por <code>hora_inicio</code>) pasa sin que nadie se entere. Y una captura no se versiona ni se compara con el código. Si el contexto debe ser exacto, el texto gana. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="b" hidden>Parafrasear reintroduce el problema: «fecha, horas y un estado» no dice que son <code>fecha</code>, <code>horaInicio</code>, <code>horaFin</code> y <code>estado</code>, ni cuál es la relación con Club. La IA volverá a elegir sus propios nombres. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="c" hidden>Exacto. El texto conserva cada nombre tal cual, vive en el repositorio junto al código y se puede revisar en un PR. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="clases" hidden>
+<h2>Diagrama de clases como contexto: nombres y estructura</h2>
+<p class="lead">El diagrama de clases le da a la IA el vocabulario del dominio. <a href="modelo-dominio.html">El modelo de EventoUAB</a> se puede escribir como texto con Mermaid, un lenguaje de diagramas que GitHub y GitLab dibujan solos, y que cualquier IA lee sin ambigüedad.</p>
+
+<div class="code">
+<div class="code-header"><span>Contexto — modelo de dominio en Mermaid</span></div>
+<pre><code class="src">classDiagram
+  class Estudiante {
+    nombre
+    carnet
+    correo
+  }
+  class Club {
+    nombre
+    facultad
+  }
+  class Reserva {
+    fecha
+    horaInicio
+    horaFin
+    estado
+  }
+  class Espacio {
+    nombre
+    capacidad
+    tieneProyector
+  }
+  Estudiante "1" --&gt; "0..*" Club : lidera
+  Club "1" --&gt; "0..*" Reserva : solicita
+  Reserva "0..*" --&gt; "1" Espacio : ocupa</code></pre>
+</div>
+
+<table class="tabla">
+<thead><tr><th scope="col">Qué lee la IA</th><th scope="col">Qué evita</th></tr></thead>
+<tbody>
+<tr><td>Los nombres de los atributos, tal cual</td><td><code>status</code>, <code>start_time</code>, <code>hora_inicio</code> y otras variantes.</td></tr>
+<tr><td>Que la reserva la <em>solicita un Club</em></td><td><code>userId</code> y un «usuario» que no existe en el dominio.</td></tr>
+<tr><td>Qué atributos NO existen</td><td><code>precio</code>, <code>motivo</code>, <code>penalidad</code>, <code>canceladaPor</code>.</td></tr>
+<tr><td>La multiplicidad (<code>1</code>, <code>0..*</code>)</td><td>Guardar una lista de reservas dentro de Club, o un solo espacio con varias reservas simultáneas.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Pedile que se quede dentro del modelo</strong>
+<p>El diagrama solo ayuda si la instrucción lo vuelve una frontera: «usá únicamente las clases y atributos de este diagrama; si necesitás otro, preguntá». Sin esa frase, la IA lo trata como una sugerencia.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision5" hidden>
+<h2>Cancelar lo que ya está cancelado</h2>
+<p class="lead">Con historia, caso de uso y modelo, la función ya se parece a EventoUAB. Valentina la prueba con una reserva ya cancelada: la IA responde «cancelada con éxito». Con una reserva que ya terminó ayer, también. El atributo <code>estado</code> existe, pero nadie le dijo qué valores puede tomar ni cuáles cambios están permitidos.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-5" data-unlock="estados decision6">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Cómo cierra Valentina ese hueco?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a" data-correct>Le da el diagrama de estados como texto con sus transiciones válidas, indica que toda transición ausente se rechaza con error y pide una prueba por cada una.</button>
+<button class="quiz-opt" data-key="b">Agrega al código un <code>if</code> por cada caso raro que se le ocurra, a medida que los va encontrando probando a mano, y deja el resto como está.</button>
+<button class="quiz-opt" data-key="c">Le pide a la IA que decida por su cuenta qué estados puede tener una reserva y qué cambios tienen sentido, ya que conoce cómo funcionan las reservas en general.</button>
+</div>
+<p class="quiz-fb ko" data-key="b" hidden>Es el juego del topo: solo aparecen los casos que Valentina imagina, y el resto queda a merced de la IA. Y los <code>if</code> sueltos no dejan constancia de cuál es la regla completa. Un diagrama escribe todas las reglas de una vez. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>«Cómo funcionan las reservas en general» no es «cómo funcionan las de EventoUAB». La IA puede inventar «pendiente de pago» o «reprogramada», estados que el producto no tiene, y el código quedaría coherente consigo mismo pero ajeno al diseño. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="a" hidden>Exacto. El diagrama fija los estados válidos, y la regla «lo que no está permitido, se rechaza» convierte cualquier omisión en un error visible. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="estados" hidden>
+<h2>Diagrama de estados como contexto: qué se puede hacer cuándo</h2>
+<p class="lead">Un objeto como la reserva vive una secuencia de estados, y no todos los saltos son válidos. El <strong>diagrama de estados</strong> es la lista cerrada de esos saltos. Para la IA es contexto que dice «estos son los únicos valores de <code>estado</code>» y «estas son las únicas transiciones».</p>
+
+<div class="code">
+<div class="code-header"><span>Contexto — estados de Reserva en Mermaid</span></div>
+<pre><code class="src">stateDiagram-v2
+  [*] --&gt; confirmada : reservar
+  confirmada --&gt; cancelada : cancelar (2 h o más antes)
+  confirmada --&gt; finalizada : pasa la horaFin
+  cancelada --&gt; [*]
+  finalizada --&gt; [*]</code></pre>
+</div>
+
+<table class="tabla">
+<thead><tr><th scope="col">Desde</th><th scope="col">Evento</th><th scope="col">Hacia</th><th scope="col">¿Se permite?</th></tr></thead>
+<tbody>
+<tr><td><code>confirmada</code></td><td>cancelar</td><td><code>cancelada</code></td><td>Sí, con 2 h o más de anticipación.</td></tr>
+<tr><td><code>confirmada</code></td><td>pasa la <code>horaFin</code></td><td><code>finalizada</code></td><td>Sí (otra historia).</td></tr>
+<tr><td><code>cancelada</code></td><td>cancelar</td><td>—</td><td>No: error.</td></tr>
+<tr><td><code>finalizada</code></td><td>cancelar</td><td>—</td><td>No: error.</td></tr>
+</tbody>
+</table>
+
+<div class="highlight">
+<strong>Lo que no está en el diagrama, está prohibido</strong>
+<p>Es una lista de permitidos, no de prohibidos: no hace falta enumerar todas las cosas que no se pueden hacer. Cualquier transición ausente del diagrama es un error. Cada fila de la tabla se vuelve una prueba, y la prueba atrapa a la IA si se inventa una transición.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="decision6" hidden>
+<h2>«Asumí que cualquier miembro del club puede cancelar»</h2>
+<p class="lead">Valentina armó el paquete completo y, al final de su pedido, agregó una regla: <em>«si te falta información, no la completes: listá tus supuestos»</em>. La IA entrega la función y, al pie, escribe: <em>«Supuesto: asumí que cualquier miembro del club puede cancelar, no solo quien lidera el club»</em>. El modelo dice que un Estudiante «lidera» un Club, pero no dice nada de los demás miembros. Es un hueco real, y la IA lo señaló en vez de taparlo.</p>
+
+<div class="quiz quiz-decision" data-quiz-id="decision-6" data-unlock="huecos armador detectar repaso reto cheatsheet sabias pie">
+<span class="quiz-badge">Decisión</span>
+<p class="quiz-q">¿Qué hace Valentina con ese supuesto?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-key="a">Lo acepta porque suena razonable y sigue, ya que frenar el sprint por una duda tan chica retrasaría al equipo más que cualquier posible error.</button>
+<button class="quiz-opt" data-key="b" data-correct>Lleva la duda a Camila, anota la respuesta en la historia y en el contexto, y recién entonces ajusta o regenera el código con la regla confirmada.</button>
+<button class="quiz-opt" data-key="c">Corrige solo el código para que haga lo que ella cree correcto, sin tocar la historia, para no molestar a Camila con una pregunta menor.</button>
+</div>
+<p class="quiz-fb ko" data-key="a" hidden>Una regla de negocio no es un detalle de implementación: quién puede cancelar lo decide el producto. «Suena razonable» es exactamente el criterio con el que la IA inventó el administrador. Si el supuesto está mal, el error aparece en producción, no en el chat. Probá con otra opción.</p>
+<p class="quiz-fb ko" data-key="c" hidden>El código queda con una regla que ningún documento respalda. Cuando alguien más (o la misma IA, en otra sesión) retome la historia, va a volver a adivinar, y quizá distinto. La decisión tiene que quedar escrita donde el próximo la va a leer. Probá con otra opción.</p>
+<p class="quiz-fb ok" data-key="b" hidden>Exacto. La decisión la toma quien tiene la autoridad, queda en el artefacto, y recién después se toca el código. El contexto es un documento vivo, no un prompt descartable. Seguí leyendo ↓</p>
+</div>
+</section>
+
+<section class="flow-flat" id="huecos" hidden>
+<h2>Los huecos y el control: lo que la IA no puede decidir por vos</h2>
+<p class="lead">Con el paquete completo, la función que sale ya no inventa nada: cada línea tiene un origen que se puede señalar. Mirá el resultado y fijate de dónde sale cada decisión.</p>
+
+<div class="code">
+<div class="code-header"><span>Node.js — cancelarReserva con el contexto completo</span></div>
+<pre><code class="src">// reservas.js
+const HORAS_MINIMAS = 2;                                       // criterio 2 (historia #14)
+
+export function cancelarReserva(reserva, club, ahora) {
+  if (reserva.club !== club) {                                 // criterio 1; flujo alternativo 2a
+    throw new Error("Solo el club dueño puede cancelar la reserva");
+  }
+  if (reserva.estado !== "confirmada") {                       // diagrama de estados; flujo 2c
+    throw new Error("Solo se puede cancelar una reserva confirmada");
+  }
+  const inicio = new Date(`${reserva.fecha}T${reserva.horaInicio}`);   // atributos del modelo
+  const horasAntes = (inicio - ahora) / 3600000;
+  if (horasAntes &lt; HORAS_MINIMAS) {                            // criterio 2; borde: justo 2 h sí; flujo 2b
+    throw new Error("Solo se puede cancelar con 2 horas de anticipación");
+  }
+  return { ...reserva, estado: "cancelada" };                  // transición confirmada → cancelada
+}</code></pre>
+</div>
+
+<p>Y las pruebas salen de las mismas fuentes, una por criterio, por rama y por transición. Se ejecutaron en Node con <code>node --test</code>:</p>
+
+<div class="code">
+<div class="code-header"><span>Node.js — pruebas (6 pasan)</span></div>
+<pre><code class="src">import test from "node:test";
+import assert from "node:assert/strict";
+import { cancelarReserva } from "./reservas.js";
+
+const reserva = {
+  club: "Robótica", fecha: "2026-11-10",
+  horaInicio: "10:00", horaFin: "12:00", estado: "confirmada",
+};
+const a = (hhmm) =&gt; new Date(`2026-11-10T${hhmm}`);
+
+test("el club dueño cancela con 3 horas de anticipación", () =&gt; {
+  assert.equal(cancelarReserva(reserva, "Robótica", a("07:00")).estado, "cancelada");
+});
+test("otro club no puede cancelar", () =&gt; {
+  assert.throws(() =&gt; cancelarReserva(reserva, "Teatro", a("07:00")), /club dueño/);
+});
+test("no se cancela una reserva ya cancelada", () =&gt; {
+  assert.throws(() =&gt; cancelarReserva({ ...reserva, estado: "cancelada" }, "Robótica", a("07:00")), /confirmada/);
+});
+test("no se cancela una reserva finalizada", () =&gt; {
+  assert.throws(() =&gt; cancelarReserva({ ...reserva, estado: "finalizada" }, "Robótica", a("07:00")), /confirmada/);
+});
+test("borde: justo 2 horas antes sí se puede", () =&gt; {
+  assert.equal(cancelarReserva(reserva, "Robótica", a("08:00")).estado, "cancelada");
+});
+test("borde: 1 h 59 min antes no se puede", () =&gt; {
+  assert.throws(() =&gt; cancelarReserva(reserva, "Robótica", a("08:01")), /2 horas/);
+});</code></pre>
+</div>
+
+<p>Si se cambia <code>&lt;</code> por <code>&lt;=</code> en la comparación de las horas, falla exactamente una prueba: la del borde de 2 horas. Esa prueba existe porque el criterio lo pedía, no porque la IA se acordó de él.</p>
+
+<h3 style="margin:28px 0 8px;">Las reglas para el asistente</h3>
+<p>El paquete de contexto cierra con unas pocas reglas que convierten los documentos en una frontera. Son las que evitaron que la IA «completara» el hueco de la decisión 6:</p>
+
+<table class="tabla">
+<thead><tr><th scope="col">Regla</th><th scope="col">Por qué</th></tr></thead>
+<tbody>
+<tr><td>Usá solo los nombres de clases, atributos y estados del contexto.</td><td>Evita el vocabulario paralelo (<code>status</code>, <code>userId</code>).</td></tr>
+<tr><td>Si falta información, no la completes: preguntá o listá el supuesto al final.</td><td>Convierte un error silencioso en una pregunta visible.</td></tr>
+<tr><td>No agregues nada de la sección «Fuera de alcance».</td><td>Frena a la IA servicial de más.</td></tr>
+<tr><td>Entregá una prueba por criterio y por transición, incluidos los bordes.</td><td>Cada regla del contexto queda comprobable.</td></tr>
+</tbody>
+</table>
+
+<h3 style="margin:28px 0 8px;">Una plantilla reutilizable: CONTEXTO.md</h3>
+<p>Todo lo anterior cabe en un solo archivo de texto que vive en el repositorio. Muchos asistentes de código leen automáticamente un archivo de instrucciones de la raíz (como <code>AGENTS.md</code> o <code>CLAUDE.md</code>), y también podés pegar el tuyo al empezar una conversación:</p>
+
+<div class="code">
+<div class="code-header"><span>CONTEXTO.md — plantilla para una historia</span></div>
+<pre><code class="src"># CONTEXTO — [Producto] · Historia #[N] "[Título]"
+
+## 1. Tarea
+Una frase: qué se implementa y en qué archivo.
+
+## 2. Historia y criterios (del backlog)
+Copiá la historia, sus criterios de aceptación con los bordes y la DoD.
+
+## 3. Caso de uso
+Actores, precondición, flujo principal, flujos alternativos y postcondición.
+
+## 4. Modelo (diagrama de clases, en Mermaid)
+Clases, atributos con sus nombres exactos y relaciones con multiplicidad.
+
+## 5. Estados (diagrama de estados, en Mermaid)
+Estados válidos y transiciones permitidas.
+
+## 6. Fuera de alcance
+Lo que NO se hace en esta historia.
+
+## 7. Convenciones
+Lenguaje, librería de pruebas, idioma de los mensajes de error.
+
+## 8. Reglas para el asistente
+1. Usá solo los nombres de este documento.
+2. Si falta información, preguntá o listá el supuesto al final.
+3. No agregues nada de la sección 6.
+4. Entregá una prueba por criterio y por transición, con los bordes.</code></pre>
+</div>
+
+<div class="highlight">
+<strong>Un contexto desactualizado miente con autoridad</strong>
+<p>Si cambia una regla y no se actualiza el artefacto, la IA seguirá aplicando la versión vieja con total convicción. Por eso la decisión 6 terminó con un cambio en la historia y no solo en el código: el artefacto se corrige primero, y el código lo sigue.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="armador" hidden>
+<span class="tag-exploratoria">🧪 Actividad exploratoria · no califica</span>
+<h2>Armador de paquete de contexto</h2>
+<p class="lead">Tarea: «implementar cancelar reserva». Marcá qué artefactos le das a la IA y mirá cuántas decisiones le dejás adivinar. Abajo se arma el texto que pegarías en el chat. Probá con ninguno, con uno solo, con todos, y buscá cuál combinación es la mínima que cubre todo.</p>
+
+<div class="ctx-armador">
+<div class="ctx-arm-grid" id="armChecks">
+<label class="ctx-arm-check"><input type="checkbox" data-art="historia"> Historia #14 con criterios y DoD</label>
+<label class="ctx-arm-check"><input type="checkbox" data-art="caso"> Descripción del caso de uso</label>
+<label class="ctx-arm-check"><input type="checkbox" data-art="modelo"> Diagrama de clases (Mermaid)</label>
+<label class="ctx-arm-check"><input type="checkbox" data-art="estados"> Diagrama de estados (Mermaid)</label>
+<label class="ctx-arm-check"><input type="checkbox" data-art="limites"> Sección «Fuera de alcance»</label>
+<label class="ctx-arm-check"><input type="checkbox" data-art="convenciones"> Convenciones (lenguaje, pruebas)</label>
+</div>
+<div class="ctx-arm-meter" id="armMeter" role="status" aria-live="polite"></div>
+<ul class="ctx-arm-lista" id="armHuecos"></ul>
+<label for="armSalida" style="font-size:14px;font-weight:600;">Paquete de contexto resultante</label>
+<textarea class="ctx-arm-salida" id="armSalida" readonly></textarea>
+<div class="ctx-arm-barra">
+<button type="button" class="code-btn run" id="armCopiar">📋 Copiar paquete</button>
+<span id="armCopiado" role="status" aria-live="polite"></span>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="detectar" hidden>
+<h2>Detectar lo que inventó la IA</h2>
+<p class="lead">Otro intento de la IA, esta vez con la historia #14, el modelo y el diagrama de estados, pero <strong>sin</strong> la sección «Fuera de alcance». Leelo línea por línea contra los artefactos de esta guía.</p>
+
+<div class="code">
+<div class="code-header"><span>JavaScript — segundo intento de la IA</span></div>
+<pre><code class="src">export function cancelarReserva(reserva, club, ahora) {
+  if (reserva.club !== club) throw new Error("Solo el club dueño puede cancelar");
+  if (reserva.estado === "finalizada") throw new Error("La reserva ya terminó");
+  const horas = (new Date(`${reserva.fecha}T${reserva.horaInicio}`) - ahora) / 3600000;
+  if (horas &lt; 2) throw new Error("Faltan menos de 2 horas");
+  reserva.estado = "cancelada";
+  reserva.canceladaPor = club;
+  reserva.penalidad = horas &lt; 24 ? 50 : 0;
+  notificarBienestar(reserva);
+  return reserva;
+}</code></pre>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="suposiciones-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">¿Esta línea sale del contexto, o la inventó la IA?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>if (reserva.club !== club) throw …</code></span>
+<div class="quiz-classify-btns">
+<button>La inventó la IA</button>
+<button data-correct>Sale del contexto</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>reserva.canceladaPor = club</code></span>
+<div class="quiz-classify-btns">
+<button data-correct>La inventó la IA</button>
+<button>Sale del contexto</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>if (horas &lt; 2) throw …</code></span>
+<div class="quiz-classify-btns">
+<button data-correct>Sale del contexto</button>
+<button>La inventó la IA</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>notificarBienestar(reserva)</code></span>
+<div class="quiz-classify-btns">
+<button>Sale del contexto</button>
+<button data-correct>La inventó la IA</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>if (reserva.estado === "finalizada") throw …</code></span>
+<div class="quiz-classify-btns">
+<button data-correct>Sale del contexto</button>
+<button>La inventó la IA</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>reserva.penalidad = horas &lt; 24 ? 50 : 0</code></span>
+<div class="quiz-classify-btns">
+<button>Sale del contexto</button>
+<button data-correct>La inventó la IA</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>reserva.estado = "cancelada"</code></span>
+<div class="quiz-classify-btns">
+<button>La inventó la IA</button>
+<button data-correct>Sale del contexto</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="highlight">
+<strong>Lo que falta es más difícil de ver que lo que sobra</strong>
+<p>Las tres invenciones se detectan porque están ahí. Pero este intento también <em>omitió</em> algo: solo rechaza <code>finalizada</code>, así que una reserva ya <code>cancelada</code> se cancela otra vez sin error. Ninguna línea está «mal»; falta una. Por eso la lista de transiciones del diagrama se convierte en pruebas: una omisión solo aparece cuando algo la comprueba.</p>
+</div>
+</section>
+
+<section class="flow-flat" id="repaso" hidden>
+<h2>Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de lo que acabás de recorrer. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="artefactos-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada artefacto con lo que evita que la IA adivine.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="criterios">Criterios de aceptación</button>
+<button class="quiz-match-item" data-pair="caso">Caso de uso</button>
+<button class="quiz-match-item" data-pair="clases">Diagrama de clases</button>
+<button class="quiz-match-item" data-pair="estados">Diagrama de estados</button>
+<button class="quiz-match-item" data-pair="limites">Sección «Fuera de alcance»</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="estados">Qué transiciones están permitidas y cuáles se rechazan.</button>
+<button class="quiz-match-item" data-pair="limites">Qué funciones extra NO se deben agregar.</button>
+<button class="quiz-match-item" data-pair="criterios">Cuántas horas de anticipación y quién puede cancelar.</button>
+<button class="quiz-match-item" data-pair="clases">Cómo se llaman los atributos y cómo se relacionan.</button>
+<button class="quiz-match-item" data-pair="caso">Qué actor participa y qué pasa en cada rama del flujo.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué distingue a la ingeniería de contexto de simplemente escribir un buen prompt?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Que se usan frases más largas y más educadas, porque el modelo responde mejor cuanto más detallada y amable es la instrucción.</button>
+<button class="quiz-opt">Que se le pide al modelo que repita la tarea varias veces y se queda con la versión que mejor le parezca al programador.</button>
+<button class="quiz-opt" data-correct>Que además de la instrucción se le da la información que necesita (artefactos, nombres, reglas), para que no tenga que suponer.</button>
+<button class="quiz-opt">Que se reemplaza la revisión humana por la del propio modelo, porque con buen contexto el código ya no necesita pruebas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el prompt es la instrucción; el contexto es la información que evita que el modelo adivine. El objetivo no es un texto más largo, sino menos decisiones sin dueño." data-ko="La diferencia no es el largo ni la cortesía del prompt: es qué información recibe el modelo. Con los artefactos del equipo, las decisiones quedan escritas y la IA no tiene que suponerlas." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Mientras más documentos del proyecto le pases a la IA, mejor va a ser su resultado.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el contexto tiene que ser relevante. El ruido compite con lo importante y puede arrastrar la solución hacia otras historias." data-ko="Es falso: lo que cuenta es la relevancia, no la cantidad. Un backlog entero distrae a la IA con historias que no tocan la tarea." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">La IA devuelve código que usa un atributo <code>reserva.motivo</code>, que no aparece en el diagrama de clases. ¿Qué corresponde hacer?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Dejarlo, porque agregar un dato extra nunca hace daño en un sistema que ya funciona y que no lo necesitaba.</button>
+<button class="quiz-opt" data-correct>Consultar a quien decide si hace falta; si se acepta, agregarlo primero al modelo y a la historia, y recién después al código.</button>
+<button class="quiz-opt">Dejarlo pero sin escribir pruebas para ese atributo, porque no figura en los criterios y probarlo sería trabajo extra.</button>
+<button class="quiz-opt">Borrarlo del código sin avisar a nadie, para que el equipo no note que la IA se excedió con la consigna original.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un atributo nuevo es una decisión de diseño. Se aprueba, se escribe en el artefacto y recién entonces entra al código; así el modelo y el código nunca se contradicen." data-ko="Un atributo que no está en el modelo es una decisión sin dueño. Ni se deja sin probar ni se borra en silencio: se consulta, y si se acepta se actualiza primero el artefacto y después el código." hidden></p>
+</div>
+</section>
+
+<section class="flow-flat" id="reto" hidden>
+<h2>🎯 Reto Final: el CONTEXTO.md de tu próxima historia</h2>
+<p class="lead">Ahora con tu propio proyecto. Elegí la próxima historia que vayas a programar con ayuda de una IA y escribí su <code>CONTEXTO.md</code> usando la plantilla: la historia con sus criterios, el caso de uso, el modelo y los estados que la tocan, qué queda fuera de alcance y las reglas para el asistente. Si algún artefacto todavía no existe en tu equipo, anotá qué decisiones quedarían sin dueño.</p>
+
+<div class="quiz quiz-open" data-quiz-id="reto-abierto">
+<span class="quiz-badge">Análisis abierto</span>
+<p class="quiz-q">CONTEXTO.md de una historia real de tu proyecto.</p>
+<textarea class="quiz-open-input" placeholder="Escribe acá tu borrador antes de ver la checklist de autoevaluación…"></textarea>
+<button type="button" class="quiz-open-btn code-btn run">Ver checklist de autoevaluación</button>
+<div class="quiz-open-model" hidden>
+<strong>Checklist de autoevaluación</strong>
+<ul style="margin:0;padding-left:20px;line-height:1.8;">
+<li>La historia incluye criterios de aceptación con al menos un caso de borde, no solo el camino feliz.</li>
+<li>Los nombres de clases, atributos y estados están copiados del modelo, no parafraseados.</li>
+<li>Los estados listan las transiciones permitidas, y dice que cualquier otra se rechaza con un error.</li>
+<li>Hay una sección «Fuera de alcance» que nombra al menos una cosa que la IA podría querer agregar.</li>
+<li>Las reglas para el asistente piden preguntar o listar supuestos en vez de completar huecos.</li>
+<li>Para cada decisión que hoy no está en ningún artefacto, anotaste quién la toma (la PO, el equipo).</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="flow-flat" id="cheatsheet" hidden>
+<h2>Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Término</th><th scope="col">Idea clave</th></tr></thead>
+<tbody>
+<tr><td>Ingeniería de contexto</td><td>Decidir qué información recibe la IA, con qué forma y en qué orden, para que no tenga que suponer.</td></tr>
+<tr><td>Prompt vs. contexto</td><td>El prompt es la instrucción; el contexto es la información que la rodea.</td></tr>
+<tr><td>Backlog</td><td>La historia, sus criterios con bordes y la DoD. Solo la de la tarea, no todo el tablero.</td></tr>
+<tr><td>Fuera de alcance</td><td>Lo que NO se hace. Frena a la IA servicial de más.</td></tr>
+<tr><td>Caso de uso</td><td>Actores y flujos: cada rama es un <code>if</code> y una prueba.</td></tr>
+<tr><td>Diagrama de clases</td><td>Nombres y relaciones exactos, en texto (Mermaid), y la frontera «solo esto».</td></tr>
+<tr><td>Diagrama de estados</td><td>Lista cerrada de transiciones: lo que no figura se rechaza.</td></tr>
+<tr><td>Hueco</td><td>Decisión que ningún artefacto cubre. La IA pregunta o lista el supuesto; lo resuelve quien tiene autoridad.</td></tr>
+<tr><td>Fuente de verdad</td><td>El artefacto manda y el código lo sigue. Se actualiza primero el documento.</td></tr>
+<tr><td>Trazabilidad</td><td>Cada línea del código se puede rastrear hasta un artefacto. Si no se puede, sobra o falta algo.</td></tr>
+<tr><td>CONTEXTO.md</td><td>Un archivo en el repositorio que reúne todo lo anterior para cada historia.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="flow-flat" id="sabias" hidden>
+<h2>¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🧠 Un nombre nuevo para algo viejo</h3><p>En 2025, varias personas de la comunidad de desarrollo con IA empezaron a preferir «ingeniería de contexto» a «ingeniería de prompts», porque lo que decide la calidad del resultado no es la frase sino toda la información que rodea la tarea. La idea de fondo es la de siempre: especificar bien antes de programar.</p></div>
+<div class="info"><h3>📄 AGENTS.md y CLAUDE.md</h3><p>Muchos asistentes de código buscan, en la raíz del repositorio, un archivo de instrucciones (los nombres más comunes son <code>AGENTS.md</code> y <code>CLAUDE.md</code>) y lo leen al empezar cada sesión. Es el mismo principio del CONTEXTO.md: el contexto versionado junto al código, revisable en un PR.</p></div>
+<div class="info"><h3>🔎 Más contexto no siempre es mejor</h3><p>Los modelos tienen una ventana de contexto finita, y aun dentro de ese límite, la información irrelevante compite por la atención del modelo. Por eso la regla de oro es «relevante, exacto y verificable», no «todo lo que tengas».</p></div>
+</div>
+</section>
+
+<footer id="pie" hidden>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Ingeniería de Contexto: que la IA no adivine nada</h2>
+<p>Guía de aula invertida · Ingeniería de Software.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</main>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+
+/* ===== Barra de progreso (topbar) ===== */
+const flowFill = document.getElementById("flowFill");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  flowFill.style.width = (total > 0 ? window.pageYOffset / total * 100 : 0) + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú de índice ===== */
+const flowMenuBtn = document.getElementById("flowMenuBtn");
+const flowMenuPanel = document.getElementById("flowMenuPanel");
+const flowMenuOverlay = document.getElementById("flowMenuOverlay");
+function abrirFlowMenu(){ flowMenuPanel.classList.add("show"); flowMenuOverlay.classList.add("show"); }
+function cerrarFlowMenu(){ flowMenuPanel.classList.remove("show"); flowMenuOverlay.classList.remove("show"); }
+flowMenuBtn.addEventListener("click", abrirFlowMenu);
+flowMenuOverlay.addEventListener("click", cerrarFlowMenu);
+document.querySelectorAll(".flow-menu-list button").forEach(b => {
+  b.addEventListener("click", () => {
+    const target = b.dataset.target;
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const el = document.getElementById(target);
+      if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    cerrarFlowMenu();
+  });
+});
+
+/* ===== Tema claro / oscuro ===== */
+const flowThemeBtn = document.getElementById("flowThemeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  flowThemeBtn.textContent = actual === "dark" ? "☀️" : "🌙";
+}
+actualizarIconoTema();
+flowThemeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "isw-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Decisiones ramificadas — reusa el vocabulario visual de quiz-mc
+   (.quiz-opts/.quiz-opt/.quiz-fb) pero con reglas propias. Las opciones
+   incorrectas muestran su propia consecuencia (.quiz-fb[data-key]) y NO
+   se deshabilitan — se puede reintentar cuantas veces haga falta. Solo
+   la opción correcta cierra la decisión, guarda el progreso y desbloquea
+   (quita "hidden" a) el/los siguiente(s) tramo(s) listados en data-unlock
+   (separados por espacio), haciendo scroll suave hacia el primero. Si la
+   decisión ya estaba resuelta en una visita anterior (localStorage), se
+   restaura ese estado al cargar la página en vez de volver a ocultar lo
+   ya desbloqueado. */
+document.querySelectorAll(".quiz-decision").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const feedbacks = [...quiz.querySelectorAll(".quiz-fb")];
+  const id = quiz.dataset.quizId;
+  const siguientes = (quiz.dataset.unlock || "").split(/\s+/).filter(Boolean)
+    .map(sid => document.getElementById(sid)).filter(Boolean);
+  let resuelto = localStorage.getItem(QUIZ_PREFIX + id) === "ok";
+
+  if (resuelto) {
+    const correcta = opciones.find(o => o.hasAttribute("data-correct"));
+    opciones.forEach(o => { o.disabled = true; });
+    if (correcta) correcta.classList.add("correct");
+    const fbOk = feedbacks.find(fb => fb.classList.contains("ok"));
+    if (fbOk) fbOk.hidden = false;
+    siguientes.forEach(s => { s.hidden = false; });
+  }
+
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (resuelto) return;
+      const clave = opt.dataset.key;
+      const esCorrecta = opt.hasAttribute("data-correct");
+      feedbacks.forEach(fb => { fb.hidden = fb.dataset.key !== clave; });
+      opciones.forEach(o => o.classList.remove("correct", "incorrect"));
+      opt.classList.add(esCorrecta ? "correct" : "incorrect");
+      if (esCorrecta) {
+        resuelto = true;
+        opciones.forEach(o => { o.disabled = true; });
+        marcarResuelto(id, "ok");
+        if (siguientes.length) {
+          siguientes.forEach(s => { s.hidden = false; });
+          setTimeout(() => siguientes[0].scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+      }
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+/* Análisis abierto (checklist de autoevaluación) */
+document.querySelectorAll(".quiz-open").forEach(quiz => {
+  const textarea = quiz.querySelector(".quiz-open-input");
+  const btn = quiz.querySelector(".quiz-open-btn");
+  const modelo = quiz.querySelector(".quiz-open-model");
+  const id = quiz.dataset.quizId;
+  btn.addEventListener("click", () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
+    modelo.hidden = false;
+    btn.disabled = true;
+    textarea.disabled = true;
+    marcarResuelto(id, "ok");
+  });
+});
+
+actualizarProgreso();
+
+</script>
+
+<script>
+/* ===== Armador de paquete de contexto (sandbox exploratorio, no califica) =====
+   Cada "hueco" es una decisión que la IA tendría que tomar sola. Se considera
+   cubierto si al menos uno de los artefactos marcados en `cubre` está incluido. */
+(function () {
+  const F = "```";
+
+  const ARTEFACTOS = {
+    historia: [
+      "## Historia y criterios (backlog)",
+      "Historia #14 — Cancelar una reserva",
+      "Como estudiante responsable de un club, quiero cancelar una reserva que ya no voy a usar, para liberar el espacio.",
+      "Criterios de aceptación:",
+      "- Solo el club que hizo la reserva puede cancelarla.",
+      "- No se puede cancelar con menos de 2 horas de anticipación. Justo 2 horas antes sí se puede.",
+      "- Solo se puede cancelar una reserva confirmada.",
+      "DoD: una prueba automática por criterio, incluido el borde; PR revisado por otra persona."
+    ].join("\n"),
+    caso: [
+      "## Caso de uso: Cancelar reserva",
+      "Actores del sistema: Estudiante (responsable de un club) y Bienestar. Actor de este caso: Estudiante.",
+      "Precondición: el estudiante inició sesión.",
+      "Flujo principal: 1) elige una reserva de su club; 2) el sistema verifica que sea del club y que falten 2 horas o más; 3) confirma; 4) el sistema la marca como cancelada y libera el espacio.",
+      "Alternativos: 2a) de otro club: se rechaza; 2b) faltan menos de 2 horas: se rechaza; 2c) no está confirmada: se rechaza."
+    ].join("\n"),
+    modelo: [
+      "## Modelo (diagrama de clases)",
+      F + "mermaid",
+      "classDiagram",
+      "  class Estudiante { nombre; carnet; correo }",
+      "  class Club { nombre; facultad }",
+      "  class Reserva { fecha; horaInicio; horaFin; estado }",
+      "  class Espacio { nombre; capacidad; tieneProyector }",
+      "  Estudiante \"1\" --> \"0..*\" Club : lidera",
+      "  Club \"1\" --> \"0..*\" Reserva : solicita",
+      "  Reserva \"0..*\" --> \"1\" Espacio : ocupa",
+      F
+    ].join("\n"),
+    estados: [
+      "## Estados de Reserva (diagrama de estados)",
+      F + "mermaid",
+      "stateDiagram-v2",
+      "  [*] --> confirmada : reservar",
+      "  confirmada --> cancelada : cancelar (2 h o más antes)",
+      "  confirmada --> finalizada : pasa la horaFin",
+      F,
+      "Toda transición que no figure acá se rechaza con un error."
+    ].join("\n"),
+    limites: [
+      "## Fuera de alcance",
+      "- Notificar a Bienestar Estudiantil (historia #22).",
+      "- Cobros, penalidades o motivos de cancelación.",
+      "- Roles nuevos (por ejemplo administrador)."
+    ].join("\n"),
+    convenciones: [
+      "## Convenciones",
+      "- JavaScript (módulos ES), pruebas con node:test.",
+      "- Mensajes de error en español."
+    ].join("\n")
+  };
+
+  const REGLAS = [
+    "## Reglas para el asistente",
+    "1. Usá solo los nombres de clases, atributos y estados de este documento.",
+    "2. Si falta información, no la completes: preguntá o listá el supuesto al final.",
+    "3. No agregues nada de la sección «Fuera de alcance».",
+    "4. Entregá una prueba por criterio y por transición, incluidos los bordes."
+  ].join("\n");
+
+  const HUECOS = [
+    { p: "¿Cómo se llama el dueño de la reserva: club, userId, usuario?", cubre: ["modelo"] },
+    { p: "¿Qué atributos tiene una reserva, y cuáles no?", cubre: ["modelo"] },
+    { p: "¿Quién puede cancelar?", cubre: ["historia", "caso"] },
+    { p: "¿Cuánta anticipación mínima, y cuenta el borde de justo 2 horas?", cubre: ["historia"] },
+    { p: "¿Qué valores puede tener el estado y cómo se escriben?", cubre: ["estados"] },
+    { p: "¿Qué pasa al cancelar una reserva que ya está cancelada?", cubre: ["estados"] },
+    { p: "¿Y una que ya finalizó?", cubre: ["estados"] },
+    { p: "¿Se notifica, se cobra penalidad o se agregan roles?", cubre: ["limites"] },
+    { p: "¿Qué ve el estudiante en cada rama del flujo alternativo?", cubre: ["caso"] },
+    { p: "¿Qué lenguaje, qué librería de pruebas y en qué idioma van los errores?", cubre: ["convenciones"] }
+  ];
+
+  const checks = [...document.querySelectorAll("#armChecks input[data-art]")];
+  const meter = document.getElementById("armMeter");
+  const lista = document.getElementById("armHuecos");
+  const salida = document.getElementById("armSalida");
+  const copiar = document.getElementById("armCopiar");
+  const copiado = document.getElementById("armCopiado");
+  if (!meter || !lista || !salida) return;
+
+  function render() {
+    const activos = checks.filter(c => c.checked).map(c => c.dataset.art);
+    let adivina = 0;
+    lista.innerHTML = "";
+    HUECOS.forEach(h => {
+      const cubierto = h.cubre.some(a => activos.includes(a));
+      if (!cubierto) adivina++;
+      const li = document.createElement("li");
+      li.className = cubierto ? "cubierto" : "adivina";
+      const ico = document.createElement("span");
+      ico.className = "ico";
+      ico.textContent = cubierto ? "✅" : "❓";
+      const txt = document.createElement("span");
+      txt.textContent = h.p + (cubierto ? "" : " — la IA lo adivina.");
+      li.append(ico, txt);
+      lista.appendChild(li);
+    });
+
+    meter.className = "ctx-arm-meter" + (adivina === 0 ? " ok" : adivina >= 7 ? " mal" : "");
+    if (adivina === 0) {
+      meter.textContent = "La IA no tiene nada que adivinar: las 10 decisiones están escritas. Ahora el riesgo cambia de lugar: que algún artefacto esté desactualizado o sea ambiguo.";
+    } else if (adivina === HUECOS.length) {
+      meter.textContent = "La IA tiene que adivinar las " + HUECOS.length + " decisiones. Es el caso de «hacé el módulo para cancelar reservas».";
+    } else {
+      meter.textContent = "La IA tiene que adivinar " + adivina + " de " + HUECOS.length + " decisiones. Cada ❓ de abajo es un lugar donde puede inventar.";
+    }
+
+    if (!activos.length) {
+      salida.value = "";
+      salida.placeholder = "Marcá al menos un artefacto para armar el paquete…";
+      return;
+    }
+    const partes = ["# CONTEXTO — EventoUAB · Historia #14 \"Cancelar una reserva\"",
+      "## Tarea\nImplementar cancelarReserva(reserva, club, ahora) en reservas.js."];
+    ["historia", "caso", "modelo", "estados", "limites", "convenciones"].forEach(k => {
+      if (activos.includes(k)) partes.push(ARTEFACTOS[k]);
+    });
+    partes.push(REGLAS);
+    salida.value = partes.join("\n\n");
+  }
+
+  checks.forEach(c => c.addEventListener("change", render));
+
+  copiar.addEventListener("click", () => {
+    if (!salida.value) { copiado.textContent = "Marcá un artefacto primero."; return; }
+    const ok = () => { copiado.textContent = "✓ Copiado"; setTimeout(() => { copiado.textContent = ""; }, 2000); };
+    const respaldo = () => { salida.select(); try { document.execCommand("copy"); ok(); } catch (e) { copiado.textContent = "Seleccioná el texto y copialo a mano."; } };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(salida.value).then(ok, respaldo);
+    } else {
+      respaldo();
+    }
+  });
+
+  render();
+})();
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL); accedida directo, como siempre, no dispara nada nuevo. No
+     toca el motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return;
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
