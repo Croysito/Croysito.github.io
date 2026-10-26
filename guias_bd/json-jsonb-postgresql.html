@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON y JSONB en PostgreSQL | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>JSONB</span></div>
+<p>Datos semi-estructurados en PostgreSQL</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#por-que">¿Por qué guardar JSON?</a>
+<a href="#json-jsonb">json vs jsonb</a>
+<a href="#guardar">Guardar documentos</a>
+<a href="#leer">Leer: -&gt;, -&gt;&gt; y #&gt;&gt;</a>
+<a href="#filtrar">Filtrar: @&gt;, ? y compañía</a>
+<a href="#modificar">Modificar sin reescribir todo</a>
+<a href="#expandir">De JSON a filas y viceversa</a>
+<a href="#indices">Índices GIN</a>
+<a href="#cuando">¿JSONB o columnas?</a>
+<a href="#mongo">El puente hacia MongoDB</a>
+<a href="#razonamiento">Cuando algo falla</a>
+<a href="#ejercicios">Actividades de repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🗄️ Guía de Aula Invertida</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>JSON y <span>JSONB</span> en PostgreSQL</h1>
+<p>Una tienda vende notebooks, mouses y cables. Cada producto tiene atributos distintos: unos tienen RAM, otros colores, otros nada. ¿Una columna por cada atributo posible? ¿Una tabla por tipo de producto? PostgreSQL ofrece una tercera vía: guardar un documento JSON dentro de una columna y consultarlo con SQL. Es, además, el mejor ensayo para entender MongoDB.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Hasta ahora, cada dato de tus tablas tenía una columna con nombre y tipo fijos. Eso da orden y garantías, pero cuesta cuando los datos no tienen la misma forma en todas las filas. Con <strong>JSONB</strong> sigues dentro de PostgreSQL, con sus transacciones, sus índices y sus JOINs, pero una columna puede guardar un documento entero.</p>
+<div class="highlight">
+<strong>Objetivo del módulo</strong>
+<p>Al finalizar esta guía sabrás elegir entre <code>json</code> y <code>jsonb</code>, guardar y leer documentos con <code>-&gt;</code>, <code>-&gt;&gt;</code> y <code>#&gt;&gt;</code>, filtrar con <code>@&gt;</code> y <code>?</code>, modificar partes de un documento con <code>jsonb_set</code>, convertir entre JSON y filas, acelerar consultas con índices GIN y decidir cuándo conviene JSONB y cuándo columnas normales.</p>
+</div>
+<div class="highlight">
+<strong>📦 El caso de esta guía</strong>
+<p>Todos los ejemplos usan una tabla <code>productos</code> de una tienda de tecnología. Cada fila tiene columnas fijas (<code>id</code>, <code>nombre</code>, <code>precio</code>) y una columna <code>atributos</code> de tipo JSONB con lo que cambia de un producto a otro. Todos los resultados que verás fueron ejecutados en PostgreSQL real antes de publicarse.</p>
+</div>
+<div class="highlight">
+<strong>📝 Actividades de este módulo</strong>
+<p>Encontrarás <strong>actividades cortas y autocorregibles</strong> repartidas por la guía y una sección final de <strong>escenarios de fallas</strong> reales donde tienes que decidir qué pasó antes de ver la respuesta. La práctica con editor SQL en vivo es el taller que sigue a esta guía.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>🧩 Flexibilidad</h3><p>Cada fila puede traer atributos distintos sin tocar la estructura de la tabla.</p></div>
+<div class="info"><h3>🔎 Consulta real</h3><p>No es un texto opaco: puedes filtrar, ordenar y agrupar por lo que hay adentro del documento.</p></div>
+<div class="info"><h3>🌉 Puente</h3><p>Los mismos conceptos (documento, clave, arreglo anidado) son los de MongoDB.</p></div>
+</div>
+</div>
+</section>
+
+<section class="container" id="por-que">
+<div class="card">
+<h2 class="section-title">¿Por qué guardar JSON en una base relacional?</h2>
+<p class="lead">Imagina el catálogo de la tienda. Un notebook tiene RAM, almacenamiento y puertos; unos auriculares tienen autonomía y bluetooth; un cable HDMI casi no tiene atributos. El modelo relacional clásico ofrece tres salidas, y las tres duelen:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Enfoque</th><th scope="col">Cómo se ve</th><th scope="col">El problema</th></tr></thead>
+<tbody>
+<tr><td><strong>Una columna por atributo</strong></td><td>Tabla con <code>ram_gb</code>, <code>bluetooth</code>, <code>autonomia_h</code>, <code>pulgadas</code>…</td><td>Decenas de columnas casi todas en NULL. Cada producto nuevo con un atributo inédito exige un <code>ALTER TABLE</code>.</td></tr>
+<tr><td><strong>Una tabla por tipo de producto</strong></td><td><code>notebooks</code>, <code>auriculares</code>, <code>mouses</code>…</td><td>Listar "todos los productos" obliga a un <code>UNION</code> de tablas, y cada categoría nueva es una tabla nueva.</td></tr>
+<tr><td><strong>Clave-valor (EAV)</strong></td><td>Tabla <code>producto_atributo(producto_id, clave, valor)</code></td><td>Todo se guarda como texto, y recuperar un producto completo requiere un JOIN o un pivot por cada atributo.</td></tr>
+<tr><td><strong>Columna JSONB</strong></td><td>Una columna <code>atributos</code> con el documento de cada producto</td><td>Pierdes algunas garantías del modelo relacional (lo vemos en la sección <a href="#cuando">¿JSONB o columnas?</a>).</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>No es "o lo uno o lo otro"</strong>
+<p>La idea no es reemplazar columnas por JSON. Es un <strong>modelo híbrido</strong>: lo que todos los productos comparten y que usas para unir, ordenar y validar (<code>id</code>, <code>nombre</code>, <code>precio</code>) va en columnas normales; lo que varía de fila a fila va en un documento.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="porque-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Un catálogo tiene 40 categorías de producto y cada una trae entre 3 y 12 atributos propios que cambian cada mes. ¿Qué modelo se adapta mejor a ese ritmo de cambio?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Una columna por cada atributo de cada categoría, con NULL donde no aplique.</button>
+<button class="quiz-opt" data-correct>Columnas fijas para lo común y una columna JSONB para lo que varía.</button>
+<button class="quiz-opt">Una tabla independiente por categoría, con sus propios atributos.</button>
+<button class="quiz-opt">Un solo campo de texto donde se anota todo separado por comas.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el modelo híbrido mantiene en columnas lo que se usa para unir y ordenar, y deja que lo variable evolucione dentro del documento sin ALTER TABLE." data-ko="Con atributos que cambian cada mes, columnas o tablas por categoría obligan a modificar la estructura constantemente, y el texto separado por comas no se puede consultar bien. Lo flexible va en JSONB; lo común, en columnas." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="json-jsonb">
+<div class="card">
+<h2 class="section-title">json vs jsonb</h2>
+<p class="lead">PostgreSQL ofrece dos tipos para documentos JSON, y la diferencia importa: <code>json</code> guarda el <strong>texto tal como lo escribiste</strong>; <code>jsonb</code> lo convierte a un formato <strong>binario ya interpretado</strong>.</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">SELECT '{"a":1,   "b":2, "a":3}'::json  AS como_json,
+       '{"a":1,   "b":2, "a":3}'::jsonb AS como_jsonb;</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado</span></div>
+<pre><code class="src">        como_json         |   como_jsonb
+--------------------------+------------------
+ {"a":1,   "b":2, "a":3}  | {"a": 3, "b": 2}</code></pre>
+</div>
+<p>El <code>json</code> conservó los espacios y la clave <code>a</code> repetida. El <code>jsonb</code> descartó el espacio, quedó con una sola <code>a</code> (se queda el último valor) y ordenó las claves. Otro ejemplo del orden:</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">SELECT '{"nombre":"Ana","id":1,"activo":true}'::jsonb;</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado</span></div>
+<pre><code class="src">                 jsonb
+-------------------------------------------
+ {"id": 1, "activo": true, "nombre": "Ana"}</code></pre>
+</div>
+<p>Las claves salen primero las más cortas y, a igual largo, por orden alfabético. <strong>El orden en que las escribiste no se conserva.</strong></p>
+<table class="tabla">
+<thead><tr><th scope="col"></th><th scope="col"><code>json</code></th><th scope="col"><code>jsonb</code></th></tr></thead>
+<tbody>
+<tr><td><strong>Almacenamiento</strong></td><td>Texto idéntico al original</td><td>Binario ya interpretado</td></tr>
+<tr><td><strong>Claves repetidas</strong></td><td>Las conserva todas</td><td>Se queda con la última</td></tr>
+<tr><td><strong>Orden y espacios</strong></td><td>Se conservan</td><td>No se conservan</td></tr>
+<tr><td><strong>Velocidad al consultar</strong></td><td>Lenta: reinterpreta el texto en cada consulta</td><td>Rápida: ya está procesado</td></tr>
+<tr><td><strong>Operadores <code>@&gt;</code> y <code>?</code></strong></td><td>No disponibles</td><td>Disponibles</td></tr>
+<tr><td><strong>Índices GIN</strong></td><td>No</td><td>Sí</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Regla práctica: usa <code>jsonb</code></strong>
+<p>Elige <code>json</code> solo si necesitas guardar el texto <em>exacto</em> que llegó (por ejemplo, la firma de un mensaje que se verifica byte a byte). En cualquier otro caso, <code>jsonb</code>: se consulta más rápido y es el único que admite los operadores de filtrado y los índices de esta guía. De aquí en adelante, todo es <code>jsonb</code>.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="jsonb-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Guardas en una columna <code>jsonb</code> el texto <code>{"a":1,"a":3}</code>. ¿Qué almacena PostgreSQL?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Un error de sintaxis, porque una clave repetida no es JSON válido.</button>
+<button class="quiz-opt">Las dos claves a, una detrás de la otra, tal como se escribieron.</button>
+<button class="quiz-opt">Solo la primera clave a, con valor 1, y descarta la segunda.</button>
+<button class="quiz-opt" data-correct>Una sola clave a con valor 3: el último valor reemplaza al anterior.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: jsonb interpreta el documento y deja una sola clave; con duplicadas, gana la última. El tipo json sí habría conservado las dos." data-ko="Una clave repetida no es un error: jsonb la acepta y conserva solo la última (a = 3). Conservar el texto tal cual, con ambas claves, es lo que haría el tipo json, no jsonb." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="guardar">
+<div class="card">
+<h2 class="section-title">Guardar documentos</h2>
+<p class="lead">Una columna <code>jsonb</code> se declara como cualquier otra. Conviene ponerle un valor por defecto y una restricción que asegure que siempre guarda un <em>objeto</em> (y no un número o un arreglo suelto).</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">CREATE TABLE productos (
+    id        SERIAL PRIMARY KEY,
+    nombre    TEXT           NOT NULL,
+    precio    NUMERIC(10,2)  NOT NULL,
+    atributos JSONB          NOT NULL DEFAULT '{}',
+    CONSTRAINT atributos_es_objeto
+        CHECK (jsonb_typeof(atributos) = 'object')
+);</code></pre>
+</div>
+<p>El documento se escribe como un literal de texto entre comillas simples. Las claves y los textos van con comillas <strong>dobles</strong> dentro del JSON:</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">INSERT INTO productos (nombre, precio, atributos) VALUES
+('Notebook Aurora 14', 5200.00,
+ '{"marca":"Lenovo","ram_gb":16,
+   "almacenamiento":{"tipo":"SSD","gb":512},
+   "puertos":["USB-C","HDMI","USB-A"],
+   "garantia_meses":12}'),
+('Auriculares Vento', 350.00,
+ '{"marca":"Sony","bluetooth":true,"autonomia_h":30,
+   "colores":["negro","azul"]}'),
+('Mouse Pixel', 120.00,
+ '{"marca":"Logitech","inalambrico":true,"colores":["negro"]}'),
+('Monitor Lumen 27', 2100.00,
+ '{"marca":"LG","pulgadas":27,"resolucion":"2560x1440",
+   "puertos":["HDMI","DisplayPort"],"garantia_meses":24}'),
+('Cable HDMI 2 m', 45.00, '{}');</code></pre>
+</div>
+<p>Observa lo que acabas de lograr: cinco productos con atributos completamente distintos, en una sola tabla y sin una sola columna sobrante. JSON admite seis tipos de valor, y conviene reconocerlos:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Tipo JSON</th><th scope="col">Ejemplo</th><th scope="col"><code>jsonb_typeof</code> devuelve</th></tr></thead>
+<tbody>
+<tr><td>Número</td><td><code>16</code></td><td><code>number</code></td></tr>
+<tr><td>Texto</td><td><code>"16"</code></td><td><code>string</code></td></tr>
+<tr><td>Booleano</td><td><code>true</code></td><td><code>boolean</code></td></tr>
+<tr><td>Nulo</td><td><code>null</code></td><td><code>null</code></td></tr>
+<tr><td>Objeto</td><td><code>{"gb": 512}</code></td><td><code>object</code></td></tr>
+<tr><td>Arreglo</td><td><code>["HDMI","USB-C"]</code></td><td><code>array</code></td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>El <code>CHECK</code> sí rechaza lo que no es un objeto</strong>
+<p>Si intentas insertar <code>'[1,2]'</code> en <code>atributos</code>, PostgreSQL responde <code>new row for relation "productos" violates check constraint "atributos_es_objeto"</code>. Es la forma de recuperar un poco de la disciplina que el esquema fijo daba gratis.</p>
+</div>
+<p>Ojo con el tipo: <code>16</code> (número) y <code>"16"</code> (texto) son valores distintos para <code>jsonb</code>, y más adelante verás por qué eso importa al filtrar.</p>
+
+<div class="quiz quiz-mc" data-quiz-id="guardar-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué hace la restricción <code>CHECK (jsonb_typeof(atributos) = 'object')</code> sobre la columna?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Verifica que cada clave del documento tenga un tipo de dato fijo.</button>
+<button class="quiz-opt">Impide que dos productos tengan los mismos atributos.</button>
+<button class="quiz-opt" data-correct>Rechaza valores que no sean un objeto, como un arreglo o un número suelto.</button>
+<button class="quiz-opt">Obliga a que el documento contenga al menos una clave.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: solo comprueba la forma exterior del valor (objeto, arreglo, número…). No valida claves ni tipos internos; un '{}' vacío también pasa." data-ko="El CHECK mira únicamente el tipo exterior del valor guardado. No exige claves concretas, ni tipos para ellas, ni evita repetidos; incluso un objeto vacío '{}' lo cumple." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="leer">
+<div class="card">
+<h2 class="section-title">Leer: -&gt;, -&gt;&gt; y #&gt;&gt;</h2>
+<p class="lead">Para sacar un valor del documento hay dos operadores básicos, y la diferencia entre ellos es la fuente de la mayoría de los errores de principiantes.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Operador</th><th scope="col">Devuelve</th><th scope="col">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><code>-&gt;</code></td><td>El valor <strong>como <code>jsonb</code></strong> (todavía JSON)</td><td><code>atributos-&gt;'marca'</code></td></tr>
+<tr><td><code>-&gt;&gt;</code></td><td>El valor <strong>como <code>text</code></strong> (SQL normal)</td><td><code>atributos-&gt;&gt;'marca'</code></td></tr>
+<tr><td><code>#&gt;</code> / <code>#&gt;&gt;</code></td><td>Lo mismo, pero siguiendo una <strong>ruta</strong> de varios niveles</td><td><code>atributos#&gt;&gt;'{almacenamiento,tipo}'</code></td></tr>
+</tbody>
+</table>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">SELECT nombre,
+       atributos-&gt;'marca'   AS con_flecha,
+       atributos-&gt;&gt;'marca'  AS con_doble_flecha
+FROM productos ORDER BY id;</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado</span></div>
+<pre><code class="src">       nombre       | con_flecha | con_doble_flecha
+--------------------+------------+------------------
+ Notebook Aurora 14 | "Lenovo"   | Lenovo
+ Auriculares Vento  | "Sony"     | Sony
+ Mouse Pixel        | "Logitech" | Logitech
+ Monitor Lumen 27   | "LG"       | LG
+ Cable HDMI 2 m     |            |</code></pre>
+</div>
+<p>Con <code>-&gt;</code> el resultado conserva las comillas porque sigue siendo JSON (un texto JSON). Con <code>-&gt;&gt;</code> obtienes el texto limpio. El Cable HDMI no tiene <code>marca</code>: pedir una clave que no existe no es un error, devuelve <strong>NULL</strong>.</p>
+
+<h3>Documentos anidados y arreglos</h3>
+<p>Los operadores se encadenan para bajar por los niveles. Para un arreglo, el "nombre" es la posición, <strong>empezando en 0</strong>:</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">SELECT nombre,
+       atributos-&gt;'almacenamiento'-&gt;&gt;'tipo'     AS tipo,
+       atributos#&gt;&gt;'{almacenamiento,gb}'        AS gb,
+       atributos-&gt;'puertos'-&gt;&gt;0                AS primer_puerto,
+       jsonb_array_length(atributos-&gt;'puertos')  AS cant_puertos
+FROM productos
+WHERE atributos ? 'almacenamiento';</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado</span></div>
+<pre><code class="src">       nombre       | tipo | gb  | primer_puerto | cant_puertos
+--------------------+------+-----+---------------+--------------
+ Notebook Aurora 14 | SSD  | 512 | USB-C         |            3</code></pre>
+</div>
+
+<div class="highlight">
+<strong>⚠️ Los números salen como texto</strong>
+<p><code>-&gt;&gt;</code> siempre devuelve <code>text</code>, aunque el valor sea un número. Si comparas sin convertir, PostgreSQL compara <strong>letra por letra</strong>, y <code>'8'</code> resulta "mayor o igual" que <code>'16'</code> porque <code>'8'</code> viene después de <code>'1'</code>. Para comparar como número hay que convertir con <code>::int</code> (o <code>::numeric</code>):</p>
+</div>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">-- Mal: compara texto contra texto
+SELECT nombre FROM productos WHERE atributos-&gt;&gt;'ram_gb' &gt;= '16';
+
+-- Bien: convierte a número antes de comparar
+SELECT nombre FROM productos WHERE (atributos-&gt;&gt;'ram_gb')::int &gt;= 16;</code></pre>
+</div>
+<p>Con los datos de esta tabla ambas devuelven el Notebook (el único con RAM), así que el error pasa desapercibido. Pero un equipo de 8 GB también habría entrado en la primera:</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">SELECT v, v &gt;= '16'      AS como_texto,
+          v::int &gt;= 16  AS como_numero
+FROM (VALUES ('8'), ('16'), ('32')) t(v);</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado</span></div>
+<pre><code class="src"> v  | como_texto | como_numero
+----+------------+-------------
+ 8  | t          | f
+ 16 | t          | t
+ 32 | t          | t</code></pre>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="leer-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica el tipo de dato que devuelve cada expresión sobre <code>atributos</code>.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>atributos-&gt;'puertos'</code></span>
+<div class="quiz-classify-btns">
+<button>text</button>
+<button data-correct>jsonb</button>
+<button>boolean</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>atributos-&gt;&gt;'marca'</code></span>
+<div class="quiz-classify-btns">
+<button data-correct>text</button>
+<button>boolean</button>
+<button>jsonb</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>atributos ? 'bluetooth'</code></span>
+<div class="quiz-classify-btns">
+<button>jsonb</button>
+<button>text</button>
+<button data-correct>boolean</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>atributos#&gt;&gt;'{almacenamiento,tipo}'</code></span>
+<div class="quiz-classify-btns">
+<button>boolean</button>
+<button data-correct>text</button>
+<button>jsonb</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="leer-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Quieres los productos con al menos 16 GB de RAM y escribes <code>WHERE atributos-&gt;&gt;'ram_gb' &gt;= 16</code>. ¿Qué ocurre?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Funciona igual que si hubieras comparado con el texto '16'.</button>
+<button class="quiz-opt" data-correct>Error: no existe el operador que compara text con integer.</button>
+<button class="quiz-opt">Devuelve todas las filas, porque el número se convierte a NULL.</button>
+<button class="quiz-opt">Devuelve solo las filas donde ram_gb vale exactamente 16.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: -&gt;&gt; devuelve text y PostgreSQL no compara text con un número. El error es operator does not exist: text &gt;= integer. La solución es (atributos-&gt;&gt;'ram_gb')::int &gt;= 16." data-ko="-&gt;&gt; entrega texto, y PostgreSQL no inventa una conversión implícita hacia el número 16: lanza el error operator does not exist: text &gt;= integer. Hay que convertir tú con ::int." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="filtrar">
+<div class="card">
+<h2 class="section-title">Filtrar: @&gt;, ? y compañía</h2>
+<p class="lead">Podrías filtrar con <code>WHERE atributos-&gt;&gt;'marca' = 'Lenovo'</code>, y funciona. Pero <code>jsonb</code> trae operadores propios, más expresivos, que además se pueden acelerar con índices (próxima sección). Los dos que más vas a usar:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Operador</th><th scope="col">Pregunta que responde</th></tr></thead>
+<tbody>
+<tr><td><code>@&gt;</code> (contiene)</td><td>¿El documento de la izquierda <strong>contiene</strong> este fragmento de documento?</td></tr>
+<tr><td><code>?</code> (existe clave)</td><td>¿Existe esta <strong>clave</strong> en el primer nivel del documento?</td></tr>
+<tr><td><code>?|</code></td><td>¿Existe <strong>al menos una</strong> de estas claves?</td></tr>
+<tr><td><code>?&amp;</code></td><td>¿Existen <strong>todas</strong> estas claves?</td></tr>
+</tbody>
+</table>
+<h3>Contiene: @&gt;</h3>
+<p>Escribes el fragmento que esperas encontrar y PostgreSQL verifica que esté dentro. Funciona con valores simples, con objetos anidados y con arreglos:</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">-- Un valor simple
+SELECT nombre FROM productos WHERE atributos @&gt; '{"marca":"Lenovo"}';
+
+-- Dentro de un objeto anidado
+SELECT nombre FROM productos
+WHERE atributos @&gt; '{"almacenamiento":{"tipo":"SSD"}}';
+
+-- Dentro de un arreglo: ¿tiene un puerto HDMI?
+SELECT nombre FROM productos
+WHERE atributos @&gt; '{"puertos":["HDMI"]}' ORDER BY id;</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado</span></div>
+<pre><code class="src">-- 1.º y 2.º SELECT:  Notebook Aurora 14
+
+-- 3.º SELECT:
+       nombre
+--------------------
+ Notebook Aurora 14
+ Monitor Lumen 27</code></pre>
+</div>
+<p>Fíjate en la tercera consulta: para buscar un elemento dentro de un arreglo no recorres el arreglo, simplemente describes cómo debería verse el documento. Es el mismo estilo de pensamiento que usarás en MongoDB.</p>
+<h3>Existe la clave: ?, ?| y ?&amp;</h3>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">-- ¿Tiene garantía registrada?
+SELECT nombre FROM productos WHERE atributos ? 'garantia_meses' ORDER BY id;
+
+-- ¿Es bluetooth O inalámbrico? (al menos una de las dos claves)
+SELECT nombre FROM productos
+WHERE atributos ?| ARRAY['bluetooth','inalambrico'] ORDER BY id;
+
+-- ¿Tiene marca Y garantía? (las dos claves)
+SELECT nombre FROM productos
+WHERE atributos ?&amp; ARRAY['marca','garantia_meses'] ORDER BY id;</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado</span></div>
+<pre><code class="src">-- 1.º y 3.º SELECT:     -- 2.º SELECT:
+ Notebook Aurora 14       Auriculares Vento
+ Monitor Lumen 27         Mouse Pixel</code></pre>
+</div>
+<div class="highlight">
+<strong>Dos trampas de <code>?</code> y <code>@&gt;</code></strong>
+<p><strong>1.</strong> <code>?</code> solo mira las claves del <strong>primer nivel</strong>: <code>'{"a":{"b":1}}'::jsonb ? 'b'</code> es <code>false</code>, porque <code>b</code> está un nivel más abajo. <strong>2.</strong> <code>@&gt;</code> distingue tipos: <code>atributos @&gt; '{"ram_gb":"16"}'</code> (con el 16 entre comillas, como texto) <strong>no</strong> encuentra al Notebook, cuyo <code>ram_gb</code> es el número <code>16</code>, sin comillas. No lanza error: simplemente devuelve cero filas.</p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="operadores-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada expresión con lo que responde.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="contiene">atributos @&gt; '{"marca":"LG"}'</button>
+<button class="quiz-match-item" data-pair="existe">atributos ? 'bluetooth'</button>
+<button class="quiz-match-item" data-pair="alguna">atributos ?| ARRAY['wifi','bluetooth']</button>
+<button class="quiz-match-item" data-pair="todas">atributos ?&amp; ARRAY['marca','precio_lista']</button>
+<button class="quiz-match-item" data-pair="texto">atributos-&gt;&gt;'marca'</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="todas">¿Existen las dos claves en el primer nivel del documento?</button>
+<button class="quiz-match-item" data-pair="contiene">¿El documento incluye la marca LG, con ese valor exacto?</button>
+<button class="quiz-match-item" data-pair="texto">El valor de la marca convertido en texto SQL normal.</button>
+<button class="quiz-match-item" data-pair="alguna">¿Está presente por lo menos una de esas dos claves?</button>
+<button class="quiz-match-item" data-pair="existe">¿Existe la clave bluetooth, sea cual sea su valor?</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="filtrar-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Ejecutas <code>WHERE atributos @&gt; '{"ram_gb":"16"}'</code> sobre la tabla del Notebook (cuyo documento tiene <code>"ram_gb": 16</code>, sin comillas) y obtienes 0 filas, sin ningún error. ¿Por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>"16" (texto) y 16 (número) son valores distintos para jsonb.</button>
+<button class="quiz-opt">La clave ram_gb está anidada y @&gt; solo mira el primer nivel.</button>
+<button class="quiz-opt">@&gt; solo funciona con texto y nunca con claves numéricas.</button>
+<button class="quiz-opt">Falta crear un índice GIN antes de poder usar @&gt;.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: jsonb respeta los tipos. Para encontrar al Notebook hay que buscar el número: atributos @&gt; '{&quot;ram_gb&quot;:16}'." data-ko="@&gt; sí admite números, ram_gb está en el primer nivel (y @&gt; igual bajaría por niveles) y el índice solo acelera, no habilita. La causa es que el texto &quot;16&quot; y el número 16 son valores distintos." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="modificar">
+<div class="card">
+<h2 class="section-title">Modificar sin reescribir todo</h2>
+<p class="lead">Un <code>jsonb</code> no se edita "en el lugar": las funciones y operadores de esta sección <strong>devuelven un documento nuevo</strong>, y tú lo asignas con <code>UPDATE ... SET atributos = ...</code>.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Quiero…</th><th scope="col">Uso</th></tr></thead>
+<tbody>
+<tr><td>Cambiar o agregar <strong>una</strong> clave en una ruta</td><td><code>jsonb_set(doc, '{ruta}', nuevo_valor)</code></td></tr>
+<tr><td>Combinar con otro documento (agrega y pisa claves)</td><td><code>doc || '{"clave": valor}'</code></td></tr>
+<tr><td>Quitar una clave del primer nivel</td><td><code>doc - 'clave'</code></td></tr>
+<tr><td>Quitar una clave de una ruta anidada</td><td><code>doc #- '{ruta,clave}'</code></td></tr>
+</tbody>
+</table>
+<h3>jsonb_set: cambiar un valor</h3>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">-- Subir la RAM del notebook a 32 GB
+UPDATE productos
+SET atributos = jsonb_set(atributos, '{ram_gb}', '32')
+WHERE nombre = 'Notebook Aurora 14';
+
+-- Cambiar un valor anidado: ruta de dos niveles
+UPDATE productos
+SET atributos = jsonb_set(atributos, '{almacenamiento,gb}', '1024')
+WHERE nombre = 'Notebook Aurora 14';</code></pre>
+</div>
+<p>El tercer argumento debe ser <strong>jsonb</strong>. Un número como <code>'32'</code> se interpreta bien, pero para un texto hay que incluir las comillas dobles dentro de las simples: <code>'"SSD"'</code>. Si escribes <code>'SSD'</code> a secas, PostgreSQL responde <code>invalid input syntax for type json</code>. Para valores que vienen de una columna o parámetro, usa <code>to_jsonb(valor)</code> y se encarga de las comillas.</p>
+<h3>|| y -: agregar y quitar</h3>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">-- Agregar una clave nueva Y pisar una existente en un solo paso
+UPDATE productos
+SET atributos = atributos || '{"color":"gris","garantia_meses":18}'
+WHERE nombre = 'Notebook Aurora 14';
+
+-- Quitar la clave color
+UPDATE productos
+SET atributos = atributos - 'color'
+WHERE nombre = 'Notebook Aurora 14';
+
+-- Quitar la clave tipo, dentro de almacenamiento
+UPDATE productos
+SET atributos = atributos #- '{almacenamiento,tipo}'
+WHERE nombre = 'Notebook Aurora 14';</code></pre>
+</div>
+<p>Con <code>||</code>, la clave <code>garantia_meses</code> ya existía con valor 12 y quedó en 18: <strong>a igual clave, gana el documento de la derecha</strong>.</p>
+
+<div class="highlight">
+<strong>⚠️ Tres trampas de jsonb_set</strong>
+<p><strong>1. No crea rutas intermedias.</strong> <code>jsonb_set(atributos, '{wifi,version}', '6')</code> sobre el Mouse no hace nada y no avisa: como <code>wifi</code> no existe, no hay dónde poner <code>version</code>. Primero hay que crear <code>wifi</code> como objeto.</p>
+<p><strong>2. NULL borra todo.</strong> Si el nuevo valor es un <code>NULL</code> de SQL, <code>jsonb_set</code> devuelve NULL y <em>toda la columna</em> queda en NULL (aquí, el <code>NOT NULL</code> lo rechaza con un error). Para guardar un nulo JSON usa <code>'null'::jsonb</code>.</p>
+<p><strong>3. Reescribe el documento completo.</strong> Cambiar una sola clave hace que PostgreSQL escriba de nuevo todo el valor jsonb de esa fila. En documentos pequeños no se nota; en documentos de cientos de KB, sí.</p>
+</div>
+
+<h3>Agregar a un arreglo</h3>
+<p>Para sumar un elemento al arreglo <code>colores</code> del Mouse, concatenas con <code>||</code> y guardas el arreglo nuevo con <code>jsonb_set</code>:</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">UPDATE productos
+SET atributos = jsonb_set(atributos, '{colores}',
+                          (atributos-&gt;'colores') || '"rojo"')
+WHERE nombre = 'Mouse Pixel';</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado de consultar atributos-&gt;'colores'</span></div>
+<pre><code class="src"> ["negro", "rojo"]</code></pre>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="modificar-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Predice el efecto de cada instrucción sobre el documento <code>{"marca":"LG","pulgadas":27}</code>:</p>
+<p>1. <code>atributos || '{"pulgadas":32,"curvo":true}'</code> deja
+<select class="quiz-blank" data-correct="pisa">
+<option value="">— elige —</option>
+<option value="conserva">las pulgadas en 27 y agrega curvo</option>
+<option value="pisa">las pulgadas en 32 y agrega curvo</option>
+<option value="error">un error por la clave repetida</option>
+</select>.</p>
+<p>2. <code>atributos - 'marca'</code> devuelve el documento
+<select class="quiz-blank" data-correct="sin">
+<option value="">— elige —</option>
+<option value="null">completo en NULL, por haber borrado marca</option>
+<option value="sin">sin la clave marca y con pulgadas</option>
+<option value="igual">idéntico, porque - no modifica nada</option>
+</select>.</p>
+<p>3. <code>jsonb_set(atributos, '{garantia,meses}', '12')</code>, siendo <code>garantia</code> inexistente,
+<select class="quiz-blank" data-correct="igual">
+<option value="">— elige —</option>
+<option value="crea">crea garantia con meses dentro</option>
+<option value="igual">devuelve el documento sin cambios</option>
+<option value="error">lanza un error de ruta inexistente</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="modificar-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Necesitas guardar el texto <code>Samsung</code> en la clave <code>marca</code>. ¿Cuál es la instrucción correcta?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">jsonb_set(atributos, '{marca}', 'Samsung')</button>
+<button class="quiz-opt">jsonb_set(atributos, 'marca', '"Samsung"')</button>
+<button class="quiz-opt">jsonb_set(atributos, '{marca}', "Samsung")</button>
+<button class="quiz-opt" data-correct>jsonb_set(atributos, '{marca}', '"Samsung"')</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la ruta va entre llaves como arreglo de texto y el valor debe ser jsonb, así que un texto lleva sus comillas dobles dentro de las simples." data-ko="Dos cosas deben cumplirse: la ruta es un arreglo de texto entre llaves ('{marca}') y el nuevo valor debe ser jsonb válido, por lo que un texto necesita comillas dobles dentro de las simples ('&quot;Samsung&quot;')." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="expandir">
+<div class="card">
+<h2 class="section-title">De JSON a filas y de filas a JSON</h2>
+<p class="lead">El puente entre los dos mundos se cruza en ambos sentidos. Para <strong>desarmar</strong> un documento en filas se usan funciones que "expanden", y para <strong>armar</strong> uno desde filas, funciones que "construyen".</p>
+<h3>Desarmar: jsonb_each_text y jsonb_array_elements_text</h3>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">-- Cada clave del documento se vuelve una fila
+SELECT k AS clave, v AS valor
+FROM productos, jsonb_each_text(atributos) AS e(k, v)
+WHERE nombre = 'Auriculares Vento'
+ORDER BY k;</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado</span></div>
+<pre><code class="src">    clave    |     valor
+-------------+----------------
+ autonomia_h | 30
+ bluetooth   | true
+ colores     | ["negro", "azul"]
+ marca       | Sony</code></pre>
+</div>
+<p>Y para volver filas los elementos de un <strong>arreglo</strong>, <code>jsonb_array_elements_text</code>. Es lo que permite contar y agrupar contenido que vive adentro de un documento, con el <code>GROUP BY</code> de siempre:</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">-- ¿Qué puertos aparecen más en el catálogo?
+SELECT p AS puerto, count(*) AS productos
+FROM productos, jsonb_array_elements_text(atributos-&gt;'puertos') AS p
+GROUP BY p
+ORDER BY productos DESC, puerto;</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado</span></div>
+<pre><code class="src">   puerto    | productos
+-------------+-----------
+ HDMI        |         2
+ DisplayPort |         1
+ USB-A       |         1
+ USB-C       |         1</code></pre>
+</div>
+<p>Los productos sin <code>puertos</code> simplemente no aportan filas. También puedes agrupar por un valor del documento, como la marca: <code>GROUP BY atributos-&gt;&gt;'marca'</code>. Los productos sin esa clave quedan juntos en un grupo cuyo valor es NULL.</p>
+<h3>Armar: jsonb_build_object, jsonb_agg y to_jsonb</h3>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">-- Armar un objeto a mano, clave por clave
+SELECT jsonb_build_object('id', id, 'nombre', nombre, 'precio', precio)
+FROM productos WHERE id = 3;
+
+-- Juntar varias filas en un solo arreglo
+SELECT jsonb_agg(nombre ORDER BY id)
+FROM productos WHERE atributos ? 'garantia_meses';
+
+-- Convertir una fila completa en un objeto
+SELECT to_jsonb(p)
+FROM (SELECT id, nombre, precio FROM productos WHERE id = 2) p;</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado</span></div>
+<pre><code class="src">{"id": 3, "nombre": "Mouse Pixel", "precio": 120.00}
+
+["Notebook Aurora 14", "Monitor Lumen 27"]
+
+{"id": 2, "nombre": "Auriculares Vento", "precio": 350.00}</code></pre>
+</div>
+<div class="highlight">
+<strong>¿Para qué sirve armar JSON?</strong>
+<p>Para que la propia base de datos entregue a tu aplicación la respuesta lista para una API: un pedido con sus líneas anidadas, un producto con sus atributos. Es exactamente la forma en que MongoDB devuelve sus documentos.</p>
+</div>
+<p>Si necesitas leer un documento largo a simple vista, <code>jsonb_pretty(atributos)</code> lo devuelve con sangrías:</p>
+<div class="code">
+<div class="code-header"><span>Resultado de jsonb_pretty en el Monitor</span></div>
+<pre><code class="src">{
+    "marca": "LG",
+    "puertos": [
+        "HDMI",
+        "DisplayPort"
+    ],
+    "pulgadas": 27,
+    "resolucion": "2560x1440",
+    "garantia_meses": 24
+}</code></pre>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="expandir-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Quieres saber cuántos productos incluyen cada color, sabiendo que <code>colores</code> es un arreglo dentro de <code>atributos</code>. ¿Qué enfoque lo resuelve?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>jsonb_array_elements_text(atributos-&gt;'colores') y luego GROUP BY sobre cada elemento.</button>
+<button class="quiz-opt">jsonb_agg(atributos), que une los documentos en una sola lista de colores.</button>
+<button class="quiz-opt">GROUP BY atributos-&gt;&gt;'colores', que ya agrupa por cada color del arreglo.</button>
+<button class="quiz-opt">jsonb_build_object('color', atributos), que arma una fila por cada color.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: primero se expande el arreglo en una fila por elemento y después se agrupa con el GROUP BY de siempre, igual que se hizo con los puertos." data-ko="Agrupar por -&gt;&gt;'colores' trata el arreglo entero como un solo texto; jsonb_agg y jsonb_build_object arman JSON, no lo desarman. Para contar elementos hay que expandirlos a filas con jsonb_array_elements_text." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="indices">
+<div class="card">
+<h2 class="section-title">Índices GIN: que no recorra todo el catálogo</h2>
+<p class="lead">Sin ayuda, una consulta sobre el contenido del documento recorre <strong>toda la tabla</strong> abriendo cada documento. Con miles de productos eso se nota. Para <code>jsonb</code> existe un tipo de índice hecho a medida: <strong>GIN</strong>.</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">CREATE INDEX idx_productos_atributos
+ON productos USING GIN (atributos);</code></pre>
+</div>
+<p>Un índice GIN indexa <em>todas</em> las claves y valores del documento. Sirve para acelerar <code>@&gt;</code>, <code>?</code>, <code>?|</code> y <code>?&amp;</code>. Para verlo con <code>EXPLAIN</code>, como la tabla de ejemplo tiene solo cinco filas y el planificador preferiría recorrerla entera, le pedimos que no lo haga:</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">SET enable_seqscan = off;   -- solo para esta demostración
+
+EXPLAIN SELECT nombre FROM productos
+WHERE atributos @&gt; '{"marca":"Lenovo"}';</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado (sin los costos)</span></div>
+<pre><code class="src">Bitmap Heap Scan on productos
+  Recheck Cond: (atributos @&gt; '{"marca": "Lenovo"}'::jsonb)
+  -&gt;  Bitmap Index Scan on idx_productos_atributos
+        Index Cond: (atributos @&gt; '{"marca": "Lenovo"}'::jsonb)</code></pre>
+</div>
+<p><code>Bitmap Index Scan on idx_productos_atributos</code> confirma que el índice se usó. Pero ese índice <strong>no ayuda</strong> a esta otra forma de preguntar lo mismo:</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">EXPLAIN SELECT nombre FROM productos
+WHERE atributos-&gt;&gt;'marca' = 'Lenovo';</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado (sin los costos)</span></div>
+<pre><code class="src">Seq Scan on productos
+  Filter: ((atributos -&gt;&gt; 'marca'::text) = 'Lenovo'::text)</code></pre>
+</div>
+<p>El GIN no entiende la expresión <code>atributos-&gt;&gt;'marca'</code>. Si ese filtro es el que más usas, crea un <strong>índice sobre la expresión</strong> (un B-tree normal, el de siempre):</p>
+<div class="code">
+<div class="code-header"><span>SQL</span></div>
+<pre><code class="src">CREATE INDEX idx_productos_marca
+ON productos ((atributos-&gt;&gt;'marca'));   -- los paréntesis dobles son obligatorios
+
+EXPLAIN SELECT nombre FROM productos
+WHERE atributos-&gt;&gt;'marca' = 'Lenovo';</code></pre>
+</div>
+<div class="code">
+<div class="code-header"><span>Resultado (sin los costos)</span></div>
+<pre><code class="src">Index Scan using idx_productos_marca on productos
+  Index Cond: ((atributos -&gt;&gt; 'marca'::text) = 'Lenovo'::text)</code></pre>
+</div>
+<table class="tabla">
+<thead><tr><th scope="col">Tipo de consulta</th><th scope="col">Índice que ayuda</th></tr></thead>
+<tbody>
+<tr><td>Buscar por contenido o por existencia de claves (<code>@&gt;</code>, <code>?</code>)</td><td>GIN sobre toda la columna</td></tr>
+<tr><td>Igualdad, rango u orden sobre <strong>una</strong> clave concreta (<code>-&gt;&gt;</code>)</td><td>Índice de expresión sobre esa clave</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>El mismo método de siempre</strong>
+<p>No adivines: mide con <code>EXPLAIN</code> como hiciste en la guía de índices. Y recuerda el costo de todo índice: acelera las lecturas pero hace más lentas las escrituras. Un GIN completo sobre documentos grandes es relativamente pesado; si solo consultas dos claves, el índice de expresión es más barato.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="indices-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Creaste un índice GIN sobre <code>atributos</code>. ¿Cuál de estas consultas puede aprovecharlo?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">WHERE atributos-&gt;&gt;'marca' = 'Lenovo'</button>
+<button class="quiz-opt">WHERE (atributos-&gt;&gt;'ram_gb')::int &gt;= 16</button>
+<button class="quiz-opt" data-correct>WHERE atributos @&gt; '{"marca":"Lenovo"}'</button>
+<button class="quiz-opt">ORDER BY atributos-&gt;&gt;'marca'</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el GIN está pensado para los operadores propios de jsonb (@&gt;, ?, ?|, ?&amp;). Las demás consultas usan expresiones con -&gt;&gt; que requieren un índice de expresión propio." data-ko="Un GIN sobre la columna solo se aplica a los operadores de jsonb como @&gt;. Las condiciones y el orden con -&gt;&gt; trabajan con una expresión de texto, y para eso haría falta un índice sobre esa expresión." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="cuando">
+<div class="card">
+<h2 class="section-title">¿JSONB o columnas?</h2>
+<p class="lead">JSONB es una herramienta poderosa y por eso es fácil abusar de ella. Un esquema que termina siendo "id + una columna JSONB con todo" tiró por la borda lo que PostgreSQL hace mejor. Estas son las garantías que pierdes al meter un dato dentro del documento:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Con una columna</th><th scope="col">Dentro de un documento JSONB</th></tr></thead>
+<tbody>
+<tr><td>Tipo estricto: un <code>INTEGER</code> no acepta texto</td><td>Cualquier clave acepta cualquier tipo; <code>16</code> y <code>"16"</code> conviven</td></tr>
+<tr><td><code>NOT NULL</code>, <code>UNIQUE</code>, <code>CHECK</code> y <code>DEFAULT</code> por columna</td><td>Solo se pueden simular con <code>CHECK</code> sobre expresiones, más incómodos</td></tr>
+<tr><td>Clave foránea hacia otra tabla</td><td>Imposible: un id dentro del documento no se verifica contra nada</td></tr>
+<tr><td>Estadísticas del planificador por columna</td><td>El planificador sabe poco sobre lo que hay dentro, y puede elegir peores planes</td></tr>
+<tr><td>Cambiar un valor reescribe esa columna</td><td>Cambiar una clave reescribe el documento completo</td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Criterio de decisión</strong>
+<p>Usa <strong>columnas</strong> para lo que: se usa en JOINs, es clave foránea, debe ser único, es obligatorio o se consulta en casi todas las consultas. Usa <strong>JSONB</strong> para lo que: varía de fila en fila, no tiene estructura estable, o es una respuesta externa que guardas casi como llegó (por ejemplo, la respuesta de una pasarela de pagos). Y si una clave del documento empieza a usarse en todos los filtros, es señal de que ya merece ser su propia columna.</p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="cuando-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Decide dónde guardarías cada dato en la tienda: ¿columna normal o documento JSONB?</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El precio de cada producto, que se ordena y se suma en los reportes.</span>
+<div class="quiz-classify-btns">
+<button>Documento JSONB</button>
+<button data-correct>Columna normal</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">Las características técnicas, que cambian según la categoría del producto.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Documento JSONB</button>
+<button>Columna normal</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El id de la categoría, que debe existir en la tabla categorias.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Columna normal</button>
+<button>Documento JSONB</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">La respuesta completa de la pasarela de pagos, guardada tal como llegó.</span>
+<div class="quiz-classify-btns">
+<button>Columna normal</button>
+<button data-correct>Documento JSONB</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text">El correo del cliente, que no puede repetirse entre clientes.</span>
+<div class="quiz-classify-btns">
+<button data-correct>Columna normal</button>
+<button>Documento JSONB</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="mongo">
+<div class="card">
+<h2 class="section-title">El puente hacia MongoDB</h2>
+<p class="lead">Lo que acabas de aprender es, casi tal cual, la forma de pensar de MongoDB: la unidad de datos es un <strong>documento</strong> con claves, valores, objetos anidados y arreglos. La diferencia es que en Mongo <em>todo</em> es documento, y en PostgreSQL el documento convive con tablas, claves foráneas y transacciones. Lo que viene en las próximas guías va a resultarte familiar:</p>
+<table class="tabla">
+<thead><tr><th scope="col">Idea</th><th scope="col">PostgreSQL (jsonb)</th><th scope="col">MongoDB</th></tr></thead>
+<tbody>
+<tr><td>Unidad de datos</td><td>Una fila con una columna jsonb</td><td>Un documento en una colección</td></tr>
+<tr><td>Filtrar por valor</td><td><code>WHERE atributos @&gt; '{"marca":"Lenovo"}'</code></td><td><code>find({ marca: "Lenovo" })</code></td></tr>
+<tr><td>Campo anidado</td><td><code>atributos#&gt;&gt;'{almacenamiento,tipo}'</code></td><td><code>find({ "almacenamiento.tipo": "SSD" })</code></td></tr>
+<tr><td>La clave existe</td><td><code>WHERE atributos ? 'garantia_meses'</code></td><td><code>find({ garantia_meses: { $exists: true } })</code></td></tr>
+<tr><td>Cambiar un campo</td><td><code>jsonb_set(atributos, '{ram_gb}', '32')</code></td><td><code>updateOne(filtro, { $set: { ram_gb: 32 } })</code></td></tr>
+<tr><td>Quitar un campo</td><td><code>atributos - 'color'</code></td><td><code>updateOne(filtro, { $unset: { color: "" } })</code></td></tr>
+<tr><td>Agregar a un arreglo</td><td><code>jsonb_set(..., '{colores}', ... || '"rojo"')</code></td><td><code>updateOne(filtro, { $push: { colores: "rojo" } })</code></td></tr>
+<tr><td>Acelerar una búsqueda</td><td><code>CREATE INDEX ... ON productos ((atributos-&gt;&gt;'marca'))</code></td><td><code>createIndex({ marca: 1 })</code></td></tr>
+</tbody>
+</table>
+<div class="highlight">
+<strong>Cada herramienta con su ventaja</strong>
+<p>En PostgreSQL, un pedido y su cliente se relacionan con una clave foránea y se modifican en una misma transacción. En MongoDB, el modelo natural es guardar el pedido <em>con</em> sus líneas dentro de un único documento. Elegir entre embeber datos o referenciarlos es el tema central de la guía de modelado en Mongo. Y la decisión de qué dato vive en qué motor es la del proyecto integrador.</p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="mongo-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué consulta de PostgreSQL con jsonb se parece más a <code>db.productos.find({ "almacenamiento.tipo": "SSD" })</code> de MongoDB?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">SELECT * FROM productos WHERE atributos ? 'SSD' AND atributos ? 'tipo'</button>
+<button class="quiz-opt" data-correct>SELECT * FROM productos WHERE atributos #&gt;&gt; '{almacenamiento,tipo}' = 'SSD'</button>
+<button class="quiz-opt">SELECT * FROM productos WHERE atributos-&gt;&gt;'almacenamiento.tipo' = 'SSD'</button>
+<button class="quiz-opt">SELECT atributos - 'almacenamiento' - 'tipo' FROM productos</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: la notación con punto de Mongo equivale a una ruta de varios niveles en PostgreSQL, que se escribe con #&gt;&gt; y llaves." data-ko="La notación con punto baja por niveles anidados, y en PostgreSQL eso es una ruta '{almacenamiento,tipo}' con #&gt;&gt;. ? busca claves (no valores), -&gt;&gt;'a.b' buscaría una clave que literalmente se llama así, y '-' elimina claves." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="razonamiento">
+<div class="card">
+<h2 class="section-title">Cuando algo falla</h2>
+<p class="lead">Estos son los errores y síntomas más frecuentes al empezar con JSONB. Reconocerlos por su mensaje te ahorra tiempo.</p>
+<table class="tabla">
+<thead><tr><th scope="col">Mensaje o síntoma</th><th scope="col">Causa habitual</th></tr></thead>
+<tbody>
+<tr><td><code>invalid input syntax for type json</code></td><td>El texto no es JSON válido: comillas simples en vez de dobles, coma sobrante al final, o un texto suelto sin comillas (<code>'Samsung'</code> en lugar de <code>'"Samsung"'</code>).</td></tr>
+<tr><td><code>operator does not exist: jsonb &gt;= integer</code> (o <code>text &gt;= integer</code>)</td><td>Comparaste directamente el resultado de <code>-&gt;</code> o <code>-&gt;&gt;</code> con un número. Convierte con <code>::int</code> o <code>::numeric</code>.</td></tr>
+<tr><td><code>invalid input syntax for type integer: "Lenovo"</code></td><td>Hiciste <code>::int</code> sobre una clave que en alguna fila guarda un texto. Un campo sin tipo fijo puede traer cualquier cosa.</td></tr>
+<tr><td>La consulta con <code>-&gt;</code> y un texto devuelve cero filas</td><td><code>-&gt;</code> entrega JSON, y un texto JSON lleva comillas: se compara con <code>'"Lenovo"'</code>. Usa <code>-&gt;&gt;</code> para comparar con <code>'Lenovo'</code>.</td></tr>
+<tr><td><code>@&gt;</code> devuelve cero filas y no hay error</td><td>El tipo no coincide (<code>"16"</code> texto vs. <code>16</code> número), o la clave está en otro nivel.</td></tr>
+<tr><td>El <code>UPDATE</code> con <code>jsonb_set</code> no cambió nada</td><td>La ruta intermedia no existe: <code>jsonb_set</code> no la crea.</td></tr>
+<tr><td><code>null value in column "atributos" violates not-null constraint</code> tras un <code>jsonb_set</code></td><td>Pasaste un <code>NULL</code> de SQL como nuevo valor. Con <code>jsonb_set</code>, eso anula todo el documento.</td></tr>
+</tbody>
+</table>
+
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Ejecutas <code>WHERE atributos-&gt;'marca' = 'Lenovo'</code> y PostgreSQL responde <code>invalid input syntax for type json</code>. ¿Por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">La clave marca no existe en ninguna de las filas de la tabla, y por eso falla.</button>
+<button class="quiz-opt">-&gt; solo funciona con claves numéricas y nunca con claves de texto.</button>
+<button class="quiz-opt">Falta el cast ::text después del operador para que pueda comparar.</button>
+<button class="quiz-opt" data-correct>-&gt; devuelve jsonb, y 'Lenovo' sin comillas dobles no es JSON válido.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el lado derecho se interpreta como jsonb, y Lenovo sin comillas no es JSON válido. Se arregla con -&gt;&gt; (comparar texto con texto) o escribiendo '&quot;Lenovo&quot;'." data-ko="Si la clave no existiera, el resultado sería simplemente NULL, sin error; y -&gt; funciona con cualquier tipo. El problema es que -&gt; devuelve jsonb y 'Lenovo' sin comillas dobles no es JSON válido." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="razonamiento-2">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Una consulta filtra con <code>(atributos-&gt;&gt;'precio_lista')::numeric &gt; 100</code> y falla con <code>invalid input syntax for type numeric</code> en una sola fila de miles. ¿Qué es lo más probable?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>En esa fila, precio_lista guarda un texto no numérico, como "consultar".</button>
+<button class="quiz-opt">Falta un índice GIN, y el error aparece cuando la consulta tarda demasiado.</button>
+<button class="quiz-opt">El operador -&gt;&gt; está limitado a las primeras 1000 filas de la tabla.</button>
+<button class="quiz-opt">La tabla está corrupta y hay que restaurarla desde un respaldo.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: JSONB no obliga a un tipo por clave, así que una sola fila con un texto inesperado rompe la conversión de toda la consulta. Es el costo de la flexibilidad: validar con CHECK o corregir ese dato." data-ko="Ni la corrupción, ni el índice, ni un límite de filas explican un error de conversión en una sola fila. La causa es que JSONB no fija tipos: esa fila guarda en precio_lista un valor que no es un número." hidden></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="razonamiento-3">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Con la tabla <code>productos</code> del caso, predice qué devuelve cada consulta:</p>
+<p>1. <code>WHERE atributos ? 'ram_gb'</code> sobre el Notebook:
+<select class="quiz-blank" data-correct="si">
+<option value="">— elige —</option>
+<option value="no">no lo devuelve, porque ? busca valores</option>
+<option value="si">lo devuelve, porque la clave existe</option>
+<option value="error">lanza error: ? no admite números</option>
+</select>.</p>
+<p>2. <code>WHERE atributos ? 'tipo'</code> sobre el Notebook, que tiene <code>"almacenamiento": {"tipo": "SSD"}</code>:
+<select class="quiz-blank" data-correct="no">
+<option value="">— elige —</option>
+<option value="si">lo devuelve, porque tipo está en el documento</option>
+<option value="no">no lo devuelve, porque tipo está en otro nivel</option>
+<option value="error">lanza error: la clave está anidada</option>
+</select>.</p>
+<p>3. <code>atributos-&gt;&gt;'marca'</code> sobre el Cable HDMI, cuyo documento es <code>{}</code>:
+<select class="quiz-blank" data-correct="null">
+<option value="">— elige —</option>
+<option value="error">lanza error: la clave no existe</option>
+<option value="vacio">devuelve un texto vacío</option>
+<option value="null">devuelve NULL</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container" id="ejercicios">
+<div class="card">
+<h2 class="section-title">Actividades de repaso</h2>
+<p class="lead">Un repaso integrador de todo el módulo. Cada actividad se corrige al instante; tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué diferencia hay entre los operadores <code>-&gt;</code> y <code>-&gt;&gt;</code>?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El primero lee claves de primer nivel y el segundo cualquier nivel.</button>
+<button class="quiz-opt">El primero sirve para arreglos y el segundo solo para objetos.</button>
+<button class="quiz-opt" data-correct>El primero devuelve jsonb y el segundo devuelve text.</button>
+<button class="quiz-opt">El primero devuelve un texto y el segundo un número entero.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: -&gt; deja el valor como JSON (un texto conserva sus comillas) y -&gt;&gt; lo entrega como text de SQL, listo para comparar o convertir." data-ko="Ambos operadores sirven con objetos y arreglos y con cualquier nivel (se encadenan). Lo que cambia es el tipo del resultado: -&gt; devuelve jsonb y -&gt;&gt; devuelve text." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">Al ejecutar <code>jsonb_set(atributos, '{wifi,version}', '6')</code> sobre un producto que no tiene la clave <code>wifi</code>, PostgreSQL la crea automáticamente con <code>version</code> adentro.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: jsonb_set solo puede crear la última clave de la ruta, no los niveles intermedios. Si wifi no existe, devuelve el documento sin cambios y sin avisar." data-ko="Es falso: jsonb_set no crea rutas intermedias. Con wifi inexistente, el documento queda igual y no hay error, por lo que hay que crear primero wifi como objeto." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">Quieres agregar <code>"color": "gris"</code> a un producto sin perder ninguna de sus otras claves. ¿Qué <code>SET</code> usas?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">atributos = '{"color":"gris"}'</button>
+<button class="quiz-opt">atributos = atributos - 'color'</button>
+<button class="quiz-opt">atributos = atributos ? 'color'</button>
+<button class="quiz-opt" data-correct>atributos = atributos || '{"color":"gris"}'</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: || combina el documento actual con el fragmento nuevo, conserva lo demás y agrega o pisa solo las claves del fragmento." data-ko="La primera opción reemplaza todo el documento; la segunda quitaría la clave color y la tercera devuelve un booleano, no un documento. Para sumar una clave y conservar el resto se usa ||." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Cuál de estas es una razón <strong>en contra</strong> de guardar un dato dentro de una columna JSONB?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Sus atributos cambian de un producto a otro.</button>
+<button class="quiz-opt" data-correct>Necesitas que una clave foránea verifique que ese id existe.</button>
+<button class="quiz-opt">Es una respuesta externa que se guarda tal como llegó.</button>
+<button class="quiz-opt">No sabes de antemano qué claves traerá cada documento.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: un id dentro de un documento no puede ser clave foránea, así que PostgreSQL no puede verificar que exista. Esos datos van en una columna normal." data-ko="Las otras tres son justo los motivos a favor de JSONB: estructura variable, respuestas externas y claves desconocidas. En contra juega perder garantías como la clave foránea." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">¿Qué hace <code>UPDATE productos SET atributos = atributos #- '{almacenamiento,tipo}'</code>?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>Elimina la clave tipo dentro de almacenamiento y conserva el resto.</button>
+<button class="quiz-opt">Cambia el valor de tipo a NULL pero deja la clave presente.</button>
+<button class="quiz-opt">Borra la clave almacenamiento completa, con todo lo que contiene.</button>
+<button class="quiz-opt">Devuelve el valor de tipo sin modificar el documento guardado.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: #- sigue la ruta y quita solo la clave final; almacenamiento sigue existiendo con el resto de sus claves (por ejemplo, gb)." data-ko="#- elimina únicamente la última clave de la ruta (tipo), no toda la rama ni la deja en NULL, y como va dentro de un UPDATE sí modifica el documento. Leer sin modificar sería #&gt;&gt;." hidden></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Expresión</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>col-&gt;'k'</code> · <code>col-&gt;&gt;'k'</code></td><td>Valor de la clave <code>k</code> como jsonb · como text.</td></tr>
+<tr><td><code>col#&gt;'{a,b}'</code> · <code>col#&gt;&gt;'{a,b}'</code></td><td>Lo mismo, siguiendo una ruta de varios niveles.</td></tr>
+<tr><td><code>col-&gt;'arr'-&gt;&gt;0</code></td><td>Elemento de un arreglo (la posición empieza en 0).</td></tr>
+<tr><td><code>(col-&gt;&gt;'k')::int</code></td><td>Convertir a número antes de comparar u ordenar.</td></tr>
+<tr><td><code>col @&gt; '{"k":"v"}'</code></td><td>¿El documento contiene este fragmento? Respeta el tipo.</td></tr>
+<tr><td><code>col ? 'k'</code> · <code>?|</code> · <code>?&amp;</code></td><td>¿Existe la clave? · ¿alguna de varias? · ¿todas? (solo primer nivel).</td></tr>
+<tr><td><code>jsonb_set(col, '{ruta}', '"v"')</code></td><td>Cambiar un valor; no crea rutas intermedias.</td></tr>
+<tr><td><code>col || '{...}'</code></td><td>Agregar claves o pisar las existentes.</td></tr>
+<tr><td><code>col - 'k'</code> · <code>col #- '{a,b}'</code></td><td>Quitar una clave de primer nivel · de una ruta.</td></tr>
+<tr><td><code>jsonb_each_text</code> · <code>jsonb_array_elements_text</code></td><td>Desarmar un documento o un arreglo en filas.</td></tr>
+<tr><td><code>jsonb_build_object</code> · <code>jsonb_agg</code> · <code>to_jsonb</code></td><td>Armar objetos, arreglos y documentos desde filas.</td></tr>
+<tr><td><code>jsonb_typeof</code> · <code>jsonb_array_length</code> · <code>jsonb_pretty</code></td><td>Tipo de un valor · largo de un arreglo · formato legible.</td></tr>
+<tr><td><code>USING GIN (col)</code></td><td>Índice para <code>@&gt;</code>, <code>?</code>, <code>?|</code>, <code>?&amp;</code>.</td></tr>
+<tr><td><code>((col-&gt;&gt;'k'))</code></td><td>Índice de expresión para filtrar por una clave concreta.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>📜 Un formato nacido en la web</h3><p>JSON viene de JavaScript Object Notation y se popularizó a mediados de los 2000 como alternativa más ligera que XML para que los navegadores y los servidores intercambiaran datos.</p></div>
+<div class="info"><h3>🐘 Dos tipos, dos épocas</h3><p>PostgreSQL agregó el tipo <code>json</code> en 2012 y el tipo <code>jsonb</code>, con índices, en 2014. Desde entonces muchos equipos cubren con él gran parte de lo que antes los empujaba a una base de documentos.</p></div>
+<div class="info"><h3>🧱 Documento binario, no texto</h3><p>La "b" de <code>jsonb</code> significa binario: el texto se interpreta una sola vez al guardarlo, y por eso no conserva espacios, el orden de las claves ni las claves repetidas.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Guía de Reforzamiento: JSON y JSONB en PostgreSQL</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+<script>
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (correctas === filas.length) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=... en
+     la URL); accedida directo, como siempre, no dispara nada nuevo. No
+     toca el motor de quizzes de arriba: se engancha a marcarResuelto() y
+     actualizarProgreso(), que ya existen. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf('?');
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get('atenza_token') && p.get('guia_intento')) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return;
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
