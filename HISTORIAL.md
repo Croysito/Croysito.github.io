@@ -270,6 +270,19 @@ Quizzes auditados con script: primer borrador tenía un `quiz-classify` con dos 
 
 Antes de publicar se corrió cada consulta (ROW_NUMBER/PARTITION BY/RANK/DENSE_RANK/LAG/LEAD/SUM() OVER, EXPLAIN antes/después del índice) contra Postgres real vía `@electric-sql/pglite` en Node. Con 50.000 filas y un filtro de selectividad ~5% (`vendedor`, 20 valores), Postgres real elige un plan **Bitmap Heap Scan** apoyado en un **Bitmap Index Scan**, no un "Index Scan" simple como el ejemplo ilustrativo de la guía teórica — el taller explica esa diferencia en vez de prometer un plan que Postgres no elegiría. El Reto final agrega un filtro por `id` (selectividad de una fila entre 50.000) para mostrar recién ahí un Index Scan puro.
 
+### #taller-json-jsonb — Verificación y hallazgos (28/10)
+
+Antes de escribir el HTML se corrió cada ejercicio contra `@electric-sql/pglite@0.5.4` (PostgreSQL 18.3) en Node, y después la página completa con jsdom + PGlite real (escribir el SQL en cada editor y pulsar «Ejecutar»). Tres hallazgos que cambian el motor copiado de `taller-seguridad-roles.html`:
+- **`jsonb`/`json` llegan ya parseados** a JS, y `formatearValor` los mostraría como `[object Object]`. Solución en `ejecutarSQL`: `db.exec(codigo, { parsers: { 114: v => v, 3802: v => v } })` (OID de `json`/`jsonb`) devuelve el texto canónico de Postgres (`{"a": 3, "b": 2}`, con `"Lenovo"` entre comillas en `->`).
+- **`affectedRows` llega acumulado** entre las sentencias de un mismo bloque (INSERT 1 + UPDATE 4 se informa como 5). `renderizarResultados` resta el acumulado anterior para mostrar el de cada sentencia. Este bug latente sigue en los demás talleres (no se tocaron; sus enunciados no dependen de ese número).
+- **PostgreSQL 18 agrega `Disabled: true`** al `EXPLAIN` cuando `enable_seqscan = off` y no hay otra opción; el enunciado 6.2 lo anticipa. Hay un `RESET enable_seqscan;` al final de 6.3 para no dejar la sesión alterada.
+
+Quizzes auditados con script: el primer borrador tenía la correcta como la opción más larga en 4 de 5 preguntas; reescritas hasta ratio ≤ 1.3 con posiciones 3-2-4-1-3 y `quiz-classify` sin diagonal (2-3-1-2).
+
+### #bug-cuadros-resaltador — Cuadros en los bloques de código de `herencia.html` y `taller-herencia.html` (28/10)
+
+`highlightPython()` enmascara comentarios, textos, números y palabras clave con marcadores de la zona de uso privado Unicode (`U+E000…`) y al final los restituye con `out.replace(/[-]/g, ...)`. En estas dos guías el rango del regex se había guardado con los extremos **literales e invisibles** (no con el escape `-`), se perdieron y quedó `/[-]/g`: nada se restituía y las palabras clave y los textos salían como cuadros. `clases-objetos.html`, `encapsulacion.html` y `taller-encapsulacion.html` conservan los caracteres literales y funcionan, pero son frágiles. Al copiar `highlightPython()` a una guía nueva, usar siempre el escape `-`. Se corrigió probando la función real extraída de cada archivo.
+
 ---
 
 ## Club — Product Owner y Diseñador de Sistemas

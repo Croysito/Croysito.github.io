@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller: JSON y JSONB en Vivo — PostgreSQL Real en tu Navegador | Roy Carrasco</title>
+
+<script>
+(function(){
+  var saved = localStorage.getItem('guia-theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/guia.css">
+
+<style>
+/* Estilos propios de este taller: tabla de resultados y barra de la base de datos, con la
+   misma estética "consola oscura" que ya usa .output-body en guia.css. No toca el CSS compartido. */
+.sql-result-table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+.sql-result-table th,.sql-result-table td{ padding:8px 10px; text-align:left; border:1px solid rgba(255,255,255,.15); }
+.sql-result-table thead th{ background:rgba(255,255,255,.08); color:#8fd48a; }
+.sql-result-table td em{ color:#7d8899; font-style:italic; }
+.sql-result-table td{ overflow-wrap:anywhere; }
+.sql-status{ margin:4px 0 10px; color:#8fd48a; }
+.sql-meta{ margin:0 0 10px; color:#7d8899; font-size:12px; }
+.db-toolbar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:18px 0 8px; padding:16px 20px; background:var(--highlightBg); border-left:6px solid var(--verde); border-radius:8px; }
+.db-toolbar button{ background:var(--verde); color:white; border:none; padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:14px; }
+.db-toolbar button:hover{ background:var(--verde2); }
+.db-toolbar button:disabled{ opacity:.5; cursor:wait; }
+.db-toolbar button.secundario{ background:transparent; color:var(--verde); border:2px solid var(--verde); }
+.db-estado{ font-size:14px; opacity:.85; }
+
+/* Bloqueo de copiar/pegar en los editores: flash de aviso + toast global */
+.editor.bloqueado{ outline:2px solid #ff8a8a; outline-offset:-2px; }
+.clipboard-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:#2a2f38; color:#ffb4b4; border:1px solid #ff8a8a; border-radius:8px;
+  padding:12px 20px; font-size:14px; z-index:999; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; box-shadow:0 8px 24px rgba(0,0,0,.3);
+  max-width:90vw; text-align:center;
+}
+.clipboard-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<button id="menuBtn" class="menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+<div id="backdrop" class="sidebar-backdrop"></div>
+
+<aside class="sidebar">
+
+<div class="logo">BD II <span>Taller JSONB</span></div>
+<p>SQL en vivo con PostgreSQL real</p>
+
+<div class="buscador">
+<input type="search" id="buscador" placeholder="Buscar en la guía…" aria-label="Buscar sección en la guía">
+<p class="sin-resultados" id="sinResultados">Sin resultados.</p>
+</div>
+
+<nav class="menu">
+<a href="#intro">Introducción</a>
+<a href="#zona-pruebas">Zona de pruebas libres</a>
+<a href="#preparar">Prepara tu base de datos</a>
+<a href="#tipos-vivo">1. json, jsonb y tipos</a>
+<a href="#leer-vivo">2. Leer</a>
+<a href="#filtrar-vivo">3. Filtrar</a>
+<a href="#modificar-vivo">4. Modificar</a>
+<a href="#expandir-vivo">5. Desarmar y armar</a>
+<a href="#indices-vivo">6. Índices GIN</a>
+<a href="#reto">Reto final</a>
+<a href="#repaso">Repaso</a>
+</nav>
+
+<button id="themeBtn" class="theme-btn" aria-label="Cambiar entre tema claro y oscuro">🌙 Modo oscuro</button>
+
+</aside>
+
+<div class="main">
+
+<header class="hero">
+<div class="hero-content">
+<div class="badge">🧪 Taller de Laboratorio</div>
+<div class="view-counter"><span aria-hidden="true">👁</span> <span id="viewCount">—</span> vistas</div>
+<h1>JSON y JSONB <span>en Vivo</span></h1>
+<p>PostgreSQL de verdad, compilado a WebAssembly, corriendo en tu navegador. Esta vez vas a guardar documentos en una columna <code>jsonb</code>, leerlos, filtrarlos, modificarlos, desarmarlos en filas e indexarlos, y a ver con tus propios ojos los errores y trampas reales que la guía solo te contó.</p>
+<div class="author">
+<div class="avatar">RC</div>
+<div><strong>Ing. Roy Carrasco</strong><br>Facultad de Ingeniería de Sistemas · UAB</div>
+</div>
+</div>
+</header>
+
+<section class="container" id="intro">
+<div class="card">
+<h2 class="section-title">Bienvenido</h2>
+<p class="lead">Este taller es la práctica de laboratorio de <strong>JSON y JSONB en PostgreSQL</strong>. No vuelve a explicar la teoría desde cero —asume que ya viste <a href="json-jsonb-postgresql.html">la guía</a>— y en cambio te da un PostgreSQL real donde vas a escribir las consultas, provocar a propósito algunos errores y corregirlos.</p>
+<div class="highlight">
+<strong>📎 Prerrequisito</strong>
+<p>Si todavía no viste la teoría, repasa primero <a href="json-jsonb-postgresql.html">JSON y JSONB en PostgreSQL</a> antes de continuar. Este taller usa una única tabla, <code>productos</code>, con una columna <code>atributos</code> de tipo <code>jsonb</code>: el catálogo de una tienda de tecnología.</p>
+</div>
+<div class="highlight">
+<strong>⚠️ Todo vive en la memoria de esta pestaña</strong>
+<p>Esta página corre su <strong>propia</strong> base de datos, independiente de cualquier otro taller que hayas abierto antes. Existe solo mientras esta pestaña siga abierta: si <strong>recargas la página, la cierras, o navegas a otra guía, se pierde todo</strong> y hay que empezar de nuevo desde "Prepara tu base de datos". Si te equivocas y quieres reiniciar sin recargar, usa el botón "Reiniciar base de datos" de abajo.</p>
+</div>
+<div class="highlight">
+<strong>🔗 Los ejercicios van en cadena</strong>
+<p>La sección 4 <strong>modifica</strong> los documentos, y las secciones 5, 6 y el reto asumen esos cambios. Haz los ejercicios en orden. Si algo no te cuadra, el botón de reinicio te devuelve al principio.</p>
+</div>
+<div class="info-grid">
+<div class="info"><h3>✍️ Lo escribes tú</h3><p>Cada bloque parte vacío. El enunciado te dice qué tienes que lograr — el código SQL lo escribes de cero, y copiar y pegar está deshabilitado a propósito.</p></div>
+<div class="info"><h3>⛔ Algunos errores son a propósito</h3><p>Varios ejercicios te piden hacer algo que <strong>debería fallar</strong> (o devolver 0 filas sin avisar). Ver la trampa en vivo es la mejor forma de no caer en ella después.</p></div>
+<div class="info"><h3>🔎 Compara con lo esperado</h3><p>Debajo de cada ejercicio hay un recuadro con lo que deberías ver. Si tu resultado es distinto, vuelve a leer el enunciado antes de seguir.</p></div>
+</div>
+
+<div class="db-toolbar">
+<button type="button" id="resetDbBtn">🔄 Reiniciar base de datos</button>
+<span class="db-estado" id="dbEstado">La base de datos está vacía. Baja a "Prepara tu base de datos" para empezar.</span>
+</div>
+</div>
+</section>
+
+<section class="container" id="zona-pruebas">
+<div class="card">
+<h2 class="section-title">Zona de pruebas libres</h2>
+<p class="lead">Este bloque queda disponible durante toda la guía. Úsalo en cualquier momento para probar una idea propia o revisar el estado de la tabla con <code>SELECT * FROM productos;</code> — sin desordenar los bloques guiados.</p>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🧪 Escribe cualquier sentencia SQL</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Zona de pruebas libres" placeholder="Por ejemplo: SELECT nombre, atributos FROM productos;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="preparar">
+<div class="card">
+<h2 class="section-title">Prepara tu base de datos</h2>
+<p class="lead">Escribe el <code>CREATE TABLE</code> y el <code>INSERT</code> de <code>productos</code>. Las columnas son <code>id</code> (clave primaria autoincremental), <code>nombre</code> (texto obligatorio), <code>precio</code> (<code>NUMERIC(10,2)</code> obligatorio) y <code>atributos</code> (<code>JSONB</code> obligatorio, con valor por defecto <code>'{}'</code>). Agrégale una restricción llamada <code>atributos_es_objeto</code> que use <code>jsonb_typeof</code> para exigir que el valor sea un objeto.</p>
+<div class="highlight">
+<strong>Datos de partida</strong> — los ejercicios de todo el taller asumen estos 5 productos exactos
+<table class="tabla" style="margin-top:8px;">
+<thead><tr><th scope="col">nombre</th><th scope="col">precio</th><th scope="col">atributos</th></tr></thead>
+<tbody>
+<tr><td>Notebook Aurora 14</td><td>5200.00</td><td><code>{"marca":"Lenovo","ram_gb":16,"almacenamiento":{"tipo":"SSD","gb":512},"puertos":["USB-C","HDMI","USB-A"],"garantia_meses":12}</code></td></tr>
+<tr><td>Auriculares Vento</td><td>350.00</td><td><code>{"marca":"Sony","bluetooth":true,"autonomia_h":30,"colores":["negro","azul"]}</code></td></tr>
+<tr><td>Mouse Pixel</td><td>120.00</td><td><code>{"marca":"Logitech","inalambrico":true,"colores":["negro"]}</code></td></tr>
+<tr><td>Monitor Lumen 27</td><td>2100.00</td><td><code>{"marca":"LG","pulgadas":27,"puertos":["HDMI","DisplayPort"],"garantia_meses":24}</code></td></tr>
+<tr><td>Cable HDMI 2 m</td><td>45.00</td><td><code>{}</code></td></tr>
+</tbody>
+</table>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🏗️ Crea la tabla productos y carga los 5 productos</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:260px" aria-label="Editor SQL: preparación de productos" placeholder="-- CREATE TABLE productos (id SERIAL PRIMARY KEY, nombre ..., precio ..., atributos JSONB ..., CONSTRAINT ... CHECK (...));
+-- INSERT INTO productos (nombre, precio, atributos) VALUES (...), (...), ...;
+-- SELECT id, nombre, precio, atributos FROM productos ORDER BY id;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight">
+<strong>Confirma los datos</strong>
+<p>El <code>SELECT</code> final debería mostrarte <strong>5 filas</strong>. Fíjate en que el orden de las claves dentro de cada documento no es el que escribiste: <code>jsonb</code> las reordena. Si algo no coincide (por ejemplo, un error de comillas en el JSON), usa "🔄 Reiniciar base de datos" y vuelve a intentar — el resto del taller asume exactamente estos datos.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="tipos-vivo">
+<div class="card">
+<h2 class="section-title">1. json, jsonb y los tipos de valor</h2>
+<p class="lead">Antes de consultar nada, comprueba con tus propios ojos qué hace <code>jsonb</code> con lo que le entregas, y qué rechaza.</p>
+
+<div class="highlight">
+<strong>Enunciado — 1.1: json frente a jsonb</strong>
+<p>Escribe un <code>SELECT</code> con dos columnas, <code>como_json</code> y <code>como_jsonb</code>, que conviertan el mismo literal <code>{"a":1,   "b":2, "a":3}</code> (con los espacios y la clave <code>a</code> repetida) al tipo <code>json</code> y al tipo <code>jsonb</code> con <code>::</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.1 — json y jsonb lado a lado</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Editor SQL: json y jsonb lado a lado" placeholder="-- SELECT '{&quot;a&quot;:1,   &quot;b&quot;:2, &quot;a&quot;:3}'::json AS como_json, ..."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Dos resultados distintos</strong>
+<p>El <code>json</code> conservó el texto tal cual: espacios, orden y las dos <code>a</code>. El <code>jsonb</code> quedó como <code>{"a": 3, "b": 2}</code>: una sola <code>a</code> (gana la última) y sin los espacios.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.2: el CHECK en acción (debe fallar)</strong>
+<p>Intenta insertar en <code>productos</code> una fila de nombre <code>Cosa rara</code>, precio <code>10</code> y atributos <code>[1,2]</code> (un arreglo, no un objeto). <strong>Debería fallar.</strong></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.2 — INSERT con un arreglo en atributos</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: INSERT con un arreglo que el CHECK rechaza" placeholder="-- INSERT INTO productos (nombre, precio, atributos) VALUES (...);"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Error esperado</strong>
+<p>Deberías ver <code>new row for relation "productos" violates check constraint "atributos_es_objeto"</code>. Es el <code>CHECK</code> que escribiste en "Prepara tu base de datos": solo deja pasar objetos.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 1.3: los seis tipos de valor</strong>
+<p>Con <code>jsonb_typeof</code> sobre literales <code>::jsonb</code>, consulta el tipo de estos seis valores en un solo <code>SELECT</code>: <code>16</code>, <code>"16"</code>, <code>true</code>, <code>null</code>, <code>{"gb":512}</code> y <code>["HDMI"]</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 1.3 — jsonb_typeof de seis valores</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Editor SQL: jsonb_typeof de seis valores" placeholder="-- SELECT jsonb_typeof('16'::jsonb), jsonb_typeof(...), ...;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Seis tipos distintos</strong>
+<p>Deberías ver, en orden: <code>number</code>, <code>string</code>, <code>boolean</code>, <code>null</code>, <code>object</code> y <code>array</code>. Fíjate en los dos primeros: <code>16</code> y <code>"16"</code> parecen lo mismo, pero para <code>jsonb</code> son tipos distintos. Eso vuelve en la sección 3.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="leer-vivo">
+<div class="card">
+<h2 class="section-title">2. Leer: <code>-&gt;</code>, <code>-&gt;&gt;</code> y <code>#&gt;&gt;</code></h2>
+<p class="lead">Sacar un valor del documento es fácil. Lo difícil es acordarse de qué tipo devuelve cada operador.</p>
+
+<div class="highlight">
+<strong>Enunciado — 2.1: flecha simple frente a doble</strong>
+<p>Lista <code>nombre</code>, la marca con <code>-&gt;</code> (columna <code>con_flecha</code>) y la marca con <code>-&gt;&gt;</code> (columna <code>con_doble_flecha</code>) de todos los productos, ordenados por <code>id</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.1 — -&gt; frente a -&gt;&gt;</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Editor SQL: flecha simple frente a flecha doble" placeholder="-- SELECT nombre, atributos-&gt;'marca' ..., atributos-&gt;&gt;'marca' ... FROM productos ORDER BY id;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Con y sin comillas</strong>
+<p>La columna <code>con_flecha</code> conserva las comillas (<code>"Lenovo"</code>) porque sigue siendo JSON; <code>con_doble_flecha</code> es texto SQL limpio (<code>Lenovo</code>). El <strong>Cable HDMI</strong> no tiene <code>marca</code>: devuelve <strong>NULL</strong> en ambas, sin ningún error.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.2: bajar por niveles y arreglos</strong>
+<p>Solo para el <code>Notebook Aurora 14</code>, obtén: el <code>tipo</code> de almacenamiento (encadenando <code>-&gt;</code> y <code>-&gt;&gt;</code>), los <code>gb</code> de almacenamiento (con <code>#&gt;&gt;</code> y una ruta), el <code>primer_puerto</code> (posición 0 del arreglo <code>puertos</code>) y la cantidad de puertos como <code>cant_puertos</code> (con <code>jsonb_array_length</code>).</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.2 — Rutas y posiciones de arreglo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: rutas y posiciones de arreglo" placeholder="-- SELECT nombre,
+--        atributos-&gt;'almacenamiento'-&gt;&gt;'tipo' AS tipo,
+--        ...
+-- FROM productos WHERE nombre = 'Notebook Aurora 14';"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Una sola fila</strong>
+<p>Deberías ver <code>SSD</code>, <code>512</code>, <code>USB-C</code> y <code>3</code>. El arreglo empieza en la posición <strong>0</strong>, no en 1.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.3: la trampa del tipo (debe fallar)</strong>
+<p>Quieres los productos con al menos 16 GB de RAM. Escribe <code>SELECT nombre FROM productos WHERE</code> comparando directamente <code>atributos-&gt;&gt;'ram_gb' &gt;= 16</code>. <strong>Debería fallar.</strong></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.3 — Comparar texto con número (falla)</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: comparar texto con número, debe fallar" placeholder="-- SELECT nombre FROM productos WHERE atributos-&gt;&gt;'ram_gb' &gt;= 16;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Error esperado</strong>
+<p>Deberías ver <code>operator does not exist: text &gt;= integer</code>. <code>-&gt;&gt;</code> siempre devuelve <code>text</code>, y PostgreSQL no compara texto con un número.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.4: la corrección</strong>
+<p>Repite la misma consulta, pero convirtiendo el valor a número con <code>::int</code> antes de comparar (con paréntesis alrededor de la expresión <code>-&gt;&gt;</code>).</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.4 — Convertir con ::int</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: convertir con ::int antes de comparar" placeholder="-- SELECT nombre FROM productos WHERE (...)::int &gt;= 16;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Ahora sí</strong>
+<p>Devuelve solo el <strong>Notebook Aurora 14</strong> (el único producto con <code>ram_gb</code>; los demás dan NULL y no pasan el filtro).</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 2.5: por qué importa convertir</strong>
+<p>Para ver el daño real de comparar como texto, ejecuta <code>SELECT v, v &gt;= '16' AS como_texto, v::int &gt;= 16 AS como_numero FROM (VALUES ('8'), ('16'), ('32')) t(v);</code></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 2.5 — Texto contra número, fila por fila</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Editor SQL: comparación como texto frente a número" placeholder="-- SELECT v, v &gt;= '16' AS como_texto, ... FROM (VALUES ('8'), ('16'), ('32')) t(v);"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>El 8 se cuela</strong>
+<p>En <code>como_texto</code> el <code>8</code> sale <code>true</code>: como texto, <code>'8'</code> viene después de <code>'1'</code>. En <code>como_numero</code> sale <code>false</code>, que es lo correcto. Una consulta que "funciona" puede estar mal.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="filtrar-vivo">
+<div class="card">
+<h2 class="section-title">3. Filtrar: <code>@&gt;</code>, <code>?</code> y compañía</h2>
+<p class="lead">Los operadores propios de <code>jsonb</code>: describes cómo debería verse el documento en vez de recorrerlo.</p>
+
+<div class="highlight">
+<strong>Enunciado — 3.1: contiene: @&gt;</strong>
+<p>Escribe tres <code>SELECT nombre FROM productos</code> separados por <code>;</code>, cada uno con <code>@&gt;</code>: (a) marca <code>Lenovo</code>; (b) <code>almacenamiento</code> con <code>tipo</code> <code>SSD</code> (documento anidado); (c) <code>puertos</code> que incluya <code>HDMI</code>, ordenado por <code>id</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.1 — Tres búsquedas con @&gt;</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: tres búsquedas con el operador contiene" placeholder="-- SELECT nombre FROM productos WHERE atributos @&gt; '{&quot;marca&quot;:&quot;Lenovo&quot;}';
+-- ..."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Tres tablas de resultado</strong>
+<p>Las dos primeras devuelven solo el <strong>Notebook Aurora 14</strong>. La tercera devuelve dos filas: el <strong>Notebook Aurora 14</strong> y el <strong>Monitor Lumen 27</strong>. Para buscar un elemento dentro de un arreglo no lo recorres: describes el fragmento esperado.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.2: existe la clave: ?, ?| y ?&amp;</strong>
+<p>Otra vez tres consultas con <code>;</code>, todas ordenadas por <code>id</code>: (a) productos con la clave <code>garantia_meses</code>; (b) productos con <strong>al menos una</strong> de las claves <code>bluetooth</code> o <code>inalambrico</code> (<code>?|</code> con <code>ARRAY[...]</code>); (c) productos con <strong>las dos</strong> claves <code>marca</code> y <code>garantia_meses</code> (<code>?&amp;</code>).</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.2 — ?, ?| y ?&amp;</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: operadores de existencia de clave" placeholder="-- SELECT nombre FROM productos WHERE atributos ? 'garantia_meses' ORDER BY id;
+-- ..."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Resultados</strong>
+<p>(a) Notebook y Monitor. (b) Auriculares y Mouse. (c) Notebook y Monitor.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.3: la trampa de los tipos (devuelve 0 filas)</strong>
+<p>Busca con <code>@&gt;</code> los productos cuyo <code>ram_gb</code> sea el <strong>texto</strong> <code>"16"</code> (entre comillas dobles, dentro del literal). Después, en el mismo editor, repite la búsqueda con el <strong>número</strong> <code>16</code>, sin comillas.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.3 — "16" frente a 16</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:130px" aria-label="Editor SQL: búsqueda con texto frente a número" placeholder="-- SELECT nombre FROM productos WHERE atributos @&gt; '{&quot;ram_gb&quot;:&quot;16&quot;}';
+-- SELECT nombre FROM productos WHERE atributos @&gt; '{&quot;ram_gb&quot;:16}';"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Cero filas, sin error</strong>
+<p>La primera consulta no devuelve filas y <strong>tampoco lanza ningún error</strong>: es el peligro de esta trampa. La segunda devuelve el Notebook. Para <code>jsonb</code>, <code>"16"</code> y <code>16</code> son valores distintos.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 3.4: ? solo mira el primer nivel</strong>
+<p>Comprueba con un solo <code>SELECT</code> sobre el literal <code>'{"a":{"b":1}}'::jsonb</code> si contiene la clave <code>b</code> (columna <code>en_primer_nivel</code>) y la clave <code>a</code> (columna <code>en_raiz</code>), usando <code>?</code> en ambas.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 3.4 — ? en un documento anidado</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:110px" aria-label="Editor SQL: existencia de clave en documento anidado" placeholder="-- SELECT '{&quot;a&quot;:{&quot;b&quot;:1}}'::jsonb ? 'b' AS en_primer_nivel, ... AS en_raiz;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>false y true</strong>
+<p><code>b</code> está un nivel más abajo, así que <code>?</code> no la ve (<code>false</code>); <code>a</code> sí está en el primer nivel (<code>true</code>).</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="modificar-vivo">
+<div class="card">
+<h2 class="section-title">4. Modificar sin reescribir todo</h2>
+<p class="lead">Un <code>jsonb</code> no se edita "en el lugar": cada función devuelve un documento nuevo y tú lo guardas con <code>UPDATE ... SET atributos = ...</code>. <strong>Estos ejercicios cambian los datos</strong>: las secciones siguientes y el reto parten del resultado.</p>
+
+<div class="highlight">
+<strong>Enunciado — 4.1: jsonb_set</strong>
+<p>Con dos <code>UPDATE</code> sobre el <code>Notebook Aurora 14</code> usando <code>jsonb_set</code>: sube <code>ram_gb</code> a <code>32</code> y después cambia el valor anidado <code>almacenamiento.gb</code> a <code>1024</code> (ruta de dos niveles). Cierra con un <code>SELECT</code> que muestre <code>ram</code> (con <code>-&gt;&gt;</code>) y <code>gb</code> (con <code>#&gt;&gt;</code>).</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.1 — jsonb_set en dos niveles</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:170px" aria-label="Editor SQL: jsonb_set en dos niveles" placeholder="-- UPDATE productos SET atributos = jsonb_set(atributos, '{ram_gb}', ...) WHERE ...;
+-- UPDATE ...;
+-- SELECT ...;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>32 y 1024</strong>
+<p>El <code>SELECT</code> final debe mostrar <code>ram = 32</code> y <code>gb = 1024</code>. Las dos sentencias de <code>UPDATE</code> afectaron una fila cada una.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.2: ||, - y #-</strong>
+<p>Sobre el mismo Notebook, en este orden: (1) con <code>||</code> agrega <code>{"color":"gris","garantia_meses":18}</code>; (2) con <code>-</code> quita la clave <code>color</code>; (3) con <code>#-</code> quita la clave <code>tipo</code> de dentro de <code>almacenamiento</code>. Cierra con <code>SELECT atributos FROM productos WHERE nombre = 'Notebook Aurora 14';</code></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.2 — Agregar, pisar y quitar claves</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:190px" aria-label="Editor SQL: agregar, pisar y quitar claves" placeholder="-- UPDATE productos SET atributos = atributos || '...' WHERE ...;
+-- UPDATE productos SET atributos = atributos - '...' WHERE ...;
+-- ..."></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>El documento final</strong>
+<p>Debe quedar <code>{"marca": "Lenovo", "ram_gb": 32, "puertos": ["USB-C", "HDMI", "USB-A"], "almacenamiento": {"gb": 1024}, "garantia_meses": 18}</code>: la garantía pasó de 12 a 18 (a igual clave gana el documento de la derecha de <code>||</code>), <code>color</code> ya no está y <code>almacenamiento</code> perdió su <code>tipo</code>.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.3: agregar un elemento a un arreglo</strong>
+<p>El <code>Mouse Pixel</code> tiene <code>colores</code> = <code>["negro"]</code>. Agrégale <code>"rojo"</code>: concatena con <code>||</code> el arreglo actual (<code>atributos-&gt;'colores'</code>) y guarda el resultado con <code>jsonb_set</code>. Después consulta <code>atributos-&gt;'colores'</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.3 — Sumar un color al arreglo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: agregar un elemento a un arreglo" placeholder="-- UPDATE productos SET atributos = jsonb_set(atributos, '{colores}', (...) || '&quot;rojo&quot;') WHERE ...;
+-- SELECT atributos-&gt;'colores' ...;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Dos colores</strong>
+<p>Debe mostrar <code>["negro", "rojo"]</code>.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.4: trampa: jsonb_set no crea rutas intermedias</strong>
+<p>Intenta con <code>jsonb_set</code> poner <code>6</code> en la ruta <code>{wifi,version}</code> del Mouse (la clave <code>wifi</code> no existe). Después consulta, con <code>?</code>, si el Mouse tiene ahora la clave <code>wifi</code> (columna <code>tiene_wifi</code>) junto con su <code>atributos</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.4 — Ruta intermedia inexistente</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: jsonb_set con ruta intermedia inexistente" placeholder="-- UPDATE productos SET atributos = jsonb_set(atributos, '{wifi,version}', '6') WHERE ...;
+-- SELECT atributos ? 'wifi' AS tiene_wifi, atributos FROM productos WHERE ...;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Sin error y sin cambios</strong>
+<p>El <code>UPDATE</code> dice que afectó una fila, pero <code>tiene_wifi</code> es <code>false</code> y el documento quedó igual. Como <code>wifi</code> no existe, no hay dónde poner <code>version</code>, y PostgreSQL no avisa.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.5: trampa: un NULL de SQL (debe fallar)</strong>
+<p>Intenta con <code>jsonb_set</code> poner un <code>NULL</code> de SQL (la palabra <code>NULL</code> sin comillas) en la clave <code>marca</code> del Mouse. <strong>Debería fallar.</strong></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.5 — jsonb_set con NULL (falla)</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: jsonb_set con NULL, debe fallar" placeholder="-- UPDATE productos SET atributos = jsonb_set(atributos, '{marca}', NULL) WHERE ...;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Error esperado</strong>
+<p>Deberías ver <code>null value in column "atributos" of relation "productos" violates not-null constraint</code>. Con un <code>NULL</code> de SQL, <code>jsonb_set</code> devuelve NULL para <strong>todo el documento</strong>, y solo el <code>NOT NULL</code> de la columna lo salvó. Si quisieras guardar un nulo de JSON, se escribe <code>'null'::jsonb</code>.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 4.6: trampa: el texto sin comillas (debe fallar)</strong>
+<p>Ahora pon el texto <code>Logitech</code> en <code>marca</code>, pero escribiendo el tercer argumento como <code>'Logitech'</code>, <strong>sin</strong> comillas dobles internas. <strong>Debería fallar.</strong></p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 4.6 — jsonb_set con texto sin comillas dobles (falla)</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: jsonb_set con texto sin comillas dobles, debe fallar" placeholder="-- UPDATE productos SET atributos = jsonb_set(atributos, '{marca}', 'Logitech') WHERE ...;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Error esperado</strong>
+<p>Deberías ver <code>invalid input syntax for type json</code>. El valor debe ser <code>jsonb</code> válido, y un texto necesita sus comillas dobles dentro de las simples: <code>'"Logitech"'</code>.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="expandir-vivo">
+<div class="card">
+<h2 class="section-title">5. De JSON a filas y de filas a JSON</h2>
+<p class="lead">Cruza el puente en ambos sentidos: desarma documentos para contar y agrupar con el <code>GROUP BY</code> de siempre, y arma documentos listos para una API.</p>
+
+<div class="highlight">
+<strong>Enunciado — 5.1: desarmar un documento</strong>
+<p>Con <code>jsonb_each_text(atributos) AS e(k, v)</code> en el <code>FROM</code> (junto a <code>productos</code>), muestra cada clave del documento de los <code>Auriculares Vento</code> como una fila: columnas <code>clave</code> y <code>valor</code>, ordenadas por clave.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.1 — jsonb_each_text</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:130px" aria-label="Editor SQL: jsonb_each_text sobre un producto" placeholder="-- SELECT k AS clave, v AS valor FROM productos, jsonb_each_text(atributos) AS e(k, v) WHERE ... ORDER BY k;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Cuatro filas</strong>
+<p><code>autonomia_h</code> (30), <code>bluetooth</code> (true), <code>colores</code> (<code>["negro", "azul"]</code>) y <code>marca</code> (Sony).</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 5.2: contar elementos de un arreglo</strong>
+<p>¿Qué puertos aparecen más en el catálogo? Expande <code>atributos-&gt;'puertos'</code> con <code>jsonb_array_elements_text</code> (alias <code>p</code>), agrupa por puerto y cuenta: columnas <code>puerto</code> y <code>productos</code>, ordenadas por cantidad descendente y luego por puerto.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.2 — jsonb_array_elements_text + GROUP BY</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: contar puertos con jsonb_array_elements_text" placeholder="-- SELECT p AS puerto, count(*) AS productos
+-- FROM productos, jsonb_array_elements_text(...) AS p
+-- GROUP BY ... ORDER BY ...;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Cuatro puertos</strong>
+<p><code>HDMI</code> con 2; luego <code>DisplayPort</code>, <code>USB-A</code> y <code>USB-C</code> con 1 cada uno. Los productos sin <code>puertos</code> simplemente no aportan filas.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 5.3: ahora hazlo con los colores</strong>
+<p>Sin pistas esta vez: haz la misma consulta para los <code>colores</code>. Columnas <code>color</code> y <code>productos</code>, ordenadas por cantidad descendente y luego por color.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.3 — Colores del catálogo</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: contar colores del catálogo" placeholder="-- Misma idea que 5.2, pero con la clave colores"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Tres colores</strong>
+<p><code>negro</code> con 2 (Auriculares y Mouse), <code>azul</code> con 1 y <code>rojo</code> con 1 (el que agregaste en 4.3). Si <code>rojo</code> no aparece, repasa el ejercicio 4.3.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 5.4: armar JSON</strong>
+<p>Tres consultas separadas por <code>;</code>: (a) con <code>jsonb_build_object</code>, un objeto con <code>id</code>, <code>nombre</code> y <code>precio</code> del producto de <code>id = 3</code>; (b) con <code>jsonb_agg(nombre ORDER BY id)</code>, un arreglo con los nombres de los productos que tienen la clave <code>garantia_meses</code>; (c) con <code>to_jsonb</code>, el producto de <code>id = 2</code> convertido en objeto (pista: pásale una subconsulta alias <code>p</code> que seleccione <code>id, nombre, precio</code>).</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 5.4 — jsonb_build_object, jsonb_agg y to_jsonb</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:190px" aria-label="Editor SQL: armar JSON con jsonb_build_object, jsonb_agg y to_jsonb" placeholder="-- SELECT jsonb_build_object('id', id, ...) FROM productos WHERE id = 3;
+-- SELECT jsonb_agg(nombre ORDER BY id) FROM productos WHERE ...;
+-- SELECT to_jsonb(p) FROM (SELECT ...) p;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Tres documentos</strong>
+<p>(a) <code>{"id": 3, "nombre": "Mouse Pixel", "precio": 120.00}</code>; (b) <code>["Notebook Aurora 14", "Monitor Lumen 27"]</code>; (c) <code>{"id": 2, "nombre": "Auriculares Vento", "precio": 350.00}</code>. Es el tipo de respuesta que una API le devuelve directo a la aplicación.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="indices-vivo">
+<div class="card">
+<h2 class="section-title">6. Índices GIN: que no recorra todo el catálogo</h2>
+<p class="lead">Comprueba con <code>EXPLAIN</code>, sobre Postgres real, qué consultas aprovechan cada índice. La tabla tiene solo unas filas, así que el planificador preferiría recorrerla entera: para ver el índice hay que pedirle que no lo haga.</p>
+
+<div class="highlight">
+<strong>Enunciado — 6.1: un índice GIN y @&gt;</strong>
+<p>En tres sentencias separadas por <code>;</code>: (1) crea el índice <code>idx_productos_atributos</code> sobre <code>productos</code> <code>USING GIN (atributos)</code>; (2) <code>SET enable_seqscan = off;</code> (solo para esta demostración); (3) <code>EXPLAIN</code> de la búsqueda <code>atributos @&gt; '{"marca":"Lenovo"}'</code> que devuelve el nombre.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 6.1 — CREATE INDEX GIN + EXPLAIN</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: crear un índice GIN y ver el plan de @&gt;" placeholder="-- CREATE INDEX idx_productos_atributos ON productos USING GIN (atributos);
+-- SET enable_seqscan = off;
+-- EXPLAIN SELECT nombre FROM productos WHERE ...;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>El índice se usó</strong>
+<p>En el plan debe aparecer <code>Bitmap Index Scan on idx_productos_atributos</code>. Ignora los números de <code>cost</code>: lo importante es qué nodos aparecen.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 6.2: el GIN no entiende ->&gt;</strong>
+<p>Pide el <code>EXPLAIN</code> de la misma búsqueda, pero escrita como <code>atributos-&gt;&gt;'marca' = 'Lenovo'</code>.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 6.2 — EXPLAIN con -&gt;&gt; (sin índice que ayude)</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:90px" aria-label="Editor SQL: EXPLAIN con la flecha doble" placeholder="-- EXPLAIN SELECT nombre FROM productos WHERE atributos-&gt;&gt;'marca' = 'Lenovo';"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Seq Scan</strong>
+<p>Ahora el plan muestra <code>Seq Scan on productos</code> con un <code>Filter</code>, aunque el GIN exista. (Verás también <code>Disabled: true</code>, porque apagaste los recorridos secuenciales en 6.1 y aun así no había otra opción.) El GIN solo sirve a los operadores propios de <code>jsonb</code>.</p>
+</div>
+
+<div class="highlight" style="margin-top:20px;">
+<strong>Enunciado — 6.3: índice sobre la expresión</strong>
+<p>Crea <code>idx_productos_marca</code> sobre la expresión <code>(atributos-&gt;&gt;'marca')</code> (<strong>paréntesis dobles</strong>), repite el <code>EXPLAIN</code> de 6.2 y cierra con <code>RESET enable_seqscan;</code> para devolver el planificador a la normalidad.</p>
+</div>
+<div class="editor-panel">
+<div class="editor-header">
+<span>🗄️ Ejercicio 6.3 — Índice de expresión + EXPLAIN</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:150px" aria-label="Editor SQL: índice de expresión y EXPLAIN" placeholder="-- CREATE INDEX idx_productos_marca ON productos ((...));
+-- EXPLAIN SELECT ...;
+-- RESET enable_seqscan;"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+<div class="highlight" style="margin-top:20px;">
+<strong>Index Scan</strong>
+<p>Debe aparecer <code>Index Scan using idx_productos_marca on productos</code>. Cada tipo de consulta pide su índice: <strong>GIN</strong> para <code>@&gt;</code> y <code>?</code>; <strong>índice de expresión</strong> para igualdad u orden sobre una clave concreta con <code>-&gt;&gt;</code>.</p>
+</div>
+</div>
+</section>
+
+<section class="container" id="reto">
+<div class="card">
+<h2 class="section-title">Reto final: modelo híbrido de punta a punta</h2>
+<p class="lead">Reúne todo: insertar un documento nuevo, completar con <code>||</code> los que no tienen un dato, y entregar un reporte armado en JSON. Parte del estado en que dejaste la base al terminar las secciones anteriores.</p>
+<div class="highlight">
+<strong>Requisitos</strong>
+<ul style="margin-left:22px;line-height:2">
+<li><strong>1.</strong> Inserta un producto nuevo: <code>Teclado Rex</code>, precio <code>480.00</code>, con atributos <code>marca</code> = <code>Redragon</code>, <code>inalambrico</code> = <code>false</code> y <code>colores</code> = <code>["negro","rojo"]</code> (sin garantía).</li>
+<li><strong>2.</strong> Con un único <code>UPDATE</code> y el operador <code>||</code>, agrega <code>"garantia_meses":12</code> <strong>solo a los productos que todavía no tienen esa clave</strong> (pista: <code>WHERE NOT atributos ? '...'</code>). Debe afectar <strong>4 filas</strong>.</li>
+<li><strong>3.</strong> Entrega un reporte con una fila por marca: columna <code>marca</code> (con <code>-&gt;&gt;</code>) y columna <code>productos</code>, un arreglo JSON con los nombres de esa marca ordenados alfabéticamente (<code>jsonb_agg</code>). Excluye los productos sin marca y ordena el reporte por marca.</li>
+<li><strong>4.</strong> Confirma con un <code>count(*)</code> que los <strong>6</strong> productos tienen ahora la clave <code>garantia_meses</code>.</li>
+</ul>
+</div>
+<div class="highlight">
+<strong>Resultado esperado del reporte (paso 3)</strong>
+<table class="tabla" style="margin-top:8px;">
+<thead><tr><th scope="col">marca</th><th scope="col">productos</th></tr></thead>
+<tbody>
+<tr><td>LG</td><td>["Monitor Lumen 27"]</td></tr>
+<tr><td>Lenovo</td><td>["Notebook Aurora 14"]</td></tr>
+<tr><td>Logitech</td><td>["Mouse Pixel"]</td></tr>
+<tr><td>Redragon</td><td>["Teclado Rex"]</td></tr>
+<tr><td>Sony</td><td>["Auriculares Vento"]</td></tr>
+</tbody>
+</table>
+</div>
+<div class="highlight">
+<strong>La idea central del reto</strong>
+<p>El Cable HDMI no tiene marca y el Teclado no tenía garantía, y la tabla los aceptó a los dos sin tocar su estructura: esa es la flexibilidad del documento. Pero <code>nombre</code> y <code>precio</code> siguen siendo columnas con tipo, <code>NOT NULL</code> y <code>CHECK</code>: lo que se une, ordena y valida va en columnas; lo que varía, en el documento.</p>
+</div>
+<div class="editor-panel independiente">
+<div class="editor-header">
+<span>🏆 Resuelve aquí el reto</span>
+<button type="button" class="code-btn run" aria-label="Ejecutar SQL">▶ Ejecutar</button>
+</div>
+<textarea class="editor" spellcheck="false" style="min-height:260px" aria-label="Escribe aquí tu solución al reto final" placeholder="-- 1. INSERT INTO productos (nombre, precio, atributos) VALUES ('Teclado Rex', 480.00, '{...}');
+-- 2. UPDATE productos SET atributos = atributos || '{&quot;garantia_meses&quot;:12}' WHERE NOT atributos ? 'garantia_meses';
+-- 3. SELECT atributos-&gt;&gt;'marca' AS marca, jsonb_agg(nombre ORDER BY nombre) AS productos FROM productos ...
+-- 4. SELECT count(*) FROM productos WHERE atributos ? 'garantia_meses';"></textarea>
+<div class="output" hidden>
+<div class="output-head">Resultado</div>
+<div class="output-body"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="container" id="repaso">
+<div class="card">
+<h2 class="section-title">Repaso</h2>
+<p class="lead">Preguntas cortas sobre lo que acabas de ejecutar en vivo. Tu progreso se guarda automáticamente en este navegador.</p>
+
+<div class="quiz-tracker">
+<div>
+<div class="quiz-tracker-count" id="quizBarLabel">0 / 0</div>
+<div class="quiz-tracker-label">actividades correctas en toda la guía</div>
+</div>
+<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-1">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 1.2, el INSERT de <code>[1,2]</code> en <code>atributos</code> fue rechazado. ¿Qué lo rechazó?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">El tipo <code>jsonb</code> mismo, porque <code>[1,2]</code> no es un JSON válido.</button>
+<button class="quiz-opt">La clave primaria, porque no se pudo generar el valor de <code>id</code>.</button>
+<button class="quiz-opt" data-correct>El <code>CHECK</code> <code>atributos_es_objeto</code>: el valor no es un objeto.</button>
+<button class="quiz-opt">El <code>NOT NULL</code>, porque la columna no admite arreglos.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: [1,2] es JSON válido, así que jsonb lo aceptaría. Quien lo frenó fue el CHECK jsonb_typeof(atributos) = 'object', que solo deja pasar objetos." data-ko="[1,2] sí es JSON válido y la clave primaria no tuvo nada que ver; tampoco fue el NOT NULL, porque el valor no era nulo. La causa fue el CHECK atributos_es_objeto, que exige un objeto." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-2">
+<span class="quiz-badge">Verdadero o falso</span>
+<p class="quiz-q">En el ejercicio 3.3, la búsqueda con <code>@&gt; '{"ram_gb":"16"}'</code> devolvió 0 filas porque todavía no se había creado el índice GIN.</p>
+<div class="quiz-opts inline">
+<button class="quiz-opt">Verdadero</button>
+<button class="quiz-opt" data-correct>Falso</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el índice solo acelera, no habilita. La búsqueda devolvió 0 filas porque &quot;16&quot; (texto) y 16 (número) son valores distintos para jsonb." data-ko="Es falso: @&gt; funciona igual sin ningún índice. Devolvió 0 filas porque el documento guarda el número 16 y se buscó el texto &quot;16&quot;, que para jsonb es otro valor." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-3">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 4.5, <code>jsonb_set(atributos, '{marca}', NULL)</code> falló con un error de <code>NOT NULL</code>. ¿Qué había hecho <code>jsonb_set</code> con ese <code>NULL</code> de SQL?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Ignoró el NULL y devolvió el documento exactamente igual.</button>
+<button class="quiz-opt">Guardó la clave <code>marca</code> con un nulo de JSON como valor.</button>
+<button class="quiz-opt">Lo reemplazó por el objeto vacío que define el <code>DEFAULT</code>.</button>
+<button class="quiz-opt" data-correct>Devolvió NULL para todo el documento; el <code>NOT NULL</code> lo rechazó.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: con un NULL de SQL, jsonb_set devuelve NULL para el documento completo. Para guardar un nulo de JSON hay que escribir 'null'::jsonb." data-ko="jsonb_set no ignora el NULL, no lo convierte en un nulo de JSON ni aplica el DEFAULT. Devolvió NULL para todo el documento, y solo el NOT NULL de la columna impidió el desastre." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-4">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 6.2, el <code>EXPLAIN</code> de <code>atributos-&gt;&gt;'marca' = 'Lenovo'</code> mostró <code>Seq Scan</code> aunque el índice GIN ya existía. ¿Por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" data-correct>El GIN atiende <code>@&gt;</code> y <code>?</code>; esa expresión pide un índice propio.</button>
+<button class="quiz-opt">Porque <code>enable_seqscan = off</code> impide usar cualquier índice de la base.</button>
+<button class="quiz-opt">Porque la tabla tiene tantas filas que ningún índice compensa el costo.</button>
+<button class="quiz-opt">Porque los índices GIN dejan de funcionar al hacer un <code>UPDATE</code>.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: el GIN indexa el documento para sus operadores propios; una condición sobre atributos-&gt;&gt;'marca' necesita un índice sobre esa expresión, como el de 6.3." data-ko="enable_seqscan = off desalienta el recorrido secuencial, no impide los índices; la tabla es pequeña y los UPDATE no inutilizan un GIN. El GIN simplemente no entiende la expresión -&gt;&gt;, y para eso hace falta un índice de expresión." hidden></p>
+</div>
+
+<div class="quiz quiz-mc" data-quiz-id="repaso-5">
+<span class="quiz-badge">Selección múltiple</span>
+<p class="quiz-q">En el ejercicio 4.4, <code>jsonb_set(atributos, '{wifi,version}', '6')</code> no cambió nada y tampoco dio error. ¿Por qué?</p>
+<div class="quiz-opts">
+<button class="quiz-opt">Porque el número 6 debe escribirse siempre con comillas dobles.</button>
+<button class="quiz-opt">Porque el Mouse ya tenía la clave <code>version</code> con otro valor.</button>
+<button class="quiz-opt" data-correct>Porque no crea la clave <code>wifi</code>, así que no hay dónde poner <code>version</code>.</button>
+<button class="quiz-opt">Porque <code>jsonb_set</code> solo modifica claves cuyo valor es un número.</button>
+</div>
+<p class="quiz-fb" data-ok="Correcto: jsonb_set no crea rutas intermedias. Primero habría que crear wifi como objeto (por ejemplo con ||) y recién después poner version dentro." data-ko="El 6 sin comillas es válido (es un número), el Mouse no tenía version, y jsonb_set también modifica textos y otros tipos. Lo que falló es que wifi no existía, y jsonb_set no la crea." hidden></p>
+</div>
+
+<div class="quiz quiz-classify" data-quiz-id="repaso-classify">
+<span class="quiz-badge">Clasificación</span>
+<p class="quiz-q">Clasifica cada expresión que usaste en este taller según lo que hace con el documento.</p>
+<div class="quiz-classify-list">
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>jsonb_agg(nombre ORDER BY id)</code></span>
+<div class="quiz-classify-btns">
+<button>Desarmar en filas</button>
+<button data-correct>Armar JSON</button>
+<button>Modificar un documento</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>atributos #- '{almacenamiento,tipo}'</code></span>
+<div class="quiz-classify-btns">
+<button>Armar JSON</button>
+<button>Desarmar en filas</button>
+<button data-correct>Modificar un documento</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>jsonb_each_text(atributos)</code></span>
+<div class="quiz-classify-btns">
+<button data-correct>Desarmar en filas</button>
+<button>Modificar un documento</button>
+<button>Armar JSON</button>
+</div>
+</div>
+<div class="quiz-classify-row">
+<span class="quiz-classify-text"><code>jsonb_array_elements_text(atributos-&gt;'colores')</code></span>
+<div class="quiz-classify-btns">
+<button>Modificar un documento</button>
+<button data-correct>Desarmar en filas</button>
+<button>Armar JSON</button>
+</div>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-fill" data-quiz-id="repaso-fill">
+<span class="quiz-badge">Completar</span>
+<p class="quiz-q">Sobre los índices del ejercicio 6: elige el índice que acelera cada consulta.</p>
+<p>1. <code>WHERE atributos @&gt; '{"marca":"Lenovo"}'</code> se acelera con
+<select class="quiz-blank" data-correct="gin">
+<option value="">— elige —</option>
+<option value="expr">un índice sobre la expresión de la marca</option>
+<option value="gin">un índice GIN sobre toda la columna</option>
+<option value="ninguno">ningún índice puede acelerarla</option>
+</select>.</p>
+<p>2. <code>WHERE atributos-&gt;&gt;'marca' = 'Lenovo'</code> se acelera con
+<select class="quiz-blank" data-correct="expr">
+<option value="">— elige —</option>
+<option value="gin">un índice GIN sobre toda la columna</option>
+<option value="ninguno">ningún índice puede acelerarla</option>
+<option value="expr">un índice sobre la expresión de la marca</option>
+</select>.</p>
+<p class="quiz-progress"></p>
+</div>
+
+<div class="quiz quiz-match" data-quiz-id="repaso-match">
+<span class="quiz-badge">Emparejamiento</span>
+<p class="quiz-q">Une cada herramienta con lo que hizo en este taller.</p>
+<div class="quiz-match-grid">
+<div data-col="left">
+<button class="quiz-match-item" data-pair="set">jsonb_set</button>
+<button class="quiz-match-item" data-pair="concat">atributos || '{...}'</button>
+<button class="quiz-match-item" data-pair="resta">atributos - 'color'</button>
+<button class="quiz-match-item" data-pair="texto">atributos-&gt;&gt;'ram_gb'</button>
+<button class="quiz-match-item" data-pair="gin">USING GIN</button>
+</div>
+<div data-col="right">
+<button class="quiz-match-item" data-pair="set">Cambió el valor de una clave en una ruta, como la RAM del Notebook.</button>
+<button class="quiz-match-item" data-pair="concat">Agregó claves nuevas y pisó la garantía que ya existía.</button>
+<button class="quiz-match-item" data-pair="resta">Quitó una clave del primer nivel del documento.</button>
+<button class="quiz-match-item" data-pair="texto">Entregó el valor como texto, y por eso falló al compararlo con 16.</button>
+<button class="quiz-match-item" data-pair="gin">Creó el índice que aceleró la búsqueda con el operador contiene.</button>
+</div>
+</div>
+<p class="quiz-progress"></p>
+</div>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">Cheat Sheet del taller</h2>
+<table class="tabla">
+<thead><tr><th scope="col">Forma</th><th scope="col">Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>atributos-&gt;'clave'</code> / <code>atributos-&gt;&gt;'clave'</code></td><td>Valor como jsonb / valor como texto SQL.</td></tr>
+<tr><td><code>atributos#&gt;&gt;'{a,b}'</code></td><td>Texto siguiendo una ruta de varios niveles.</td></tr>
+<tr><td><code>(atributos-&gt;&gt;'ram_gb')::int &gt;= 16</code></td><td>Comparar como número: hay que convertir.</td></tr>
+<tr><td><code>atributos @&gt; '{"marca":"LG"}'</code></td><td>¿El documento contiene este fragmento? Distingue 16 de "16".</td></tr>
+<tr><td><code>atributos ? 'clave'</code>, <code>?|</code>, <code>?&amp;</code></td><td>Existe una clave del primer nivel / alguna / todas.</td></tr>
+<tr><td><code>jsonb_set(doc, '{ruta}', '"texto"')</code></td><td>Cambia una clave; no crea rutas intermedias; el valor debe ser jsonb.</td></tr>
+<tr><td><code>doc || '{...}'</code>, <code>doc - 'clave'</code>, <code>doc #- '{ruta}'</code></td><td>Agregar o pisar, quitar del primer nivel, quitar de una ruta.</td></tr>
+<tr><td><code>jsonb_each_text</code>, <code>jsonb_array_elements_text</code></td><td>Desarmar un documento o un arreglo en filas.</td></tr>
+<tr><td><code>jsonb_build_object</code>, <code>jsonb_agg</code>, <code>to_jsonb</code></td><td>Armar JSON desde columnas o filas.</td></tr>
+<tr><td><code>CREATE INDEX ... USING GIN (atributos)</code></td><td>Acelera <code>@&gt;</code>, <code>?</code>, <code>?|</code> y <code>?&amp;</code>.</td></tr>
+<tr><td><code>CREATE INDEX ... ((atributos-&gt;&gt;'clave'))</code></td><td>Acelera igualdad u orden sobre una clave concreta.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="container">
+<div class="card">
+<h2 class="section-title">¿Sabías que...?</h2>
+<div class="info-grid">
+<div class="info"><h3>🔤 Desde PostgreSQL 14 hay subíndices</h3><p>Además de <code>-&gt;</code> y <code>jsonb_set</code>, se puede escribir <code>atributos['marca']</code> para leer y <code>UPDATE productos SET atributos['marca'] = '"Dell"'</code> para modificar. Hace lo mismo, con una sintaxis más cercana a la de un lenguaje de programación.</p></div>
+<div class="info"><h3>🐢 Un Seq Scan no siempre es un problema</h3><p>Con unas pocas filas, recorrer toda la tabla es lo más barato, y por eso en la sección 6 tuviste que apagar <code>enable_seqscan</code> para ver trabajar al índice. El planificador elige por costo, no por moda.</p></div>
+<div class="info"><h3>🗂️ Tu tabla es tuya sola</h3><p>Cada estudiante corre su propia base en su propia pestaña. La tabla <code>productos</code> con sus documentos vive solo en la memoria de este navegador y desaparece al cerrar o recargar la página.</p></div>
+</div>
+</div>
+</section>
+
+<footer>
+<h2 style="font-family:Fraunces,serif;margin-bottom:10px;">Taller: JSON y JSONB en Vivo — PostgreSQL Real en tu Navegador</h2>
+<p>Material de apoyo para la asignatura de Base de Datos II.</p>
+<br>
+<p>Elaborado por <strong>Ing. Roy Carrasco</strong></p>
+<p>Universidad Adventista de Bolivia</p>
+<p>2026</p>
+</footer>
+
+</div>
+
+<div id="clipboardToast" class="clipboard-toast" role="status" aria-live="polite"></div>
+
+<button id="topBtn" class="top-btn" aria-label="Volver arriba">↑</button>
+
+
+<script>
+
+/* ===== Barra de progreso ===== */
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.pageYOffset / total) * 100 + "%";
+});
+
+/* ===== Botón volver arriba ===== */
+const topBtn = document.getElementById("topBtn");
+window.addEventListener("scroll", () => {
+  topBtn.classList.toggle("show", window.scrollY > 500);
+});
+topBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+/* ===== Menú móvil (hamburguesa) ===== */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.querySelector(".sidebar");
+const backdrop = document.getElementById("backdrop");
+const enlacesMenu = document.querySelectorAll(".menu a");
+
+function abrirMenu(){ sidebar.classList.add("open"); backdrop.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function cerrarMenu(){ sidebar.classList.remove("open"); backdrop.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click", () => sidebar.classList.contains("open") ? cerrarMenu() : abrirMenu());
+backdrop.addEventListener("click", cerrarMenu);
+enlacesMenu.forEach(a => a.addEventListener("click", cerrarMenu));
+
+/* ===== Buscador del menú ===== */
+const buscador = document.getElementById("buscador");
+const sinResultados = document.getElementById("sinResultados");
+buscador.addEventListener("input", () => {
+  const q = buscador.value.trim().toLowerCase();
+  let visibles = 0;
+  enlacesMenu.forEach(a => {
+    const coincide = a.textContent.toLowerCase().includes(q);
+    a.style.display = coincide ? "" : "none";
+    if (coincide) visibles++;
+  });
+  sinResultados.classList.toggle("show", visibles === 0);
+});
+
+/* ===== Tema claro / oscuro ===== */
+const themeBtn = document.getElementById("themeBtn");
+function actualizarIconoTema(){
+  const actual = document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent = actual === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+}
+actualizarIconoTema();
+themeBtn.addEventListener("click", () => {
+  const actual = document.documentElement.getAttribute("data-theme");
+  const nuevo = actual === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nuevo);
+  localStorage.setItem("guia-theme", nuevo);
+  actualizarIconoTema();
+});
+
+/* ===== Resaltar menú según sección visible ===== */
+const secciones = document.querySelectorAll("section[id]");
+window.addEventListener("scroll", () => {
+  let actual = "";
+  secciones.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) actual = sec.id;
+  });
+  enlacesMenu.forEach(a => {
+    a.style.background = "";
+    a.style.color = "";
+    if (a.getAttribute("href") === "#" + actual) {
+      a.style.background = "#78b159";
+      a.style.color = "white";
+    }
+  });
+});
+
+/* ===== Motor de actividades interactivas (quiz) ===== */
+const QUIZ_PREFIX = "bd-quiz-" + location.pathname + "-";
+
+function marcarResuelto(id, estado) {
+  localStorage.setItem(QUIZ_PREFIX + id, estado);
+  actualizarProgreso();
+}
+
+function actualizarProgreso() {
+  const barra = document.getElementById("quizBarFill");
+  const etiqueta = document.getElementById("quizBarLabel");
+  if (!barra || !etiqueta) return;
+  const ids = new Set();
+  document.querySelectorAll("[data-quiz-id]").forEach(q => ids.add(q.dataset.quizId));
+  let correctas = 0;
+  ids.forEach(id => { if (localStorage.getItem(QUIZ_PREFIX + id) === "ok") correctas++; });
+  const total = ids.size;
+  etiqueta.textContent = correctas + " / " + total;
+  barra.style.width = (total ? (correctas / total) * 100 : 0) + "%";
+}
+
+/* Selección múltiple y verdadero/falso */
+document.querySelectorAll(".quiz-mc").forEach(quiz => {
+  const opciones = [...quiz.querySelectorAll(".quiz-opt")];
+  const fb = quiz.querySelector(".quiz-fb");
+  const id = quiz.dataset.quizId;
+  opciones.forEach(opt => {
+    opt.addEventListener("click", () => {
+      const esCorrecta = opt.hasAttribute("data-correct");
+      opciones.forEach(o => {
+        o.disabled = true;
+        if (o.hasAttribute("data-correct")) o.classList.add("correct");
+      });
+      if (!esCorrecta) opt.classList.add("incorrect");
+      if (fb) {
+        fb.hidden = false;
+        fb.textContent = esCorrecta ? fb.dataset.ok : fb.dataset.ko;
+        fb.classList.add(esCorrecta ? "ok" : "ko");
+      }
+      marcarResuelto(id, esCorrecta ? "ok" : "ko");
+    });
+  });
+});
+
+/* Emparejamiento */
+document.querySelectorAll(".quiz-match").forEach(quiz => {
+  quiz.querySelectorAll('[data-col="right"]').forEach(col => {
+    [...col.children].sort(() => Math.random() - 0.5).forEach(el => col.appendChild(el));
+  });
+  const items = [...quiz.querySelectorAll(".quiz-match-item")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const totalPares = items.length / 2;
+  const id = quiz.dataset.quizId;
+  let seleccionado = null;
+  let pares = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = pares + " de " + totalPares + " pares emparejados correctamente.";
+    if (pares === totalPares) marcarResuelto(id, "ok");
+  }
+  refrescar();
+
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      if (item.classList.contains("matched")) return;
+      if (seleccionado === item) {
+        item.classList.remove("selected");
+        seleccionado = null;
+        return;
+      }
+      if (!seleccionado) {
+        seleccionado = item;
+        item.classList.add("selected");
+        return;
+      }
+      if (seleccionado.dataset.pair === item.dataset.pair) {
+        seleccionado.classList.remove("selected");
+        seleccionado.classList.add("matched");
+        item.classList.add("matched");
+        seleccionado.disabled = true;
+        item.disabled = true;
+        seleccionado = null;
+        pares++;
+        refrescar();
+      } else {
+        const previo = seleccionado;
+        item.classList.add("wrong");
+        previo.classList.add("wrong");
+        setTimeout(() => {
+          item.classList.remove("wrong");
+          previo.classList.remove("wrong", "selected");
+        }, 500);
+        seleccionado = null;
+      }
+    });
+  });
+});
+
+/* Clasificación */
+document.querySelectorAll(".quiz-classify").forEach(quiz => {
+  const filas = [...quiz.querySelectorAll(".quiz-classify-row")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+  let correctas = 0;
+  let respondidas = 0;
+
+  function refrescar() {
+    if (progreso) progreso.textContent = correctas + " de " + filas.length + " clasificadas correctamente.";
+    if (respondidas === filas.length) marcarResuelto(id, correctas === filas.length ? "ok" : "ko");
+  }
+  refrescar();
+
+  filas.forEach(fila => {
+    const botones = [...fila.querySelectorAll("button")];
+    botones.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (botones.some(b => b.disabled)) return;
+        botones.forEach(b => b.disabled = true);
+        respondidas++;
+        if (btn.hasAttribute("data-correct")) {
+          btn.classList.add("correct");
+          correctas++;
+        } else {
+          btn.classList.add("incorrect");
+          botones.find(b => b.hasAttribute("data-correct")).classList.add("correct");
+        }
+        refrescar();
+      });
+    });
+  });
+});
+
+/* Completar espacios */
+document.querySelectorAll(".quiz-fill").forEach(quiz => {
+  const blancos = [...quiz.querySelectorAll(".quiz-blank")];
+  const progreso = quiz.querySelector(".quiz-progress");
+  const id = quiz.dataset.quizId;
+
+  function refrescar() {
+    const correctas = blancos.filter(b => b.classList.contains("correct")).length;
+    if (progreso) progreso.textContent = correctas + " de " + blancos.length + " correctas.";
+    if (correctas === blancos.length) marcarResuelto(id, "ok");
+  }
+
+  blancos.forEach(sel => {
+    sel.addEventListener("change", () => {
+      sel.classList.remove("correct", "incorrect");
+      if (!sel.value) return;
+      sel.classList.add(sel.value === sel.dataset.correct ? "correct" : "incorrect");
+      refrescar();
+    });
+  });
+});
+
+actualizarProgreso();
+
+/* =======================================================================
+   PGlite: PostgreSQL real compilado a WebAssembly, corriendo en el navegador.
+   Mismo patrón de carga perezosa que Pyodide en las guías de POO.
+   ======================================================================= */
+const PGLITE_CDN = "https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.5.4/dist/index.js";
+let pgliteReadyPromise = null;
+
+function cargarPGlite(){
+  if (!pgliteReadyPromise) {
+    pgliteReadyPromise = (async () => {
+      const { PGlite } = await import(PGLITE_CDN);
+      return new PGlite();
+    })();
+  }
+  return pgliteReadyPromise;
+}
+
+function reiniciarPGlite(){
+  pgliteReadyPromise = null;
+}
+
+async function ejecutarSQL(codigo){
+  try {
+    const db = await cargarPGlite();
+    // jsonb/json (OID 3802/114) llegan como texto: se ven tal cual los muestra psql, no como objeto JS
+    const resultados = await db.exec(codigo, { parsers: { 114: v => v, 3802: v => v } });
+    return { resultados, error: null };
+  } catch (e) {
+    return { resultados: null, error: (e && e.message) ? e.message : String(e) };
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* ===== Toast de aviso al bloquear copiar/pegar en los editores ===== */
+const clipboardToast = document.getElementById("clipboardToast");
+let clipboardToastTimer = null;
+function mostrarAvisoPortapapeles(mensaje){
+  if (!clipboardToast) return;
+  clipboardToast.textContent = mensaje;
+  clipboardToast.classList.add("show");
+  clearTimeout(clipboardToastTimer);
+  clipboardToastTimer = setTimeout(() => clipboardToast.classList.remove("show"), 2200);
+}
+
+function formatearValor(v){
+  if (v === null || v === undefined) return "<em>NULL</em>";
+  return escapeHtml(v);
+}
+
+function renderizarResultados(resultados){
+  if (!resultados || !resultados.length) {
+    return '<p class="sql-status">✅ Ejecutado. No se generó ningún resultado.</p>';
+  }
+  // PGlite entrega affectedRows acumulado a lo largo del bloque: se resta lo anterior para mostrar el de cada sentencia
+  let previoAfectadas = 0;
+  return resultados.map(r => {
+    const acumulado = typeof r.affectedRows === "number" ? r.affectedRows : null;
+    const propias = acumulado === null ? null : acumulado - previoAfectadas;
+    if (acumulado !== null) previoAfectadas = acumulado;
+    const columnas = (r.fields || []).map(f => f.name);
+    if (columnas.length) {
+      let html = '<table class="sql-result-table"><thead><tr>' +
+        columnas.map(c => `<th scope="col">${escapeHtml(c)}</th>`).join("") +
+        "</tr></thead><tbody>";
+      if (!r.rows || !r.rows.length) {
+        html += `<tr><td colspan="${columnas.length}"><em>(0 filas)</em></td></tr>`;
+      } else {
+        r.rows.forEach(fila => {
+          html += "<tr>" + columnas.map(c => `<td>${formatearValor(fila[c])}</td>`).join("") + "</tr>";
+        });
+      }
+      html += "</tbody></table>";
+      return html;
+    }
+    const n = propias;
+    const msg = n !== null
+      ? `✅ Sentencia ejecutada (${n} fila${n === 1 ? "" : "s"} afectada${n === 1 ? "" : "s"}).`
+      : "✅ Sentencia ejecutada correctamente.";
+    return `<p class="sql-status">${msg}</p>`;
+  }).join("");
+}
+
+function conectarSqlLab(panel){
+  const textarea = panel.querySelector(".editor");
+  const runBtn = panel.querySelector(".code-btn.run");
+  const output = panel.querySelector(".output");
+  const outputBody = panel.querySelector(".output-body");
+
+  /* En este taller el código se escribe, no se copia ni se pega: bloqueamos
+     copiar/cortar/pegar/arrastrar y avisamos brevemente por qué. */
+  function avisarBloqueo(){
+    textarea.classList.add("bloqueado");
+    mostrarAvisoPortapapeles("✋ En este taller el código se escribe a mano — copiar y pegar está deshabilitado.");
+    setTimeout(() => textarea.classList.remove("bloqueado"), 400);
+  }
+  ["copy", "cut", "paste", "drop"].forEach(evt => {
+    textarea.addEventListener(evt, e => { e.preventDefault(); avisarBloqueo(); });
+  });
+
+  textarea.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const inicio = textarea.selectionStart;
+      const fin = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0, inicio) + "    " + textarea.value.slice(fin);
+      textarea.selectionStart = textarea.selectionEnd = inicio + 4;
+      return;
+    }
+    const teclaCtrl = e.ctrlKey || e.metaKey;
+    if (teclaCtrl && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      avisarBloqueo();
+    }
+  });
+
+  runBtn.onclick = async () => {
+    const codigo = textarea.value.trim();
+    output.hidden = false;
+    output.classList.remove("error");
+    if (!codigo) {
+      outputBody.textContent = "Escribe alguna sentencia SQL antes de ejecutar.";
+      output.classList.add("error");
+      return;
+    }
+    outputBody.textContent = "Cargando PostgreSQL real (WebAssembly)… la primera vez puede tardar varios segundos.";
+    runBtn.disabled = true;
+    try {
+      const { resultados, error } = await ejecutarSQL(codigo);
+      if (error) {
+        outputBody.textContent = "❌ Error de PostgreSQL: " + error;
+        output.classList.add("error");
+      } else {
+        outputBody.innerHTML = renderizarResultados(resultados);
+      }
+    } catch (e) {
+      outputBody.textContent = "No se pudo cargar el motor de PostgreSQL: " + e;
+      output.classList.add("error");
+    } finally {
+      runBtn.disabled = false;
+    }
+  };
+}
+
+document.querySelectorAll(".editor-panel").forEach(conectarSqlLab);
+
+/* ===== Botón "Reiniciar base de datos" ===== */
+const resetBtn = document.getElementById("resetDbBtn");
+const dbEstado = document.getElementById("dbEstado");
+resetBtn.addEventListener("click", () => {
+  reiniciarPGlite();
+  document.querySelectorAll(".editor-panel .output").forEach(o => { o.hidden = true; });
+  dbEstado.textContent = "🔄 Base de datos reiniciada — todo lo creado antes se perdió. Vuelve a ejecutar 'Prepara tu base de datos'.";
+});
+
+</script>
+
+<!-- ATENZA · guía nativa en vivo. Solo actúa si la guía se abrió desde
+     un lanzamiento de ATENZA (con ?atenza_token=...&guia_intento=...
+     en la URL, agregado por IniciarOReanudarGuiaIntento del backend);
+     accedida directo, como siempre, no dispara nada nuevo. No toca el
+     motor de quizzes de arriba (repaso) ni la parte de PGlite/editores: se
+     engancha a marcarResuelto() y actualizarProgreso(), que ya existen.
+     Los ejercicios sueltos con editor SQL no reportan nada acá — solo
+     cuentan las preguntas de la sección "Repaso" (data-quiz-id), igual
+     que taller-procedimientos-triggers.html. Usa paramsDeAtenza() (con
+     fallback a location.hash) desde el vamos. -->
+<script>
+(function () {
+  var ATENZA_API = 'https://api-atenza.atenzabo.com';
+
+  function paramsDeAtenza() {
+    var candidatos = [location.search];
+    var posInterrogante = location.hash.indexOf("?");
+    if (posInterrogante !== -1) candidatos.push(location.hash.slice(posInterrogante));
+    for (var i = 0; i < candidatos.length; i++) {
+      var p = new URLSearchParams(candidatos[i]);
+      if (p.get("atenza_token") && p.get("guia_intento")) return p;
+    }
+    return new URLSearchParams(candidatos[0]);
+  }
+
+  var params = paramsDeAtenza();
+  var token = params.get('atenza_token');
+  var guiaIntentoId = params.get('guia_intento');
+  if (!token || !guiaIntentoId) return; // acceso público normal, sin ATENZA
+
+  var claveIntentoActual = QUIZ_PREFIX + '_atenza_intento_actual';
+  if (localStorage.getItem(claveIntentoActual) !== guiaIntentoId) {
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) {
+      localStorage.removeItem(QUIZ_PREFIX + q.dataset.quizId);
+    });
+    localStorage.setItem(claveIntentoActual, guiaIntentoId);
+    if (typeof actualizarProgreso === 'function') actualizarProgreso();
+  }
+
+  function post(path, body) {
+    return fetch(ATENZA_API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  function avisar(texto, ok, onClick) {
+    var aviso = document.createElement('div');
+    aviso.textContent = texto;
+    aviso.style.cssText =
+      'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:960;' +
+      'padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; color:#fff;' +
+      'box-shadow:0 5px 15px rgba(0,0,0,.25); max-width:90vw; text-align:center; cursor:' +
+      (onClick ? 'pointer' : 'default') + ';' +
+      'background:' + (ok ? 'var(--verde,#78b159)' : '#c0392b') + ';';
+    if (onClick) aviso.addEventListener('click', function () { aviso.remove(); onClick(); });
+    document.body.appendChild(aviso);
+  }
+
+  var pantallaBtn = document.createElement('button');
+  pantallaBtn.textContent = '🖥️ Comenzar en pantalla completa';
+  pantallaBtn.style.cssText =
+    'position:fixed; top:64px; right:16px; z-index:950; padding:10px 16px;' +
+    'border:none; border-radius:10px; background:var(--verde,#78b159); color:#fff;' +
+    'font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,.25);';
+  document.body.appendChild(pantallaBtn);
+
+  var comenzado = false;
+  var terminado = false;
+  pantallaBtn.addEventListener('click', function () {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function () {});
+    }
+    comenzado = true;
+    pantallaBtn.remove();
+  });
+
+  var marcarResueltoOriginal = marcarResuelto;
+  marcarResuelto = function (id, estado) {
+    marcarResueltoOriginal(id, estado);
+    var quiz = document.querySelector('[data-quiz-id="' + id + '"]');
+    if (quiz && quiz.classList.contains('quiz-open')) {
+      var textarea = quiz.querySelector('.quiz-open-input');
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        texto_libre: textarea ? textarea.value : '',
+      }).catch(function () {});
+    } else {
+      post('/api/guias/intentos/' + guiaIntentoId + '/respuesta', {
+        referencia: id,
+        correcta: estado === 'ok',
+      }).catch(function () {});
+    }
+  };
+
+  function reportarIncidente(detalle) {
+    post('/api/guias/intentos/' + guiaIntentoId + '/incidente', { detalle: detalle }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (comenzado && !terminado && document.hidden) reportarIncidente('visibilitychange');
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (comenzado && !terminado && !document.fullscreenElement) reportarIncidente('salida_pantalla_completa');
+  });
+  window.addEventListener('blur', function () {
+    if (comenzado && !terminado) reportarIncidente('blur');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (comenzado && !terminado) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var finalizado = false;
+  function intentarFinalizar() {
+    finalizado = true;
+    post('/api/guias/intentos/' + guiaIntentoId + '/finalizar', {})
+      .then(function (res) {
+        if (res.ok) {
+          terminado = true;
+          avisar('✅ ¡Guía enviada! Ya podés cerrar esta pestaña.', true);
+        } else {
+          finalizado = false;
+          avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+        }
+      })
+      .catch(function () {
+        finalizado = false;
+        avisar('⚠️ No se pudo enviar tu guía — tocá para reintentar.', false, intentarFinalizar);
+      });
+  }
+
+  var actualizarProgresoOriginal = actualizarProgreso;
+  actualizarProgreso = function () {
+    actualizarProgresoOriginal();
+    if (finalizado) return;
+    var ids = new Set();
+    document.querySelectorAll('[data-quiz-id]').forEach(function (q) { ids.add(q.dataset.quizId); });
+    var contestadas = 0;
+    ids.forEach(function (id) { if (localStorage.getItem(QUIZ_PREFIX + id)) contestadas++; });
+    if (ids.size > 0 && contestadas === ids.size) intentarFinalizar();
+  };
+})();
+</script>
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "5041d0ab98294913aa21f17c2aa5dd0f"}'></script>
+<!-- End Cloudflare Web Analytics -->
+
+<!-- Contador de vistas (Cloudflare Web Analytics via Worker proxy) -->
+<script>
+fetch('https://paginaguias-vistas.roysitoc.workers.dev/?path=' + encodeURIComponent(location.pathname))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var el = document.getElementById('viewCount');
+    if (el) el.textContent = d.count;
+  })
+  .catch(function(){});
+</script>
+
+</body>
+</html>
